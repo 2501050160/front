@@ -1519,6 +1519,26 @@ function AdminDashboard() {
         }
     };
 
+    const handleDownloadBackup = async () => {
+        try {
+            showAlert("Exporting Backup", "Generating database backup. Please wait...", "info");
+            const response = await api.get("/admin/export-sql", { responseType: "blob" });
+            const blob = new Blob([response.data], { type: "text/plain" });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `backup_${new Date().toISOString().split('T')[0]}.sql`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            showAlert("Success", "Database backup SQL file downloaded successfully!", "success");
+        } catch (error) {
+            console.error("Backup failed:", error);
+            showAlert("Backup Failed", error.message || "Failed to download backup file", "error");
+        }
+    };
+
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0">
             <div className="!max-w-none !w-full px-8 py-6">
@@ -4248,7 +4268,14 @@ function AdminDashboard() {
                                 className="field font-mono text-sm leading-relaxed min-h-[140px] bg-slate-950 text-cyan-400 border-slate-800 p-4 focus:ring-4 focus:ring-cyan-950"
                                 placeholder="SELECT * FROM users;"
                             />
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-3">
+                                <button 
+                                    type="button" 
+                                    onClick={handleDownloadBackup} 
+                                    className="btn secondary min-h-0 font-bold px-6 py-2.5"
+                                >
+                                    📥 Backup Database (SQL)
+                                </button>
                                 <button type="submit" className="btn warning min-h-0 font-bold px-6 py-2.5" disabled={sqlExecuting}>
                                     {sqlExecuting ? "Executing query..." : "Execute Statement"}
                                 </button>
