@@ -352,6 +352,7 @@ function AdminDashboard() {
             // rewards moved to settings tab
         } else if (activeTab === "subadmins") {
             fetchSubAdmins();
+            fetchBlocks();
         } else if (activeTab === "notifications") {
             fetchNotifications();
         }
@@ -4417,10 +4418,10 @@ function AdminDashboard() {
                                                 className="field cursor-pointer"
                                                 required
                                             >
-                                                <option value="KLU">KLU College</option>
-                                                <option value="UoH">UoH College</option>
-                                                <option value="VIT">VIT College</option>
-                                                <option value="SRM">SRM College</option>
+                                                <option value="" disabled>Select assigned college...</option>
+                                                {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                    <option key={col} value={col}>{col} College</option>
+                                                ))}
                                             </select>
                                         )}
                                     </label>
