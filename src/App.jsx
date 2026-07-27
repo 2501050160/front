@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import api from "./services/api";
 import { clearUserSession } from "./services/auth";
-
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 
@@ -80,6 +80,13 @@ function SessionManager() {
 }
 
 function App() {
+  useEffect(() => {
+    // Ping the backend immediately on application load to wake up the sleeping Render server
+    api.get("/system/db-status")
+      .then(() => console.log("Backend service wake-up triggered successfully."))
+      .catch((err) => console.warn("Wake-up ping failed:", err.message));
+  }, []);
+
   return (
     <BrowserRouter>
       <SessionManager />
