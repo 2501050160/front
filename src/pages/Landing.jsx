@@ -2214,6 +2214,10 @@ import kiosk0Ai from "../assets/kiosk-0-ai.png";
 import kiosk45Ai from "../assets/kiosk-45-ai.png";
 import kiosk90Ai from "../assets/kiosk-90-ai.png";
 import kiosk315Ai from "../assets/kiosk-315-ai.png";
+import cloudKioskFront from "../assets/cloud-print-kiosk.png";
+import cloudKiosk45 from "../assets/kiosk-45-official.png";
+import cloudKiosk90 from "../assets/kiosk-90-official.png";
+import cloudKiosk315 from "../assets/kiosk-315-official.png";
 import aiStep1 from "../assets/ai-step1-upload.png";
 import aiStep2 from "../assets/ai-step2-printer.png";
 import aiStep3 from "../assets/ai-step3-otp.png";
@@ -2340,10 +2344,10 @@ function ScrollSteps3D({ steps }) {
   }, [steps.length]);
 
   const kioskViews = [
-    { img: kiosk0Ai, alt: "Kiosk Front View 0°", skew: "" },
-    { img: kiosk45Ai, alt: "Kiosk Angle View 45°", skew: "skewY(-2deg)" },
-    { img: kiosk90Ai, alt: "Kiosk Side View 90°", skew: "" },
-    { img: kiosk315Ai, alt: "Kiosk Angle View 315°", skew: "skewY(2deg)" }
+    { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
+    { img: cloudKiosk45, alt: "Official CLOUD PRINT Kiosk 45° Angle View", skew: "" },
+    { img: cloudKiosk90, alt: "Official CLOUD PRINT Kiosk 90° Side View", skew: "" },
+    { img: cloudKiosk315, alt: "Official CLOUD PRINT Kiosk 315° Angle View", skew: "" }
   ];
 
   return (
