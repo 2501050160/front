@@ -2308,194 +2308,64 @@ function Reveal3D({ children, className = "", delay = 0 }) {
 }
 
 // ---------------------------------------------------------------------------
-// Procedural Three.js 3D Kiosk Model for WebGL 60FPS Interactive Showcase
+// Exact Reference Kiosk Machine PNG Views Stage — Pinned Bottom-Right 360 Scroll
 // ---------------------------------------------------------------------------
-function buildPrinterModel() {
-  const group = new THREE.Group();
+function KioskViewStage({ scrollProgress, activeStep, steps }) {
+  const views = [
+    { img: kiosk0, alt: "Kiosk Front View (0°)", skew: "" },
+    { img: kiosk45, alt: "Kiosk 45° Angle View", skew: "skewY(-2deg)" },
+    { img: kiosk90, alt: "Kiosk 90° Side View", skew: "" },
+    { img: kiosk315, alt: "Kiosk 315° Angle View", skew: "skewY(2deg)" }
+  ];
 
-  // Main chassis body
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0f1420, metalness: 0.65, roughness: 0.35 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 1.8), bodyMat);
-  body.position.y = 0.1;
-  group.add(body);
+  const currentViewIdx = Math.min(3, Math.max(0, Math.floor(scrollProgress * 4)));
+  const currentView = views[currentViewIdx];
 
-  // Top bevel accent
-  const topMat = new THREE.MeshStandardMaterial({ color: 0x1b2436, metalness: 0.75, roughness: 0.25 });
-  const top = new THREE.Mesh(new THREE.BoxGeometry(2.25, 0.25, 1.85), topMat);
-  top.position.y = 1.75;
-  group.add(top);
+  return (
+    <div className="relative w-full h-full flex items-center justify-center p-4">
+      {/* Soft Ambient Glow under exact reference kiosk machine */}
+      <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/25 rounded-full blur-2xl pointer-events-none" />
 
-  // Glowing screen (front face)
-  const screenMat = new THREE.MeshStandardMaterial({
-    color: 0x0a0f1a,
-    emissive: new THREE.Color(0x3b82f6),
-    emissiveIntensity: 1.5,
-    roughness: 0.25
-  });
-  const screen = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.05), screenMat);
-  screen.position.set(0, 0.85, 0.92);
-  group.add(screen);
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentViewIdx}
+          initial={{ opacity: 0, scale: 0.92, rotateY: -15 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          exit={{ opacity: 0, scale: 0.92, rotateY: 15 }}
+          transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+          className="relative w-full h-full flex items-center justify-center"
+        >
+          <img
+            src={currentView.img}
+            alt={currentView.alt}
+            className="w-full h-full object-contain filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
+          />
 
-  // Output slot glow strip
-  const slotMat = new THREE.MeshStandardMaterial({
-    color: 0x0a0f1a,
-    emissive: new THREE.Color(0x10b981),
-    emissiveIntensity: 1.3
-  });
-  const slot = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.05), slotMat);
-  slot.position.set(0, -0.45, 0.92);
-  group.add(slot);
-
-  // Paper tray group (slides forward on step 3)
-  const trayGroup = new THREE.Group();
-  trayGroup.position.set(0, -0.7, 0.9);
-  const trayMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 });
-  const tray = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.7), trayMat);
-  trayGroup.add(tray);
-  const paperMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
-  const paper = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.6), paperMat);
-  paper.position.y = 0.07;
-  trayGroup.add(paper);
-  group.add(trayGroup);
-
-  // Base pedestal
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x070a12, metalness: 0.4, roughness: 0.6 });
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.0, 0.25, 48), baseMat);
-  base.position.y = -1.55;
-  group.add(base);
-
-  // Floating cyan accent ring around base
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(2.05, 2.15, 64), ringMat);
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = -1.53;
-  group.add(ring);
-
-  return { group, screenMat, slotMat, trayGroup, ringMat };
+          {/* Screen overlay mapped over exact reference kiosk screen */}
+          {currentViewIdx !== 2 && (
+            <div
+              className={`absolute bg-black/90 flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/30 rounded-[2px] shadow-inner transition-all duration-300 ${
+                currentViewIdx === 0
+                  ? "top-[16.5%] left-[35.5%] w-[32%] h-[11%]"
+                  : currentViewIdx === 1
+                  ? "top-[16.5%] left-[33.5%] w-[26%] h-[11%]"
+                  : "top-[16.5%] left-[40.5%] w-[26%] h-[11%]"
+              }`}
+              style={currentView.skew ? { transform: currentView.skew } : {}}
+            >
+              <div className="text-[10px] mb-0.5">{steps[activeStep].icon}</div>
+              <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">
+                {steps[activeStep].phoneLabel}
+              </p>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
 }
 
-function buildPageParticles(count = 20) {
-  const group = new THREE.Group();
-  const geo = new THREE.PlaneGeometry(0.25, 0.34);
-  const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
-  const meshes = [];
-  for (let i = 0; i < count; i++) {
-    const m = new THREE.Mesh(geo, mat.clone());
-    const radius = 2.8 + Math.random() * 2.0;
-    const angle = Math.random() * Math.PI * 2;
-    m.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 3.5, Math.sin(angle) * radius);
-    m.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-    m.userData.speed = 0.12 + Math.random() * 0.2;
-    m.userData.phase = Math.random() * Math.PI * 2;
-    group.add(m);
-    meshes.push(m);
-  }
-  return { group, meshes };
-}
-
-function ThreeKioskCanvas({ scrollProgress, activeStep }) {
-  const containerRef = useRef(null);
-  const progressRef = useRef(scrollProgress);
-  progressRef.current = scrollProgress;
-  const activeStepRef = useRef(activeStep);
-  activeStepRef.current = activeStep;
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const width = container.clientWidth || 340;
-    const height = container.clientHeight || 480;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(width, height);
-    container.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-
-    // Camera calibrated to show 100% of printer machine completely on screen
-    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    camera.position.set(0, 0.2, 5.6);
-
-    // Lighting
-    const ambient = new THREE.AmbientLight(0x8899bb, 0.65);
-    scene.add(ambient);
-    const key = new THREE.DirectionalLight(0xffffff, 1.2);
-    key.position.set(3, 4, 5);
-    scene.add(key);
-    const rim = new THREE.PointLight(0x38bdf8, 5, 10);
-    rim.position.set(-3, 1.5, -2);
-    scene.add(rim);
-    const warm = new THREE.PointLight(0xf59e0b, 3, 8);
-    warm.position.set(2, -1, 2.5);
-    scene.add(warm);
-
-    const { group: printer, screenMat, slotMat, trayGroup, ringMat } = buildPrinterModel();
-    scene.add(printer);
-
-    const { group: particles, meshes: particleMeshes } = buildPageParticles();
-    scene.add(particles);
-
-    let raf;
-    const clock = new THREE.Clock();
-
-    const animate = () => {
-      const t = clock.getElapsedTime();
-      const p = progressRef.current; // 0.0 to 1.0 continuous scroll
-
-      // Continuous 360-degree rotation driven directly by scroll progress
-      // 0..1 maps to 0..2*PI (0° to 360°)
-      const targetRotY = p * Math.PI * 2;
-      printer.rotation.y += (targetRotY - printer.rotation.y) * 0.1;
-      printer.position.y = Math.sin(t * 0.8) * 0.04;
-
-      // Paper tray slides out as progress reaches final collect stage (> 0.72)
-      const collectAmount = smoothstep(0.72, 0.95, p);
-      trayGroup.position.z = 0.9 + collectAmount * 0.55;
-
-      // Pulse screen and ring glow based on step
-      const stepColors = [0x3b82f6, 0x8b5cf6, 0xf59e0b, 0x10b981];
-      const curColor = stepColors[Math.min(3, Math.max(0, activeStepRef.current))];
-      screenMat.emissive.setHex(curColor);
-      screenMat.emissiveIntensity = 1.3 + Math.sin(t * 2.5) * 0.25;
-      ringMat.opacity = 0.45 + Math.sin(t * 1.5) * 0.2;
-
-      // Drift floating paper particles
-      particleMeshes.forEach((m) => {
-        m.position.y += Math.sin(t * m.userData.speed + m.userData.phase) * 0.0015;
-        m.rotation.z += 0.001;
-      });
-
-      renderer.render(scene, camera);
-      raf = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      const w = containerRef.current.clientWidth || 340;
-      const h = containerRef.current.clientHeight || 480;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", handleResize);
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-    };
-  }, []);
-
-  return <div ref={containerRef} className="w-full h-full relative" />;
-}
-
-// Scroll-pinned 3D step showcase — continuous 360 degree rotation pinned bottom-right
+// Scroll-pinned 3D step showcase — exact reference kiosk views pinned bottom-right until 360 completed
 function ScrollSteps3D({ steps }) {
   const containerRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -2523,10 +2393,10 @@ function ScrollSteps3D({ steps }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative min-h-[250vh]">
+    <div ref={containerRef} className="relative min-h-[260vh]">
       <div className="sticky top-20 min-h-[calc(100vh-6rem)] flex flex-col justify-center">
         <div className="grid lg:grid-cols-12 gap-8 items-center">
-          {/* Left Column: Steps indicator */}
+          {/* Left Column: Workflow Steps */}
           <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
             {steps.map((step, idx) => (
               <div
@@ -2544,12 +2414,10 @@ function ScrollSteps3D({ steps }) {
             ))}
           </div>
 
-          {/* Right / Bottom-Right Column: 360 degree WebGL Printer Kiosk */}
+          {/* Right / Bottom-Right Column: Exact Reference Kiosk Machine Views */}
           <div className="lg:col-span-6 flex justify-center lg:justify-end items-center">
-            <div className="relative w-full max-w-[360px] h-[480px] md:h-[520px] rounded-[28px] bg-slate-950/80 border border-white/10 shadow-2xl p-4 overflow-hidden backdrop-blur-md">
-              {/* Soft Ambient Glow under kiosk */}
-              <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-              <ThreeKioskCanvas scrollProgress={scrollProgress} activeStep={activeStep} />
+            <div className="relative w-full max-w-[360px] h-[480px] md:h-[520px] rounded-[28px] bg-slate-950/60 border border-white/10 shadow-2xl p-4 overflow-hidden backdrop-blur-md">
+              <KioskViewStage scrollProgress={scrollProgress} activeStep={activeStep} steps={steps} />
             </div>
           </div>
         </div>
