@@ -2393,25 +2393,6 @@ function ScrollSteps3D({ steps }) {
                   alt={kioskViews[activeStep].alt}
                   className="w-full h-full object-contain filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
                 />
-
-                {/* Dynamic Screen Overlay on exact kiosk display panel */}
-                {activeStep !== 2 && (
-                  <div
-                    className={`absolute bg-black/90 flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/30 rounded-[2px] shadow-inner transition-all duration-300 ${
-                      activeStep === 0
-                        ? "top-[16.5%] left-[35.5%] w-[32%] h-[11%]"
-                        : activeStep === 1
-                        ? "top-[16.5%] left-[33.5%] w-[26%] h-[11%]"
-                        : "top-[16.5%] left-[40.5%] w-[26%] h-[11%]"
-                    }`}
-                    style={kioskViews[activeStep].skew ? { transform: kioskViews[activeStep].skew } : {}}
-                  >
-                    <div className="text-[10px] mb-0.5">{steps[activeStep].icon}</div>
-                    <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">
-                      {steps[activeStep].phoneLabel}
-                    </p>
-                  </div>
-                )}
               </motion.div>
             </AnimatePresence>
           </div>
