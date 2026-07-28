@@ -2210,6 +2210,10 @@ import kiosk0 from "../assets/kiosk-0.png";
 import kiosk45 from "../assets/kiosk-45.png";
 import kiosk90 from "../assets/kiosk-90.png";
 import kiosk315 from "../assets/kiosk-315.png";
+import kiosk0Ai from "../assets/kiosk-0-ai.png";
+import kiosk45Ai from "../assets/kiosk-45-ai.png";
+import kiosk90Ai from "../assets/kiosk-90-ai.png";
+import kiosk315Ai from "../assets/kiosk-315-ai.png";
 import aiStep1 from "../assets/ai-step1-upload.png";
 import aiStep2 from "../assets/ai-step2-printer.png";
 import aiStep3 from "../assets/ai-step3-otp.png";
@@ -2336,10 +2340,10 @@ function ScrollSteps3D({ steps }) {
   }, [steps.length]);
 
   const kioskViews = [
-    { img: kiosk0, alt: "Kiosk Front View 0°", skew: "" },
-    { img: kiosk45, alt: "Kiosk Angle View 45°", skew: "skewY(-2deg)" },
-    { img: kiosk90, alt: "Kiosk Side View 90°", skew: "" },
-    { img: kiosk315, alt: "Kiosk Angle View 315°", skew: "skewY(2deg)" }
+    { img: kiosk0Ai, alt: "Kiosk Front View 0°", skew: "" },
+    { img: kiosk45Ai, alt: "Kiosk Angle View 45°", skew: "skewY(-2deg)" },
+    { img: kiosk90Ai, alt: "Kiosk Side View 90°", skew: "" },
+    { img: kiosk315Ai, alt: "Kiosk Angle View 315°", skew: "skewY(2deg)" }
   ];
 
   return (
