@@ -2393,8 +2393,10 @@ function buildPageParticles(count = 20) {
   return { group, meshes };
 }
 
-function ThreeKioskCanvas({ activeStep }) {
+function ThreeKioskCanvas({ scrollProgress, activeStep }) {
   const containerRef = useRef(null);
+  const progressRef = useRef(scrollProgress);
+  progressRef.current = scrollProgress;
   const activeStepRef = useRef(activeStep);
   activeStepRef.current = activeStep;
 
@@ -2402,8 +2404,8 @@ function ThreeKioskCanvas({ activeStep }) {
     const container = containerRef.current;
     if (!container) return;
 
-    const width = container.clientWidth || 320;
-    const height = container.clientHeight || 450;
+    const width = container.clientWidth || 340;
+    const height = container.clientHeight || 480;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -2412,8 +2414,9 @@ function ThreeKioskCanvas({ activeStep }) {
 
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(1.4, 0.4, 4.8);
+    // Camera calibrated to show 100% of printer machine completely on screen
+    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+    camera.position.set(0, 0.2, 5.6);
 
     // Lighting
     const ambient = new THREE.AmbientLight(0x8899bb, 0.65);
@@ -2434,42 +2437,28 @@ function ThreeKioskCanvas({ activeStep }) {
     const { group: particles, meshes: particleMeshes } = buildPageParticles();
     scene.add(particles);
 
-    // Step target parameters
-    const stepTargets = [
-      { camPos: new THREE.Vector3(1.4, 0.4, 4.8), lookAt: new THREE.Vector3(0, 0.2, 0), rotY: 0.35, trayZ: 0.9, screenColor: 0x3b82f6, slotColor: 0x10b981 },
-      { camPos: new THREE.Vector3(-1.8, 0.5, 4.4), lookAt: new THREE.Vector3(0, 0.3, 0), rotY: -0.75, trayZ: 0.9, screenColor: 0x8b5cf6, slotColor: 0x10b981 },
-      { camPos: new THREE.Vector3(0.0, 0.6, 3.6), lookAt: new THREE.Vector3(0, 0.6, 0), rotY: 0.0, trayZ: 0.9, screenColor: 0xf59e0b, slotColor: 0x10b981 },
-      { camPos: new THREE.Vector3(0.4, -0.4, 3.8), lookAt: new THREE.Vector3(0, -0.5, 0), rotY: 0.25, trayZ: 1.45, screenColor: 0x10b981, slotColor: 0x34d399 }
-    ];
-
-    let currentCamPos = camera.position.clone();
-    let currentLookAt = new THREE.Vector3(0, 0.2, 0);
-
     let raf;
     const clock = new THREE.Clock();
 
     const animate = () => {
       const t = clock.getElapsedTime();
-      const stepIdx = Math.min(3, Math.max(0, activeStepRef.current));
-      const target = stepTargets[stepIdx];
+      const p = progressRef.current; // 0.0 to 1.0 continuous scroll
 
-      // Lerp camera position and lookAt smoothly
-      currentCamPos.lerp(target.camPos, 0.06);
-      currentLookAt.lerp(target.lookAt, 0.06);
-      camera.position.copy(currentCamPos);
-      camera.lookAt(currentLookAt);
-
-      // Lerp printer rotation + idle bob
-      printer.rotation.y += (target.rotY + Math.sin(t * 0.5) * 0.04 - printer.rotation.y) * 0.06;
+      // Continuous 360-degree rotation driven directly by scroll progress
+      // 0..1 maps to 0..2*PI (0° to 360°)
+      const targetRotY = p * Math.PI * 2;
+      printer.rotation.y += (targetRotY - printer.rotation.y) * 0.1;
       printer.position.y = Math.sin(t * 0.8) * 0.04;
 
-      // Lerp tray extension
-      trayGroup.position.z += (target.trayZ - trayGroup.position.z) * 0.08;
+      // Paper tray slides out as progress reaches final collect stage (> 0.72)
+      const collectAmount = smoothstep(0.72, 0.95, p);
+      trayGroup.position.z = 0.9 + collectAmount * 0.55;
 
-      // Pulse screen and ring glow
-      screenMat.emissive.setHex(target.screenColor);
+      // Pulse screen and ring glow based on step
+      const stepColors = [0x3b82f6, 0x8b5cf6, 0xf59e0b, 0x10b981];
+      const curColor = stepColors[Math.min(3, Math.max(0, activeStepRef.current))];
+      screenMat.emissive.setHex(curColor);
       screenMat.emissiveIntensity = 1.3 + Math.sin(t * 2.5) * 0.25;
-      slotMat.emissive.setHex(target.slotColor);
       ringMat.opacity = 0.45 + Math.sin(t * 1.5) * 0.2;
 
       // Drift floating paper particles
@@ -2485,8 +2474,8 @@ function ThreeKioskCanvas({ activeStep }) {
 
     const handleResize = () => {
       if (!containerRef.current) return;
-      const w = containerRef.current.clientWidth || 320;
-      const h = containerRef.current.clientHeight || 450;
+      const w = containerRef.current.clientWidth || 340;
+      const h = containerRef.current.clientHeight || 480;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
@@ -2506,70 +2495,63 @@ function ThreeKioskCanvas({ activeStep }) {
   return <div ref={containerRef} className="w-full h-full relative" />;
 }
 
-// Scroll-pinned 3D step showcase (the qwikprint.in technique) — a sticky
-// phone mockup on desktop swaps its screen content as each step scrolls
-// into view, driven by IntersectionObserver rather than scroll-position
-// math so it stays smooth on both trackpad and touch scrolling. On mobile,
-// where there's no room for a pinned column, it falls back to a single
-// tiltable phone card instead of hiding the visual entirely.
+// Scroll-pinned 3D step showcase — continuous 360 degree rotation pinned bottom-right
 function ScrollSteps3D({ steps }) {
+  const containerRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
-  const stepRefs = useRef([]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveStep(Number(entry.target.dataset.stepIndex));
-          }
-        });
-      },
-      { threshold: 0.6, rootMargin: "-35% 0px -35% 0px" }
-    );
-    stepRefs.current.forEach((el) => el && observer.observe(el));
-    return () => observer.disconnect();
-  }, [steps.length]);
+    const handleScroll = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const totalScrollable = rect.height - window.innerHeight;
+      if (totalScrollable <= 0) return;
+
+      const currentScroll = -rect.top;
+      const progress = Math.min(1, Math.max(0, currentScroll / totalScrollable));
+      setScrollProgress(progress);
+
+      const stepIdx = Math.min(3, Math.floor(progress * 4));
+      setActiveStep(stepIdx);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-      <div className="flex flex-col">
-        {steps.map((step, idx) => (
-          <div
-            key={step.title}
-            ref={(el) => (stepRefs.current[idx] = el)}
-            data-step-index={idx}
-            className={`py-12 md:py-14 pl-7 border-l-2 transition-all duration-500 ${
-              activeStep === idx
-                ? "border-blue-500 opacity-100 translate-x-0"
-                : "border-white/10 opacity-40 -translate-x-1"
-            }`}
-          >
-            <span className="text-[11px] font-black text-blue-400 tracking-widest uppercase">Step {idx + 1}</span>
-            <h3 className="text-xl md:text-2xl font-black text-white mt-2 mb-2">{step.title}</h3>
-            <p className="text-sm text-slate-400 font-bold leading-relaxed max-w-sm">{step.desc}</p>
+    <div ref={containerRef} className="relative min-h-[250vh]">
+      <div className="sticky top-20 min-h-[calc(100vh-6rem)] flex flex-col justify-center">
+        <div className="grid lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Steps indicator */}
+          <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
+            {steps.map((step, idx) => (
+              <div
+                key={step.title}
+                className={`py-6 pl-7 border-l-2 transition-all duration-500 ${
+                  activeStep === idx
+                    ? "border-blue-500 opacity-100 translate-x-0"
+                    : "border-white/10 opacity-30 -translate-x-1"
+                }`}
+              >
+                <span className="text-[11px] font-black text-blue-400 tracking-widest uppercase">Step {idx + 1}</span>
+                <h3 className="text-xl md:text-2xl font-black text-white mt-1 mb-1">{step.title}</h3>
+                <p className="text-sm text-slate-400 font-bold leading-relaxed max-w-sm">{step.desc}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="h-full">
-        {/* Desktop: sticky 3D Three.js WebGL Kiosk showcase */}
-        <div className="hidden lg:flex sticky top-28 h-[480px] items-center justify-center">
-          <div className="relative w-[340px] h-[460px] flex items-center justify-center rounded-[28px] bg-slate-950/80 border border-white/10 shadow-2xl p-4 overflow-hidden backdrop-blur-md">
-            {/* Soft Ambient Glow under kiosk */}
-            <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-            <ThreeKioskCanvas activeStep={activeStep} />
+          {/* Right / Bottom-Right Column: 360 degree WebGL Printer Kiosk */}
+          <div className="lg:col-span-6 flex justify-center lg:justify-end items-center">
+            <div className="relative w-full max-w-[360px] h-[480px] md:h-[520px] rounded-[28px] bg-slate-950/80 border border-white/10 shadow-2xl p-4 overflow-hidden backdrop-blur-md">
+              {/* Soft Ambient Glow under kiosk */}
+              <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
+              <ThreeKioskCanvas scrollProgress={scrollProgress} activeStep={activeStep} />
+            </div>
           </div>
-        </div>
-
-        {/* Mobile: compact Three.js WebGL Kiosk card */}
-        <div className="lg:hidden mt-2 mb-10">
-          <TiltCard
-            className="w-full max-w-[280px] h-[380px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative bg-slate-950/80 backdrop-blur-md p-2"
-            tiltOptions={{ maxTilt: 10, scale: 1.02 }}
-          >
-            <ThreeKioskCanvas activeStep={activeStep} />
-          </TiltCard>
         </div>
       </div>
     </div>
