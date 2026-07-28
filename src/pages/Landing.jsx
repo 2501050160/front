@@ -2345,9 +2345,9 @@ function ScrollSteps3D({ steps }) {
 
   const kioskViews = [
     { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
-    { img: cloudKiosk45, alt: "Official CLOUD PRINT Kiosk 45° Angle View", skew: "" },
-    { img: cloudKiosk90, alt: "Official CLOUD PRINT Kiosk 90° Side View", skew: "" },
-    { img: cloudKiosk315, alt: "Official CLOUD PRINT Kiosk 315° Angle View", skew: "" }
+    { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
+    { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
+    { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" }
   ];
 
   return (
