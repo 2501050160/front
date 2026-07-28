@@ -2414,59 +2414,59 @@ function ScrollSteps3D({ steps }) {
 // as a physical deck of cards you can nudge with your cursor (or drag on
 // touch), tying the "3D" ask directly back to what CloudPrint actually does.
 // ---------------------------------------------------------------------------
-function HeroFlowStack({ mouseX, mouseY }) {
-  const rotY = useTransform(mouseX, [-1, 1], [-18, 18]);
-  const rotX = useTransform(mouseY, [-1, 1], [14, -14]);
-  const springRotY = useSpring(rotY, { stiffness: 90, damping: 18 });
-  const springRotX = useSpring(rotX, { stiffness: 90, damping: 18 });
-
-  const cards = [
-    { label: "Upload PDF", icon: <UploadCloud className="w-5 h-5" />, tint: "rgba(59,130,246,0.9)", z: 0, y: 60, rot: -9 },
-    { label: "Pay Securely", icon: <CreditCard className="w-5 h-5" />, tint: "rgba(139,92,246,0.9)", z: 40, y: 20, rot: -3 },
-    { label: "Scan / Enter OTP", icon: <QrCode className="w-5 h-5" />, tint: "rgba(245,158,11,0.9)", z: 80, y: -20, rot: 3 },
-    { label: "Collect Print", icon: <Zap className="w-5 h-5" />, tint: "rgba(16,185,129,0.9)", z: 120, y: -60, rot: 9 }
-  ];
-
-  return (
-    <div className="hidden lg:flex w-full h-full items-center justify-center" style={{ perspective: "1600px" }}>
-      <motion.div
-        className="relative w-[380px] h-[380px]"
-        style={{ rotateY: springRotY, rotateX: springRotX, transformStyle: "preserve-3d" }}
-      >
-        {cards.map((card, idx) => (
-          <motion.div
-            key={card.label}
-            className="absolute left-1/2 top-1/2 w-[260px] rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-xl p-5 shadow-2xl"
-            style={{
-              transform: `translate(-50%, -50%) translateY(${card.y}px) translateZ(${card.z}px) rotate(${card.rot}deg)`,
-              transformStyle: "preserve-3d"
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: idx * 0.12 }}
-          >
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white mb-3 shadow-lg"
-              style={{ background: card.tint }}
-            >
-              {card.icon}
-            </div>
-            <p className="text-xs font-black text-white tracking-wide">{card.label}</p>
-            <div className="mt-3 h-1 w-full rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: `${(idx + 1) * 25}%`, background: card.tint }} />
-            </div>
-          </motion.div>
-        ))}
-        {/* Connective glow spine running through the stack, giving the
-            fanned cards a sense of a single continuous pipeline */}
-        <div
-          className="absolute left-1/2 top-1/2 w-[2px] h-[280px] bg-gradient-to-b from-blue-500/0 via-blue-400/60 to-emerald-400/0 blur-[1px]"
-          style={{ transform: "translate(-50%, -50%) translateZ(40px)" }}
-        />
-      </motion.div>
-    </div>
-  );
-}
+// function HeroFlowStack({ mouseX, mouseY }) {
+//   const rotY = useTransform(mouseX, [-1, 1], [-18, 18]);
+//   const rotX = useTransform(mouseY, [-1, 1], [14, -14]);
+//   const springRotY = useSpring(rotY, { stiffness: 90, damping: 18 });
+//   const springRotX = useSpring(rotX, { stiffness: 90, damping: 18 });
+// 
+//   const cards = [
+//     { label: "Upload PDF", icon: <UploadCloud className="w-5 h-5" />, tint: "rgba(59,130,246,0.9)", z: 0, y: 60, rot: -9 },
+//     { label: "Pay Securely", icon: <CreditCard className="w-5 h-5" />, tint: "rgba(139,92,246,0.9)", z: 40, y: 20, rot: -3 },
+//     { label: "Scan / Enter OTP", icon: <QrCode className="w-5 h-5" />, tint: "rgba(245,158,11,0.9)", z: 80, y: -20, rot: 3 },
+//     { label: "Collect Print", icon: <Zap className="w-5 h-5" />, tint: "rgba(16,185,129,0.9)", z: 120, y: -60, rot: 9 }
+//   ];
+// 
+//   return (
+//     <div className="hidden lg:flex w-full h-full items-center justify-center" style={{ perspective: "1600px" }}>
+//       <motion.div
+//         className="relative w-[380px] h-[380px]"
+//         style={{ rotateY: springRotY, rotateX: springRotX, transformStyle: "preserve-3d" }}
+//       >
+//         {cards.map((card, idx) => (
+//           <motion.div
+//             key={card.label}
+//             className="absolute left-1/2 top-1/2 w-[260px] rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-xl p-5 shadow-2xl"
+//             style={{
+//               transform: `translate(-50%, -50%) translateY(${card.y}px) translateZ(${card.z}px) rotate(${card.rot}deg)`,
+//               transformStyle: "preserve-3d"
+//             }}
+//             initial={{ opacity: 0 }}
+//             animate={{ opacity: 1 }}
+//             transition={{ duration: 0.6, delay: idx * 0.12 }}
+//           >
+//             <div
+//               className="w-9 h-9 rounded-xl flex items-center justify-center text-white mb-3 shadow-lg"
+//               style={{ background: card.tint }}
+//             >
+//               {card.icon}
+//             </div>
+//             <p className="text-xs font-black text-white tracking-wide">{card.label}</p>
+//             <div className="mt-3 h-1 w-full rounded-full bg-white/10 overflow-hidden">
+//               <div className="h-full rounded-full" style={{ width: `${(idx + 1) * 25}%`, background: card.tint }} />
+//             </div>
+//           </motion.div>
+//         ))}
+//         {/* Connective glow spine running through the stack, giving the
+//             fanned cards a sense of a single continuous pipeline */}
+//         <div
+//           className="absolute left-1/2 top-1/2 w-[2px] h-[280px] bg-gradient-to-b from-blue-500/0 via-blue-400/60 to-emerald-400/0 blur-[1px]"
+//           style={{ transform: "translate(-50%, -50%) translateZ(40px)" }}
+//         />
+//       </motion.div>
+//     </div>
+//   );
+// }
 
 function Landing() {
   const [activeBuilding, setActiveBuilding] = useState("C Block");
@@ -2928,9 +2928,7 @@ function Landing() {
 
             {/* Right Side: signature 3D flow-stack — a mouse-reactive deck of
                 cards tracing Upload → Pay → Verify → Collect in real 3D space */}
-            <div className="hidden lg:block lg:w-[50%] h-[90vh] relative">
-              <HeroFlowStack mouseX={mouseX} mouseY={mouseY} />
-            </div>
+            <div className="hidden lg:block lg:w-[50%] h-[90vh] relative" />
           </motion.div>        </motion.div>
       </section>
 
