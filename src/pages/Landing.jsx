@@ -2205,6 +2205,7 @@ import introVideo from "../assets/intro.mp4";
 import demoVideo from "../assets/demo.mp4";
 import inVideo from "../assets/in.mp4";
 import api from "../services/api";
+import printKioskBg from "../assets/print-kiosk-bg.png";
 import {
   Printer,
   UploadCloud,
@@ -2351,51 +2352,53 @@ function ScrollSteps3D({ steps }) {
       </div>
 
       <div>
-        {/* Desktop: sticky 3D phone that rotates and swaps screens per step */}
-        <div className="hidden lg:flex sticky top-28 h-[440px] items-center justify-center" style={{ perspective: "1400px" }}>
-          <div
-            className="w-[240px] h-[420px] rounded-[36px] bg-slate-900 border border-white/10 p-3 shadow-2xl transition-transform duration-700"
-            style={{
-              transform: `rotateY(${phoneRotations[activeStep] ?? 0}deg) rotateX(4deg)`,
-              transformStyle: "preserve-3d"
-            }}
-          >
-            <div className="w-full h-full rounded-[26px] bg-black relative overflow-hidden">
+        {/* Desktop: sticky 3D kiosk photo showcase */}
+        <div className="hidden lg:flex sticky top-28 h-[460px] items-center justify-center">
+          <div className="relative w-[300px] h-[450px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl">
+            <img 
+              src={printKioskBg} 
+              alt="CloudPrint Kiosk" 
+              className="w-full h-full object-cover" 
+            />
+            {/* Dynamic Screen Overlay over the kiosk display panel */}
+            <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
               {steps.map((step, idx) => (
                 <div
                   key={step.title}
-                  className={`absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center transition-opacity duration-500 ${
-                    activeStep === idx ? "opacity-100" : "opacity-0"
+                  className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
+                    activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" style={{ background: step.iconBg }}>
-                    {step.icon}
-                  </div>
-                  <p className="text-xs font-black text-slate-200">{step.phoneLabel}</p>
+                  <div className="text-xl mb-1">{step.icon}</div>
+                  <p className="text-[9px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Mobile: compact tiltable phone card instead of a pinned column */}
+        {/* Mobile: compact tiltable kiosk photo card */}
         <div className="lg:hidden mt-2 mb-10">
           <TiltCard
-            className="w-full max-w-[240px] h-[220px] rounded-[28px] bg-slate-900 border border-white/10 p-3 shadow-2xl mx-auto"
+            className="w-full max-w-[260px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative"
             tiltOptions={{ maxTilt: 10, scale: 1.02 }}
           >
-            <div className="w-full h-full rounded-[22px] bg-black relative overflow-hidden">
+            <img 
+              src={printKioskBg} 
+              alt="CloudPrint Kiosk" 
+              className="w-full h-full object-cover" 
+            />
+            {/* Dynamic Screen Overlay over the kiosk display panel */}
+            <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
               {steps.map((step, idx) => (
                 <div
                   key={step.title}
-                  className={`absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center transition-opacity duration-500 ${
-                    activeStep === idx ? "opacity-100" : "opacity-0"
+                  className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
+                    activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: step.iconBg }}>
-                    {step.icon}
-                  </div>
-                  <p className="text-[10px] font-black text-slate-200">{step.phoneLabel}</p>
+                  <div className="text-lg mb-0.5">{step.icon}</div>
+                  <p className="text-[8px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
                 </div>
               ))}
             </div>
