@@ -1,194 +1,645 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import introVideo from "../assets/intro.mp4";
-import demoVideo from "../assets/demo.mp4";
-import inVideo from "../assets/in.mp4";
-import api from "../services/api";
-import { 
-  Printer, 
-  UploadCloud, 
-  CreditCard, 
-  ShieldCheck, 
-  MapPin, 
-  Zap, 
-  FileText, 
-  Users, 
-  TrendingUp,
-  ChevronDown,
-  Layers,
-  Sparkles,
-  Play,
+import {
+  Printer,
+  UploadCloud,
+  CreditCard,
   QrCode,
+  ChevronDown,
+  Play,
   Lock,
+  Sparkles,
+  ShieldCheck,
+  MapPin,
+  Zap,
+  FileText,
+  Users,
+  TrendingUp,
   Globe,
   Database,
   CheckCircle2,
   AlertTriangle
 } from "lucide-react";
+import introVideo from "../assets/intro.mp4";
+import demoVideo from "../assets/demo.mp4";
+import api from "../services/api";
 
-function Landing() {
-  const [activeBuilding, setActiveBuilding] = useState("C Block");
-  const [activeFaq, setActiveFaq] = useState(null);
-  const [activeFlowStep, setActiveFlowStep] = useState(0);
-  const [showIntro, setShowIntro] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const introVideoRef = useRef(null);
-  const [showDemo, setShowDemo] = useState(false);
-  const statsRef = useRef(null);
-  const statsStarted = useRef(false);
-  const demoVideoRef = useRef(null);
+// ---------------------------------------------------------------------------
+// Inline SVG kiosk — pixel-accurate representing the physical cabinet
+// ---------------------------------------------------------------------------
+function KioskSVG({ paperVisible }) {
+  return (
+    <svg
+      viewBox="0 0 260 520"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: "100%", filter: "drop-shadow(0 40px 60px rgba(0,0,0,.75)) drop-shadow(0 0 30px rgba(37,99,235,.3))" }}
+    >
+      <defs>
+        <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#d1d5db" />
+          <stop offset="40%" stopColor="#f3f4f6" />
+          <stop offset="100%" stopColor="#e5e7eb" />
+        </linearGradient>
+        <linearGradient id="darkGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#0a0c12" />
+          <stop offset="60%" stopColor="#111318" />
+          <stop offset="100%" stopColor="#1a1c22" />
+        </linearGradient>
+        <linearGradient id="swooshGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#1d4ed8" />
+          <stop offset="100%" stopColor="#2563eb" />
+        </linearGradient>
+        <filter id="kshadow" x="-20%" y="-10%" width="140%" height="130%">
+          <feDropShadow dx="4" dy="8" stdDeviation="6" floodColor="#000" floodOpacity=".5" />
+        </filter>
+      </defs>
 
-  const [isMobile, setIsMobile] = useState(false);
-  const [typedTitle1, setTypedTitle1] = useState("");
-  const [typedTitle2, setTypedTitle2] = useState("");
+      <g filter="url(#kshadow)">
+        <ellipse cx="130" cy="516" rx="70" ry="8" fill="rgba(0,0,0,.4)" />
+
+        {/* Lower dark cabinet */}
+        <rect x="20" y="265" width="220" height="240" rx="6" fill="url(#darkGrad)" />
+        {/* Left dark panel on upper cabinet */}
+        <rect x="20" y="55" width="28" height="210" rx="3" fill="#111318" />
+        {/* Upper white cabinet */}
+        <rect x="48" y="55" width="192" height="210" rx="6" fill="url(#bodyGrad)" />
+
+        {/* Brand name */}
+        <text x="100" y="46" textAnchor="middle" fontSize="13" fontWeight="700" fill="#2563eb" fontFamily="system-ui">CLOUD</text>
+        <text x="139" y="46" textAnchor="start" fontSize="13" fontWeight="700" fill="#111827" fontFamily="system-ui">PRINT</text>
+
+        {/* Screen bezel */}
+        <rect x="36" y="66" width="144" height="114" rx="5" fill="#0a0c12" />
+        {/* Screen surface */}
+        <rect x="38" y="68" width="140" height="110" rx="4" fill="#1e3a8a" />
+        {/* Screen welcome bar */}
+        <rect x="38" y="68" width="140" height="18" rx="0" fill="#1d4ed8" />
+        <text x="108" y="81" textAnchor="middle" fontSize="7" fill="#fff" fontFamily="system-ui" fontWeight="500">Welcome to Cloud Print</text>
+        {/* Screen icon tiles */}
+        <rect x="54" y="100" width="28" height="28" rx="5" fill="#eff6ff" />
+        <text x="68" y="118" textAnchor="middle" fontSize="8" fill="#1d4ed8" fontFamily="system-ui">🖨</text>
+        <text x="68" y="126" textAnchor="middle" fontSize="5.5" fill="#374151" fontFamily="system-ui">PRINT</text>
+        <rect x="94" y="100" width="28" height="28" rx="5" fill="#eff6ff" />
+        <text x="108" y="118" textAnchor="middle" fontSize="9" fill="#1d4ed8" fontFamily="system-ui">⊙</text>
+        <text x="108" y="126" textAnchor="middle" fontSize="5.5" fill="#374151" fontFamily="system-ui">SCAN</text>
+        <rect x="134" y="100" width="28" height="28" rx="5" fill="#eff6ff" />
+        <text x="148" y="118" textAnchor="middle" fontSize="8" fill="#1d4ed8" fontFamily="system-ui">💳</text>
+        <text x="148" y="126" textAnchor="middle" fontSize="5.5" fill="#374151" fontFamily="system-ui">PAY</text>
+        {/* Progress dots on screen */}
+        <circle cx="100" cy="166" r="3" fill="#2563eb" />
+        <circle cx="110" cy="166" r="3" fill="#93c5fd" />
+        <circle cx="120" cy="166" r="3" fill="#93c5fd" />
+
+        {/* Receipt printer */}
+        <rect x="186" y="72" width="22" height="60" rx="3" fill="#d1d5db" />
+        <rect x="190" y="76" width="14" height="8" rx="1" fill="#9ca3af" />
+        <rect x="190" y="90" width="14" height="30" rx="1" fill="#e5e7eb" />
+
+        {/* Blue card reader */}
+        <rect x="192" y="144" width="26" height="46" rx="4" fill="#2563eb" />
+        <rect x="194" y="146" width="22" height="42" rx="3" fill="#0f172a" />
+        <text x="205" y="172" textAnchor="middle" fontSize="5" fill="#64748b" fontFamily="system-ui">PAYMENT</text>
+
+        {/* Self service bar */}
+        <rect x="62" y="196" width="118" height="18" rx="4" fill="#0a0c12" />
+        <text x="121" y="208" textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff" fontFamily="system-ui" letterSpacing="1">SELF SERVICE</text>
+
+        {/* Output slot label + slot */}
+        <text x="90" y="248" textAnchor="middle" fontSize="5.5" fill="#9ca3af" fontFamily="system-ui">OUTPUT</text>
+        <rect x="48" y="257" width="192" height="8" rx="0" fill="#e5e7eb" />
+        <rect x="58" y="250" width="130" height="12" rx="2" fill="#1f2937" />
+        {/* Paper slip */}
+        {paperVisible && (
+          <rect x="72" y="252" width="102" height="6" rx="1" fill="#f9fafb" />
+        )}
+
+        {/* USB ports */}
+        <rect x="200" y="255" width="16" height="4" rx="1" fill="#374151" />
+        <rect x="200" y="261" width="16" height="4" rx="1" fill="#374151" />
+
+        {/* Blue swoosh on lower cabinet */}
+        <path d="M 20,335 L 240,290 L 240,308 L 20,355 Z" fill="url(#swooshGrad)" opacity=".9" />
+
+        {/* Cloud logo */}
+        <circle cx="120" cy="375" r="18" fill="none" stroke="#2563eb" strokeWidth="2.5" />
+        <circle cx="136" cy="370" r="14" fill="none" stroke="#2563eb" strokeWidth="2.5" />
+        <circle cx="104" cy="370" r="14" fill="none" stroke="#2563eb" strokeWidth="2.5" />
+        <rect x="100" y="374" width="80" height="16" rx="0" fill="#fff" />
+        <rect x="112" y="376" width="36" height="22" rx="2" fill="#2563eb" />
+        <rect x="116" y="380" width="28" height="10" rx="1" fill="#fff" />
+        <rect x="120" y="393" width="20" height="4" rx="1" fill="#fbbf24" />
+
+        {/* Logo text */}
+        <text x="118" y="412" textAnchor="middle" fontSize="10" fontWeight="700" fill="#2563eb" fontFamily="system-ui">CLOUD</text>
+        <text x="146" y="412" textAnchor="start" fontSize="10" fontWeight="700" fill="#111827" fontFamily="system-ui">PRINT</text>
+        <text x="130" y="424" textAnchor="middle" fontSize="6.5" fill="#6b7280" fontFamily="system-ui" letterSpacing=".5">PRINT • SCAN • PAY</text>
+
+        {/* 24x7 label */}
+        <text x="36" y="462" fontSize="12" fontWeight="700" fill="#fff" fontFamily="system-ui">24x7</text>
+        <text x="36" y="474" fontSize="7" fontWeight="700" fill="#60a5fa" fontFamily="system-ui" letterSpacing=".5">PRINTING</text>
+
+        {/* Caster wheels */}
+        <rect x="40" y="497" width="22" height="12" rx="6" fill="#1a1c22" />
+        <circle cx="51" cy="503" r="4" fill="#0a0c12" />
+        <rect x="80" y="497" width="22" height="12" rx="6" fill="#1a1c22" />
+        <circle cx="91" cy="503" r="4" fill="#0a0c12" />
+        <rect x="158" y="497" width="22" height="12" rx="6" fill="#1a1c22" />
+        <circle cx="169" cy="503" r="4" fill="#0a0c12" />
+        <rect x="198" y="497" width="22" height="12" rx="6" fill="#1a1c22" />
+        <circle cx="209" cy="503" r="4" fill="#0a0c12" />
+      </g>
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Scroll-linked 3D storytelling showcase
+// ---------------------------------------------------------------------------
+function ScrollHero({ stats, onWatchDemo }) {
+  const stageRef = useRef(null);
+  const kioskRef = useRef(null);
+  const wrapRef  = useRef(null);
+  const rafRef   = useRef(null);
+
+  const rotY     = useRef(-25);
+  const rotX     = useRef(8);
+  const targetY  = useRef(-25);
+  const targetX  = useRef(8);
+  const scrollRY = useRef(-25);
+
+  const isDragging  = useRef(false);
+  const dragStartX  = useRef(0);
+  const dragStartY  = useRef(0);
+  const dragBaseY   = useRef(-25);
+  const dragBaseX   = useRef(8);
+  const dragTimeout = useRef(null);
+
+  const [activeStage, setActiveStage]   = useState(0);
+  const [progress, setProgress]         = useState(0);
+  const [paperVisible, setPaperVisible] = useState(false);
+  const [scrolled, setScrolled]         = useState(false);
+  const [showDragHint, setShowDragHint] = useState(false);
+  const shownDrag = useRef(false);
+
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  const getScrollProgress = useCallback(() => {
+    const el = stageRef.current;
+    if (!el) return 0;
+    const rect  = el.getBoundingClientRect();
+    const total = el.offsetHeight - window.innerHeight;
+    const scrolled = -rect.top;
+    return Math.min(1, Math.max(0, total > 0 ? scrolled / total : 0));
+  }, []);
 
   useEffect(() => {
-    const title1 = "Print Anywhere.";
-    const title2 = "Collect Instantly.";
-    let index1 = 0;
-    let index2 = 0;
-    let timer1;
-    let timer2;
-    let loopTimer;
+    const onScroll = () => {
+      const p = getScrollProgress();
+      setProgress(p);
+      setScrolled(p > 0.01);
 
-    const type1 = () => {
-      if (index1 <= title1.length) {
-        setTypedTitle1(title1.substring(0, index1));
-        index1++;
-        timer1 = setTimeout(type1, 80);
-      } else {
-        type2();
+      const stageIdx = Math.min(3, Math.floor(p * 4));
+      setActiveStage(stageIdx);
+      setPaperVisible(p > 0.82);
+
+      const rotTarget = -25 + p * 380;
+      scrollRY.current = rotTarget;
+      if (!isDragging.current) targetY.current = rotTarget;
+
+      if (p > 0.05 && !shownDrag.current) {
+        shownDrag.current = true;
+        setShowDragHint(true);
+        setTimeout(() => setShowDragHint(false), 2500);
       }
     };
 
-    const type2 = () => {
-      if (index2 <= title2.length) {
-        setTypedTitle2(title2.substring(0, index2));
-        index2++;
-        timer2 = setTimeout(type2, 80);
-      } else {
-        // Wait 3 seconds, then clear and restart the loop
-        loopTimer = setTimeout(() => {
-          setTypedTitle1("");
-          setTypedTitle2("");
-          index1 = 0;
-          index2 = 0;
-          type1();
-        }, 3000);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [getScrollProgress]);
+
+  useEffect(() => {
+    const tick = () => {
+      rotY.current = lerp(rotY.current, targetY.current, 0.08);
+      rotX.current = lerp(rotX.current, targetX.current, 0.08);
+
+      const floatY = Math.sin(Date.now() * 0.0008) * 3;
+
+      if (kioskRef.current) {
+        kioskRef.current.style.transform =
+          `perspective(900px) rotateX(${rotX.current}deg) rotateY(${rotY.current}deg)`;
       }
+      if (wrapRef.current) {
+        wrapRef.current.style.transform = `translateY(calc(-50% + ${floatY}px))`;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
     };
-
-    type1();
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(loopTimer);
-    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // Statistics counters
-  const [stats, setStats] = useState({
-    activePrinters: 27,
-    pagesPrinted: 102540,
-    studentsServed: 15420,
-    successRate: 99.8
-  });
-
-  useEffect(() => {
-    const introShown = sessionStorage.getItem("landingIntroShown");
-    if (!introShown) {
-      setShowIntro(true);
-    }
-  }, []);
-
-  const handleSkipIntro = () => {
-    sessionStorage.setItem("landingIntroShown", "true");
-    setShowIntro(false);
+  // Drag handlers
+  const onMouseDown = (e) => {
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
+    dragStartY.current = e.clientY;
+    dragBaseY.current  = rotY.current;
+    dragBaseX.current  = rotX.current;
+    clearTimeout(dragTimeout.current);
+    e.preventDefault();
   };
 
-  // Load and refresh stats from database every 5 seconds
+  const onMouseMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    const dx = e.clientX - dragStartX.current;
+    const dy = e.clientY - dragStartY.current;
+    targetY.current = dragBaseY.current + dx * 0.5;
+    targetX.current = Math.max(-20, Math.min(20, dragBaseX.current - dy * 0.3));
+  }, []);
+
+  const onMouseUp = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    dragTimeout.current = setTimeout(() => {
+      targetY.current = scrollRY.current;
+      targetX.current = 8;
+    }, 1800);
+  }, []);
+
+  const onTouchStart = (e) => {
+    isDragging.current = true;
+    dragStartX.current = e.touches[0].clientX;
+    dragStartY.current = e.touches[0].clientY;
+    dragBaseY.current  = rotY.current;
+    dragBaseX.current  = rotX.current;
+    clearTimeout(dragTimeout.current);
+  };
+
+  const onTouchMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    const dx = e.touches[0].clientX - dragStartX.current;
+    const dy = e.touches[0].clientY - dragStartY.current;
+    targetY.current = dragBaseY.current + dx * 0.5;
+    targetX.current = Math.max(-20, Math.min(20, dragBaseX.current - dy * 0.3));
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    isDragging.current = false;
+    dragTimeout.current = setTimeout(() => {
+      targetY.current = scrollRY.current;
+      targetX.current = 8;
+    }, 1800);
+  }, []);
+
   useEffect(() => {
-    const fetchStats = () => {
-      const apiUrl = import.meta.env.VITE_API_URL || "https://printer-backend-34ih.onrender.com";
-      fetch(`${apiUrl}/api/public/stats`)
-        .then(res => res.json())
-        .then(data => {
-          setStats({
-            activePrinters: data.activePrinters ?? 27,
-            pagesPrinted: data.pagesPrinted ?? 102540,
-            studentsServed: data.studentsServed ?? 15420,
-            successRate: data.successRate ?? 99.8
-          });
-        })
-        .catch(() => {
-          // Fallback if backend is offline
-          setStats({
-            activePrinters: 27,
-            pagesPrinted: 102540,
-            studentsServed: 15420,
-            successRate: 99.8
-          });
-        });
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
+  }, [onMouseMove, onMouseUp, onTouchMove, onTouchEnd]);
 
-    fetchStats();
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-play demo video with audio when #how-it-works scrolls into view
-  useEffect(() => {
-    const video = demoVideoRef.current;
-    if (!video) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      },
-      { threshold: 0.4 }
-    );
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, []);
-
-  // Workflow auto-stepping effect for the 3D ecosystem column
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveFlowStep((prev) => (prev + 1) % 6);
-    }, 2500);
-    return () => clearInterval(timer);
-  }, []);
-
-  const faqData = [
+  const stages = [
     {
-      q: "How does CloudPrint work?",
-      a: "Simply upload your PDF to the web portal, customize your print options (such as color, paper size, and page range), make a cashless payment, and print. You will receive a unique OTP and QR code which you can use to instantly release the print job at your selected campus printer."
+      eyebrow: "Campus print infrastructure",
+      heading: (
+        <>
+          Print<br />
+          <span style={{ color: "#60a5fa" }}>anywhere.</span><br />
+          Collect instantly.
+        </>
+      ),
+      desc: "Upload from your laptop, walk to any campus kiosk, scan to collect. Scroll to see how it works — or drag the machine to spin it.",
+      ctas: true,
     },
     {
-      q: "How secure is QR printing?",
-      a: "CloudPrint utilizes point-to-point security. Your documents are stored encrypted on our server and are only decrypted when you walk up to the physical printer and scan your QR code or enter your 6-digit OTP. Your documents are automatically wiped from our cache after printing."
+      eyebrow: "Step 01 — Upload",
+      heading: (
+        <>
+          Send it from<br />
+          <span style={{ color: "#60a5fa" }}>anywhere.</span>
+        </>
+      ),
+      desc: "Upload a PDF from your dorm, library, or the quad. CloudPrint queues it to the kiosk touchscreen instantly over the cloud.",
     },
     {
-      q: "Can I pay using my wallet?",
-      a: "Yes! Students can load money into their secure prepaid digital wallet using UPI, card, or net banking via Razorpay. Using the wallet allows for instantaneous checkouts and dynamic Happy Hours/Thesis discounts."
+      eyebrow: "Step 02 — Pay",
+      heading: (
+        <>
+          Pay in<br />
+          <span style={{ color: "#fbbf24" }}>one tap.</span>
+        </>
+      ),
+      desc: "Prepaid wallet, UPI, or card — tap the blue reader beside the screen and checkout completes in seconds.",
     },
     {
-      q: "Can I print from my mobile?",
-      a: "Absolutely. CloudPrint is a progressive web application. You don't need to install any app. Just open www.saipraveen.site on your iPhone or Android browser, upload your file, and pay."
-    }
+      eyebrow: "Step 03 — Collect",
+      heading: (
+        <>
+          Scan.<br />Collect.<br />
+          <span style={{ color: "#34d399" }}>Go.</span>
+        </>
+      ),
+      desc: "Scan your QR or enter your OTP — your pages slide from the output tray. Done.",
+    },
   ];
+
+  const DOT_PCTS = [0, 33, 66, 100];
+
+  return (
+    <div ref={stageRef} style={{ height: "400vh", position: "relative" }}>
+      {/* Sticky viewport */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#05070c",
+        }}
+      >
+        {/* Ambient glows */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+          <div style={{
+            position: "absolute", top: "25%", left: "35%",
+            width: 500, height: 500,
+            background: "radial-gradient(circle, rgba(37,99,235,.16) 0%, transparent 70%)",
+            borderRadius: "50%", transform: "translate(-50%,-50%)",
+          }} />
+          <div style={{
+            position: "absolute", bottom: "10%", right: "15%",
+            width: 320, height: 320,
+            background: "radial-gradient(circle, rgba(16,185,129,.09) 0%, transparent 70%)",
+            borderRadius: "50%",
+          }} />
+        </div>
+
+        {/* Progress dot rail */}
+        <div style={{
+          position: "absolute", left: "2.5%", top: "50%",
+          transform: "translateY(-50%)",
+          display: "flex", flexDirection: "column", alignItems: "center",
+        }}>
+          <div style={{
+            width: 2, height: 160,
+            background: "rgba(255,255,255,.07)",
+            borderRadius: 2, position: "relative",
+          }}>
+            {/* Fill bar */}
+            <div style={{
+              position: "absolute", top: 0, left: 0, width: "100%",
+              background: "#2563eb", borderRadius: 2,
+              height: `${progress * 100}%`,
+              transition: "height .1s linear",
+            }} />
+            {/* Dots */}
+            {DOT_PCTS.map((pct, i) => (
+              <div key={i} style={{
+                position: "absolute",
+                top: `${pct}%`,
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 9, height: 9,
+                borderRadius: "50%",
+                background: activeStage === i ? "#2563eb" : "rgba(255,255,255,.12)",
+                border: `1.5px solid ${activeStage === i ? "#60a5fa" : "rgba(255,255,255,.18)"}`,
+                transition: "background .3s, border-color .3s",
+              }} />
+            ))}
+          </div>
+        </div>
+
+        {/* Text panels */}
+        <div style={{
+          position: "absolute",
+          left: "8%",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "36%",
+          maxWidth: 380,
+        }}>
+          {stages.map((s, i) => (
+            <div
+              key={i}
+              style={{
+                position: i === 0 ? "relative" : "absolute",
+                top: i === 0 ? "auto" : 0,
+                left: 0,
+                right: 0,
+                opacity: activeStage === i ? 1 : 0,
+                transform: `translateY(${activeStage === i ? 0 : 24}px)`,
+                transition: "opacity .4s ease, transform .4s ease",
+                pointerEvents: activeStage === i ? "auto" : "none",
+              }}
+            >
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8,
+                fontSize: 10, fontWeight: 600, letterSpacing: "0.22em",
+                textTransform: "uppercase", color: "#60a5fa", marginBottom: 16,
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: "50%", background: "#2563eb",
+                  display: "inline-block",
+                }} />
+                {s.eyebrow}
+              </div>
+
+              <h2 style={{
+                fontSize: "clamp(2rem, 3.8vw, 3rem)",
+                fontWeight: 800,
+                color: "#fff",
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                marginBottom: 18,
+              }}>
+                {s.heading}
+              </h2>
+
+              <p style={{
+                fontSize: 14, color: "#94a3b8", lineHeight: 1.75, maxWidth: 300,
+              }}>
+                {s.desc}
+              </p>
+
+              {s.ctas && (
+                <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
+                  <Link
+                    to="/login"
+                    style={{
+                      padding: "12px 22px",
+                      background: "#2563eb",
+                      color: "#fff",
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    ⚡ Upload Document
+                  </Link>
+                  <button
+                    onClick={onWatchDemo}
+                    style={{
+                      padding: "12px 22px",
+                      background: "rgba(255,255,255,.08)",
+                      color: "#fff",
+                      border: "1px solid rgba(255,255,255,.12)",
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Play size={14} fill="white" /> Watch Demo
+                  </button>
+                </div>
+              )}
+
+              {s.ctas && (
+                <div style={{
+                  marginTop: 32,
+                  paddingTop: 24,
+                  borderTop: "1px solid rgba(255,255,255,.08)",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 12,
+                }}>
+                  {[
+                    ["🖨️", `${stats.activePrinters} Active Printers`],
+                    ["📄", `${stats.pagesPrinted.toLocaleString()} Pages Printed`],
+                    ["👨‍🎓", `${stats.studentsServed.toLocaleString()} Students`],
+                    ["⚡", `${stats.successRate}% Success Rate`],
+                  ].map(([icon, label]) => (
+                    <div key={label} style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      fontSize: 12, fontWeight: 600, color: "#64748b",
+                    }}>
+                      <span style={{ fontSize: 16 }}>{icon}</span> {label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Kiosk — right side, draggable */}
+        <div
+          ref={wrapRef}
+          style={{
+            position: "absolute",
+            right: "8%",
+            top: "50%",
+            transform: "translateY(-50%)",
+            willChange: "transform",
+          }}
+        >
+          <div
+            ref={kioskRef}
+            onMouseDown={onMouseDown}
+            onTouchStart={onTouchStart}
+            style={{
+              width: 230,
+              cursor: "grab",
+              willChange: "transform",
+              userSelect: "none",
+            }}
+          >
+            <KioskSVG paperVisible={paperVisible} />
+          </div>
+        </div>
+
+        {/* Scroll hint */}
+        <div style={{
+          position: "absolute",
+          bottom: 32, left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 6,
+          opacity: scrolled ? 0 : 1,
+          transition: "opacity .5s",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            width: 1, height: 40,
+            background: "linear-gradient(to bottom, rgba(255,255,255,.4), transparent)",
+            animation: "scrollPulse 1.6s ease-in-out infinite",
+          }} />
+          <span style={{
+            fontSize: 10, letterSpacing: "0.18em",
+            textTransform: "uppercase", color: "#64748b", fontWeight: 600,
+          }}>Scroll</span>
+        </div>
+
+        {/* Drag hint */}
+        <div style={{
+          position: "absolute",
+          bottom: 80,
+          right: "8%",
+          fontSize: 11,
+          color: "#475569",
+          letterSpacing: "0.05em",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          opacity: showDragHint ? 1 : 0,
+          transition: "opacity .5s",
+          pointerEvents: "none",
+        }}>
+          <span>✦</span>
+          <span>Drag to spin</span>
+        </div>
+
+        <style>{`
+          @keyframes scrollPulse {
+            0%, 100% { opacity: .4; transform: scaleY(.8); }
+            50%       { opacity: 1;  transform: scaleY(1); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Landing page component
+// ---------------------------------------------------------------------------
+export default function Landing() {
+  const [activeBuilding, setActiveBuilding] = useState("C Block");
+  const [activeFaq,      setActiveFaq]      = useState(null);
+  const [activeFlowStep, setActiveFlowStep] = useState(0);
+  const [showIntro,      setShowIntro]      = useState(false);
+  const [isMuted,        setIsMuted]        = useState(true);
+  const [showDemo,       setShowDemo]       = useState(false);
+  const [isMobile,       setIsMobile]       = useState(false);
+  const [typedTitle1,    setTypedTitle1]    = useState("");
+  const [typedTitle2,    setTypedTitle2]    = useState("");
+
+  const introVideoRef = useRef(null);
+  const demoVideoRef  = useRef(null);
+
+  const [stats, setStats] = useState({
+    activePrinters: 27,
+    pagesPrinted:   102540,
+    studentsServed: 15420,
+    successRate:    99.8,
+  });
 
   const [buildingData, setBuildingData] = useState({
     "C Block": {
@@ -200,6 +651,84 @@ function Landing() {
       model: "Brother HL-L2320D"
     }
   });
+
+  // Typing animation loop
+  useEffect(() => {
+    const t1 = "Print Anywhere.";
+    const t2 = "Collect Instantly.";
+    let i1 = 0, i2 = 0;
+    let tm1, tm2, tmLoop;
+
+    const type1 = () => {
+      if (i1 <= t1.length) {
+        setTypedTitle1(t1.substring(0, i1++));
+        tm1 = setTimeout(type1, 80);
+      } else {
+        type2();
+      }
+    };
+
+    const type2 = () => {
+      if (i2 <= t2.length) {
+        setTypedTitle2(t2.substring(0, i2++));
+        tm2 = setTimeout(type2, 80);
+      } else {
+        tmLoop = setTimeout(() => {
+          setTypedTitle1("");
+          setTypedTitle2("");
+          i1 = 0;
+          i2 = 0;
+          type1();
+        }, 3000);
+      }
+    };
+
+    type1();
+    return () => {
+      clearTimeout(tm1);
+      clearTimeout(tm2);
+      clearTimeout(tmLoop);
+    };
+  }, []);
+
+  // Mobile detection
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Intro video overlay trigger
+  useEffect(() => {
+    if (!sessionStorage.getItem("landingIntroShown")) {
+      setShowIntro(true);
+    }
+  }, []);
+
+  const handleSkipIntro = () => {
+    sessionStorage.setItem("landingIntroShown", "true");
+    setShowIntro(false);
+  };
+
+  // Stats polling
+  useEffect(() => {
+    const fetchStats = () => {
+      const apiUrl = import.meta.env?.VITE_API_URL || "https://printer-backend-34ih.onrender.com";
+      fetch(`${apiUrl}/api/public/stats`)
+        .then((r) => r.json())
+        .then((d) => setStats({
+          activePrinters: d.activePrinters ?? 27,
+          pagesPrinted:   d.pagesPrinted   ?? 102540,
+          studentsServed: d.studentsServed  ?? 15420,
+          successRate:    d.successRate     ?? 99.8,
+        }))
+        .catch(() => {});
+    };
+    fetchStats();
+    const iv = setInterval(fetchStats, 5000);
+    return () => clearInterval(iv);
+  }, []);
 
   // Fetch real campus data
   useEffect(() => {
@@ -214,7 +743,7 @@ function Landing() {
         const blocks = blocksRes.data || [];
         const printers = printersRes.data || [];
         
-        if (blocks.length === 0) return; // Keep fallback if backend fails
+        if (blocks.length === 0) return;
         
         const newBuildingData = {};
         
@@ -225,7 +754,7 @@ function Landing() {
              const queueRes = await api.get("/queue/pending", { params: { blockLocation: b.name } });
              queueCount = (queueRes.data || []).length;
           } catch (e) {
-             // suppress error
+             // suppress
           }
           
           let status = "Offline";
@@ -271,603 +800,452 @@ function Landing() {
     };
   }, []);
 
-  const flowSteps = [
-    { name: "Student Laptop", color: "from-blue-500 to-indigo-500" },
-    { name: "Upload PDF", color: "from-cyan-500 to-blue-500" },
-    { name: "Cloud Server", color: "from-purple-500 to-indigo-500" },
-    { name: "Payment Gateway", color: "from-amber-500 to-emerald-500" },
-    { name: "Campus Printer", color: "from-purple-500 to-pink-500" },
-    { name: "QR Collection", color: "from-emerald-500 to-teal-500" }
+  // Demo video intersection observer
+  useEffect(() => {
+    const video = demoVideoRef.current;
+    if (!video) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    obs.observe(video);
+    return () => obs.disconnect();
+  }, []);
+
+  // FAQ questions list
+  const faqData = [
+    {
+      q: "How does CloudPrint work?",
+      a: "Simply upload your PDF to the web portal, customize your print options (color, paper size, page range), make a cashless payment, and print. You'll receive a unique OTP and QR code to release the job at any campus printer.",
+    },
+    {
+      q: "How secure is QR printing?",
+      a: "CloudPrint uses point-to-point security. Documents stay encrypted on our server and are only decrypted when you scan your QR or enter your 6-digit OTP at the physical printer. Documents are automatically wiped after printing.",
+    },
+    {
+      q: "Can I pay using my wallet?",
+      a: "Yes — students can load a prepaid digital wallet using UPI, card, or net banking via Razorpay for instantaneous checkouts and Happy Hours discounts.",
+    },
+    {
+      q: "Can I print from my mobile?",
+      a: "Absolutely. CloudPrint is a progressive web app. No install needed — just open the URL in your phone's browser, upload a file, and pay.",
+    },
   ];
+
+  const activeBuil = buildingData[activeBuilding] || {};
+  const paperPct   = parseInt(activeBuil.paper) || 0;
 
   return (
     <>
-    <div className="min-h-screen bg-slate-950 text-white dot-grid relative overflow-hidden font-sans">
-      {/* Inline SVG Clip Path definition */}
-      <svg className="h-0 w-0 absolute pointer-events-none" aria-hidden="true">
-        <defs>
-          <clipPath id="hero-clip" clipPathUnits="objectBoundingBox">
-            <path d="M 0.38,0 Q 0.33,0.5 0.38,1 L 1.0,1 L 1.0,0 Z" />
-          </clipPath>
-        </defs>
-      </svg>
+      <div style={{ minHeight: "100vh", background: "#05070c", color: "#fff", fontFamily: "system-ui, sans-serif", overflowX: "hidden" }}>
 
-      {/* Subtle Animated Background Mesh */}
-      <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 left-0 w-[40rem] h-[40rem] bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-      {/* Floating Transparent Navbar */}
-      <header className="sticky top-0 z-50 w-full h-20 transition-all bg-transparent flex items-center" style={{ width: '100vw', left: 0, right: 0 }}>
-        <nav className="w-full h-full px-[40px] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-              <Printer className="w-5 h-5" />
+        {/* ── Navbar ─────────────────────────────────────────────────────── */}
+        <header style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+          height: 72, display: "flex", alignItems: "center",
+          padding: "0 40px",
+          background: "rgba(5,7,12,.85)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(255,255,255,.06)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+            <div style={{
+              padding: 8, borderRadius: 10,
+              background: "#2563eb", color: "#fff",
+            }}>
+              <Printer size={18} />
             </div>
-            <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              CloudPrint
-            </span>
+            <span style={{
+              fontSize: 18, fontWeight: 900, letterSpacing: "-0.02em",
+              background: "linear-gradient(to right, #2563eb, #818cf8)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}>CloudPrint</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-16 text-sm font-black text-slate-400">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#locations" className="hover:text-white transition-colors">Campus Locations</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
-            <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
-          </div>
+          {!isMobile && (
+            <nav style={{ display: "flex", gap: 40, fontSize: 13, fontWeight: 700, color: "#64748b" }}>
+              {[["#features", "Features"], ["#locations", "Locations"], ["#how-it-works", "How it works"], ["#faq", "FAQ"]].map(([href, label]) => (
+                <a key={href} href={href} style={{ color: "#64748b", textDecoration: "none", transition: "color .2s" }}
+                  onMouseEnter={e => e.target.style.color = "#fff"}
+                  onMouseLeave={e => e.target.style.color = "#64748b"}
+                >{label}</a>
+              ))}
+            </nav>
+          )}
 
-          <div className="flex items-center">
-            <Link to="/login" className="btn success min-h-0 py-2.5 px-5 rounded-xl font-black text-sm shadow-md shadow-blue-500/10">
+          <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+            <Link to="/login" style={{
+              padding: "10px 20px",
+              background: "#2563eb", color: "#fff",
+              borderRadius: 10, fontWeight: 700,
+              fontSize: 13, textDecoration: "none",
+            }}>
               ⚡ Upload Document
             </Link>
           </div>
-        </nav>
-      </header>
+        </header>
 
-      {/* Hero Section */}
-      <section className="w-full max-w-none px-0 pt-0 pb-24 relative z-10 -mt-20">
-        <motion.div 
-          className="relative w-full rounded-none min-h-[95vh] pt-28 pb-16 md:pb-24 bg-slate-950 border-b border-white/10 overflow-hidden flex items-center"
-          initial={{ y: 0 }}
-          animate={{ 
-            y: [0, -4, 0],
-          }}
-          transition={{ 
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          style={{ transition: "all 0.3s ease" }}        >
-          {/* Subtle Blue Ambient Glow Behind Arc */}
-          <div className="absolute top-1/2 left-[40%] -translate-y-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none z-0" />
-
-          {/* Background Video Showcase: occupies full hero area, clipped exactly to the curve on desktop */}
-          <div 
-            className="absolute inset-0 z-0 bg-transparent"
-            style={isMobile ? {} : {
-              clipPath: "url(#hero-clip)",
-              WebkitClipPath: "url(#hero-clip)"
-            }}
-          >
-            <video 
-              src={inVideo}
-              autoPlay 
-              muted 
-              loop 
-              playsInline
-              preload="auto"
-              controls={false}
-              controlsList="nodownload nofullscreen"
-              disablePictureInPicture
-              draggable="false"
-              className={`w-full h-full object-cover object-center pointer-events-none select-none transition-all duration-300 ${isMobile ? 'blur-[4px] opacity-35' : 'opacity-100'}`}
-            />
-            {/* Soft feather overlay gradient where the arc meets the video (only on desktop) */}
-            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none hidden lg:block" />
-          </div>
-
-          {/* Massive Curved Glowing Arc Divider Stroke Overlay (rendered directly on 100% width, hidden on mobile) */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {/* 2px glowing blue stroke */}
-            <path d="M 38,0 Q 33,50 38,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
-          </svg>
-
-          {/* Foreground Content Wrapper */}
-          <div className="relative z-10 w-full px-8 md:px-12 lg:px-16 flex flex-col lg:flex-row justify-between items-center min-h-[90vh]">
-            {/* Left Column: 40% width overlay with max-width 560px, vertically centered */}
-            <div className="w-full lg:w-[40%] max-w-[560px] text-white text-left z-20 my-auto">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-blue-400 bg-blue-950/80 border border-blue-800/60">
-                <Sparkles className="w-3.5 h-3.5" /> Next-Gen Kiosk Printing
-              </span>
-              
-              <h1 className="mt-6 text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-white">
-                {typedTitle1}
-                {typedTitle1 && <br />}
-                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  {typedTitle2}
-                </span>
-              </h1>
-              
-              <p className="mt-6 text-sm md:text-base font-bold text-slate-300 leading-relaxed max-w-xl">
-                Upload your PDF documents from anywhere on campus, pay securely online, and collect your prints instantly using secure OTP codes or QR verification from any CloudPrint-enabled printer.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/login" className="btn success px-6 py-3.5 rounded-xl font-black text-sm shadow-lg shadow-emerald-500/20">
-                  ⚡ Upload Document
-                </Link>
-                <button
-                  onClick={() => setShowDemo(true)}
-                  className="btn secondary !bg-white/10 !text-white !border-white/10 hover:!bg-white/20 px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-1.5"
-                >
-                  <Play className="w-4 h-4 fill-white" /> Watch Demo
-                </button>
-              </div>
-              {/* Left-Side Trust Section */}
-              <div className="mt-10 pt-8 border-t border-white/10 grid grid-cols-2 gap-4 text-slate-400">
-                <div className="flex items-center gap-2 text-xs font-bold">
-                  <span className="text-base">🖨️</span>
-                  <span>{stats.activePrinters} Active Printers</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold">
-                  <span className="text-base">📄</span>
-                  <span>{stats.pagesPrinted.toLocaleString()} Pages Printed</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold">
-                  <span className="text-base">👨‍🎓</span>
-                  <span>{stats.studentsServed.toLocaleString()} Students Served</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold">
-                  <span className="text-base">⚡</span>
-                  <span>{stats.successRate}% Success Rate</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Side: Empty div placeholder since video occupies full background of the right side */}
-            <div className="hidden lg:block lg:w-[50%] h-[90vh] pointer-events-none relative" />
-          </div>        </motion.div>
-      </section>
-
-      {/* Live Statistics Section */}
-      <section className="bg-slate-900 text-white py-16 border-y border-slate-800" ref={statsRef}>
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-          <div>
-            <h3 className="text-4xl font-black tracking-tight text-white">{stats.pagesPrinted.toLocaleString()}+</h3>
-            <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Pages Printed</p>
-          </div>
-          <div>
-            <h3 className="text-4xl font-black tracking-tight text-emerald-400">{stats.activePrinters}</h3>
-            <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Active Printers</p>
-          </div>
-          <div>
-            <h3 className="text-4xl font-black tracking-tight text-blue-400">{stats.successRate}%</h3>
-            <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Success Rate</p>
-          </div>
-          <div>
-            <h3 className="text-4xl font-black tracking-tight text-purple-400">{stats.studentsServed.toLocaleString()}+</h3>
-            <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Students Served</p>
-          </div>
+        {/* ── Scroll 3D Hero ─────────────────────────────────────────────── */}
+        <div style={{ paddingTop: 72 }}>
+          <ScrollHero stats={stats} onWatchDemo={() => setShowDemo(true)} />
         </div>
-      </section>
 
-      {/* How It Works — Demo Video Section */}
-      <section id="how-it-works" className="bg-slate-950 py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-black uppercase tracking-widest text-blue-400 bg-blue-950 border border-blue-800 px-3 py-1 rounded-full">
-              Live Demo
-            </span>
-            <h2 className="mt-4 text-3xl md:text-4xl font-black text-white">
-              See CloudPrint in Action
-            </h2>
-            <p className="mt-4 text-sm font-bold text-slate-400">
-              Upload, pay, and collect prints in seconds — watch the full workflow.
-            </p>
-          </div>
-
-          {/* Video player */}
-          <div className="relative rounded-[20px] overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/10">
-            {/* macOS-style bar */}
-            <div className="bg-slate-900 px-5 py-3 flex items-center gap-2 border-b border-white/10">
-              <div className="flex gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500" />
-              </div>
-              <span className="text-xs font-black text-slate-400 ml-2 uppercase tracking-widest">CloudPrint — How It Works</span>
-            </div>
-            <video
-              ref={demoVideoRef}
-              src={demoVideo}
-              autoPlay
-              muted
-              controls
-              playsInline
-              loop
-              className="w-full aspect-video bg-black"
-            />
-          </div>
-
-          {/* How It Works Steps Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
+        {/* ── Live Stats ─────────────────────────────────────────────────── */}
+        <section style={{
+          background: "#0d1117", borderTop: "1px solid rgba(255,255,255,.06)",
+          borderBottom: "1px solid rgba(255,255,255,.06)",
+          padding: "64px 24px",
+        }}>
+          <div style={{
+            maxWidth: 960, margin: "0 auto",
+            display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 32,
+            textAlign: "center",
+          }}>
             {[
-              { title: "Upload PDF", desc: "Select and process files", icon: "📄" },
-              { title: "Choose Printer", desc: "Pick nearest pickup counter", icon: "🖨️" },
-              { title: "Verify OTP", desc: "Input code at counter", icon: "🔑" },
-              { title: "Collect Print", desc: "Grab pages from output tray", icon: "⚡" }
-            ].map((step, idx) => (
-              <div key={idx} className="p-6 bg-slate-900/40 border border-white/10 rounded-2xl relative text-left">
-                <span className="absolute top-4 right-4 text-[10px] font-black bg-blue-500/20 text-blue-400 w-5 h-5 rounded-full flex items-center justify-center border border-blue-500/30">
-                  {idx + 1}
-                </span>
-                <div className="text-2xl mb-3">{step.icon}</div>
-                <h4 className="text-base font-black text-white">{step.title}</h4>
-                <p className="text-xs text-slate-400 mt-2 font-bold leading-relaxed">{step.desc}</p>
+              [stats.pagesPrinted.toLocaleString() + "+", "Pages Printed", "#fff"],
+              [stats.activePrinters.toString(), "Active Printers", "#34d399"],
+              [stats.successRate + "%", "Success Rate", "#60a5fa"],
+              [stats.studentsServed.toLocaleString() + "+", "Students Served", "#a78bfa"],
+            ].map(([num, label, color]) => (
+              <div key={label}>
+                <p style={{ fontSize: "clamp(1.8rem,4vw,2.8rem)", fontWeight: 900, color, letterSpacing: "-0.03em" }}>{num}</p>
+                <p style={{ marginTop: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#475569" }}>{label}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Trust Feature Cards */}
-      <section className="max-w-6xl mx-auto px-6 py-24" id="features">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm bg-[rgba(59,130,246,0.12)] border border-[rgba(96,165,250,0.35)] text-[#60A5FA]">
-            Security & Trust
-          </span>
-          <h2 className="mt-4 text-3xl md:text-4xl text-white font-[800] tracking-[-0.03em] [text-shadow:0_0_24px_rgba(59,130,246,0.18)]">
-            Trusted Across Campus
-          </h2>
-        </div>
+        {/* ── How It Works (demo video) ───────────────────────────────────── */}
+        <section id="how-it-works" style={{ background: "#05070c", padding: "96px 24px" }}>
+          <div style={{ maxWidth: 960, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                padding: "4px 14px", borderRadius: 20,
+                background: "rgba(37,99,235,.15)",
+                border: "1px solid rgba(37,99,235,.3)",
+                color: "#60a5fa",
+              }}>Live Demo</span>
+              <h2 style={{ marginTop: 16, fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 900, color: "#fff" }}>
+                See CloudPrint in Action
+              </h2>
+            </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_18px_50px_rgba(37,99,235,0.15)] flex items-start gap-4">
-            <div className="p-3 bg-[#ECFDF5] rounded-2xl shadow-sm shadow-[#22C55E]/10 shrink-0">
-              <Lock className="w-5 h-5 text-[#22C55E]" />
+            {/* macOS-style video player */}
+            <div style={{
+              borderRadius: 20,
+              overflow: "hidden",
+              border: "1px solid rgba(255,255,255,.08)",
+              boxShadow: "0 40px 80px rgba(0,0,0,.5)",
+            }}>
+              <div style={{
+                background: "#0d1117", padding: "12px 18px",
+                display: "flex", alignItems: "center", gap: 8,
+                borderBottom: "1px solid rgba(255,255,255,.06)",
+              }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {["#ef4444","#f59e0b","#22c55e"].map(c => (
+                    <span key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c, display: "block" }} />
+                  ))}
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#475569", letterSpacing: "0.15em", textTransform: "uppercase", marginLeft: 8 }}>
+                  CloudPrint — How It Works
+                </span>
+              </div>
+              <video
+                ref={demoVideoRef}
+                autoPlay muted controls playsInline loop
+                style={{ width: "100%", aspectRatio: "16/9", background: "#000", display: "block" }}
+              />
             </div>
-            <div>
-              <h3 className="font-[700] text-[20px] text-[#111827]">Secure OTP Printing</h3>
-              <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">No unauthorized prints. Documents release only when you type in your OTP.</p>
-            </div>
-          </div>
 
-          <div className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_18px_50px_rgba(37,99,235,0.15)] flex items-start gap-4">
-            <div className="p-3 bg-[#EFF6FF] rounded-2xl shadow-sm shadow-[#2563EB]/10 shrink-0">
-              <QrCode className="w-5 h-5 text-[#2563EB]" />
-            </div>
-            <div>
-              <h3 className="font-[700] text-[20px] text-[#111827]">QR Code Release</h3>
-              <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">Simply scan the QR sticker on the kiosk tray to immediately output pages.</p>
-            </div>
-          </div>
-
-          <div className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_18px_50px_rgba(37,99,235,0.15)] flex items-start gap-4">
-            <div className="p-3 bg-[#F5F3FF] rounded-2xl shadow-sm shadow-[#8B5CF6]/10 shrink-0">
-              <CreditCard className="w-5 h-5 text-[#8B5CF6]" />
-            </div>
-            <div>
-              <h3 className="font-[700] text-[20px] text-[#111827]">Razorpay Payments</h3>
-              <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">Fast checkouts using UPI, Credit Cards, or Net banking gateways.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Live Campus Map Section */}
-      <section className="bg-slate-50 border-y border-slate-200/60 py-24" id="locations">
-        <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <span className="text-xs font-[800] uppercase tracking-widest text-[#9333EA] bg-[#F3E8FF] border border-[#D8B4FE] px-3 py-1 rounded-full">
-              Interactive Campus Map
-            </span>
-            <h2 className="mt-4 text-[48px] font-[800] text-[#111827] leading-tight">
-              Find Active Campus Printers
-            </h2>
-            <p className="mt-4 text-[#475569] leading-[1.8]">
-              Click on a building in the selector grid to check real-time queue states, hardware status, and paper load levels.
-            </p>
-
-            {/* Building Grid Selector */}
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              {Object.keys(buildingData).map((name) => (
-                <button
-                  key={name}
-                  onClick={() => setActiveBuilding(name)}
-                  className={`p-4 rounded-2xl border text-left transition-[0.3s] ${
-                    activeBuilding === name
-                      ? "bg-[#EFF6FF] border-[#2563EB] border-[2px] text-[#1D4ED8] shadow-[0_0_30px_rgba(37,99,235,0.18)] scale-[1.02] font-[800]"
-                      : "bg-[#FFFFFF] border-[#E2E8F0] text-[#334155] hover:border-[#2563EB] hover:shadow-[0_12px_30px_rgba(37,99,235,0.12)] font-[700]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">{name}</span>
-                    <span className={`w-2 h-2 rounded-full ${
-                      buildingData[name].status === "Online"
-                        ? "bg-[#22C55E] animate-pulse"
-                        : buildingData[name].status === "Busy"
-                        ? "bg-[#F59E0B]"
-                        : "bg-[#EF4444]"
-                    }`} />
-                  </div>
-                </button>
+            {/* Steps grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+              gap: 20, marginTop: 48,
+            }}>
+              {[
+                { emoji: "📄", title: "Upload PDF",    desc: "Select and upload from any device" },
+                { emoji: "🖨️", title: "Choose Printer", desc: "Pick nearest campus kiosk" },
+                { emoji: "🔑", title: "Verify OTP",    desc: "Enter code at the kiosk" },
+                { emoji: "⚡", title: "Collect Print",  desc: "Grab pages from the output tray" },
+              ].map((step, i) => (
+                <div key={i} style={{
+                  padding: "24px 20px",
+                  background: "rgba(255,255,255,.03)",
+                  border: "1px solid rgba(255,255,255,.07)",
+                  borderRadius: 16, position: "relative",
+                }}>
+                  <span style={{
+                    position: "absolute", top: 14, right: 14,
+                    fontSize: 10, fontWeight: 700,
+                    background: "rgba(37,99,235,.2)", color: "#60a5fa",
+                    width: 20, height: 20, borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1px solid rgba(37,99,235,.3)",
+                  }}>{i + 1}</span>
+                  <div style={{ fontSize: 24, marginBottom: 12 }}>{step.emoji}</div>
+                  <h4 style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{step.title}</h4>
+                  <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, lineHeight: 1.6 }}>{step.desc}</p>
+                </div>
               ))}
             </div>
           </div>
+        </section>
 
-          {/* Building Live Status Panel */}
-          <div className="p-8 rounded-[24px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] flex flex-col gap-6 relative overflow-hidden transition-[0.3s]">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl" />
-            
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Selected Hub</span>
-                <h3 className="text-2xl font-[800] text-[#111827] mt-1">{activeBuilding}</h3>
-              </div>
-              {buildingData[activeBuilding].status === "Online" ? (
-                <span className="px-3 py-1 rounded-full text-xs font-[800] uppercase bg-[#DCFCE7] text-[#16A34A] animate-[float_3s_ease-in-out_infinite]">
-                  {buildingData[activeBuilding].status}
-                </span>
-              ) : (
-                <span className={`px-3 py-1 rounded-full text-xs font-[800] uppercase border ${buildingData[activeBuilding].statusColor}`}>
-                  {buildingData[activeBuilding].status}
-                </span>
-              )}
+        {/* ── Trust features ─────────────────────────────────────────────── */}
+        <section id="features" style={{ padding: "96px 24px", background: "#0d1117" }}>
+          <div style={{ maxWidth: 960, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+                padding: "4px 14px", borderRadius: 20,
+                background: "rgba(37,99,235,.12)", border: "1px solid rgba(37,99,235,.25)", color: "#60a5fa",
+              }}>Security & Trust</span>
+              <h2 style={{ marginTop: 16, fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 900, color: "#fff" }}>
+                Trusted across campus
+              </h2>
             </div>
-
-            <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <div className="flex justify-between items-center mb-1">
-                  <p className="text-xs font-bold text-[#64748B]">Paper Level</p>
-                  <p className="text-lg font-[700] text-[#111827]">{buildingData[activeBuilding].paper}</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 24 }}>
+              {[
+                { icon: <Lock size={20} />, iconBg: "#052e16", iconColor: "#22c55e", title: "Secure OTP printing", desc: "No unauthorised prints. Documents release only when you enter your OTP." },
+                { icon: <QrCode size={20} />, iconBg: "#0c1a3a", iconColor: "#2563eb", title: "QR code release",    desc: "Scan the QR on the kiosk tray to immediately output your pages." },
+                { icon: <CreditCard size={20} />, iconBg: "#1e0a3a", iconColor: "#8b5cf6", title: "Razorpay payments",  desc: "Fast checkouts via UPI, credit card, or net banking." },
+              ].map((f) => (
+                <div key={f.title} style={{
+                  padding: "24px 22px",
+                  background: "rgba(255,255,255,.03)",
+                  border: "1px solid rgba(255,255,255,.07)",
+                  borderRadius: 20, display: "flex", gap: 18,
+                }}>
+                  <div style={{
+                    padding: 12, borderRadius: 14,
+                    background: f.iconBg, color: f.iconColor, flexShrink: 0,
+                  }}>{f.icon}</div>
+                  <div>
+                    <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>{f.title}</h3>
+                    <p style={{ fontSize: 12, color: "#64748b", marginTop: 6, lineHeight: 1.7 }}>{f.desc}</p>
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#22C55E] to-[#16A34A] transition-all duration-1000 ease-out"
-                    style={{ width: buildingData[activeBuilding].paper }}
-                  />
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <p className="text-xs font-bold text-[#64748B]">Estimated Wait</p>
-                <p className="text-lg font-[700] text-[#2563EB] mt-1">{buildingData[activeBuilding].wait}</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex justify-between items-center">
-              <div>
-                <p className="text-xs font-bold text-[#64748B]">Active Queue</p>
-                <p className="text-lg font-[700] text-[#111827] mt-1">{buildingData[activeBuilding].queue} orders pending</p>
-              </div>
-              <span className="text-xs font-bold text-[#64748B]">Model: {buildingData[activeBuilding].model}</span>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Live Dashboard Perspective Previews */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
-            Modern SaaS Interfaces
-          </span>
-          <h2 className="mt-4 text-3xl md:text-4xl font-black text-slate-900">
-            Interactive Dashboard Ecosystems
-          </h2>
-        </div>
+        {/* ── Campus map / building selector ─────────────────────────────── */}
+        <section id="locations" style={{ padding: "96px 24px", background: "#05070c" }}>
+          <div style={{
+            maxWidth: 960, margin: "0 auto",
+            display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: 48, alignItems: "center",
+          }}>
+            <div>
+              <span style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+                padding: "4px 14px", borderRadius: 20,
+                background: "rgba(147,51,234,.15)", border: "1px solid rgba(147,51,234,.3)", color: "#a78bfa",
+              }}>Interactive campus map</span>
+              <h2 style={{ marginTop: 16, fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 900, color: "#fff" }}>
+                Find active campus printers
+              </h2>
+              <p style={{ marginTop: 12, color: "#64748b", lineHeight: 1.8, fontSize: 14 }}>
+                Click a building to check real-time queue status, hardware health, and paper load.
+              </p>
+              <div style={{ marginTop: 28, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {Object.keys(buildingData).map((name) => {
+                  const active = name === activeBuilding;
+                  return (
+                    <button key={name} onClick={() => setActiveBuilding(name)} style={{
+                      padding: "14px 16px", borderRadius: 14, textAlign: "left",
+                      cursor: "pointer", transition: "all .2s",
+                      border: active ? "2px solid #2563eb" : "1px solid rgba(255,255,255,.08)",
+                      background: active ? "rgba(37,99,235,.15)" : "rgba(255,255,255,.03)",
+                      color: active ? "#60a5fa" : "#94a3b8",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 13, fontWeight: 700 }}>{name}</span>
+                        <span style={{
+                          width: 8, height: 8, borderRadius: "50%",
+                          background: buildingData[name].status === "Online" ? "#22c55e"
+                            : buildingData[name].status === "Busy" ? "#f59e0b" : "#ef4444",
+                          display: "block",
+                        }} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Perspective stacked cards */}
-        <div className="relative h-[480px] w-full flex items-center justify-center overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-tr from-slate-100 to-white shadow-inner p-8">
-          
-          {/* Admin Dashboard Mock Card */}
-          <div 
-            className="absolute left-10 md:left-24 w-[360px] md:w-[460px] h-[300px] rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 hidden sm:flex flex-col gap-4"
-            style={{
-              transform: "perspective(1000px) rotateY(15deg) rotateX(8deg) translateZ(50px)",
-              opacity: 0.85
-            }}
-          >
-            <div className="flex justify-between items-center border-b pb-3">
-              <span className="text-xs font-black text-slate-500">SaaS Admin Control</span>
-              <span className="h-2 w-2 rounded-full bg-blue-600" />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-[10px] text-slate-400 font-bold">Revenue</span>
-                <p className="text-sm font-black mt-1">₹4,290.00</p>
+            {/* Live status panel */}
+            <div style={{
+              padding: 32, borderRadius: 24,
+              background: "rgba(255,255,255,.03)",
+              border: "1px solid rgba(255,255,255,.07)",
+              display: "flex", flexDirection: "column", gap: 20,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#475569" }}>Selected hub</p>
+                  <h3 style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginTop: 4 }}>{activeBuilding}</h3>
+                </div>
+                <span style={{
+                  padding: "4px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+                  background: activeBuil.status === "Online" ? "rgba(34,197,94,.15)" : "rgba(239,68,68,.15)",
+                  color: activeBuil.status === "Online" ? "#22c55e" : "#ef4444",
+                  border: `1px solid ${activeBuil.status === "Online" ? "rgba(34,197,94,.3)" : "rgba(239,68,68,.3)"}`,
+                }}>
+                  {activeBuil.status}
+                </span>
               </div>
-              <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-[10px] text-slate-400 font-bold">Online</span>
-                <p className="text-sm font-black mt-1">6 Printers</p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)" }}>
+                  <p style={{ fontSize: 11, color: "#475569", fontWeight: 700 }}>Paper level</p>
+                  <p style={{ fontSize: 18, fontWeight: 900, color: "#fff", marginTop: 4 }}>{activeBuil.paper}</p>
+                  <div style={{ marginTop: 8, height: 4, background: "rgba(255,255,255,.08)", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${paperPct}%`, background: "#22c55e", borderRadius: 4, transition: "width 1s ease" }} />
+                  </div>
+                </div>
+                <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)" }}>
+                  <p style={{ fontSize: 11, color: "#475569", fontWeight: 700 }}>Wait time</p>
+                  <p style={{ fontSize: 18, fontWeight: 900, color: "#60a5fa", marginTop: 4 }}>{activeBuil.wait}</p>
+                </div>
               </div>
-              <div className="p-3 bg-slate-50 rounded-xl">
-                <span className="text-[10px] text-slate-400 font-bold">Queue</span>
-                <p className="text-sm font-black mt-1">4 Active</p>
+
+              <div style={{ padding: 16, borderRadius: 14, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <p style={{ fontSize: 11, color: "#475569", fontWeight: 700 }}>Active queue</p>
+                  <p style={{ fontSize: 16, fontWeight: 900, color: "#fff", marginTop: 4 }}>{activeBuil.queue} orders pending</p>
+                </div>
+                <span style={{ fontSize: 11, color: "#475569" }}>{activeBuil.model}</span>
               </div>
-            </div>
-            <div className="h-24 bg-slate-50 rounded-xl border flex items-center justify-center text-xs font-bold text-slate-400">
-              Interactive charts (ApexCharts/Recharts)
             </div>
           </div>
+        </section>
 
-          {/* Student Dashboard Mock Card (Top/Front) */}
-          <div 
-            className="w-[380px] md:w-[480px] h-[320px] rounded-2xl bg-slate-950 text-white shadow-2xl p-6 flex flex-col gap-4 z-20"
-            style={{
-              transform: "perspective(1000px) rotateY(-15deg) rotateX(10deg) translateZ(80px)"
-            }}
-          >
-            <div className="flex justify-between items-center border-b border-white/10 pb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="text-xs font-black text-slate-400">www.saipraveen.site</span>
+        {/* ── FAQ ────────────────────────────────────────────────────────── */}
+        <section id="faq" style={{ background: "#0d1117", padding: "96px 24px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+                padding: "4px 14px", borderRadius: 20,
+                background: "rgba(37,99,235,.12)", border: "1px solid rgba(37,99,235,.25)", color: "#60a5fa",
+              }}>Questions & Answers</span>
+              <h2 style={{ marginTop: 16, fontSize: "clamp(1.6rem,3.5vw,2.4rem)", fontWeight: 900, color: "#fff" }}>
+                Frequently asked questions
+              </h2>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {faqData.map((faq, i) => (
+                <div key={faq.q} style={{ borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+                  <button
+                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
+                    style={{
+                      width: "100%", padding: "22px 0",
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      background: "none", border: "none", cursor: "pointer",
+                      textAlign: "left",
+                      color: "#fff",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transform: `rotate(${activeFaq === i ? 180 : 0}deg)`,
+                        transition: "transform .2s",
+                        color: "#64748b",
+                      }}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {activeFaq === i && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        <p style={{ paddingBottom: 24, fontSize: 14, color: "#64748b", lineHeight: 1.7 }}>
+                          {faq.a}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer style={{
+          background: "#05070c",
+          borderTop: "1px solid rgba(255,255,255,.06)",
+          padding: "64px 24px 48px",
+          color: "#475569",
+          fontSize: 12,
+        }}>
+          <div style={{
+            maxWidth: 960, margin: "0 auto",
+            display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4,1fr)",
+            gap: 40,
+          }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#fff", fontWeight: 700, fontSize: 14 }}>
+                <Printer size={16} /> CloudPrint
               </div>
-              <span className="text-[10px] font-black uppercase text-cyan-300">Active</span>
+              <p style={{ marginTop: 12, lineHeight: 1.6 }}>
+                Automating campus printing infrastructure with cashless checkouts, secure OTP collections, and dynamic Student discounts.
+              </p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Wallet balance</p>
-              <h3 className="text-3xl font-black mt-1">₹120.00</h3>
-            </div>
-            
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
-                  <UploadCloud className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black truncate">thesis_report_v2.pdf</p>
-                  <p className="text-[10px] text-slate-400">Ready to collect · OTP: 892718</p>
-                </div>
+              <h4 style={{ color: "#fff", fontWeight: 700, textTransform: "uppercase", fontSize: 11, letterSpacing: ".1em", marginBottom: 16 }}>Features</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <a href="#features" style={{ color: "inherit", textDecoration: "none" }}>OTP Safe Printing</a>
+                <a href="#locations" style={{ color: "inherit", textDecoration: "none" }}>Campus Map</a>
               </div>
             </div>
-            
-            <div className="flex justify-between gap-3 mt-2">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex-1">
-                <span className="text-[9px] text-slate-500 font-bold block">SAVED</span>
-                <span className="text-xs font-black text-emerald-400">₹85.00</span>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex-1">
-                <span className="text-[9px] text-slate-500 font-bold block">REWARDS</span>
-                <span className="text-xs font-black text-purple-400">420 pts</span>
+            <div>
+              <h4 style={{ color: "#fff", fontWeight: 700, textTransform: "uppercase", fontSize: 11, letterSpacing: ".1em", marginBottom: 16 }}>Support</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <Link to="/admin-login" style={{ color: "inherit", textDecoration: "none" }}>Admin Login</Link>
+                <span style={{ color: "#2563eb", fontWeight: 700 }}>🌐 {window.location.host}</span>
               </div>
             </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* FAQ Accordion Section */}
-      <section className="bg-white py-24 border-t border-slate-200/80" id="faq">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
-              Questions & Answers
-            </span>
-            <h2 className="mt-4 text-3xl md:text-4xl font-black text-slate-900">
-              Frequently Asked Questions
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {faqData.map((faq, index) => (
-              <div 
-                key={faq.q} 
-                className="border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-white transition-colors"
-              >
-                <button
-                  onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                  className="w-full p-6 flex justify-between items-center text-left font-black text-slate-900 text-base"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${
-                    activeFaq === index ? "rotate-180" : ""
-                  }`} />
-                </button>
-                
-                <AnimatePresence>
-                  {activeFaq === index && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="border-t border-slate-100"
-                    >
-                      <p className="p-6 text-sm font-bold text-slate-500 leading-relaxed bg-white">
-                        {faq.a}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final Call to Action */}
-      <section className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden shadow-2xl text-center">
-          <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
-          <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="max-w-2xl mx-auto relative z-10">
-            <h2 className="text-[54px] text-white font-[800] tracking-tight leading-tight">
-              Ready to Experience Smart Campus Printing?
-            </h2>
-            <p className="mt-6 text-[20px] text-[#E2E8F0] leading-relaxed">
-              Upload your documents, skip the queues, and experience printing made smart. Sign up for a free student wallet and print today.
-            </p>
-
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <Link to="/login" className="px-8 py-4 rounded-xl font-[800] text-white bg-gradient-to-r from-[#2563EB] to-[#3B82F6] hover:-translate-y-[3px] hover:shadow-[0_20px_40px_rgba(37,99,235,0.3)] hover:scale-[1.03] transition-all duration-300 relative">
-                <span className="relative z-10">Sign In & Upload ⚡</span>
-                <div className="absolute inset-0 bg-white/20 blur-md rounded-xl opacity-0 hover:opacity-100 transition-opacity" />
-              </Link>
-              <Link to="/login" className="px-8 py-4 rounded-xl font-[800] bg-white text-[#111827] border border-[#E2E8F0] hover:bg-[#F8FAFC] hover:scale-[1.03] transition-all duration-300 shadow-sm relative">
-                <span className="relative z-10">Sign In with Google</span>
-                <div className="absolute inset-0 bg-white/30 blur-md rounded-xl opacity-0 hover:opacity-100 transition-opacity" />
-              </Link>
+            <div>
+              <h4 style={{ color: "#fff", fontWeight: 700, textTransform: "uppercase", fontSize: 11, letterSpacing: ".1em", marginBottom: 16 }}>CloudPrint</h4>
+              <p style={{ lineHeight: 1.6 }}>
+                Designed for high-performance kiosk TVs, student notebooks, and campus admins.
+              </p>
+              <p style={{ marginTop: 16 }}>
+                © {new Date().getFullYear()} CloudPrint Inc. All rights reserved.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </footer>
 
-      {/* Premium Footer */}
-      <footer className="border-t border-[#E2E8F0] bg-[#F8FAFC] py-16 text-sm">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-10">
-          
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-[#2563EB] text-white shadow-sm">
-                <Printer className="w-4 h-4" />
-              </div>
-              <span className="text-[16px] font-[800] tracking-tight text-[#2563EB]">
-                CloudPrint
-              </span>
-            </div>
-            <p className="text-[#64748B] leading-[1.7]">
-              Automating university printing hubs through dynamic cloud systems, safe collections, and dynamic Student discounts.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">Features</h4>
-            <div className="flex flex-col gap-2.5 font-[500]">
-              <a href="#features" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">OTP Safe Printing</a>
-              <a href="#locations" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Campus Map</a>
-              <Link to="/blocks" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Location Selector</Link>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">Support & Documentation</h4>
-            <div className="flex flex-col gap-2.5 font-[500]">
-              <Link to="/admin-login" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Admin Login</Link>
-              <span className="normal-case font-[700] text-[#2563EB] block">🌐 {window.location.host || 'saipraveen.soye'}</span>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">CloudPrint Ecosystem</h4>
-            <p className="text-[#64748B] leading-[1.7]">
-              Designed for high-performance kiosk TVs, student notebooks, and campus admins.
-            </p>
-            <p className="mt-4 text-[11px] text-[#94A3B8] font-[500]">
-              © {new Date().getFullYear()} CloudPrint Inc. All rights reserved.
-            </p>
-          </div>
-
-        </div>
-      </footer>
-    </div>
+      </div>
 
       {/* Intro Video Overlay */}
       <AnimatePresence>
         {showIntro && (
           <motion.div
-            className="fixed inset-0 z-50 bg-black"
+            style={{ position: "fixed", inset: 0, zIndex: 100, background: "#000" }}
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
@@ -877,51 +1255,44 @@ function Landing() {
               autoPlay
               muted={isMuted}
               playsInline
-              className="w-full h-full object-cover absolute inset-0 z-0"
+              style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
               onEnded={handleSkipIntro}
             >
               <source src={introVideo} type="video/mp4" />
             </video>
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10 pointer-events-none" />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,.6), transparent 30%, rgba(0,0,0,.2))", zIndex: 10 }} />
 
             {/* Tap to Start splash */}
-            <AnimatePresence>
-              {isMuted && (
-                <motion.div
-                  className="absolute inset-0 z-30 flex flex-col items-start justify-end pb-10 pl-10 cursor-pointer"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  onClick={() => {
-                    const v = introVideoRef.current;
-                    if (!v) return;
+            {isMuted && (
+              <div
+                style={{ position: "absolute", inset: 0, zIndex: 30, display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 40, cursor: "pointer" }}
+                onClick={() => {
+                  const v = introVideoRef.current;
+                  if (v) {
                     v.muted = false;
                     v.play().catch(() => {});
                     setIsMuted(false);
-                  }}
-                >
-                  <motion.div
-                    className="flex flex-row items-center gap-3"
-                    animate={{ scale: [1, 1.04, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center shadow-2xl">
-                      <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                      </svg>
-                    </div>
-                    <p className="text-white font-black text-xs tracking-widest uppercase">Tap to Unmute</p>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  }
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Play size={18} fill="white" color="white" />
+                  </div>
+                  <p style={{ color: "#fff", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em" }}>Tap to Unmute</p>
+                </div>
+              </div>
+            )}
 
             {/* Skip button */}
             <button
               onClick={handleSkipIntro}
-              className="absolute bottom-10 right-10 z-40 px-6 py-3 bg-white/10 hover:bg-white/25 text-white font-black text-sm tracking-wider uppercase rounded-full border border-white/25 backdrop-blur-md transition-all shadow-2xl hover:scale-105 active:scale-95"
+              style={{
+                position: "absolute", bottom: 40, right: 40, zIndex: 40,
+                padding: "12px 24px", background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.25)",
+                borderRadius: 20, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer",
+              }}
             >
               Skip Intro →
             </button>
@@ -933,43 +1304,46 @@ function Landing() {
       <AnimatePresence>
         {showDemo && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+            style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,.85)", padding: 16 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowDemo(false)}
           >
             <motion.div
-              className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+              style={{ position: "relative", width: "100%", maxWidth: 896, borderRadius: 20, overflow: "hidden", background: "#0d1117", border: "1px solid rgba(255,255,255,.1)" }}
               initial={{ scale: 0.92, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92, y: 30 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={() => setShowDemo(false)}
-                className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white font-black text-lg flex items-center justify-center border border-white/20 backdrop-blur-sm transition-all"
+                style={{
+                  position: "absolute", top: 12, right: 12, zIndex: 10,
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "rgba(0,0,0,.6)", color: "#fff", border: "1px solid rgba(255,255,255,.2)",
+                  fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                }}
               >
                 ✕
               </button>
 
-              {/* Header bar */}
-              <div className="bg-slate-950 px-5 py-3 flex items-center gap-2 border-b border-white/10">
-                <div className="flex gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-red-500" />
-                  <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <span className="w-3 h-3 rounded-full bg-emerald-500" />
+              <div style={{ background: "#05070c", padding: "12px 20px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid rgba(255,255,255,.1)" }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {["#ef4444","#f59e0b","#22c55e"].map(c => (
+                    <span key={c} style={{ width: 12, height: 12, borderRadius: "50%", background: c, display: "block" }} />
+                  ))}
                 </div>
-                <span className="text-xs font-black text-slate-400 ml-2 uppercase tracking-widest">CloudPrint — How It Works</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: ".1em", marginLeft: 8 }}>CloudPrint — How It Works</span>
               </div>
 
               <video
                 src={demoVideo}
                 autoPlay
                 controls
-                className="w-full aspect-video bg-black"
+                style={{ width: "100%", aspectRatio: "16/9", background: "#000", display: "block" }}
                 onEnded={() => setShowDemo(false)}
               />
             </motion.div>
@@ -979,2577 +1353,3 @@ function Landing() {
     </>
   );
 }
-
-export default Landing;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { useState, useEffect, useRef } from "react";
-// import { Link } from "react-router-dom";
-// import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-// import introVideo from "../assets/intro.mp4";
-// import demoVideo from "../assets/demo.mp4";
-// import inVideo from "../assets/in.mp4";
-// import api from "../services/api";
-// import { 
-//   Printer, 
-//   UploadCloud, 
-//   CreditCard, 
-//   ShieldCheck, 
-//   MapPin, 
-//   Zap, 
-//   FileText, 
-//   Users, 
-//   TrendingUp,
-//   ChevronDown,
-//   Layers,
-//   Sparkles,
-//   Play,
-//   QrCode,
-//   Lock,
-//   Globe,
-//   Database,
-//   CheckCircle2,
-//   AlertTriangle
-// } from "lucide-react";
-
-// // ---------------------------------------------------------------------------
-// // 3D Tilt Interaction — unified Pointer Events power both mouse (desktop
-// // hover) and touch (mobile drag) with a single code path, so every tilt
-// // card is truly cross-device rather than a desktop-only hover trick.
-// // ---------------------------------------------------------------------------
-// function useTilt({ maxTilt = 10, scale = 1.03, baseRotateX = 0, baseRotateY = 0, baseTranslateZ = 0 } = {}) {
-//   const ref = useRef(null);
-//   const idleTransform = `perspective(1200px) rotateX(${baseRotateX}deg) rotateY(${baseRotateY}deg) translateZ(${baseTranslateZ}px) scale(1)`;
-//   const [style, setStyle] = useState({
-//     transform: idleTransform,
-//     transition: "transform 0.7s cubic-bezier(0.23, 1, 0.32, 1)"
-//   });
-
-//   const applyTilt = (clientX, clientY) => {
-//     const el = ref.current;
-//     if (!el) return;
-//     const rect = el.getBoundingClientRect();
-//     const px = (clientX - rect.left) / rect.width;
-//     const py = (clientY - rect.top) / rect.height;
-//     const rotateY = baseRotateY + (px - 0.5) * maxTilt * 2;
-//     const rotateX = baseRotateX - (py - 0.5) * maxTilt * 2;
-//     setStyle({
-//       transform: `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(${baseTranslateZ}px) scale(${scale})`,
-//       transition: "transform 0.08s linear"
-//     });
-//   };
-
-//   const reset = () => {
-//     setStyle({ transform: idleTransform, transition: "transform 0.7s cubic-bezier(0.23, 1, 0.32, 1)" });
-//   };
-
-//   const handlers = {
-//     onPointerMove: (e) => applyTilt(e.clientX, e.clientY),
-//     onPointerDown: (e) => applyTilt(e.clientX, e.clientY),
-//     onPointerLeave: reset,
-//     onPointerUp: reset,
-//     onPointerCancel: reset
-//   };
-
-//   return { ref, style, handlers };
-// }
-
-// function TiltCard({ children, className = "", tiltOptions, style = {}, ...rest }) {
-//   const { ref, style: tiltStyle, handlers } = useTilt(tiltOptions);
-//   return (
-//     <div
-//       ref={ref}
-//       className={className}
-//       style={{ ...style, ...tiltStyle, touchAction: "pan-y", willChange: "transform" }}
-//       {...handlers}
-//       {...rest}
-//     >
-//       {children}
-//     </div>
-//   );
-// }
-
-// // Lightweight scroll-triggered 3D reveal used on section headers and hero
-// // blocks — a subtle rotateX + rise, once per element, respecting a single
-// // shared easing curve so the whole page feels like one coherent motion system.
-// function Reveal3D({ children, className = "", delay = 0 }) {
-//   return (
-//     <motion.div
-//       className={className}
-//       initial={{ opacity: 0, rotateX: -12, y: 28 }}
-//       whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
-//       viewport={{ once: true, amount: 0.35 }}
-//       transition={{ duration: 0.7, delay, ease: [0.23, 1, 0.32, 1] }}
-//       style={{ transformPerspective: 800 }}
-//     >
-//       {children}
-//     </motion.div>
-//   );
-// }
-
-// function Landing() {
-//   const [activeBuilding, setActiveBuilding] = useState("C Block");
-//   const [activeFaq, setActiveFaq] = useState(null);
-//   const [activeFlowStep, setActiveFlowStep] = useState(0);
-//   const [showIntro, setShowIntro] = useState(false);
-//   const [isMuted, setIsMuted] = useState(true);
-//   const introVideoRef = useRef(null);
-//   const [showDemo, setShowDemo] = useState(false);
-//   const statsRef = useRef(null);
-//   const statsStarted = useRef(false);
-//   const demoVideoRef = useRef(null);
-
-//   const [isMobile, setIsMobile] = useState(false);
-//   const [typedTitle1, setTypedTitle1] = useState("");
-//   const [typedTitle2, setTypedTitle2] = useState("");
-
-//   // Hero scroll-parallax — video, ambient glow, and content drift at
-//   // slightly different rates as the hero scrolls out, giving the section
-//   // real depth instead of a single flat plane. Works identically on touch
-//   // scroll and wheel scroll since it's driven by scroll progress, not input type.
-//   const heroRef = useRef(null);
-//   const { scrollYProgress: heroProgress } = useScroll({
-//     target: heroRef,
-//     offset: ["start start", "end start"]
-//   });
-//   const heroVideoY = useTransform(heroProgress, [0, 1], ["0%", "18%"]);
-//   const heroGlowScale = useTransform(heroProgress, [0, 1], [1, 1.35]);
-//   const heroContentY = useTransform(heroProgress, [0, 1], ["0%", "-8%"]);
-
-//   useEffect(() => {
-//     const title1 = "Print Anywhere.";
-//     const title2 = "Collect Instantly.";
-//     let index1 = 0;
-//     let index2 = 0;
-//     let timer1;
-//     let timer2;
-//     let loopTimer;
-
-//     const type1 = () => {
-//       if (index1 <= title1.length) {
-//         setTypedTitle1(title1.substring(0, index1));
-//         index1++;
-//         timer1 = setTimeout(type1, 80);
-//       } else {
-//         type2();
-//       }
-//     };
-
-//     const type2 = () => {
-//       if (index2 <= title2.length) {
-//         setTypedTitle2(title2.substring(0, index2));
-//         index2++;
-//         timer2 = setTimeout(type2, 80);
-//       } else {
-//         // Wait 3 seconds, then clear and restart the loop
-//         loopTimer = setTimeout(() => {
-//           setTypedTitle1("");
-//           setTypedTitle2("");
-//           index1 = 0;
-//           index2 = 0;
-//           type1();
-//         }, 3000);
-//       }
-//     };
-
-//     type1();
-
-//     return () => {
-//       clearTimeout(timer1);
-//       clearTimeout(timer2);
-//       clearTimeout(loopTimer);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-//     checkMobile();
-//     window.addEventListener("resize", checkMobile);
-//     return () => window.removeEventListener("resize", checkMobile);
-//   }, []);
-
-//   // Statistics counters
-//   const [stats, setStats] = useState({
-//     activePrinters: 27,
-//     pagesPrinted: 102540,
-//     studentsServed: 15420,
-//     successRate: 99.8
-//   });
-
-//   useEffect(() => {
-//     const introShown = sessionStorage.getItem("landingIntroShown");
-//     if (!introShown) {
-//       setShowIntro(true);
-//     }
-//   }, []);
-
-//   const handleSkipIntro = () => {
-//     sessionStorage.setItem("landingIntroShown", "true");
-//     setShowIntro(false);
-//   };
-
-//   // Load and refresh stats from database every 5 seconds
-//   useEffect(() => {
-//     const fetchStats = () => {
-//       const apiUrl = import.meta.env.VITE_API_URL || "https://printer-backend-34ih.onrender.com";
-//       fetch(`${apiUrl}/api/public/stats`)
-//         .then(res => res.json())
-//         .then(data => {
-//           setStats({
-//             activePrinters: data.activePrinters ?? 27,
-//             pagesPrinted: data.pagesPrinted ?? 102540,
-//             studentsServed: data.studentsServed ?? 15420,
-//             successRate: data.successRate ?? 99.8
-//           });
-//         })
-//         .catch(() => {
-//           // Fallback if backend is offline
-//           setStats({
-//             activePrinters: 27,
-//             pagesPrinted: 102540,
-//             studentsServed: 15420,
-//             successRate: 99.8
-//           });
-//         });
-//     };
-
-//     fetchStats();
-//     const interval = setInterval(fetchStats, 5000);
-//     return () => clearInterval(interval);
-//   }, []);
-
-//   // Auto-play demo video with audio when #how-it-works scrolls into view
-//   useEffect(() => {
-//     const video = demoVideoRef.current;
-//     if (!video) return;
-//     const observer = new IntersectionObserver(
-//       (entries) => {
-//         if (entries[0].isIntersecting) {
-//           video.play().catch(() => {});
-//         } else {
-//           video.pause();
-//         }
-//       },
-//       { threshold: 0.4 }
-//     );
-//     observer.observe(video);
-//     return () => observer.disconnect();
-//   }, []);
-
-//   // Workflow auto-stepping effect for the 3D ecosystem column
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setActiveFlowStep((prev) => (prev + 1) % 6);
-//     }, 2500);
-//     return () => clearInterval(timer);
-//   }, []);
-
-//   const faqData = [
-//     {
-//       q: "How does CloudPrint work?",
-//       a: "Simply upload your PDF to the web portal, customize your print options (such as color, paper size, and page range), make a cashless payment, and print. You will receive a unique OTP and QR code which you can use to instantly release the print job at your selected campus printer."
-//     },
-//     {
-//       q: "How secure is QR printing?",
-//       a: "CloudPrint utilizes point-to-point security. Your documents are stored encrypted on our server and are only decrypted when you walk up to the physical printer and scan your QR code or enter your 6-digit OTP. Your documents are automatically wiped from our cache after printing."
-//     },
-//     {
-//       q: "Can I pay using my wallet?",
-//       a: "Yes! Students can load money into their secure prepaid digital wallet using UPI, card, or net banking via Razorpay. Using the wallet allows for instantaneous checkouts and dynamic Happy Hours/Thesis discounts."
-//     },
-//     {
-//       q: "Can I print from my mobile?",
-//       a: "Absolutely. CloudPrint is a progressive web application. You don't need to install any app. Just open www.saipraveen.site on your iPhone or Android browser, upload your file, and pay."
-//     }
-//   ];
-
-//   const [buildingData, setBuildingData] = useState({
-//     "C Block": {
-//       status: "Online",
-//       statusColor: "text-emerald-500 bg-emerald-50 border-emerald-100",
-//       paper: "85%",
-//       wait: "2 mins",
-//       queue: 4,
-//       model: "Brother HL-L2320D"
-//     }
-//   });
-
-//   // Fetch real campus data
-//   useEffect(() => {
-//     let isMounted = true;
-//     const fetchBuildingData = async () => {
-//       try {
-//         const [blocksRes, printersRes] = await Promise.all([
-//           api.get("/blocks/all").catch(() => ({ data: [] })),
-//           api.get("/printer/all").catch(() => ({ data: [] }))
-//         ]);
-        
-//         const blocks = blocksRes.data || [];
-//         const printers = printersRes.data || [];
-        
-//         if (blocks.length === 0) return; // Keep fallback if backend fails
-        
-//         const newBuildingData = {};
-        
-//         await Promise.all(blocks.map(async (b) => {
-//           const printer = printers.find(p => p.blockLocation === b.name);
-//           let queueCount = 0;
-//           try {
-//              const queueRes = await api.get("/queue/pending", { params: { blockLocation: b.name } });
-//              queueCount = (queueRes.data || []).length;
-//           } catch (e) {
-//              // suppress error
-//           }
-          
-//           let status = "Offline";
-//           let statusColor = "text-rose-500 bg-rose-50 border-rose-100";
-//           if (printer) {
-//              if (printer.active) {
-//                 status = printer.maintenance ? "Busy" : "Online";
-//                 statusColor = printer.maintenance 
-//                   ? "text-amber-500 bg-amber-50 border-amber-100" 
-//                   : "text-emerald-500 bg-emerald-50 border-emerald-100";
-//              }
-//           }
-          
-//           let paperPercent = printer && printer.paperCount !== undefined ? Math.min(100, Math.round((printer.paperCount / 500) * 100)) : 0;
-          
-//           newBuildingData[b.name] = {
-//             status,
-//             statusColor,
-//             paper: `${paperPercent}%${paperPercent < 20 ? " (Low Paper)" : ""}`,
-//             wait: queueCount > 0 ? `${queueCount * 2} mins` : "0 mins",
-//             queue: queueCount,
-//             model: printer && printer.printerName ? printer.printerName : "Standard Printer"
-//           };
-//         }));
-        
-//         if (isMounted && Object.keys(newBuildingData).length > 0) {
-//           setBuildingData(newBuildingData);
-//           setActiveBuilding(current => {
-//              if (!newBuildingData[current]) return Object.keys(newBuildingData)[0];
-//              return current;
-//           });
-//         }
-//       } catch (err) {
-//         console.error("Error fetching building data:", err);
-//       }
-//     };
-    
-//     fetchBuildingData();
-//     const interval = setInterval(fetchBuildingData, 10000);
-//     return () => {
-//       isMounted = false;
-//       clearInterval(interval);
-//     };
-//   }, []);
-
-//   const flowSteps = [
-//     { name: "Student Laptop", color: "from-blue-500 to-indigo-500" },
-//     { name: "Upload PDF", color: "from-cyan-500 to-blue-500" },
-//     { name: "Cloud Server", color: "from-purple-500 to-indigo-500" },
-//     { name: "Payment Gateway", color: "from-amber-500 to-emerald-500" },
-//     { name: "Campus Printer", color: "from-purple-500 to-pink-500" },
-//     { name: "QR Collection", color: "from-emerald-500 to-teal-500" }
-//   ];
-
-//   return (
-//     <>
-//     <div className="min-h-screen bg-slate-950 text-white dot-grid relative overflow-hidden font-sans">
-//       {/* Inline SVG Clip Path definition */}
-//       <svg className="h-0 w-0 absolute pointer-events-none" aria-hidden="true">
-//         <defs>
-//           <clipPath id="hero-clip" clipPathUnits="objectBoundingBox">
-//             <path d="M 0.38,0 Q 0.33,0.5 0.38,1 L 1.0,1 L 1.0,0 Z" />
-//           </clipPath>
-//         </defs>
-//       </svg>
-
-//       {/* Subtle Animated Background Mesh */}
-//       <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
-//       <div className="absolute bottom-10 left-0 w-[40rem] h-[40rem] bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-//       {/* Floating Transparent Navbar */}
-//       <header className="sticky top-0 z-50 w-full h-20 transition-all bg-transparent flex items-center" style={{ width: '100vw', left: 0, right: 0 }}>
-//         <nav className="w-full h-full px-[40px] flex items-center justify-between">
-//           <div className="flex items-center gap-2">
-//             <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-//               <Printer className="w-5 h-5" />
-//             </div>
-//             <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-//               CloudPrint
-//             </span>
-//           </div>
-
-//           <div className="hidden md:flex items-center gap-16 text-sm font-black text-slate-400">
-//             <a href="#features" className="hover:text-white transition-colors">Features</a>
-//             <a href="#locations" className="hover:text-white transition-colors">Campus Locations</a>
-//             <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
-//             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
-//           </div>
-
-//           <div className="flex items-center">
-//             <Link to="/login" className="btn success min-h-0 py-2.5 px-5 rounded-xl font-black text-sm shadow-md shadow-blue-500/10">
-//               ⚡ Upload Document
-//             </Link>
-//           </div>
-//         </nav>
-//       </header>
-
-//       {/* Hero Section */}
-//       <section className="w-full max-w-none px-0 pt-0 pb-24 relative z-10 -mt-20">
-//         <motion.div 
-//           ref={heroRef}
-//           className="relative w-full rounded-none min-h-[95vh] pt-28 pb-16 md:pb-24 bg-slate-950 border-b border-white/10 overflow-hidden flex items-center"
-//           initial={{ y: 0 }}
-//           animate={{ 
-//             y: [0, -4, 0],
-//           }}
-//           transition={{ 
-//             duration: 6,
-//             repeat: Infinity,
-//             ease: "easeInOut"
-//           }}
-//           style={{ transition: "all 0.3s ease" }}        >
-//           {/* Subtle Blue Ambient Glow Behind Arc — scales up with scroll depth */}
-//           <motion.div
-//             className="absolute top-1/2 left-[40%] -translate-y-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none z-0"
-//             style={{ scale: heroGlowScale }}
-//           />
-
-//           {/* Background Video Showcase: occupies full hero area, clipped exactly to the curve on desktop.
-//               Drifts vertically on scroll for parallax depth. */}
-//           <motion.div 
-//             className="absolute inset-0 z-0 bg-transparent"
-//             style={{
-//               y: heroVideoY,
-//               ...(isMobile ? {} : {
-//                 clipPath: "url(#hero-clip)",
-//                 WebkitClipPath: "url(#hero-clip)"
-//               })
-//             }}
-//           >
-//             <video 
-//               src={inVideo}
-//               autoPlay 
-//               muted 
-//               loop 
-//               playsInline
-//               preload="auto"
-//               controls={false}
-//               controlsList="nodownload nofullscreen"
-//               disablePictureInPicture
-//               draggable="false"
-//               className={`w-full h-full object-cover object-center pointer-events-none select-none transition-all duration-300 ${isMobile ? 'blur-[4px] opacity-35' : 'opacity-100'}`}
-//             />
-//             {/* Soft feather overlay gradient where the arc meets the video (only on desktop) */}
-//             <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none hidden lg:block" />
-//           </motion.div>
-
-//           {/* Massive Curved Glowing Arc Divider Stroke Overlay (rendered directly on 100% width, hidden on mobile) */}
-//           <svg className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none">
-//             {/* 2px glowing blue stroke */}
-//             <path d="M 38,0 Q 33,50 38,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
-//           </svg>
-
-//           {/* Foreground Content Wrapper — drifts opposite the video for depth */}
-//           <motion.div
-//             className="relative z-10 w-full px-8 md:px-12 lg:px-16 flex flex-col lg:flex-row justify-between items-center min-h-[90vh]"
-//             style={{ y: heroContentY }}
-//           >
-//             {/* Left Column: 40% width overlay with max-width 560px, vertically centered */}
-//             <div className="w-full lg:w-[40%] max-w-[560px] text-white text-left z-20 my-auto">
-//               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-blue-400 bg-blue-950/80 border border-blue-800/60">
-//                 <Sparkles className="w-3.5 h-3.5" /> Next-Gen Kiosk Printing
-//               </span>
-              
-//               <h1 className="mt-6 text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-white">
-//                 {typedTitle1}
-//                 {typedTitle1 && <br />}
-//                 <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-//                   {typedTitle2}
-//                 </span>
-//               </h1>
-              
-//               <p className="mt-6 text-sm md:text-base font-bold text-slate-300 leading-relaxed max-w-xl">
-//                 Upload your PDF documents from anywhere on campus, pay securely online, and collect your prints instantly using secure OTP codes or QR verification from any CloudPrint-enabled printer.
-//               </p>
-
-//               <div className="mt-8 flex flex-wrap gap-3">
-//                 <Link to="/login" className="btn success px-6 py-3.5 rounded-xl font-black text-sm shadow-lg shadow-emerald-500/20">
-//                   ⚡ Upload Document
-//                 </Link>
-//                 <button
-//                   onClick={() => setShowDemo(true)}
-//                   className="btn secondary !bg-white/10 !text-white !border-white/10 hover:!bg-white/20 px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-1.5"
-//                 >
-//                   <Play className="w-4 h-4 fill-white" /> Watch Demo
-//                 </button>
-//               </div>
-
-//               {/* Mobile-only floating 3D card — gives touch users a tactile,
-//                   draggable tilt moment since the full clipped video/dashboard
-//                   scene is desktop-only real estate. */}
-//               <div className="mt-8 lg:hidden">
-//                 <TiltCard
-//                   className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3 shadow-2xl"
-//                   tiltOptions={{ maxTilt: 12, scale: 1.03 }}
-//                 >
-//                   <div className="h-11 w-11 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
-//                     <QrCode className="w-5 h-5 text-white" />
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <p className="text-xs font-black text-white truncate">Ready to collect</p>
-//                     <p className="text-[10px] text-slate-400 font-bold">Drag me — then scan your QR at any kiosk</p>
-//                   </div>
-//                 </TiltCard>
-//               </div>
-
-//               {/* Left-Side Trust Section */}
-//               <div className="mt-10 pt-8 border-t border-white/10 grid grid-cols-2 gap-4 text-slate-400">
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">🖨️</span>
-//                   <span>{stats.activePrinters} Active Printers</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">📄</span>
-//                   <span>{stats.pagesPrinted.toLocaleString()} Pages Printed</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">👨‍🎓</span>
-//                   <span>{stats.studentsServed.toLocaleString()} Students Served</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">⚡</span>
-//                   <span>{stats.successRate}% Success Rate</span>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Right Side: Empty div placeholder since video occupies full background of the right side */}
-//             <div className="hidden lg:block lg:w-[50%] h-[90vh] pointer-events-none relative" />
-//           </motion.div>        </motion.div>
-//       </section>
-
-//       {/* Live Statistics Section */}
-//       <section className="bg-slate-900 text-white py-16 border-y border-slate-800" ref={statsRef}>
-//         <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-white">{stats.pagesPrinted.toLocaleString()}+</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Pages Printed</p>
-//           </div>
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-emerald-400">{stats.activePrinters}</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Active Printers</p>
-//           </div>
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-blue-400">{stats.successRate}%</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Success Rate</p>
-//           </div>
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-purple-400">{stats.studentsServed.toLocaleString()}+</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Students Served</p>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* How It Works — Demo Video Section */}
-//       <section id="how-it-works" className="bg-slate-950 py-24">
-//         <div className="max-w-6xl mx-auto px-6">
-//           <div className="text-center max-w-2xl mx-auto mb-12">
-//             <span className="text-xs font-black uppercase tracking-widest text-blue-400 bg-blue-950 border border-blue-800 px-3 py-1 rounded-full">
-//               Live Demo
-//             </span>
-//             <h2 className="mt-4 text-3xl md:text-4xl font-black text-white">
-//               See CloudPrint in Action
-//             </h2>
-//             <p className="mt-4 text-sm font-bold text-slate-400">
-//               Upload, pay, and collect prints in seconds — watch the full workflow.
-//             </p>
-//           </div>
-
-//           {/* Video player */}
-//           <div className="relative rounded-[20px] overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/10">
-//             {/* macOS-style bar */}
-//             <div className="bg-slate-900 px-5 py-3 flex items-center gap-2 border-b border-white/10">
-//               <div className="flex gap-1.5">
-//                 <span className="w-3 h-3 rounded-full bg-red-500" />
-//                 <span className="w-3 h-3 rounded-full bg-yellow-400" />
-//                 <span className="w-3 h-3 rounded-full bg-emerald-500" />
-//               </div>
-//               <span className="text-xs font-black text-slate-400 ml-2 uppercase tracking-widest">CloudPrint — How It Works</span>
-//             </div>
-//             <video
-//               ref={demoVideoRef}
-//               src={demoVideo}
-//               autoPlay
-//               muted
-//               controls
-//               playsInline
-//               loop
-//               className="w-full aspect-video bg-black"
-//             />
-//           </div>
-
-//           {/* How It Works Steps Grid */}
-//           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-//             {[
-//               { title: "Upload PDF", desc: "Select and process files", icon: "📄" },
-//               { title: "Choose Printer", desc: "Pick nearest pickup counter", icon: "🖨️" },
-//               { title: "Verify OTP", desc: "Input code at counter", icon: "🔑" },
-//               { title: "Collect Print", desc: "Grab pages from output tray", icon: "⚡" }
-//             ].map((step, idx) => (
-//               <Reveal3D key={idx} delay={idx * 0.08}>
-//                 <TiltCard
-//                   className="p-6 bg-slate-900/40 border border-white/10 rounded-2xl relative text-left h-full"
-//                   tiltOptions={{ maxTilt: 7, scale: 1.02 }}
-//                 >
-//                   <span className="absolute top-4 right-4 text-[10px] font-black bg-blue-500/20 text-blue-400 w-5 h-5 rounded-full flex items-center justify-center border border-blue-500/30">
-//                     {idx + 1}
-//                   </span>
-//                   <div className="text-2xl mb-3">{step.icon}</div>
-//                   <h4 className="text-base font-black text-white">{step.title}</h4>
-//                   <p className="text-xs text-slate-400 mt-2 font-bold leading-relaxed">{step.desc}</p>
-//                 </TiltCard>
-//               </Reveal3D>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Trust Feature Cards */}
-//       <section className="max-w-6xl mx-auto px-6 py-24" id="features">
-//         <Reveal3D className="text-center max-w-2xl mx-auto mb-16">
-//           <span className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm bg-[rgba(59,130,246,0.12)] border border-[rgba(96,165,250,0.35)] text-[#60A5FA]">
-//             Security & Trust
-//           </span>
-//           <h2 className="mt-4 text-3xl md:text-4xl text-white font-[800] tracking-[-0.03em] [text-shadow:0_0_24px_rgba(59,130,246,0.18)]">
-//             Trusted Across Campus
-//           </h2>
-//         </Reveal3D>
-
-//         <div className="grid md:grid-cols-3 gap-8">
-//           <TiltCard
-//             className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex items-start gap-4"
-//             tiltOptions={{ maxTilt: 9, scale: 1.03 }}
-//           >
-//             <div className="p-3 bg-[#ECFDF5] rounded-2xl shadow-sm shadow-[#22C55E]/10 shrink-0">
-//               <Lock className="w-5 h-5 text-[#22C55E]" />
-//             </div>
-//             <div>
-//               <h3 className="font-[700] text-[20px] text-[#111827]">Secure OTP Printing</h3>
-//               <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">No unauthorized prints. Documents release only when you type in your OTP.</p>
-//             </div>
-//           </TiltCard>
-
-//           <TiltCard
-//             className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex items-start gap-4"
-//             tiltOptions={{ maxTilt: 9, scale: 1.03 }}
-//           >
-//             <div className="p-3 bg-[#EFF6FF] rounded-2xl shadow-sm shadow-[#2563EB]/10 shrink-0">
-//               <QrCode className="w-5 h-5 text-[#2563EB]" />
-//             </div>
-//             <div>
-//               <h3 className="font-[700] text-[20px] text-[#111827]">QR Code Release</h3>
-//               <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">Simply scan the QR sticker on the kiosk tray to immediately output pages.</p>
-//             </div>
-//           </TiltCard>
-
-//           <TiltCard
-//             className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex items-start gap-4"
-//             tiltOptions={{ maxTilt: 9, scale: 1.03 }}
-//           >
-//             <div className="p-3 bg-[#F5F3FF] rounded-2xl shadow-sm shadow-[#8B5CF6]/10 shrink-0">
-//               <CreditCard className="w-5 h-5 text-[#8B5CF6]" />
-//             </div>
-//             <div>
-//               <h3 className="font-[700] text-[20px] text-[#111827]">Razorpay Payments</h3>
-//               <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">Fast checkouts using UPI, Credit Cards, or Net banking gateways.</p>
-//             </div>
-//           </TiltCard>
-//         </div>
-//       </section>
-
-//       {/* Interactive Live Campus Map Section */}
-//       <section className="bg-slate-50 border-y border-slate-200/60 py-24" id="locations">
-//         <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
-//           <Reveal3D>
-//             <span className="text-xs font-[800] uppercase tracking-widest text-[#9333EA] bg-[#F3E8FF] border border-[#D8B4FE] px-3 py-1 rounded-full">
-//               Interactive Campus Map
-//             </span>
-//             <h2 className="mt-4 text-[48px] font-[800] text-[#111827] leading-tight">
-//               Find Active Campus Printers
-//             </h2>
-//             <p className="mt-4 text-[#475569] leading-[1.8]">
-//               Click on a building in the selector grid to check real-time queue states, hardware status, and paper load levels.
-//             </p>
-
-//             {/* Building Grid Selector */}
-//             <div className="mt-8 grid grid-cols-2 gap-3">
-//               {Object.keys(buildingData).map((name) => (
-//                 <button
-//                   key={name}
-//                   onClick={() => setActiveBuilding(name)}
-//                   className={`p-4 rounded-2xl border text-left transition-[0.3s] ${
-//                     activeBuilding === name
-//                       ? "bg-[#EFF6FF] border-[#2563EB] border-[2px] text-[#1D4ED8] shadow-[0_0_30px_rgba(37,99,235,0.18)] scale-[1.02] font-[800]"
-//                       : "bg-[#FFFFFF] border-[#E2E8F0] text-[#334155] hover:border-[#2563EB] hover:shadow-[0_12px_30px_rgba(37,99,235,0.12)] font-[700]"
-//                   }`}
-//                 >
-//                   <div className="flex items-center justify-between">
-//                     <span className="text-sm">{name}</span>
-//                     <span className={`w-2 h-2 rounded-full ${
-//                       buildingData[name].status === "Online"
-//                         ? "bg-[#22C55E] animate-pulse"
-//                         : buildingData[name].status === "Busy"
-//                         ? "bg-[#F59E0B]"
-//                         : "bg-[#EF4444]"
-//                     }`} />
-//                   </div>
-//                 </button>
-//               ))}
-//             </div>
-//           </Reveal3D>
-
-//           {/* Building Live Status Panel — tiltable on both mouse and touch */}
-//           <Reveal3D delay={0.1}>
-//             <TiltCard
-//               className="p-8 rounded-[24px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] flex flex-col gap-6 relative overflow-hidden"
-//               tiltOptions={{ maxTilt: 6, scale: 1.015 }}
-//             >
-//               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl" />
-              
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Selected Hub</span>
-//                   <h3 className="text-2xl font-[800] text-[#111827] mt-1">{activeBuilding}</h3>
-//                 </div>
-//                 {buildingData[activeBuilding].status === "Online" ? (
-//                   <span className="px-3 py-1 rounded-full text-xs font-[800] uppercase bg-[#DCFCE7] text-[#16A34A] animate-[float_3s_ease-in-out_infinite]">
-//                     {buildingData[activeBuilding].status}
-//                   </span>
-//                 ) : (
-//                   <span className={`px-3 py-1 rounded-full text-xs font-[800] uppercase border ${buildingData[activeBuilding].statusColor}`}>
-//                     {buildingData[activeBuilding].status}
-//                   </span>
-//                 )}
-//               </div>
-
-//               <div className="grid grid-cols-2 gap-4 mt-2">
-//                 <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-//                   <div className="flex justify-between items-center mb-1">
-//                     <p className="text-xs font-bold text-[#64748B]">Paper Level</p>
-//                     <p className="text-lg font-[700] text-[#111827]">{buildingData[activeBuilding].paper}</p>
-//                   </div>
-//                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2">
-//                     <div 
-//                       className="h-full bg-gradient-to-r from-[#22C55E] to-[#16A34A] transition-all duration-1000 ease-out"
-//                       style={{ width: buildingData[activeBuilding].paper }}
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-//                   <p className="text-xs font-bold text-[#64748B]">Estimated Wait</p>
-//                   <p className="text-lg font-[700] text-[#2563EB] mt-1">{buildingData[activeBuilding].wait}</p>
-//                 </div>
-//               </div>
-
-//               <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex justify-between items-center">
-//                 <div>
-//                   <p className="text-xs font-bold text-[#64748B]">Active Queue</p>
-//                   <p className="text-lg font-[700] text-[#111827] mt-1">{buildingData[activeBuilding].queue} orders pending</p>
-//                 </div>
-//                 <span className="text-xs font-bold text-[#64748B]">Model: {buildingData[activeBuilding].model}</span>
-//               </div>
-//             </TiltCard>
-//           </Reveal3D>
-//         </div>
-//       </section>
-
-//       {/* Live Dashboard Perspective Previews */}
-//       <section className="max-w-6xl mx-auto px-6 py-24">
-//         <Reveal3D className="text-center max-w-2xl mx-auto mb-16">
-//           <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
-//             Modern SaaS Interfaces
-//           </span>
-//           <h2 className="mt-4 text-3xl md:text-4xl font-black text-slate-900">
-//             Interactive Dashboard Ecosystems
-//           </h2>
-//         </Reveal3D>
-
-//         {/* Perspective stacked cards — both mockups are now tiltable with
-//             pointer/touch drag, and the admin card is no longer hidden on
-//             mobile: it's simply resized so the stack still reads as 3D depth
-//             on small screens instead of collapsing to a single flat card. */}
-//         <Reveal3D>
-//           <div className="relative h-[420px] sm:h-[480px] w-full flex items-center justify-center overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-tr from-slate-100 to-white shadow-inner p-4 sm:p-8">
-            
-//             {/* Admin Dashboard Mock Card */}
-//             <TiltCard
-//               className="absolute left-2 sm:left-10 md:left-24 w-[220px] sm:w-[360px] md:w-[460px] h-[190px] sm:h-[300px] rounded-2xl bg-white border border-slate-200 shadow-2xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 opacity-90"
-//               tiltOptions={{ maxTilt: 6, scale: 1.015, baseRotateY: 15, baseRotateX: 8, baseTranslateZ: 50 }}
-//             >
-//               <div className="flex justify-between items-center border-b pb-3">
-//                 <span className="text-[10px] sm:text-xs font-black text-slate-500">SaaS Admin Control</span>
-//                 <span className="h-2 w-2 rounded-full bg-blue-600" />
-//               </div>
-//               <div className="grid grid-cols-3 gap-2 sm:gap-3">
-//                 <div className="p-2 sm:p-3 bg-slate-50 rounded-xl">
-//                   <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold">Revenue</span>
-//                   <p className="text-xs sm:text-sm font-black mt-1">₹4,290.00</p>
-//                 </div>
-//                 <div className="p-2 sm:p-3 bg-slate-50 rounded-xl">
-//                   <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold">Online</span>
-//                   <p className="text-xs sm:text-sm font-black mt-1">6 Printers</p>
-//                 </div>
-//                 <div className="p-2 sm:p-3 bg-slate-50 rounded-xl">
-//                   <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold">Queue</span>
-//                   <p className="text-xs sm:text-sm font-black mt-1">4 Active</p>
-//                 </div>
-//               </div>
-//               <div className="hidden sm:flex h-24 bg-slate-50 rounded-xl border items-center justify-center text-xs font-bold text-slate-400">
-//                 Interactive charts (ApexCharts/Recharts)
-//               </div>
-//             </TiltCard>
-
-//             {/* Student Dashboard Mock Card (Top/Front) */}
-//             <TiltCard
-//               className="w-[260px] sm:w-[380px] md:w-[480px] h-[240px] sm:h-[320px] rounded-2xl bg-slate-950 text-white shadow-2xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 z-20"
-//               tiltOptions={{ maxTilt: 7, scale: 1.02, baseRotateY: -15, baseRotateX: 10, baseTranslateZ: 80 }}
-//             >
-//               <div className="flex justify-between items-center border-b border-white/10 pb-3">
-//                 <div className="flex items-center gap-1.5">
-//                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
-//                   <span className="text-[10px] sm:text-xs font-black text-slate-400">www.saipraveen.site</span>
-//                 </div>
-//                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-cyan-300">Active</span>
-//               </div>
-//               <div>
-//                 <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500">Wallet balance</p>
-//                 <h3 className="text-2xl sm:text-3xl font-black mt-1">₹120.00</h3>
-//               </div>
-              
-//               <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10">
-//                 <div className="flex items-center gap-3">
-//                   <div className="h-9 w-9 sm:h-10 sm:w-10 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
-//                     <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <p className="text-[10px] sm:text-xs font-black truncate">thesis_report_v2.pdf</p>
-//                     <p className="text-[9px] sm:text-[10px] text-slate-400">Ready to collect · OTP: 892718</p>
-//                   </div>
-//                 </div>
-//               </div>
-              
-//               <div className="flex justify-between gap-3 mt-2">
-//                 <div className="p-2 sm:p-3 bg-white/5 rounded-xl border border-white/5 flex-1">
-//                   <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">SAVED</span>
-//                   <span className="text-[11px] sm:text-xs font-black text-emerald-400">₹85.00</span>
-//                 </div>
-//                 <div className="p-2 sm:p-3 bg-white/5 rounded-xl border border-white/5 flex-1">
-//                   <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">REWARDS</span>
-//                   <span className="text-[11px] sm:text-xs font-black text-purple-400">420 pts</span>
-//                 </div>
-//               </div>
-//             </TiltCard>
-
-//           </div>
-//         </Reveal3D>
-//       </section>
-
-//       {/* FAQ Accordion Section */}
-//       <section className="bg-white py-24 border-t border-slate-200/80" id="faq">
-//         <div className="max-w-4xl mx-auto px-6">
-//           <Reveal3D className="text-center max-w-2xl mx-auto mb-16">
-//             <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
-//               Questions & Answers
-//             </span>
-//             <h2 className="mt-4 text-3xl md:text-4xl font-black text-slate-900">
-//               Frequently Asked Questions
-//             </h2>
-//           </Reveal3D>
-
-//           <div className="flex flex-col gap-4">
-//             {faqData.map((faq, index) => (
-//               <div 
-//                 key={faq.q} 
-//                 className="border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-white transition-colors"
-//               >
-//                 <button
-//                   onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-//                   className="w-full p-6 flex justify-between items-center text-left font-black text-slate-900 text-base"
-//                 >
-//                   <span>{faq.q}</span>
-//                   <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${
-//                     activeFaq === index ? "rotate-180" : ""
-//                   }`} />
-//                 </button>
-                
-//                 <AnimatePresence>
-//                   {activeFaq === index && (
-//                     <motion.div
-//                       initial={{ height: 0, opacity: 0 }}
-//                       animate={{ height: "auto", opacity: 1 }}
-//                       exit={{ height: 0, opacity: 0 }}
-//                       transition={{ duration: 0.2 }}
-//                       className="border-t border-slate-100"
-//                     >
-//                       <p className="p-6 text-sm font-bold text-slate-500 leading-relaxed bg-white">
-//                         {faq.a}
-//                       </p>
-//                     </motion.div>
-//                   )}
-//                 </AnimatePresence>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Final Call to Action */}
-//       <section className="max-w-6xl mx-auto px-6 pb-24">
-//         <Reveal3D className="p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden shadow-2xl text-center">
-//           <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
-//           <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-//           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-
-//           <div className="max-w-2xl mx-auto relative z-10">
-//             <h2 className="text-[54px] text-white font-[800] tracking-tight leading-tight">
-//               Ready to Experience Smart Campus Printing?
-//             </h2>
-//             <p className="mt-6 text-[20px] text-[#E2E8F0] leading-relaxed">
-//               Upload your documents, skip the queues, and experience printing made smart. Sign up for a free student wallet and print today.
-//             </p>
-
-//             <div className="mt-10 flex flex-wrap justify-center gap-4">
-//               <Link to="/login" className="px-8 py-4 rounded-xl font-[800] text-white bg-gradient-to-r from-[#2563EB] to-[#3B82F6] hover:-translate-y-[3px] hover:shadow-[0_20px_40px_rgba(37,99,235,0.3)] hover:scale-[1.03] transition-all duration-300 relative">
-//                 <span className="relative z-10">Sign In & Upload ⚡</span>
-//                 <div className="absolute inset-0 bg-white/20 blur-md rounded-xl opacity-0 hover:opacity-100 transition-opacity" />
-//               </Link>
-//               <Link to="/login" className="px-8 py-4 rounded-xl font-[800] bg-white text-[#111827] border border-[#E2E8F0] hover:bg-[#F8FAFC] hover:scale-[1.03] transition-all duration-300 shadow-sm relative">
-//                 <span className="relative z-10">Sign In with Google</span>
-//                 <div className="absolute inset-0 bg-white/30 blur-md rounded-xl opacity-0 hover:opacity-100 transition-opacity" />
-//               </Link>
-//             </div>
-//           </div>
-//         </Reveal3D>
-//       </section>
-
-//       {/* Premium Footer */}
-//       <footer className="border-t border-[#E2E8F0] bg-[#F8FAFC] py-16 text-sm">
-//         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-10">
-          
-//           <div className="flex flex-col gap-4">
-//             <div className="flex items-center gap-2">
-//               <div className="p-1.5 rounded-lg bg-[#2563EB] text-white shadow-sm">
-//                 <Printer className="w-4 h-4" />
-//               </div>
-//               <span className="text-[16px] font-[800] tracking-tight text-[#2563EB]">
-//                 CloudPrint
-//               </span>
-//             </div>
-//             <p className="text-[#64748B] leading-[1.7]">
-//               Automating university printing hubs through dynamic cloud systems, safe collections, and dynamic Student discounts.
-//             </p>
-//           </div>
-
-//           <div>
-//             <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">Features</h4>
-//             <div className="flex flex-col gap-2.5 font-[500]">
-//               <a href="#features" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">OTP Safe Printing</a>
-//               <a href="#locations" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Campus Map</a>
-//               <Link to="/blocks" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Location Selector</Link>
-//             </div>
-//           </div>
-
-//           <div>
-//             <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">Support & Documentation</h4>
-//             <div className="flex flex-col gap-2.5 font-[500]">
-//               <Link to="/admin-login" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Admin Login</Link>
-//               <span className="normal-case font-[700] text-[#2563EB] block">🌐 {window.location.host || 'saipraveen.soye'}</span>
-//             </div>
-//           </div>
-
-//           <div>
-//             <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">CloudPrint Ecosystem</h4>
-//             <p className="text-[#64748B] leading-[1.7]">
-//               Designed for high-performance kiosk TVs, student notebooks, and campus admins.
-//             </p>
-//             <p className="mt-4 text-[11px] text-[#94A3B8] font-[500]">
-//               © {new Date().getFullYear()} CloudPrint Inc. All rights reserved.
-//             </p>
-//           </div>
-
-//         </div>
-//       </footer>
-//     </div>
-
-//       {/* Intro Video Overlay */}
-//       <AnimatePresence>
-//         {showIntro && (
-//           <motion.div
-//             className="fixed inset-0 z-50 bg-black"
-//             initial={{ opacity: 1 }}
-//             exit={{ opacity: 0 }}
-//             transition={{ duration: 0.6 }}
-//           >
-//             <video
-//               ref={introVideoRef}
-//               autoPlay
-//               muted={isMuted}
-//               playsInline
-//               className="w-full h-full object-cover absolute inset-0 z-0"
-//               onEnded={handleSkipIntro}
-//             >
-//               <source src={introVideo} type="video/mp4" />
-//             </video>
-
-//             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10 pointer-events-none" />
-
-//             {/* Tap to Start splash */}
-//             <AnimatePresence>
-//               {isMuted && (
-//                 <motion.div
-//                   className="absolute inset-0 z-30 flex flex-col items-start justify-end pb-10 pl-10 cursor-pointer"
-//                   initial={{ opacity: 0 }}
-//                   animate={{ opacity: 1 }}
-//                   exit={{ opacity: 0 }}
-//                   transition={{ duration: 0.3 }}
-//                   onClick={() => {
-//                     const v = introVideoRef.current;
-//                     if (!v) return;
-//                     v.muted = false;
-//                     v.play().catch(() => {});
-//                     setIsMuted(false);
-//                   }}
-//                 >
-//                   <motion.div
-//                     className="flex flex-row items-center gap-3"
-//                     animate={{ scale: [1, 1.04, 1] }}
-//                     transition={{ repeat: Infinity, duration: 2 }}
-//                   >
-//                     <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center shadow-2xl">
-//                       <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-//                         <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-//                       </svg>
-//                     </div>
-//                     <p className="text-white font-black text-xs tracking-widest uppercase">Tap to Unmute</p>
-//                   </motion.div>
-//                 </motion.div>
-//               )}
-//             </AnimatePresence>
-
-//             {/* Skip button */}
-//             <button
-//               onClick={handleSkipIntro}
-//               className="absolute bottom-10 right-10 z-40 px-6 py-3 bg-white/10 hover:bg-white/25 text-white font-black text-sm tracking-wider uppercase rounded-full border border-white/25 backdrop-blur-md transition-all shadow-2xl hover:scale-105 active:scale-95"
-//             >
-//               Skip Intro →
-//             </button>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-
-//       {/* Demo Video Modal */}
-//       <AnimatePresence>
-//         {showDemo && (
-//           <motion.div
-//             className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
-//             initial={{ opacity: 0 }}
-//             animate={{ opacity: 1 }}
-//             exit={{ opacity: 0 }}
-//             onClick={() => setShowDemo(false)}
-//           >
-//             <motion.div
-//               className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-//               initial={{ scale: 0.92, y: 30 }}
-//               animate={{ scale: 1, y: 0 }}
-//               exit={{ scale: 0.92, y: 30 }}
-//               transition={{ type: "spring", stiffness: 260, damping: 22 }}
-//               onClick={(e) => e.stopPropagation()}
-//             >
-//               {/* Close button */}
-//               <button
-//                 onClick={() => setShowDemo(false)}
-//                 className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white font-black text-lg flex items-center justify-center border border-white/20 backdrop-blur-sm transition-all"
-//               >
-//                 ✕
-//               </button>
-
-//               {/* Header bar */}
-//               <div className="bg-slate-950 px-5 py-3 flex items-center gap-2 border-b border-white/10">
-//                 <div className="flex gap-1.5">
-//                   <span className="w-3 h-3 rounded-full bg-red-500" />
-//                   <span className="w-3 h-3 rounded-full bg-yellow-400" />
-//                   <span className="w-3 h-3 rounded-full bg-emerald-500" />
-//                 </div>
-//                 <span className="text-xs font-black text-slate-400 ml-2 uppercase tracking-widest">CloudPrint — How It Works</span>
-//               </div>
-
-//               <video
-//                 src={demoVideo}
-//                 autoPlay
-//                 controls
-//                 className="w-full aspect-video bg-black"
-//                 onEnded={() => setShowDemo(false)}
-//               />
-//             </motion.div>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//     </>
-//   );
-// }
-
-// export default Landing;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { useState, useEffect, useRef } from "react";
-// import * as THREE from "three";
-// import { Link } from "react-router-dom";
-// import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-// import introVideo from "../assets/intro.mp4";
-// import demoVideo from "../assets/demo.mp4";
-// import inVideo from "../assets/in.mp4";
-// import api from "../services/api";
-// import kiosk0 from "../assets/kiosk-0.png";
-// import kiosk45 from "../assets/kiosk-45.png";
-// import kiosk90 from "../assets/kiosk-90.png";
-// import kiosk315 from "../assets/kiosk-315.png";
-// import kiosk0Ai from "../assets/kiosk-0-ai.png";
-// import kiosk45Ai from "../assets/kiosk-45-ai.png";
-// import kiosk90Ai from "../assets/kiosk-90-ai.png";
-// import kiosk315Ai from "../assets/kiosk-315-ai.png";
-// import cloudKioskFront from "../assets/cloud-print-kiosk.png";
-// import cloudKiosk45 from "../assets/kiosk-45-official.png";
-// import cloudKiosk90 from "../assets/kiosk-90-official.png";
-// import cloudKiosk315 from "../assets/kiosk-315-official.png";
-// import aiStep1 from "../assets/ai-step1-upload.png";
-// import aiStep2 from "../assets/ai-step2-printer.png";
-// import aiStep3 from "../assets/ai-step3-otp.png";
-// import aiStep4 from "../assets/ai-step4-collect.png";
-// import {
-//   Printer,
-//   UploadCloud,
-//   CreditCard,
-//   ShieldCheck,
-//   MapPin,
-//   Zap,
-//   FileText,
-//   Users,
-//   TrendingUp,
-//   ChevronDown,
-//   Layers,
-//   Sparkles,
-//   Play,
-//   QrCode,
-//   Lock,
-//   Globe,
-//   Database,
-//   CheckCircle2,
-//   AlertTriangle
-// } from "lucide-react";
-
-// // ---------------------------------------------------------------------------
-// // 3D Tilt Interaction — unified Pointer Events power both mouse (desktop
-// // hover) and touch (mobile drag) with a single code path, so every tilt
-// // card is truly cross-device rather than a desktop-only hover trick.
-// // ---------------------------------------------------------------------------
-// function useTilt({ maxTilt = 10, scale = 1.03, baseRotateX = 0, baseRotateY = 0, baseTranslateZ = 0 } = {}) {
-//   const ref = useRef(null);
-//   const idleTransform = `perspective(1200px) rotateX(${baseRotateX}deg) rotateY(${baseRotateY}deg) translateZ(${baseTranslateZ}px) scale(1)`;
-//   const [style, setStyle] = useState({
-//     transform: idleTransform,
-//     transition: "transform 0.7s cubic-bezier(0.23, 1, 0.32, 1)"
-//   });
-
-//   const applyTilt = (clientX, clientY) => {
-//     const el = ref.current;
-//     if (!el) return;
-//     const rect = el.getBoundingClientRect();
-//     const px = (clientX - rect.left) / rect.width;
-//     const py = (clientY - rect.top) / rect.height;
-//     const rotateY = baseRotateY + (px - 0.5) * maxTilt * 2;
-//     const rotateX = baseRotateX - (py - 0.5) * maxTilt * 2;
-//     setStyle({
-//       transform: `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(${baseTranslateZ}px) scale(${scale})`,
-//       transition: "transform 0.08s linear"
-//     });
-//   };
-
-//   const reset = () => {
-//     setStyle({ transform: idleTransform, transition: "transform 0.7s cubic-bezier(0.23, 1, 0.32, 1)" });
-//   };
-
-//   const handlers = {
-//     onPointerMove: (e) => applyTilt(e.clientX, e.clientY),
-//     onPointerDown: (e) => applyTilt(e.clientX, e.clientY),
-//     onPointerLeave: reset,
-//     onPointerUp: reset,
-//     onPointerCancel: reset
-//   };
-
-//   return { ref, style, handlers };
-// }
-
-// function TiltCard({ children, className = "", tiltOptions, style = {}, ...rest }) {
-//   const { ref, style: tiltStyle, handlers } = useTilt(tiltOptions);
-//   return (
-//     <div
-//       ref={ref}
-//       className={className}
-//       style={{ ...style, ...tiltStyle, touchAction: "pan-y", willChange: "transform" }}
-//       {...handlers}
-//       {...rest}
-//     >
-//       {children}
-//     </div>
-//   );
-// }
-
-// // Lightweight scroll-triggered 3D reveal used on section headers and hero
-// // blocks — a subtle rotateX + rise, once per element, respecting a single
-// // shared easing curve so the whole page feels like one coherent motion system.
-// function Reveal3D({ children, className = "", delay = 0 }) {
-//   return (
-//     <motion.div
-//       className={className}
-//       initial={{ opacity: 0, rotateX: -12, y: 28 }}
-//       whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
-//       viewport={{ once: true, amount: 0.35 }}
-//       transition={{ duration: 0.7, delay, ease: [0.23, 1, 0.32, 1] }}
-//       style={{ transformPerspective: 800 }}
-//     >
-//       {children}
-//     </motion.div>
-//   );
-// }
-
-// // ---------------------------------------------------------------------------
-// // Scroll-pinned 3D Kiosk Showcase (Qwikprint.in-style sticky showcase) —
-// // As you scroll down the steps on the left, the physical kiosk machine on the right
-// // stays sticky pinned in your viewport ("comes with you") and rotates through its views.
-// // ---------------------------------------------------------------------------
-// function ScrollSteps3D({ steps }) {
-//   const [activeStep, setActiveStep] = useState(0);
-//   const stepRefs = useRef([]);
-
-//   useEffect(() => {
-//     const observer = new IntersectionObserver(
-//       (entries) => {
-//         entries.forEach((entry) => {
-//           if (entry.isIntersecting) {
-//             setActiveStep(Number(entry.target.dataset.stepIndex));
-//           }
-//         });
-//       },
-//       { threshold: 0.5, rootMargin: "-25% 0px -25% 0px" }
-//     );
-//     stepRefs.current.forEach((el) => el && observer.observe(el));
-//     return () => observer.disconnect();
-//   }, [steps.length]);
-
-//   const kioskViews = [
-//     { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
-//     { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
-//     { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" },
-//     { img: cloudKioskFront, alt: "Official CLOUD PRINT Kiosk Front View 0°", skew: "" }
-//   ];
-
-//   return (
-//     <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 relative">
-//       {/* Left Column: 4 Scroll Steps with height so sticky right column can pin */}
-//       <div className="flex flex-col space-y-12 py-6">
-//         {steps.map((step, idx) => (
-//           <div
-//             key={step.title}
-//             ref={(el) => (stepRefs.current[idx] = el)}
-//             data-step-index={idx}
-//             className={`py-14 md:py-20 pl-7 border-l-2 transition-all duration-500 min-h-[360px] flex flex-col justify-center ${
-//               activeStep === idx
-//                 ? "border-blue-500 opacity-100 translate-x-0 bg-blue-950/20 rounded-r-2xl"
-//                 : "border-white/10 opacity-30 -translate-x-1"
-//             }`}
-//           >
-//             <span className="text-xs font-black text-blue-400 tracking-widest uppercase">Step {idx + 1}</span>
-//             <h3 className="text-2xl md:text-3xl font-black text-white mt-2 mb-3">{step.title}</h3>
-//             <p className="text-base text-slate-300 font-bold leading-relaxed max-w-md">{step.desc}</p>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Right Column: Sticky Kiosk Machine Showcase (Pins to viewport & comes with you as you scroll!) */}
-//       <div className="relative h-full">
-//         <div className="hidden lg:flex sticky top-28 h-[500px] items-center justify-center">
-//           <div className="relative w-[340px] h-[480px] flex items-center justify-center rounded-[28px] bg-slate-950/80 border border-white/10 shadow-2xl p-4 backdrop-blur-md overflow-hidden">
-//             {/* Ambient Blue Glow beneath machine */}
-//             <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/25 rounded-full blur-2xl pointer-events-none" />
-
-//             <AnimatePresence mode="wait">
-//               <motion.div
-//                 key={activeStep}
-//                 initial={{ opacity: 0, scale: 0.92, rotateY: -15 }}
-//                 animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-//                 exit={{ opacity: 0, scale: 0.92, rotateY: 15 }}
-//                 transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-//                 className="relative w-full h-full flex items-center justify-center"
-//               >
-//                 <img
-//                   src={kioskViews[activeStep].img}
-//                   alt={kioskViews[activeStep].alt}
-//                   className="w-full h-full object-contain filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
-//                 />
-//               </motion.div>
-//             </AnimatePresence>
-//           </div>
-//         </div>
-
-//         {/* Mobile: compact tiltable kiosk photo card */}
-//         <div className="lg:hidden mt-4 mb-10">
-//           <TiltCard
-//             className="w-full max-w-[280px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative bg-slate-950/80 backdrop-blur-md p-2"
-//             tiltOptions={{ maxTilt: 10, scale: 1.02 }}
-//           >
-//             <AnimatePresence mode="wait">
-//               <motion.div
-//                 key={activeStep}
-//                 initial={{ opacity: 0, scale: 0.95 }}
-//                 animate={{ opacity: 1, scale: 1 }}
-//                 exit={{ opacity: 0, scale: 0.95 }}
-//                 transition={{ duration: 0.3 }}
-//                 className="w-full h-full relative"
-//               >
-//                 <img
-//                   src={kioskViews[activeStep].img}
-//                   alt={kioskViews[activeStep].alt}
-//                   className="w-full h-full object-contain"
-//                 />
-//               </motion.div>
-//             </AnimatePresence>
-//           </TiltCard>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ---------------------------------------------------------------------------
-// // Signature hero element — a mouse-reactive 3D "stack" of the four flow
-// // cards (Upload → Pay → Print → Collect) fanned out in real perspective
-// // space. This is the page's one big aesthetic swing: instead of a static
-// // screenshot or a generic stat block, the whole print pipeline is rendered
-// // as a physical deck of cards you can nudge with your cursor (or drag on
-// // touch), tying the "3D" ask directly back to what CloudPrint actually does.
-// // ---------------------------------------------------------------------------
-// // function HeroFlowStack({ mouseX, mouseY }) {
-// //   const rotY = useTransform(mouseX, [-1, 1], [-18, 18]);
-// //   const rotX = useTransform(mouseY, [-1, 1], [14, -14]);
-// //   const springRotY = useSpring(rotY, { stiffness: 90, damping: 18 });
-// //   const springRotX = useSpring(rotX, { stiffness: 90, damping: 18 });
-// // 
-// //   const cards = [
-// //     { label: "Upload PDF", icon: <UploadCloud className="w-5 h-5" />, tint: "rgba(59,130,246,0.9)", z: 0, y: 60, rot: -9 },
-// //     { label: "Pay Securely", icon: <CreditCard className="w-5 h-5" />, tint: "rgba(139,92,246,0.9)", z: 40, y: 20, rot: -3 },
-// //     { label: "Scan / Enter OTP", icon: <QrCode className="w-5 h-5" />, tint: "rgba(245,158,11,0.9)", z: 80, y: -20, rot: 3 },
-// //     { label: "Collect Print", icon: <Zap className="w-5 h-5" />, tint: "rgba(16,185,129,0.9)", z: 120, y: -60, rot: 9 }
-// //   ];
-// // 
-// //   return (
-// //     <div className="hidden lg:flex w-full h-full items-center justify-center" style={{ perspective: "1600px" }}>
-// //       <motion.div
-// //         className="relative w-[380px] h-[380px]"
-// //         style={{ rotateY: springRotY, rotateX: springRotX, transformStyle: "preserve-3d" }}
-// //       >
-// //         {cards.map((card, idx) => (
-// //           <motion.div
-// //             key={card.label}
-// //             className="absolute left-1/2 top-1/2 w-[260px] rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-xl p-5 shadow-2xl"
-// //             style={{
-// //               transform: `translate(-50%, -50%) translateY(${card.y}px) translateZ(${card.z}px) rotate(${card.rot}deg)`,
-// //               transformStyle: "preserve-3d"
-// //             }}
-// //             initial={{ opacity: 0 }}
-// //             animate={{ opacity: 1 }}
-// //             transition={{ duration: 0.6, delay: idx * 0.12 }}
-// //           >
-// //             <div
-// //               className="w-9 h-9 rounded-xl flex items-center justify-center text-white mb-3 shadow-lg"
-// //               style={{ background: card.tint }}
-// //             >
-// //               {card.icon}
-// //             </div>
-// //             <p className="text-xs font-black text-white tracking-wide">{card.label}</p>
-// //             <div className="mt-3 h-1 w-full rounded-full bg-white/10 overflow-hidden">
-// //               <div className="h-full rounded-full" style={{ width: `${(idx + 1) * 25}%`, background: card.tint }} />
-// //             </div>
-// //           </motion.div>
-// //         ))}
-// //         {/* Connective glow spine running through the stack, giving the
-// //             fanned cards a sense of a single continuous pipeline */}
-// //         <div
-// //           className="absolute left-1/2 top-1/2 w-[2px] h-[280px] bg-gradient-to-b from-blue-500/0 via-blue-400/60 to-emerald-400/0 blur-[1px]"
-// //           style={{ transform: "translate(-50%, -50%) translateZ(40px)" }}
-// //         />
-// //       </motion.div>
-// //     </div>
-// //   );
-// // }
-
-// function Landing() {
-//   const [activeBuilding, setActiveBuilding] = useState("C Block");
-//   const [activeFaq, setActiveFaq] = useState(null);
-//   const [activeFlowStep, setActiveFlowStep] = useState(0);
-//   const [showIntro, setShowIntro] = useState(false);
-//   const [isMuted, setIsMuted] = useState(true);
-//   const introVideoRef = useRef(null);
-//   const [showDemo, setShowDemo] = useState(false);
-//   const statsRef = useRef(null);
-//   const statsStarted = useRef(false);
-//   const demoVideoRef = useRef(null);
-
-//   const [isMobile, setIsMobile] = useState(false);
-//   const [typedTitle1, setTypedTitle1] = useState("");
-//   const [typedTitle2, setTypedTitle2] = useState("");
-
-//   // Hero scroll-parallax — video, ambient glow, and content drift at
-//   // slightly different rates as the hero scrolls out, giving the section
-//   // real depth instead of a single flat plane. Works identically on touch
-//   // scroll and wheel scroll since it's driven by scroll progress, not input type.
-//   const heroRef = useRef(null);
-//   const { scrollYProgress: heroProgress } = useScroll({
-//     target: heroRef,
-//     offset: ["start start", "end start"]
-//   });
-//   const heroVideoY = useTransform(heroProgress, [0, 1], ["0%", "18%"]);
-//   const heroGlowScale = useTransform(heroProgress, [0, 1], [1, 1.35]);
-//   const heroContentY = useTransform(heroProgress, [0, 1], ["0%", "-8%"]);
-
-//   // Hero mouse-parallax — normalized -1..1 cursor position, driving both
-//   // the ambient glow drift and the HeroFlowStack's 3D rotation. Idles at
-//   // the origin on touch devices where there's no persistent pointer.
-//   const mouseX = useMotionValue(0);
-//   const mouseY = useMotionValue(0);
-//   const handleHeroMouseMove = (e) => {
-//     const rect = e.currentTarget.getBoundingClientRect();
-//     mouseX.set(((e.clientX - rect.left) / rect.width) * 2 - 1);
-//     mouseY.set(((e.clientY - rect.top) / rect.height) * 2 - 1);
-//   };
-//   const handleHeroMouseLeave = () => {
-//     mouseX.set(0);
-//     mouseY.set(0);
-//   };
-//   const glowDriftX = useTransform(mouseX, [-1, 1], ["-4%", "4%"]);
-//   const glowDriftY = useTransform(mouseY, [-1, 1], ["-4%", "4%"]);
-
-//   useEffect(() => {
-//     const title1 = "Print Anywhere.";
-//     const title2 = "Collect Instantly.";
-//     let index1 = 0;
-//     let index2 = 0;
-//     let timer1;
-//     let timer2;
-//     let loopTimer;
-
-//     const type1 = () => {
-//       if (index1 <= title1.length) {
-//         setTypedTitle1(title1.substring(0, index1));
-//         index1++;
-//         timer1 = setTimeout(type1, 80);
-//       } else {
-//         type2();
-//       }
-//     };
-
-//     const type2 = () => {
-//       if (index2 <= title2.length) {
-//         setTypedTitle2(title2.substring(0, index2));
-//         index2++;
-//         timer2 = setTimeout(type2, 80);
-//       } else {
-//         // Wait 3 seconds, then clear and restart the loop
-//         loopTimer = setTimeout(() => {
-//           setTypedTitle1("");
-//           setTypedTitle2("");
-//           index1 = 0;
-//           index2 = 0;
-//           type1();
-//         }, 3000);
-//       }
-//     };
-
-//     type1();
-
-//     return () => {
-//       clearTimeout(timer1);
-//       clearTimeout(timer2);
-//       clearTimeout(loopTimer);
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-//     checkMobile();
-//     window.addEventListener("resize", checkMobile);
-//     return () => window.removeEventListener("resize", checkMobile);
-//   }, []);
-
-//   // Statistics counters
-//   const [stats, setStats] = useState({
-//     activePrinters: 27,
-//     pagesPrinted: 102540,
-//     studentsServed: 15420,
-//     successRate: 99.8
-//   });
-
-//   useEffect(() => {
-//     const introShown = sessionStorage.getItem("landingIntroShown");
-//     if (!introShown) {
-//       setShowIntro(true);
-//     }
-//   }, []);
-
-//   const handleSkipIntro = () => {
-//     sessionStorage.setItem("landingIntroShown", "true");
-//     setShowIntro(false);
-//   };
-
-//   // Load and refresh stats from database every 5 seconds
-//   useEffect(() => {
-//     const fetchStats = () => {
-//       const apiUrl = import.meta.env.VITE_API_URL || "https://printer-backend-34ih.onrender.com";
-//       fetch(`${apiUrl}/api/public/stats`)
-//         .then(res => res.json())
-//         .then(data => {
-//           setStats({
-//             activePrinters: data.activePrinters ?? 27,
-//             pagesPrinted: data.pagesPrinted ?? 102540,
-//             studentsServed: data.studentsServed ?? 15420,
-//             successRate: data.successRate ?? 99.8
-//           });
-//         })
-//         .catch(() => {
-//           // Fallback if backend is offline
-//           setStats({
-//             activePrinters: 27,
-//             pagesPrinted: 102540,
-//             studentsServed: 15420,
-//             successRate: 99.8
-//           });
-//         });
-//     };
-
-//     fetchStats();
-//     const interval = setInterval(fetchStats, 5000);
-//     return () => clearInterval(interval);
-//   }, []);
-
-//   // Auto-play demo video with audio when #how-it-works scrolls into view
-//   useEffect(() => {
-//     const video = demoVideoRef.current;
-//     if (!video) return;
-//     const observer = new IntersectionObserver(
-//       (entries) => {
-//         if (entries[0].isIntersecting) {
-//           video.play().catch(() => {});
-//         } else {
-//           video.pause();
-//         }
-//       },
-//       { threshold: 0.4 }
-//     );
-//     observer.observe(video);
-//     return () => observer.disconnect();
-//   }, []);
-
-//   // Workflow auto-stepping effect for the 3D ecosystem column
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setActiveFlowStep((prev) => (prev + 1) % 6);
-//     }, 2500);
-//     return () => clearInterval(timer);
-//   }, []);
-
-//   const faqData = [
-//     {
-//       q: "How does CloudPrint work?",
-//       a: "Simply upload your PDF to the web portal, customize your print options (such as color, paper size, and page range), make a cashless payment, and print. You will receive a unique OTP and QR code which you can use to instantly release the print job at your selected campus printer."
-//     },
-//     {
-//       q: "How secure is QR printing?",
-//       a: "CloudPrint utilizes point-to-point security. Your documents are stored encrypted on our server and are only decrypted when you walk up to the physical printer and scan your QR code or enter your 6-digit OTP. Your documents are automatically wiped from our cache after printing."
-//     },
-//     {
-//       q: "Can I pay using my wallet?",
-//       a: "Yes! Students can load money into their secure prepaid digital wallet using UPI, card, or net banking via Razorpay. Using the wallet allows for instantaneous checkouts and dynamic Happy Hours/Thesis discounts."
-//     },
-//     {
-//       q: "Can I print from my mobile?",
-//       a: "Absolutely. CloudPrint is a progressive web application. You don't need to install any app. Just open www.saipraveen.site on your iPhone or Android browser, upload your file, and pay."
-//     }
-//   ];
-
-//   const [buildingData, setBuildingData] = useState({
-//     "C Block": {
-//       status: "Online",
-//       statusColor: "text-emerald-500 bg-emerald-50 border-emerald-100",
-//       paper: "85%",
-//       wait: "2 mins",
-//       queue: 4,
-//       model: "Brother HL-L2320D"
-//     }
-//   });
-
-//   // Fetch real campus data
-//   useEffect(() => {
-//     let isMounted = true;
-//     const fetchBuildingData = async () => {
-//       try {
-//         const [blocksRes, printersRes] = await Promise.all([
-//           api.get("/blocks/all").catch(() => ({ data: [] })),
-//           api.get("/printer/all").catch(() => ({ data: [] }))
-//         ]);
-
-//         const blocks = blocksRes.data || [];
-//         const printers = printersRes.data || [];
-
-//         if (blocks.length === 0) return; // Keep fallback if backend fails
-
-//         const newBuildingData = {};
-
-//         await Promise.all(blocks.map(async (b) => {
-//           const printer = printers.find(p => p.blockLocation === b.name);
-//           let queueCount = 0;
-//           try {
-//              const queueRes = await api.get("/queue/pending", { params: { blockLocation: b.name } });
-//              queueCount = (queueRes.data || []).length;
-//           } catch (e) {
-//              // suppress error
-//           }
-
-//           let status = "Offline";
-//           let statusColor = "text-rose-500 bg-rose-50 border-rose-100";
-//           if (printer) {
-//              if (printer.active) {
-//                 status = printer.maintenance ? "Busy" : "Online";
-//                 statusColor = printer.maintenance
-//                   ? "text-amber-500 bg-amber-50 border-amber-100"
-//                   : "text-emerald-500 bg-emerald-50 border-emerald-100";
-//              }
-//           }
-
-//           let paperPercent = printer && printer.paperCount !== undefined ? Math.min(100, Math.round((printer.paperCount / 500) * 100)) : 0;
-
-//           newBuildingData[b.name] = {
-//             status,
-//             statusColor,
-//             paper: `${paperPercent}%${paperPercent < 20 ? " (Low Paper)" : ""}`,
-//             wait: queueCount > 0 ? `${queueCount * 2} mins` : "0 mins",
-//             queue: queueCount,
-//             model: printer && printer.printerName ? printer.printerName : "Standard Printer"
-//           };
-//         }));
-
-//         if (isMounted && Object.keys(newBuildingData).length > 0) {
-//           setBuildingData(newBuildingData);
-//           setActiveBuilding(current => {
-//              if (!newBuildingData[current]) return Object.keys(newBuildingData)[0];
-//              return current;
-//           });
-//         }
-//       } catch (err) {
-//         console.error("Error fetching building data:", err);
-//       }
-//     };
-
-//     fetchBuildingData();
-//     const interval = setInterval(fetchBuildingData, 10000);
-//     return () => {
-//       isMounted = false;
-//       clearInterval(interval);
-//     };
-//   }, []);
-
-//   const flowSteps = [
-//     { name: "Student Laptop", color: "from-blue-500 to-indigo-500" },
-//     { name: "Upload PDF", color: "from-cyan-500 to-blue-500" },
-//     { name: "Cloud Server", color: "from-purple-500 to-indigo-500" },
-//     { name: "Payment Gateway", color: "from-amber-500 to-emerald-500" },
-//     { name: "Campus Printer", color: "from-purple-500 to-pink-500" },
-//     { name: "QR Collection", color: "from-emerald-500 to-teal-500" }
-//   ];
-
-//   return (
-//     <>
-//     <div className="min-h-screen bg-slate-950 text-white dot-grid relative overflow-hidden font-sans">
-//       {/* Inline SVG Clip Path definition */}
-//       <svg className="h-0 w-0 absolute pointer-events-none" aria-hidden="true">
-//         <defs>
-//           <clipPath id="hero-clip" clipPathUnits="objectBoundingBox">
-//             <path d="M 0.38,0 Q 0.33,0.5 0.38,1 L 1.0,1 L 1.0,0 Z" />
-//           </clipPath>
-//         </defs>
-//       </svg>
-
-//       {/* Subtle Animated Background Mesh */}
-//       <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
-//       <div className="absolute bottom-10 left-0 w-[40rem] h-[40rem] bg-gradient-to-tr from-emerald-500/10 to-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-//       {/* Floating Transparent Navbar */}
-//       <header className="sticky top-0 z-50 w-full h-20 transition-all bg-transparent flex items-center" style={{ width: '100vw', left: 0, right: 0 }}>
-//         <nav className="w-full h-full px-[40px] flex items-center justify-between">
-//           <div className="flex items-center gap-2">
-//             <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-//               <Printer className="w-5 h-5" />
-//             </div>
-//             <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-//               CloudPrint
-//             </span>
-//           </div>
-
-//           <div className="hidden md:flex items-center gap-16 text-sm font-black text-slate-400">
-//             <a href="#features" className="hover:text-white transition-colors">Features</a>
-//             <a href="#locations" className="hover:text-white transition-colors">Campus Locations</a>
-//             <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
-//             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
-//           </div>
-
-//           <div className="flex items-center">
-//             <Link to="/login" className="btn success min-h-0 py-2.5 px-5 rounded-xl font-black text-sm shadow-md shadow-blue-500/10">
-//               ⚡ Upload Document
-//             </Link>
-//           </div>
-//         </nav>
-//       </header>
-
-//       {/* Hero Section */}
-//       <section className="w-full max-w-none px-0 pt-0 pb-24 relative z-10 -mt-20">
-//         <motion.div
-//           ref={heroRef}
-//           onMouseMove={handleHeroMouseMove}
-//           onMouseLeave={handleHeroMouseLeave}
-//           className="relative w-full rounded-none min-h-[95vh] pt-28 pb-16 md:pb-24 bg-slate-950 border-b border-white/10 overflow-hidden flex items-center"
-//           initial={{ y: 0 }}
-//           animate={{
-//             y: [0, -4, 0],
-//           }}
-//           transition={{
-//             duration: 6,
-//             repeat: Infinity,
-//             ease: "easeInOut"
-//           }}
-//           style={{ transition: "all 0.3s ease" }}        >
-//           {/* Subtle Blue Ambient Glow Behind Arc — scales with scroll depth and drifts with the cursor */}
-//           <motion.div
-//             className="absolute top-1/2 left-[40%] -translate-y-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none z-0"
-//             style={{ scale: heroGlowScale, x: glowDriftX, y: glowDriftY }}
-//           />
-
-//           {/* Background Video Showcase: occupies full hero area, clipped exactly to the curve on desktop.
-//               Drifts vertically on scroll for parallax depth. */}
-//           <motion.div
-//             className="absolute inset-0 z-0 bg-transparent"
-//             style={{
-//               y: heroVideoY,
-//               ...(isMobile ? {} : {
-//                 clipPath: "url(#hero-clip)",
-//                 WebkitClipPath: "url(#hero-clip)"
-//               })
-//             }}
-//           >
-//             <video
-//               src={inVideo}
-//               autoPlay
-//               muted
-//               loop
-//               playsInline
-//               preload="auto"
-//               controls={false}
-//               controlsList="nodownload nofullscreen"
-//               disablePictureInPicture
-//               draggable="false"
-//               className={`w-full h-full object-cover object-center pointer-events-none select-none transition-all duration-300 ${isMobile ? 'blur-[4px] opacity-35' : 'opacity-100'}`}
-//             />
-//             {/* Soft feather overlay gradient where the arc meets the video (only on desktop) */}
-//             <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none hidden lg:block" />
-//           </motion.div>
-
-//           {/* Massive Curved Glowing Arc Divider Stroke Overlay (rendered directly on 100% width, hidden on mobile) */}
-//           <svg className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none">
-//             {/* 2px glowing blue stroke */}
-//             <path d="M 38,0 Q 33,50 38,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
-//           </svg>
-
-//           {/* Foreground Content Wrapper — drifts opposite the video for depth */}
-//           <motion.div
-//             className="relative z-10 w-full px-8 md:px-12 lg:px-16 flex flex-col lg:flex-row justify-between items-center min-h-[90vh]"
-//             style={{ y: heroContentY }}
-//           >
-//             {/* Left Column: 40% width overlay with max-width 560px, vertically centered */}
-//             <div className="w-full lg:w-[40%] max-w-[560px] text-white text-left z-20 my-auto">
-//               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider text-blue-400 bg-blue-950/80 border border-blue-800/60">
-//                 <Sparkles className="w-3.5 h-3.5" /> Next-Gen Kiosk Printing
-//               </span>
-
-//               <h1 className="mt-6 text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-white">
-//                 {typedTitle1}
-//                 {typedTitle1 && <br />}
-//                 <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-//                   {typedTitle2}
-//                 </span>
-//               </h1>
-
-//               <p className="mt-6 text-sm md:text-base font-bold text-slate-300 leading-relaxed max-w-xl">
-//                 Upload your PDF documents from anywhere on campus, pay securely online, and collect your prints instantly using secure OTP codes or QR verification from any CloudPrint-enabled printer.
-//               </p>
-
-//               <div className="mt-8 flex flex-wrap gap-3">
-//                 <Link to="/login" className="btn success px-6 py-3.5 rounded-xl font-black text-sm shadow-lg shadow-emerald-500/20">
-//                   ⚡ Upload Document
-//                 </Link>
-//                 <button
-//                   onClick={() => setShowDemo(true)}
-//                   className="btn secondary !bg-white/10 !text-white !border-white/10 hover:!bg-white/20 px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-1.5"
-//                 >
-//                   <Play className="w-4 h-4 fill-white" /> Watch Demo
-//                 </button>
-//               </div>
-
-//               {/* Mobile-only floating 3D card — gives touch users a tactile,
-//                   draggable tilt moment since the pinned flow-stack scene is
-//                   desktop-only real estate. */}
-//               <div className="mt-8 lg:hidden">
-//                 <TiltCard
-//                   className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3 shadow-2xl"
-//                   tiltOptions={{ maxTilt: 12, scale: 1.03 }}
-//                 >
-//                   <div className="h-11 w-11 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
-//                     <QrCode className="w-5 h-5 text-white" />
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <p className="text-xs font-black text-white truncate">Ready to collect</p>
-//                     <p className="text-[10px] text-slate-400 font-bold">Drag me — then scan your QR at any kiosk</p>
-//                   </div>
-//                 </TiltCard>
-//               </div>
-
-//               {/* Left-Side Trust Section */}
-//               <div className="mt-10 pt-8 border-t border-white/10 grid grid-cols-2 gap-4 text-slate-400">
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">🖨️</span>
-//                   <span>{stats.activePrinters} Active Printers</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">📄</span>
-//                   <span>{stats.pagesPrinted.toLocaleString()} Pages Printed</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">👨‍🎓</span>
-//                   <span>{stats.studentsServed.toLocaleString()} Students Served</span>
-//                 </div>
-//                 <div className="flex items-center gap-2 text-xs font-bold">
-//                   <span className="text-base">⚡</span>
-//                   <span>{stats.successRate}% Success Rate</span>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Right Side: signature 3D flow-stack — a mouse-reactive deck of
-//                 cards tracing Upload → Pay → Verify → Collect in real 3D space */}
-//             <div className="hidden lg:block lg:w-[50%] h-[90vh] relative" />
-//           </motion.div>        </motion.div>
-//       </section>
-
-//       {/* Live Statistics Section */}
-//       <section className="bg-slate-900 text-white py-16 border-y border-slate-800" ref={statsRef}>
-//         <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-white">{stats.pagesPrinted.toLocaleString()}+</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Pages Printed</p>
-//           </div>
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-emerald-400">{stats.activePrinters}</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Active Printers</p>
-//           </div>
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-blue-400">{stats.successRate}%</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Success Rate</p>
-//           </div>
-//           <div>
-//             <h3 className="text-4xl font-black tracking-tight text-purple-400">{stats.studentsServed.toLocaleString()}+</h3>
-//             <p className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">Students Served</p>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* How It Works — Demo Video Section */}
-//       <section id="how-it-works" className="bg-slate-950 py-24">
-//         <div className="max-w-6xl mx-auto px-6">
-//           <div className="text-center max-w-2xl mx-auto mb-12">
-//             <span className="text-xs font-black uppercase tracking-widest text-blue-400 bg-blue-950 border border-blue-800 px-3 py-1 rounded-full">
-//               Live Demo
-//             </span>
-//             <h2 className="mt-4 text-3xl md:text-4xl font-black text-white">
-//               See CloudPrint in Action
-//             </h2>
-//             <p className="mt-4 text-sm font-bold text-slate-400">
-//               Upload, pay, and collect prints in seconds — watch the full workflow.
-//             </p>
-//           </div>
-
-//           {/* Video player */}
-//           <div className="relative rounded-[20px] overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/10">
-//             {/* macOS-style bar */}
-//             <div className="bg-slate-900 px-5 py-3 flex items-center gap-2 border-b border-white/10">
-//               <div className="flex gap-1.5">
-//                 <span className="w-3 h-3 rounded-full bg-red-500" />
-//                 <span className="w-3 h-3 rounded-full bg-yellow-400" />
-//                 <span className="w-3 h-3 rounded-full bg-emerald-500" />
-//               </div>
-//               <span className="text-xs font-black text-slate-400 ml-2 uppercase tracking-widest">CloudPrint — How It Works</span>
-//             </div>
-//             <video
-//               ref={demoVideoRef}
-//               src={demoVideo}
-//               autoPlay
-//               muted
-//               controls
-//               playsInline
-//               loop
-//               className="w-full aspect-video bg-black"
-//             />
-//           </div>
-
-//           {/* How It Works Steps Grid */}
-//           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-//             {[
-//               { title: "Upload PDF", desc: "Select and process files", icon: "📄" },
-//               { title: "Choose Printer", desc: "Pick nearest pickup counter", icon: "🖨️" },
-//               { title: "Verify OTP", desc: "Input code at counter", icon: "🔑" },
-//               { title: "Collect Print", desc: "Grab pages from output tray", icon: "⚡" }
-//             ].map((step, idx) => (
-//               <Reveal3D key={idx} delay={idx * 0.08}>
-//                 <TiltCard
-//                   className="p-6 bg-slate-900/40 border border-white/10 rounded-2xl relative text-left h-full"
-//                   tiltOptions={{ maxTilt: 7, scale: 1.02 }}
-//                 >
-//                   <span className="absolute top-4 right-4 text-[10px] font-black bg-blue-500/20 text-blue-400 w-5 h-5 rounded-full flex items-center justify-center border border-blue-500/30">
-//                     {idx + 1}
-//                   </span>
-//                   <div className="text-2xl mb-3">{step.icon}</div>
-//                   <h4 className="text-base font-black text-white">{step.title}</h4>
-//                   <p className="text-xs text-slate-400 mt-2 font-bold leading-relaxed">{step.desc}</p>
-//                 </TiltCard>
-//               </Reveal3D>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Scroll-Pinned 3D Step Showcase — qwikprint.in-style: a sticky
-//           phone mockup that rotates and swaps screens as each step scrolls
-//           into focus, giving the workflow real cinematic depth. */}
-//       <section className="bg-slate-950 py-8 pb-24 border-t border-white/5">
-//         <div className="max-w-6xl mx-auto px-6">
-//           <Reveal3D className="text-center max-w-2xl mx-auto mb-6">
-//             <span className="text-xs font-black uppercase tracking-widest text-purple-400 bg-purple-950/60 border border-purple-800/60 px-3 py-1 rounded-full">
-//               Follow Along
-//             </span>
-//             <h2 className="mt-4 text-3xl md:text-4xl font-black text-white">
-//               Scroll Through the Full Workflow
-//             </h2>
-//             <p className="mt-4 text-sm font-bold text-slate-400">
-//               Keep scrolling — the device on the right follows every step.
-//             </p>
-//           </Reveal3D>
-
-//           <ScrollSteps3D
-//             steps={[
-//               { title: "Upload PDF", desc: "Select your file from your laptop or phone and let CloudPrint process it instantly.", icon: "📄", iconBg: "rgba(59,130,246,0.15)", phoneLabel: "thesis_report_v2.pdf selected" },
-//               { title: "Choose Printer", desc: "Pick your nearest campus block and see live paper levels and queue length.", icon: "🖨️", iconBg: "rgba(139,92,246,0.15)", phoneLabel: "C Block · 2 min wait" },
-//               { title: "Verify OTP", desc: "Walk up to the kiosk and enter the code sent straight to your dashboard.", icon: "🔑", iconBg: "rgba(245,158,11,0.15)", phoneLabel: "OTP · 892718" },
-//               { title: "Collect Print", desc: "Your pages come out instantly — no queues, no waiting on staff.", icon: "⚡", iconBg: "rgba(16,185,129,0.15)", phoneLabel: "Print released" }
-//             ]}
-//           />
-//         </div>
-//       </section>
-
-//       {/* Trust Feature Cards */}
-//       <section className="max-w-6xl mx-auto px-6 py-24" id="features">
-//         <Reveal3D className="text-center max-w-2xl mx-auto mb-16">
-//           <span className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm bg-[rgba(59,130,246,0.12)] border border-[rgba(96,165,250,0.35)] text-[#60A5FA]">
-//             Security & Trust
-//           </span>
-//           <h2 className="mt-4 text-3xl md:text-4xl text-white font-[800] tracking-[-0.03em] [text-shadow:0_0_24px_rgba(59,130,246,0.18)]">
-//             Trusted Across Campus
-//           </h2>
-//         </Reveal3D>
-
-//         <div className="grid md:grid-cols-3 gap-8">
-//           <TiltCard
-//             className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex items-start gap-4"
-//             tiltOptions={{ maxTilt: 9, scale: 1.03 }}
-//           >
-//             <div className="p-3 bg-[#ECFDF5] rounded-2xl shadow-sm shadow-[#22C55E]/10 shrink-0">
-//               <Lock className="w-5 h-5 text-[#22C55E]" />
-//             </div>
-//             <div>
-//               <h3 className="font-[700] text-[20px] text-[#111827]">Secure OTP Printing</h3>
-//               <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">No unauthorized prints. Documents release only when you type in your OTP.</p>
-//             </div>
-//           </TiltCard>
-
-//           <TiltCard
-//             className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex items-start gap-4"
-//             tiltOptions={{ maxTilt: 9, scale: 1.03 }}
-//           >
-//             <div className="p-3 bg-[#EFF6FF] rounded-2xl shadow-sm shadow-[#2563EB]/10 shrink-0">
-//               <QrCode className="w-5 h-5 text-[#2563EB]" />
-//             </div>
-//             <div>
-//               <h3 className="font-[700] text-[20px] text-[#111827]">QR Code Release</h3>
-//               <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">Simply scan the QR sticker on the kiosk tray to immediately output pages.</p>
-//             </div>
-//           </TiltCard>
-
-//           <TiltCard
-//             className="p-6 bg-[#FFFFFF] border border-[rgba(226,232,240,0.8)] rounded-[22px] shadow-[0_10px_40px_rgba(15,23,42,0.08)] flex items-start gap-4"
-//             tiltOptions={{ maxTilt: 9, scale: 1.03 }}
-//           >
-//             <div className="p-3 bg-[#F5F3FF] rounded-2xl shadow-sm shadow-[#8B5CF6]/10 shrink-0">
-//               <CreditCard className="w-5 h-5 text-[#8B5CF6]" />
-//             </div>
-//             <div>
-//               <h3 className="font-[700] text-[20px] text-[#111827]">Razorpay Payments</h3>
-//               <p className="text-xs text-[#64748B] mt-1.5 leading-[1.7]">Fast checkouts using UPI, Credit Cards, or Net banking gateways.</p>
-//             </div>
-//           </TiltCard>
-//         </div>
-//       </section>
-
-//       {/* Interactive Live Campus Map Section */}
-//       <section className="bg-slate-50 border-y border-slate-200/60 py-24" id="locations">
-//         <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
-//           <Reveal3D>
-//             <span className="text-xs font-[800] uppercase tracking-widest text-[#9333EA] bg-[#F3E8FF] border border-[#D8B4FE] px-3 py-1 rounded-full">
-//               Interactive Campus Map
-//             </span>
-//             <h2 className="mt-4 text-[48px] font-[800] text-[#111827] leading-tight">
-//               Find Active Campus Printers
-//             </h2>
-//             <p className="mt-4 text-[#475569] leading-[1.8]">
-//               Click on a building in the selector grid to check real-time queue states, hardware status, and paper load levels.
-//             </p>
-
-//             {/* Building Grid Selector */}
-//             <div className="mt-8 grid grid-cols-2 gap-3">
-//               {Object.keys(buildingData).map((name) => (
-//                 <button
-//                   key={name}
-//                   onClick={() => setActiveBuilding(name)}
-//                   className={`p-4 rounded-2xl border text-left transition-[0.3s] ${
-//                     activeBuilding === name
-//                       ? "bg-[#EFF6FF] border-[#2563EB] border-[2px] text-[#1D4ED8] shadow-[0_0_30px_rgba(37,99,235,0.18)] scale-[1.02] font-[800]"
-//                       : "bg-[#FFFFFF] border-[#E2E8F0] text-[#334155] hover:border-[#2563EB] hover:shadow-[0_12px_30px_rgba(37,99,235,0.12)] font-[700]"
-//                   }`}
-//                 >
-//                   <div className="flex items-center justify-between">
-//                     <span className="text-sm">{name}</span>
-//                     <span className={`w-2 h-2 rounded-full ${
-//                       buildingData[name].status === "Online"
-//                         ? "bg-[#22C55E] animate-pulse"
-//                         : buildingData[name].status === "Busy"
-//                         ? "bg-[#F59E0B]"
-//                         : "bg-[#EF4444]"
-//                     }`} />
-//                   </div>
-//                 </button>
-//               ))}
-//             </div>
-//           </Reveal3D>
-
-//           {/* Building Live Status Panel — tiltable on both mouse and touch */}
-//           <Reveal3D delay={0.1}>
-//             <TiltCard
-//               className="p-8 rounded-[24px] bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] flex flex-col gap-6 relative overflow-hidden"
-//               tiltOptions={{ maxTilt: 6, scale: 1.015 }}
-//             >
-//               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl" />
-
-//               <div className="flex justify-between items-start">
-//                 <div>
-//                   <span className="text-[10px] font-black uppercase tracking-widest text-[#64748B]">Selected Hub</span>
-//                   <h3 className="text-2xl font-[800] text-[#111827] mt-1">{activeBuilding}</h3>
-//                 </div>
-//                 {buildingData[activeBuilding].status === "Online" ? (
-//                   <span className="px-3 py-1 rounded-full text-xs font-[800] uppercase bg-[#DCFCE7] text-[#16A34A] animate-[float_3s_ease-in-out_infinite]">
-//                     {buildingData[activeBuilding].status}
-//                   </span>
-//                 ) : (
-//                   <span className={`px-3 py-1 rounded-full text-xs font-[800] uppercase border ${buildingData[activeBuilding].statusColor}`}>
-//                     {buildingData[activeBuilding].status}
-//                   </span>
-//                 )}
-//               </div>
-
-//               <div className="grid grid-cols-2 gap-4 mt-2">
-//                 <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-//                   <div className="flex justify-between items-center mb-1">
-//                     <p className="text-xs font-bold text-[#64748B]">Paper Level</p>
-//                     <p className="text-lg font-[700] text-[#111827]">{buildingData[activeBuilding].paper}</p>
-//                   </div>
-//                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mt-2">
-//                     <div
-//                       className="h-full bg-gradient-to-r from-[#22C55E] to-[#16A34A] transition-all duration-1000 ease-out"
-//                       style={{ width: buildingData[activeBuilding].paper }}
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-//                   <p className="text-xs font-bold text-[#64748B]">Estimated Wait</p>
-//                   <p className="text-lg font-[700] text-[#2563EB] mt-1">{buildingData[activeBuilding].wait}</p>
-//                 </div>
-//               </div>
-
-//               <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex justify-between items-center">
-//                 <div>
-//                   <p className="text-xs font-bold text-[#64748B]">Active Queue</p>
-//                   <p className="text-lg font-[700] text-[#111827] mt-1">{buildingData[activeBuilding].queue} orders pending</p>
-//                 </div>
-//                 <span className="text-xs font-bold text-[#64748B]">Model: {buildingData[activeBuilding].model}</span>
-//               </div>
-//             </TiltCard>
-//           </Reveal3D>
-//         </div>
-//       </section>
-
-//       {/* Live Dashboard Perspective Previews */}
-//       <section className="max-w-6xl mx-auto px-6 py-24">
-//         <Reveal3D className="text-center max-w-2xl mx-auto mb-16">
-//           <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
-//             Modern SaaS Interfaces
-//           </span>
-//           <h2 className="mt-4 text-3xl md:text-4xl font-black text-slate-900">
-//             Interactive Dashboard Ecosystems
-//           </h2>
-//         </Reveal3D>
-
-//         {/* Perspective stacked cards — both mockups are tiltable with
-//             pointer/touch drag, and the admin card is no longer hidden on
-//             mobile: it's simply resized so the stack still reads as 3D depth
-//             on small screens instead of collapsing to a single flat card. */}
-//         <Reveal3D>
-//           <div className="relative h-[420px] sm:h-[480px] w-full flex items-center justify-center overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-tr from-slate-100 to-white shadow-inner p-4 sm:p-8">
-
-//             {/* Admin Dashboard Mock Card */}
-//             <TiltCard
-//               className="absolute left-2 sm:left-10 md:left-24 w-[220px] sm:w-[360px] md:w-[460px] h-[190px] sm:h-[300px] rounded-2xl bg-white border border-slate-200 shadow-2xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 opacity-90"
-//               tiltOptions={{ maxTilt: 6, scale: 1.015, baseRotateY: 15, baseRotateX: 8, baseTranslateZ: 50 }}
-//             >
-//               <div className="flex justify-between items-center border-b pb-3">
-//                 <span className="text-[10px] sm:text-xs font-black text-slate-500">SaaS Admin Control</span>
-//                 <span className="h-2 w-2 rounded-full bg-blue-600" />
-//               </div>
-//               <div className="grid grid-cols-3 gap-2 sm:gap-3">
-//                 <div className="p-2 sm:p-3 bg-slate-50 rounded-xl">
-//                   <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold">Revenue</span>
-//                   <p className="text-xs sm:text-sm font-black mt-1">₹4,290.00</p>
-//                 </div>
-//                 <div className="p-2 sm:p-3 bg-slate-50 rounded-xl">
-//                   <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold">Online</span>
-//                   <p className="text-xs sm:text-sm font-black mt-1">6 Printers</p>
-//                 </div>
-//                 <div className="p-2 sm:p-3 bg-slate-50 rounded-xl">
-//                   <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold">Queue</span>
-//                   <p className="text-xs sm:text-sm font-black mt-1">4 Active</p>
-//                 </div>
-//               </div>
-//               <div className="hidden sm:flex h-24 bg-slate-50 rounded-xl border items-center justify-center text-xs font-bold text-slate-400">
-//                 Interactive charts (ApexCharts/Recharts)
-//               </div>
-//             </TiltCard>
-
-//             {/* Student Dashboard Mock Card (Top/Front) */}
-//             <TiltCard
-//               className="w-[260px] sm:w-[380px] md:w-[480px] h-[240px] sm:h-[320px] rounded-2xl bg-slate-950 text-white shadow-2xl p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 z-20"
-//               tiltOptions={{ maxTilt: 7, scale: 1.02, baseRotateY: -15, baseRotateX: 10, baseTranslateZ: 80 }}
-//             >
-//               <div className="flex justify-between items-center border-b border-white/10 pb-3">
-//                 <div className="flex items-center gap-1.5">
-//                   <div className="h-2 w-2 rounded-full bg-emerald-500" />
-//                   <span className="text-[10px] sm:text-xs font-black text-slate-400">www.saipraveen.site</span>
-//                 </div>
-//                 <span className="text-[9px] sm:text-[10px] font-black uppercase text-cyan-300">Active</span>
-//               </div>
-//               <div>
-//                 <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500">Wallet balance</p>
-//                 <h3 className="text-2xl sm:text-3xl font-black mt-1">₹120.00</h3>
-//               </div>
-
-//               <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/10">
-//                 <div className="flex items-center gap-3">
-//                   <div className="h-9 w-9 sm:h-10 sm:w-10 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
-//                     <UploadCloud className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-//                   </div>
-//                   <div className="flex-1 min-w-0">
-//                     <p className="text-[10px] sm:text-xs font-black truncate">thesis_report_v2.pdf</p>
-//                     <p className="text-[9px] sm:text-[10px] text-slate-400">Ready to collect · OTP: 892718</p>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="flex justify-between gap-3 mt-2">
-//                 <div className="p-2 sm:p-3 bg-white/5 rounded-xl border border-white/5 flex-1">
-//                   <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">SAVED</span>
-//                   <span className="text-[11px] sm:text-xs font-black text-emerald-400">₹85.00</span>
-//                 </div>
-//                 <div className="p-2 sm:p-3 bg-white/5 rounded-xl border border-white/5 flex-1">
-//                   <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold block">REWARDS</span>
-//                   <span className="text-[11px] sm:text-xs font-black text-purple-400">420 pts</span>
-//                 </div>
-//               </div>
-//             </TiltCard>
-
-//           </div>
-//         </Reveal3D>
-//       </section>
-
-//       {/* FAQ Accordion Section */}
-//       <section className="bg-white py-24 border-t border-slate-200/80" id="faq">
-//         <div className="max-w-4xl mx-auto px-6">
-//           <Reveal3D className="text-center max-w-2xl mx-auto mb-16">
-//             <span className="text-xs font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full">
-//               Questions & Answers
-//             </span>
-//             <h2 className="mt-4 text-3xl md:text-4xl font-black text-slate-900">
-//               Frequently Asked Questions
-//             </h2>
-//           </Reveal3D>
-
-//           <div className="flex flex-col gap-4">
-//             {faqData.map((faq, index) => (
-//               <div
-//                 key={faq.q}
-//                 className="border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-white transition-colors"
-//               >
-//                 <button
-//                   onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-//                   className="w-full p-6 flex justify-between items-center text-left font-black text-slate-900 text-base"
-//                 >
-//                   <span>{faq.q}</span>
-//                   <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${
-//                     activeFaq === index ? "rotate-180" : ""
-//                   }`} />
-//                 </button>
-
-//                 <AnimatePresence>
-//                   {activeFaq === index && (
-//                     <motion.div
-//                       initial={{ height: 0, opacity: 0 }}
-//                       animate={{ height: "auto", opacity: 1 }}
-//                       exit={{ height: 0, opacity: 0 }}
-//                       transition={{ duration: 0.2 }}
-//                       className="border-t border-slate-100"
-//                     >
-//                       <p className="p-6 text-sm font-bold text-slate-500 leading-relaxed bg-white">
-//                         {faq.a}
-//                       </p>
-//                     </motion.div>
-//                   )}
-//                 </AnimatePresence>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Final Call to Action */}
-//       <section className="max-w-6xl mx-auto px-6 pb-24">
-//         <Reveal3D className="p-12 md:p-16 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden shadow-2xl text-center">
-//           <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
-//           <div className="absolute -top-20 -left-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-//           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-
-//           <div className="max-w-2xl mx-auto relative z-10">
-//             <h2 className="text-[54px] text-white font-[800] tracking-tight leading-tight">
-//               Ready to Experience Smart Campus Printing?
-//             </h2>
-//             <p className="mt-6 text-[20px] text-[#E2E8F0] leading-relaxed">
-//               Upload your documents, skip the queues, and experience printing made smart. Sign up for a free student wallet and print today.
-//             </p>
-
-//             <div className="mt-10 flex flex-wrap justify-center gap-4">
-//               <Link to="/login" className="px-8 py-4 rounded-xl font-[800] text-white bg-gradient-to-r from-[#2563EB] to-[#3B82F6] hover:-translate-y-[3px] hover:shadow-[0_20px_40px_rgba(37,99,235,0.3)] hover:scale-[1.03] transition-all duration-300 relative">
-//                 <span className="relative z-10">Sign In & Upload ⚡</span>
-//                 <div className="absolute inset-0 bg-white/20 blur-md rounded-xl opacity-0 hover:opacity-100 transition-opacity" />
-//               </Link>
-//               <Link to="/login" className="px-8 py-4 rounded-xl font-[800] bg-white text-[#111827] border border-[#E2E8F0] hover:bg-[#F8FAFC] hover:scale-[1.03] transition-all duration-300 shadow-sm relative">
-//                 <span className="relative z-10">Sign In with Google</span>
-//                 <div className="absolute inset-0 bg-white/30 blur-md rounded-xl opacity-0 hover:opacity-100 transition-opacity" />
-//               </Link>
-//             </div>
-//           </div>
-//         </Reveal3D>
-//       </section>
-
-//       {/* Premium Footer */}
-//       <footer className="border-t border-[#E2E8F0] bg-[#F8FAFC] py-16 text-sm">
-//         <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-10">
-
-//           <div className="flex flex-col gap-4">
-//             <div className="flex items-center gap-2">
-//               <div className="p-1.5 rounded-lg bg-[#2563EB] text-white shadow-sm">
-//                 <Printer className="w-4 h-4" />
-//               </div>
-//               <span className="text-[16px] font-[800] tracking-tight text-[#2563EB]">
-//                 CloudPrint
-//               </span>
-//             </div>
-//             <p className="text-[#64748B] leading-[1.7]">
-//               Automating university printing hubs through dynamic cloud systems, safe collections, and dynamic Student discounts.
-//             </p>
-//           </div>
-
-//           <div>
-//             <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">Features</h4>
-//             <div className="flex flex-col gap-2.5 font-[500]">
-//               <a href="#features" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">OTP Safe Printing</a>
-//               <a href="#locations" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Campus Map</a>
-//               <Link to="/blocks" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Location Selector</Link>
-//             </div>
-//           </div>
-
-//           <div>
-//             <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">Support & Documentation</h4>
-//             <div className="flex flex-col gap-2.5 font-[500]">
-//               <Link to="/admin-login" className="text-[#334155] hover:text-[#2563EB] transition-[0.3s]">Admin Login</Link>
-//               <span className="normal-case font-[700] text-[#2563EB] block">🌐 {window.location.host || 'saipraveen.soye'}</span>
-//             </div>
-//           </div>
-
-//           <div>
-//             <h4 className="text-[#111827] font-[700] uppercase tracking-widest mb-4 text-xs">CloudPrint Ecosystem</h4>
-//             <p className="text-[#64748B] leading-[1.7]">
-//               Designed for high-performance kiosk TVs, student notebooks, and campus admins.
-//             </p>
-//             <p className="mt-4 text-[11px] text-[#94A3B8] font-[500]">
-//               © {new Date().getFullYear()} CloudPrint Inc. All rights reserved.
-//             </p>
-//           </div>
-
-//         </div>
-//       </footer>
-//     </div>
-
-//       {/* Intro Video Overlay */}
-//       <AnimatePresence>
-//         {showIntro && (
-//           <motion.div
-//             className="fixed inset-0 z-50 bg-black"
-//             initial={{ opacity: 1 }}
-//             exit={{ opacity: 0 }}
-//             transition={{ duration: 0.6 }}
-//           >
-//             <video
-//               ref={introVideoRef}
-//               autoPlay
-//               muted={isMuted}
-//               playsInline
-//               className="w-full h-full object-cover absolute inset-0 z-0"
-//               onEnded={handleSkipIntro}
-//             >
-//               <source src={introVideo} type="video/mp4" />
-//             </video>
-
-//             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10 pointer-events-none" />
-
-//             {/* Tap to Start splash */}
-//             <AnimatePresence>
-//               {isMuted && (
-//                 <motion.div
-//                   className="absolute inset-0 z-30 flex flex-col items-start justify-end pb-10 pl-10 cursor-pointer"
-//                   initial={{ opacity: 0 }}
-//                   animate={{ opacity: 1 }}
-//                   exit={{ opacity: 0 }}
-//                   transition={{ duration: 0.3 }}
-//                   onClick={() => {
-//                     const v = introVideoRef.current;
-//                     if (!v) return;
-//                     v.muted = false;
-//                     v.play().catch(() => {});
-//                     setIsMuted(false);
-//                   }}
-//                 >
-//                   <motion.div
-//                     className="flex flex-row items-center gap-3"
-//                     animate={{ scale: [1, 1.04, 1] }}
-//                     transition={{ repeat: Infinity, duration: 2 }}
-//                   >
-//                     <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center shadow-2xl">
-//                       <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-//                         <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-//                       </svg>
-//                     </div>
-//                     <p className="text-white font-black text-xs tracking-widest uppercase">Tap to Unmute</p>
-//                   </motion.div>
-//                 </motion.div>
-//               )}
-//             </AnimatePresence>
-
-//             {/* Skip button */}
-//             <button
-//               onClick={handleSkipIntro}
-//               className="absolute bottom-10 right-10 z-40 px-6 py-3 bg-white/10 hover:bg-white/25 text-white font-black text-sm tracking-wider uppercase rounded-full border border-white/25 backdrop-blur-md transition-all shadow-2xl hover:scale-105 active:scale-95"
-//             >
-//               Skip Intro →
-//             </button>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-
-//       {/* Demo Video Modal */}
-//       <AnimatePresence>
-//         {showDemo && (
-//           <motion.div
-//             className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
-//             initial={{ opacity: 0 }}
-//             animate={{ opacity: 1 }}
-//             exit={{ opacity: 0 }}
-//             onClick={() => setShowDemo(false)}
-//           >
-//             <motion.div
-//               className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-//               initial={{ scale: 0.92, y: 30 }}
-//               animate={{ scale: 1, y: 0 }}
-//               exit={{ scale: 0.92, y: 30 }}
-//               transition={{ type: "spring", stiffness: 260, damping: 22 }}
-//               onClick={(e) => e.stopPropagation()}
-//             >
-//               {/* Close button */}
-//               <button
-//                 onClick={() => setShowDemo(false)}
-//                 className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white font-black text-lg flex items-center justify-center border border-white/20 backdrop-blur-sm transition-all"
-//               >
-//                 ✕
-//               </button>
-
-//               {/* Header bar */}
-//               <div className="bg-slate-950 px-5 py-3 flex items-center gap-2 border-b border-white/10">
-//                 <div className="flex gap-1.5">
-//                   <span className="w-3 h-3 rounded-full bg-red-500" />
-//                   <span className="w-3 h-3 rounded-full bg-yellow-400" />
-//                   <span className="w-3 h-3 rounded-full bg-emerald-500" />
-//                 </div>
-//                 <span className="text-xs font-black text-slate-400 ml-2 uppercase tracking-widest">CloudPrint — How It Works</span>
-//               </div>
-
-//               <video
-//                 src={demoVideo}
-//                 autoPlay
-//                 controls
-//                 className="w-full aspect-video bg-black"
-//                 onEnded={() => setShowDemo(false)}
-//               />
-//             </motion.div>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//     </>
-//   );
-// }
-
-// export default Landing;
