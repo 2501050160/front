@@ -2210,6 +2210,10 @@ import kiosk0 from "../assets/kiosk-0.png";
 import kiosk45 from "../assets/kiosk-45.png";
 import kiosk90 from "../assets/kiosk-90.png";
 import kiosk315 from "../assets/kiosk-315.png";
+import aiStep1 from "../assets/ai-step1-upload.png";
+import aiStep2 from "../assets/ai-step2-printer.png";
+import aiStep3 from "../assets/ai-step3-otp.png";
+import aiStep4 from "../assets/ai-step4-collect.png";
 import {
   Printer,
   UploadCloud,
@@ -2308,68 +2312,15 @@ function Reveal3D({ children, className = "", delay = 0 }) {
 }
 
 // ---------------------------------------------------------------------------
-// Exact Reference Kiosk Machine PNG Views Stage — Pinned Bottom-Right 360 Scroll
+// Full-Screen Fast Bidirectional AI Stage Scroll Showcase
 // ---------------------------------------------------------------------------
-function KioskViewStage({ scrollProgress, activeStep, steps }) {
-  const views = [
-    { img: kiosk0, alt: "Kiosk Front View (0°)", skew: "" },
-    { img: kiosk45, alt: "Kiosk 45° Angle View", skew: "skewY(-2deg)" },
-    { img: kiosk90, alt: "Kiosk 90° Side View", skew: "" },
-    { img: kiosk315, alt: "Kiosk 315° Angle View", skew: "skewY(2deg)" }
-  ];
-
-  const currentViewIdx = Math.min(3, Math.max(0, Math.floor(scrollProgress * 4)));
-  const currentView = views[currentViewIdx];
-
-  return (
-    <div className="relative w-full h-full flex items-center justify-center p-4">
-      {/* Soft Ambient Glow under exact reference kiosk machine */}
-      <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/25 rounded-full blur-2xl pointer-events-none" />
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentViewIdx}
-          initial={{ opacity: 0, scale: 0.92, rotateY: -15 }}
-          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-          exit={{ opacity: 0, scale: 0.92, rotateY: 15 }}
-          transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-          className="relative w-full h-full flex items-center justify-center"
-        >
-          <img
-            src={currentView.img}
-            alt={currentView.alt}
-            className="w-full h-full object-contain filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
-          />
-
-          {/* Screen overlay mapped over exact reference kiosk screen */}
-          {currentViewIdx !== 2 && (
-            <div
-              className={`absolute bg-black/90 flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/30 rounded-[2px] shadow-inner transition-all duration-300 ${
-                currentViewIdx === 0
-                  ? "top-[16.5%] left-[35.5%] w-[32%] h-[11%]"
-                  : currentViewIdx === 1
-                  ? "top-[16.5%] left-[33.5%] w-[26%] h-[11%]"
-                  : "top-[16.5%] left-[40.5%] w-[26%] h-[11%]"
-              }`}
-              style={currentView.skew ? { transform: currentView.skew } : {}}
-            >
-              <div className="text-[10px] mb-0.5">{steps[activeStep].icon}</div>
-              <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">
-                {steps[activeStep].phoneLabel}
-              </p>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// Scroll-pinned 3D step showcase — exact reference kiosk views pinned bottom-right until 360 completed
 function ScrollSteps3D({ steps }) {
   const containerRef = useRef(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
+  const [scrollDir, setScrollDir] = useState("down");
+  const lastScrollY = useRef(0);
+
+  const aiImages = [aiStep1, aiStep2, aiStep3, aiStep4];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -2379,9 +2330,16 @@ function ScrollSteps3D({ steps }) {
       const totalScrollable = rect.height - window.innerHeight;
       if (totalScrollable <= 0) return;
 
+      const currentY = window.scrollY;
+      if (currentY > lastScrollY.current) {
+        setScrollDir("down");
+      } else if (currentY < lastScrollY.current) {
+        setScrollDir("up");
+      }
+      lastScrollY.current = currentY;
+
       const currentScroll = -rect.top;
       const progress = Math.min(1, Math.max(0, currentScroll / totalScrollable));
-      setScrollProgress(progress);
 
       const stepIdx = Math.min(3, Math.floor(progress * 4));
       setActiveStep(stepIdx);
@@ -2393,31 +2351,97 @@ function ScrollSteps3D({ steps }) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative min-h-[260vh]">
-      <div className="sticky top-20 min-h-[calc(100vh-6rem)] flex flex-col justify-center">
-        <div className="grid lg:grid-cols-12 gap-8 items-center">
-          {/* Left Column: Workflow Steps */}
-          <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
-            {steps.map((step, idx) => (
-              <div
-                key={step.title}
-                className={`py-6 pl-7 border-l-2 transition-all duration-500 ${
-                  activeStep === idx
-                    ? "border-blue-500 opacity-100 translate-x-0"
-                    : "border-white/10 opacity-30 -translate-x-1"
-                }`}
-              >
-                <span className="text-[11px] font-black text-blue-400 tracking-widest uppercase">Step {idx + 1}</span>
-                <h3 className="text-xl md:text-2xl font-black text-white mt-1 mb-1">{step.title}</h3>
-                <p className="text-sm text-slate-400 font-bold leading-relaxed max-w-sm">{step.desc}</p>
-              </div>
-            ))}
+    <div ref={containerRef} className="relative min-h-[300vh] bg-slate-950">
+      {/* Sticky Full-Screen AI Stage */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+        {/* Full-Screen AI Background Visual with Fast Transitions */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeStep}
+            initial={{
+              opacity: 0,
+              scale: scrollDir === "down" ? 1.08 : 0.94,
+              y: scrollDir === "down" ? 30 : -30
+            }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{
+              opacity: 0,
+              scale: scrollDir === "down" ? 0.94 : 1.08,
+              y: scrollDir === "down" ? -30 : 30
+            }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 w-full h-full"
+          >
+            <img
+              src={aiImages[activeStep]}
+              alt={steps[activeStep].title}
+              className="w-full h-full object-cover filter brightness-[0.75] contrast-[1.1]"
+            />
+            {/* Cinematic Gradient Vignette & Dark Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/70" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/30 to-transparent" />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Floating Full-Screen Interactive Content Overlay */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 h-full flex flex-col justify-between py-12 md:py-20 pointer-events-none">
+          {/* Top Stage Bar */}
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-slate-900/80 border border-white/10 backdrop-blur-md">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-xs font-black text-blue-400 uppercase tracking-widest">
+                Interactive Workflow — Step {activeStep + 1} of 4
+              </span>
+            </div>
+
+            {/* Fast Progress Indicator */}
+            <div className="flex items-center gap-2">
+              {steps.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    activeStep === idx
+                      ? "w-8 bg-blue-500"
+                      : "w-2 bg-white/20"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Right / Bottom-Right Column: Exact Reference Kiosk Machine Views */}
-          <div className="lg:col-span-6 flex justify-center lg:justify-end items-center">
-            <div className="relative w-full max-w-[360px] h-[480px] md:h-[520px] rounded-[28px] bg-slate-950/60 border border-white/10 shadow-2xl p-4 overflow-hidden backdrop-blur-md">
-              <KioskViewStage scrollProgress={scrollProgress} activeStep={activeStep} steps={steps} />
+          {/* Center Main Headline & Description */}
+          <div className="max-w-2xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeStep}
+                initial={{ opacity: 0, y: scrollDir === "down" ? 20 : -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: scrollDir === "down" ? -20 : 20 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <span className="text-xs font-black text-blue-400 tracking-[0.3em] uppercase bg-blue-950/80 border border-blue-800/60 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+                  {steps[activeStep].phoneLabel}
+                </span>
+                <h2 className="text-4xl md:text-6xl font-black text-white mt-4 leading-[0.98] tracking-tight drop-shadow-lg">
+                  {steps[activeStep].title}
+                </h2>
+                <p className="mt-4 text-base md:text-xl font-bold text-slate-300 leading-relaxed max-w-xl drop-shadow-md">
+                  {steps[activeStep].desc}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Bottom Navigation Hint */}
+          <div className="flex items-center justify-between border-t border-white/10 pt-6">
+            <div className="flex items-center gap-3 text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <span>Scroll down to advance</span>
+              <span>•</span>
+              <span>Scroll up to reverse</span>
+            </div>
+
+            <div className="flex items-center gap-4 text-slate-400 text-xs font-black uppercase tracking-widest">
+              <span>{Math.round(((activeStep + 1) / 4) * 100)}% Complete</span>
             </div>
           </div>
         </div>
