@@ -2199,6 +2199,7 @@
 
 
 import { useState, useEffect, useRef } from "react";
+import * as THREE from "three";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import introVideo from "../assets/intro.mp4";
@@ -2306,6 +2307,205 @@ function Reveal3D({ children, className = "", delay = 0 }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Procedural Three.js 3D Kiosk Model for WebGL 60FPS Interactive Showcase
+// ---------------------------------------------------------------------------
+function buildPrinterModel() {
+  const group = new THREE.Group();
+
+  // Main chassis body
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0f1420, metalness: 0.65, roughness: 0.35 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 1.8), bodyMat);
+  body.position.y = 0.1;
+  group.add(body);
+
+  // Top bevel accent
+  const topMat = new THREE.MeshStandardMaterial({ color: 0x1b2436, metalness: 0.75, roughness: 0.25 });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(2.25, 0.25, 1.85), topMat);
+  top.position.y = 1.75;
+  group.add(top);
+
+  // Glowing screen (front face)
+  const screenMat = new THREE.MeshStandardMaterial({
+    color: 0x0a0f1a,
+    emissive: new THREE.Color(0x3b82f6),
+    emissiveIntensity: 1.5,
+    roughness: 0.25
+  });
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.05), screenMat);
+  screen.position.set(0, 0.85, 0.92);
+  group.add(screen);
+
+  // Output slot glow strip
+  const slotMat = new THREE.MeshStandardMaterial({
+    color: 0x0a0f1a,
+    emissive: new THREE.Color(0x10b981),
+    emissiveIntensity: 1.3
+  });
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.05), slotMat);
+  slot.position.set(0, -0.45, 0.92);
+  group.add(slot);
+
+  // Paper tray group (slides forward on step 3)
+  const trayGroup = new THREE.Group();
+  trayGroup.position.set(0, -0.7, 0.9);
+  const trayMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 });
+  const tray = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.7), trayMat);
+  trayGroup.add(tray);
+  const paperMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
+  const paper = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.6), paperMat);
+  paper.position.y = 0.07;
+  trayGroup.add(paper);
+  group.add(trayGroup);
+
+  // Base pedestal
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x070a12, metalness: 0.4, roughness: 0.6 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.0, 0.25, 48), baseMat);
+  base.position.y = -1.55;
+  group.add(base);
+
+  // Floating cyan accent ring around base
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(2.05, 2.15, 64), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = -1.53;
+  group.add(ring);
+
+  return { group, screenMat, slotMat, trayGroup, ringMat };
+}
+
+function buildPageParticles(count = 20) {
+  const group = new THREE.Group();
+  const geo = new THREE.PlaneGeometry(0.25, 0.34);
+  const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, side: THREE.DoubleSide });
+  const meshes = [];
+  for (let i = 0; i < count; i++) {
+    const m = new THREE.Mesh(geo, mat.clone());
+    const radius = 2.8 + Math.random() * 2.0;
+    const angle = Math.random() * Math.PI * 2;
+    m.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 3.5, Math.sin(angle) * radius);
+    m.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    m.userData.speed = 0.12 + Math.random() * 0.2;
+    m.userData.phase = Math.random() * Math.PI * 2;
+    group.add(m);
+    meshes.push(m);
+  }
+  return { group, meshes };
+}
+
+function ThreeKioskCanvas({ activeStep }) {
+  const containerRef = useRef(null);
+  const activeStepRef = useRef(activeStep);
+  activeStepRef.current = activeStep;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const width = container.clientWidth || 320;
+    const height = container.clientHeight || 450;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(width, height);
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    camera.position.set(1.4, 0.4, 4.8);
+
+    // Lighting
+    const ambient = new THREE.AmbientLight(0x8899bb, 0.65);
+    scene.add(ambient);
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
+    key.position.set(3, 4, 5);
+    scene.add(key);
+    const rim = new THREE.PointLight(0x38bdf8, 5, 10);
+    rim.position.set(-3, 1.5, -2);
+    scene.add(rim);
+    const warm = new THREE.PointLight(0xf59e0b, 3, 8);
+    warm.position.set(2, -1, 2.5);
+    scene.add(warm);
+
+    const { group: printer, screenMat, slotMat, trayGroup, ringMat } = buildPrinterModel();
+    scene.add(printer);
+
+    const { group: particles, meshes: particleMeshes } = buildPageParticles();
+    scene.add(particles);
+
+    // Step target parameters
+    const stepTargets = [
+      { camPos: new THREE.Vector3(1.4, 0.4, 4.8), lookAt: new THREE.Vector3(0, 0.2, 0), rotY: 0.35, trayZ: 0.9, screenColor: 0x3b82f6, slotColor: 0x10b981 },
+      { camPos: new THREE.Vector3(-1.8, 0.5, 4.4), lookAt: new THREE.Vector3(0, 0.3, 0), rotY: -0.75, trayZ: 0.9, screenColor: 0x8b5cf6, slotColor: 0x10b981 },
+      { camPos: new THREE.Vector3(0.0, 0.6, 3.6), lookAt: new THREE.Vector3(0, 0.6, 0), rotY: 0.0, trayZ: 0.9, screenColor: 0xf59e0b, slotColor: 0x10b981 },
+      { camPos: new THREE.Vector3(0.4, -0.4, 3.8), lookAt: new THREE.Vector3(0, -0.5, 0), rotY: 0.25, trayZ: 1.45, screenColor: 0x10b981, slotColor: 0x34d399 }
+    ];
+
+    let currentCamPos = camera.position.clone();
+    let currentLookAt = new THREE.Vector3(0, 0.2, 0);
+
+    let raf;
+    const clock = new THREE.Clock();
+
+    const animate = () => {
+      const t = clock.getElapsedTime();
+      const stepIdx = Math.min(3, Math.max(0, activeStepRef.current));
+      const target = stepTargets[stepIdx];
+
+      // Lerp camera position and lookAt smoothly
+      currentCamPos.lerp(target.camPos, 0.06);
+      currentLookAt.lerp(target.lookAt, 0.06);
+      camera.position.copy(currentCamPos);
+      camera.lookAt(currentLookAt);
+
+      // Lerp printer rotation + idle bob
+      printer.rotation.y += (target.rotY + Math.sin(t * 0.5) * 0.04 - printer.rotation.y) * 0.06;
+      printer.position.y = Math.sin(t * 0.8) * 0.04;
+
+      // Lerp tray extension
+      trayGroup.position.z += (target.trayZ - trayGroup.position.z) * 0.08;
+
+      // Pulse screen and ring glow
+      screenMat.emissive.setHex(target.screenColor);
+      screenMat.emissiveIntensity = 1.3 + Math.sin(t * 2.5) * 0.25;
+      slotMat.emissive.setHex(target.slotColor);
+      ringMat.opacity = 0.45 + Math.sin(t * 1.5) * 0.2;
+
+      // Drift floating paper particles
+      particleMeshes.forEach((m) => {
+        m.position.y += Math.sin(t * m.userData.speed + m.userData.phase) * 0.0015;
+        m.rotation.z += 0.001;
+      });
+
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const w = containerRef.current.clientWidth || 320;
+      const h = containerRef.current.clientHeight || 450;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", handleResize);
+      renderer.dispose();
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
+    };
+  }, []);
+
+  return <div ref={containerRef} className="w-full h-full relative" />;
+}
+
 // Scroll-pinned 3D step showcase (the qwikprint.in technique) — a sticky
 // phone mockup on desktop swaps its screen content as each step scrolls
 // into view, driven by IntersectionObserver rather than scroll-position
@@ -2331,8 +2531,6 @@ function ScrollSteps3D({ steps }) {
     return () => observer.disconnect();
   }, [steps.length]);
 
-  const phoneRotations = [-14, -4, 6, 16];
-
   return (
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
       <div className="flex flex-col">
@@ -2355,136 +2553,22 @@ function ScrollSteps3D({ steps }) {
       </div>
 
       <div className="h-full">
-        {/* Desktop: sticky 3D transparent PNG kiosk showcase */}
+        {/* Desktop: sticky 3D Three.js WebGL Kiosk showcase */}
         <div className="hidden lg:flex sticky top-28 h-[480px] items-center justify-center">
-          <div className="relative w-[320px] h-[460px] flex items-center justify-center">
+          <div className="relative w-[340px] h-[460px] flex items-center justify-center rounded-[28px] bg-slate-950/80 border border-white/10 shadow-2xl p-4 overflow-hidden backdrop-blur-md">
             {/* Soft Ambient Glow under kiosk */}
             <div className="absolute inset-x-8 bottom-6 h-12 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeStep}
-                initial={{ opacity: 0, scale: 0.92, rotateY: -20 }}
-                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                exit={{ opacity: 0, scale: 0.92, rotateY: 20 }}
-                transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
-                className="relative w-full h-full flex items-center justify-center"
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                {activeStep === 0 && (
-                  <>
-                    <img 
-                      src={kiosk0} 
-                      alt="CloudPrint Kiosk 0" 
-                      className="w-full h-full object-contain filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.7)]" 
-                    />
-                    <div className="absolute top-[16.5%] left-[35.5%] w-[32%] h-[11%] bg-black/90 flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/30 rounded-[2px] shadow-inner">
-                      <div className="text-[10px] mb-0.5">{steps[0].icon}</div>
-                      <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[0].phoneLabel}</p>
-                    </div>
-                  </>
-                )}
-                {activeStep === 1 && (
-                  <>
-                    <img 
-                      src={kiosk45} 
-                      alt="CloudPrint Kiosk 45" 
-                      className="w-full h-full object-contain filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.7)]" 
-                    />
-                    <div className="absolute top-[16.5%] left-[33.5%] w-[26%] h-[11%] bg-black/90 flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/30 rounded-[2px] shadow-inner" style={{ transform: "skewY(-2deg)" }}>
-                      <div className="text-[10px] mb-0.5">{steps[1].icon}</div>
-                      <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[1].phoneLabel}</p>
-                    </div>
-                  </>
-                )}
-                {activeStep === 2 && (
-                  <img 
-                    src={kiosk90} 
-                    alt="CloudPrint Kiosk 90" 
-                    className="w-full h-full object-contain filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.7)]" 
-                  />
-                )}
-                {activeStep === 3 && (
-                  <>
-                    <img 
-                      src={kiosk315} 
-                      alt="CloudPrint Kiosk 315" 
-                      className="w-full h-full object-contain filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.7)]" 
-                    />
-                    <div className="absolute top-[16.5%] left-[40.5%] w-[26%] h-[11%] bg-black/90 flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/30 rounded-[2px] shadow-inner" style={{ transform: "skewY(2deg)" }}>
-                      <div className="text-[10px] mb-0.5">{steps[3].icon}</div>
-                      <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[3].phoneLabel}</p>
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            </AnimatePresence>
+            <ThreeKioskCanvas activeStep={activeStep} />
           </div>
         </div>
 
-        {/* Mobile: compact tiltable kiosk photo card */}
+        {/* Mobile: compact Three.js WebGL Kiosk card */}
         <div className="lg:hidden mt-2 mb-10">
           <TiltCard
-            className="w-full max-w-[260px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative transition-all duration-500 bg-slate-950/60 backdrop-blur-md"
+            className="w-full max-w-[280px] h-[380px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative bg-slate-950/80 backdrop-blur-md p-2"
             tiltOptions={{ maxTilt: 10, scale: 1.02 }}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeStep}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                className="w-full h-full relative"
-              >
-                {activeStep === 0 && (
-                  <>
-                    <img 
-                      src={kiosk0} 
-                      alt="CloudPrint Kiosk 0" 
-                      className="w-full h-full object-contain" 
-                    />
-                    <div className="absolute top-[16.5%] left-[35.5%] w-[32%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]">
-                      <div className="text-[8px] mb-0.5">{steps[0].icon}</div>
-                      <p className="text-[4px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[0].phoneLabel}</p>
-                    </div>
-                  </>
-                )}
-                {activeStep === 1 && (
-                  <>
-                    <img 
-                      src={kiosk45} 
-                      alt="CloudPrint Kiosk 45" 
-                      className="w-full h-full object-contain" 
-                    />
-                    <div className="absolute top-[16.5%] left-[33.5%] w-[26%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]" style={{ transform: "skewY(-2deg)" }}>
-                      <div className="text-[8px] mb-0.5">{steps[1].icon}</div>
-                      <p className="text-[4px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[1].phoneLabel}</p>
-                    </div>
-                  </>
-                )}
-                {activeStep === 2 && (
-                  <img 
-                    src={kiosk90} 
-                    alt="CloudPrint Kiosk 90" 
-                    className="w-full h-full object-contain" 
-                  />
-                )}
-                {activeStep === 3 && (
-                  <>
-                    <img 
-                      src={kiosk315} 
-                      alt="CloudPrint Kiosk 315" 
-                      className="w-full h-full object-contain" 
-                    />
-                    <div className="absolute top-[16.5%] left-[40.5%] w-[26%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]" style={{ transform: "skewY(2deg)" }}>
-                      <div className="text-[8px] mb-0.5">{steps[3].icon}</div>
-                      <p className="text-[4px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[3].phoneLabel}</p>
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            </AnimatePresence>
+            <ThreeKioskCanvas activeStep={activeStep} />
           </TiltCard>
         </div>
       </div>
