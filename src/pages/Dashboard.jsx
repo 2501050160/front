@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
-import api from "../services/api";
+import api, { RAZORPAY_KEY } from "../services/api";
 import Navbar from "../components/Navbar";
 import { getWalletBalance, clearUserSession } from "../services/auth";
 import CustomModal from "../components/CustomModal";
@@ -78,6 +78,7 @@ function Dashboard() {
     const [dontShowAgain, setDontShowAgain] = useState(false);
     const [colorSupported, setColorSupported] = useState(false);
     const [isProceedingToOrder, setIsProceedingToOrder] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState("");
 
     // General Announcement Modal States
     const [showGeneralPopup, setShowGeneralPopup] = useState(false);
@@ -386,6 +387,186 @@ function Dashboard() {
             showAlert("Order Failed", "Unable to create order.", "error");
         } finally {
             setIsProceedingToOrder(false);
+        }
+    };
+
+    const payWithWalletDirect = async () => {
+        if (!uploaded) {
+            showAlert("Files Not Uploaded", "Please upload selected files first.", "warning");
+            return;
+        }
+
+        if (pageOption === "CUSTOM") {
+            const start = parseInt(startPage);
+            const end = parseInt(endPage);
+
+            if (isNaN(start) || isNaN(end) || start < 1 || end > totalPages || start > end) {
+                showAlert("Invalid Pages", `Pages must be between 1 and ${totalPages}`, "error");
+                return;
+            }
+        }
+
+        if (isLowPaper) {
+            showAlert("Low Paper Level", "Print cannot be done due to low paper levels in this block.", "error");
+            return;
+        }
+
+        if (walletBalance < estimatedTotal) {
+            showAlert("Insufficient Funds", `Insufficient wallet balance. You need ₹${estimatedTotal.toFixed(2)}, but you only have ₹${walletBalance.toFixed(2)}.`, "warning");
+            return;
+        }
+
+        if (paymentMethod) return;
+
+        setPaymentMethod("wallet");
+        try {
+            // 1. Update the order with current settings
+            const response = await api.post(
+                "/pdf/updateOrder",
+                null,
+                {
+                    params: {
+                        orderId,
+                        copies,
+                        printType,
+                        blockLocation,
+                        selectedPages:
+                            pageOption === "ALL"
+                                ? "ALL"
+                                : `${startPage}-${endPage}`,
+                        nupLayout,
+                        doubleSided
+                    }
+                }
+            );
+
+            const finalOrder = response.data;
+
+            // 2. Pay using wallet balance
+            await api.post("/pdf/payWithWallet", null, {
+                params: {
+                    orderId: finalOrder.orderId
+                }
+            });
+
+            await getWalletBalance(userId).then(setWalletBalance);
+            localStorage.removeItem("order");
+            navigate(`/payment-success?orderId=${finalOrder.orderId}`);
+        } catch (error) {
+            console.error(error);
+            showAlert("Error", error.response?.data?.message || "Wallet payment failed", "error");
+        } finally {
+            setPaymentMethod("");
+        }
+    };
+
+    const payNowDirect = async () => {
+        if (!uploaded) {
+            showAlert("Files Not Uploaded", "Please upload selected files first.", "warning");
+            return;
+        }
+
+        if (pageOption === "CUSTOM") {
+            const start = parseInt(startPage);
+            const end = parseInt(endPage);
+
+            if (isNaN(start) || isNaN(end) || start < 1 || end > totalPages || start > end) {
+                showAlert("Invalid Pages", `Pages must be between 1 and ${totalPages}`, "error");
+                return;
+            }
+        }
+
+        if (isLowPaper) {
+            showAlert("Low Paper Level", "Print cannot be done due to low paper levels in this block.", "error");
+            return;
+        }
+
+        if (paymentMethod) return;
+
+        setPaymentMethod("razorpay");
+        try {
+            // 1. Update the order with current settings
+            const response = await api.post(
+                "/pdf/updateOrder",
+                null,
+                {
+                    params: {
+                        orderId,
+                        copies,
+                        printType,
+                        blockLocation,
+                        selectedPages:
+                            pageOption === "ALL"
+                                ? "ALL"
+                                : `${startPage}-${endPage}`,
+                        nupLayout,
+                        doubleSided
+                    }
+                }
+            );
+
+            const finalOrder = response.data;
+
+            // 2. Create Razorpay Order
+            const rzpRes = await api.post("/payment/createOrder", null, {
+                params: {
+                    amount: finalOrder.price,
+                    appOrderId: finalOrder.orderId
+                }
+            });
+
+            const orderData = rzpRes.data;
+
+            const options = {
+                key: RAZORPAY_KEY,
+                amount: orderData.amount,
+                currency: "INR",
+                name: "Cloud Print",
+                description: "Print Order Payment",
+                order_id: orderData.id,
+                handler: async function (response) {
+                    try {
+                        await api.post("/pdf/paymentSuccess", null, {
+                            params: {
+                                orderId: finalOrder.orderId,
+                                paymentId: response.razorpay_payment_id
+                            }
+                        });
+
+                        localStorage.removeItem("order");
+                        navigate(`/payment-success?orderId=${finalOrder.orderId}`);
+                    } catch (error) {
+                        console.error("Failed to mark order as paid:", error);
+                        showAlert("Error", "Unable to update payment status in our database.", "error");
+                        setPaymentMethod("");
+                    }
+                },
+                modal: {
+                    ondismiss: function () {
+                        console.log("Payment checkout modal was closed.");
+                        showAlert("Payment Cancelled", "The payment checkout was closed.", "warning");
+                        setPaymentMethod("");
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            
+            rzp.on('payment.failed', function (response) {
+                console.error("Razorpay Payment Failure Detail:", response.error);
+                showAlert(
+                    "Payment Failed",
+                    `Reason: ${response.error.description || "The transaction was declined by the bank/gateway."}`,
+                    "error"
+                );
+                setPaymentMethod("");
+            });
+
+            rzp.open();
+        } catch (error) {
+            console.error("Payment initiation error:", error);
+            showAlert("Payment Error", "Unable to initiate payment transaction.", "error");
+            setPaymentMethod("");
         }
     };
 
@@ -794,6 +975,43 @@ function Dashboard() {
                                 </div>
                             </div>
 
+                            {uploaded && (
+                                <div className="mt-5 space-y-3">
+                                    <button
+                                        onClick={payWithWalletDirect}
+                                        disabled={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal}
+                                        className="btn secondary w-full flex items-center justify-center gap-2"
+                                        style={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                    >
+                                        {paymentMethod === "wallet" ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4 text-slate-700" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                </svg>
+                                                Processing Wallet...
+                                            </>
+                                        ) : `Pay with Wallet (₹${estimatedTotal.toFixed(2)})`}
+                                    </button>
+                                    <button
+                                        onClick={payNowDirect}
+                                        disabled={isPrintingDisabled || !!paymentMethod}
+                                        className="btn success w-full flex items-center justify-center gap-2"
+                                        style={isPrintingDisabled || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                    >
+                                        {paymentMethod === "razorpay" ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                </svg>
+                                                Proceeding to Payment...
+                                            </>
+                                        ) : "Proceed to Payment"}
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Printer Info Panel */}
                             <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
                                 <p className="eyebrow">Printer Details</p>
@@ -934,14 +1152,38 @@ function Dashboard() {
                                         </label>
                                     </div>
 
-                                    <div className="mt-5 flex justify-end">
+                                    <div className="mt-5 flex flex-col sm:flex-row justify-end gap-3">
                                         <button
-                                            onClick={proceedToOrder}
-                                            className="btn success px-8 py-3"
-                                            disabled={isPrintingDisabled || isProceedingToOrder}
-                                            style={isPrintingDisabled || isProceedingToOrder ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                            onClick={payWithWalletDirect}
+                                            className="btn secondary px-8 py-3"
+                                            disabled={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal}
+                                            style={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
                                         >
-                                            {isProceedingToOrder ? "Proceeding to Order..." : "Proceed To Order"}
+                                            {paymentMethod === "wallet" ? (
+                                                <>
+                                                    <svg className="animate-spin h-4 w-4 text-slate-700 inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                    </svg>
+                                                    Processing Wallet Payment...
+                                                </>
+                                            ) : `Pay with Wallet (₹${estimatedTotal.toFixed(2)})`}
+                                        </button>
+                                        <button
+                                            onClick={payNowDirect}
+                                            className="btn success px-8 py-3 flex items-center justify-center gap-2"
+                                            disabled={isPrintingDisabled || !!paymentMethod}
+                                            style={isPrintingDisabled || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                        >
+                                            {paymentMethod === "razorpay" ? (
+                                                <>
+                                                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                    </svg>
+                                                    Proceeding to Payment...
+                                                </>
+                                            ) : "Proceed to Payment"}
                                         </button>
                                     </div>
 
@@ -1344,7 +1586,7 @@ function Dashboard() {
             {/* Privacy Policy Modal */}
             <AnimatePresence>
                 {showPrivacyNotice && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40">
                         <motion.div
                             className="relative my-auto w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 z-10 cursor-grab active:cursor-grabbing"
                             drag
@@ -1411,7 +1653,7 @@ function Dashboard() {
             {/* General Announcement Modal */}
             <AnimatePresence>
                 {showGeneralPopup && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40">
                         <motion.div
                             className="relative my-auto w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 z-10 cursor-grab active:cursor-grabbing"
                             drag
@@ -1478,7 +1720,7 @@ function Dashboard() {
             {/* Uploading Status Popup Modal */}
             <AnimatePresence>
                 {uploading && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50">
                         <motion.div 
                             className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full my-auto max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col items-center text-center"
                             initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -1516,7 +1758,7 @@ function Dashboard() {
             {/* Wallet Details Popup Modal */}
             <AnimatePresence>
                 {showWalletModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50">
                         <motion.div 
                             className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full my-auto max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col items-center text-center relative"
                             initial={{ opacity: 0, scale: 0.95, y: 15 }}

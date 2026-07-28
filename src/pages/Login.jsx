@@ -408,7 +408,7 @@ function Login() {
             <AnimatePresence>
                 {oauthNewUser && (
                     <motion.div 
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

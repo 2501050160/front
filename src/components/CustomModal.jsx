@@ -54,7 +54,7 @@ function CustomModal({
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40">
                     {/* Backdrop Click */}
                     <div className="absolute inset-0" onClick={type === "confirm" ? null : onClose} />
 

@@ -941,7 +941,7 @@ function BlockSelection() {
             <AnimatePresence>
                 {showOtpModal && (
                     <motion.div 
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
