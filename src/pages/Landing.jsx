@@ -2206,6 +2206,7 @@ import demoVideo from "../assets/demo.mp4";
 import inVideo from "../assets/in.mp4";
 import api from "../services/api";
 import printKioskBg from "../assets/print-kiosk-bg.png";
+import stepUpload from "../assets/step-upload.png";
 import {
   Printer,
   UploadCloud,
@@ -2352,56 +2353,76 @@ function ScrollSteps3D({ steps }) {
       </div>
 
       <div>
-        {/* Desktop: sticky 3D kiosk photo showcase */}
+        {/* Desktop: sticky 3D kiosk/upload photo showcase */}
         <div className="hidden lg:flex sticky top-28 h-[460px] items-center justify-center">
-          <div className="relative w-[300px] h-[450px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl">
-            <img 
-              src={printKioskBg} 
-              alt="CloudPrint Kiosk" 
-              className="w-full h-full object-cover" 
-            />
-            {/* Dynamic Screen Overlay over the kiosk display panel */}
-            <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
-              {steps.map((step, idx) => (
-                <div
-                  key={step.title}
-                  className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
-                    activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                  }`}
-                >
-                  <div className="text-xl mb-1">{step.icon}</div>
-                  <p className="text-[9px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
+          <div className="relative w-[300px] h-[450px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl transition-all duration-500">
+            {activeStep === 0 ? (
+              <img 
+                src={stepUpload} 
+                alt="Upload PDF mockup" 
+                className="w-full h-full object-contain bg-slate-950 p-2" 
+              />
+            ) : (
+              <>
+                <img 
+                  src={printKioskBg} 
+                  alt="CloudPrint Kiosk" 
+                  className="w-full h-full object-cover" 
+                />
+                {/* Dynamic Screen Overlay over the kiosk display panel */}
+                <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
+                  {steps.map((step, idx) => (
+                    <div
+                      key={step.title}
+                      className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
+                        activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                      }`}
+                    >
+                      <div className="text-xl mb-1">{step.icon}</div>
+                      <p className="text-[9px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Mobile: compact tiltable kiosk photo card */}
+        {/* Mobile: compact tiltable kiosk/upload photo card */}
         <div className="lg:hidden mt-2 mb-10">
           <TiltCard
-            className="w-full max-w-[260px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative"
+            className="w-full max-w-[260px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative transition-all duration-500"
             tiltOptions={{ maxTilt: 10, scale: 1.02 }}
           >
-            <img 
-              src={printKioskBg} 
-              alt="CloudPrint Kiosk" 
-              className="w-full h-full object-cover" 
-            />
-            {/* Dynamic Screen Overlay over the kiosk display panel */}
-            <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
-              {steps.map((step, idx) => (
-                <div
-                  key={step.title}
-                  className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
-                    activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                  }`}
-                >
-                  <div className="text-lg mb-0.5">{step.icon}</div>
-                  <p className="text-[8px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
+            {activeStep === 0 ? (
+              <img 
+                src={stepUpload} 
+                alt="Upload PDF mockup" 
+                className="w-full h-full object-contain bg-slate-950 p-2" 
+              />
+            ) : (
+              <>
+                <img 
+                  src={printKioskBg} 
+                  alt="CloudPrint Kiosk" 
+                  className="w-full h-full object-cover" 
+                />
+                {/* Dynamic Screen Overlay over the kiosk display panel */}
+                <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
+                  {steps.map((step, idx) => (
+                    <div
+                      key={step.title}
+                      className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
+                        activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                      }`}
+                    >
+                      <div className="text-lg mb-0.5">{step.icon}</div>
+                      <p className="text-[8px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </TiltCard>
         </div>
       </div>
