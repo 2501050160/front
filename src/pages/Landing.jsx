@@ -2351,7 +2351,7 @@ function ScrollSteps3D({ steps }) {
   ];
 
   return (
-    <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start relative">
+    <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 relative">
       {/* Left Column: 4 Scroll Steps with height so sticky right column can pin */}
       <div className="flex flex-col space-y-12 py-6">
         {steps.map((step, idx) => (
