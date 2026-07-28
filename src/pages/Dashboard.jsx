@@ -77,6 +77,7 @@ function Dashboard() {
     const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
     const [colorSupported, setColorSupported] = useState(false);
+    const [isProceedingToOrder, setIsProceedingToOrder] = useState(false);
 
     // General Announcement Modal States
     const [showGeneralPopup, setShowGeneralPopup] = useState(false);
@@ -357,6 +358,7 @@ function Dashboard() {
             return;
         }
 
+        setIsProceedingToOrder(true);
         try {
             const response = await api.post(
                 "/pdf/updateOrder",
@@ -382,6 +384,8 @@ function Dashboard() {
         } catch (error) {
             console.error(error);
             showAlert("Order Failed", "Unable to create order.", "error");
+        } finally {
+            setIsProceedingToOrder(false);
         }
     };
 
@@ -934,10 +938,10 @@ function Dashboard() {
                                         <button
                                             onClick={proceedToOrder}
                                             className="btn success px-8 py-3"
-                                            disabled={isPrintingDisabled}
-                                            style={isPrintingDisabled ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                            disabled={isPrintingDisabled || isProceedingToOrder}
+                                            style={isPrintingDisabled || isProceedingToOrder ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
                                         >
-                                            Proceed To Order
+                                            {isProceedingToOrder ? "Proceeding to Order..." : "Proceed To Order"}
                                         </button>
                                     </div>
 
@@ -1340,9 +1344,9 @@ function Dashboard() {
             {/* Privacy Policy Modal */}
             <AnimatePresence>
                 {showPrivacyNotice && (
-                    <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
                         <motion.div
-                            className="relative my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 z-10 cursor-grab active:cursor-grabbing touch-none"
+                            className="relative my-auto w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 z-10 cursor-grab active:cursor-grabbing"
                             drag
                             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                             dragElastic={0.6}
@@ -1407,9 +1411,9 @@ function Dashboard() {
             {/* General Announcement Modal */}
             <AnimatePresence>
                 {showGeneralPopup && (
-                    <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-sm">
                         <motion.div
-                            className="relative my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 z-10 cursor-grab active:cursor-grabbing touch-none"
+                            className="relative my-auto w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 z-10 cursor-grab active:cursor-grabbing"
                             drag
                             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                             dragElastic={0.6}
@@ -1474,9 +1478,9 @@ function Dashboard() {
             {/* Uploading Status Popup Modal */}
             <AnimatePresence>
                 {uploading && (
-                    <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
                         <motion.div 
-                            className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full my-auto shadow-2xl border border-slate-100 flex flex-col items-center text-center"
+                            className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full my-auto max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col items-center text-center"
                             initial={{ opacity: 0, scale: 0.95, y: 15 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -1512,9 +1516,9 @@ function Dashboard() {
             {/* Wallet Details Popup Modal */}
             <AnimatePresence>
                 {showWalletModal && (
-                    <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
                         <motion.div 
-                            className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full my-auto shadow-2xl border border-slate-100 flex flex-col items-center text-center relative"
+                            className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full my-auto max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col items-center text-center relative"
                             initial={{ opacity: 0, scale: 0.95, y: 15 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 15 }}
