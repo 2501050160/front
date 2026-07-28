@@ -2205,8 +2205,10 @@ import introVideo from "../assets/intro.mp4";
 import demoVideo from "../assets/demo.mp4";
 import inVideo from "../assets/in.mp4";
 import api from "../services/api";
-import printKioskBg from "../assets/print-kiosk-bg.png";
-import stepUpload from "../assets/step-upload.png";
+import kiosk0 from "../assets/kiosk-0.png";
+import kiosk45 from "../assets/kiosk-45.png";
+import kiosk90 from "../assets/kiosk-90.png";
+import kiosk315 from "../assets/kiosk-315.png";
 import {
   Printer,
   UploadCloud,
@@ -2355,33 +2357,50 @@ function ScrollSteps3D({ steps }) {
       <div>
         {/* Desktop: sticky 3D kiosk/upload photo showcase */}
         <div className="hidden lg:flex sticky top-28 h-[460px] items-center justify-center">
-          <div className="relative w-[300px] h-[450px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl transition-all duration-500">
-            {activeStep === 0 ? (
-              <img 
-                src={stepUpload} 
-                alt="Upload PDF mockup" 
-                className="w-full h-full object-contain bg-slate-950 p-2" 
-              />
-            ) : (
+          <div className="relative w-[300px] h-[450px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl transition-all duration-500 bg-slate-950">
+            {activeStep === 0 && (
               <>
                 <img 
-                  src={printKioskBg} 
-                  alt="CloudPrint Kiosk" 
-                  className="w-full h-full object-cover" 
+                  src={kiosk0} 
+                  alt="CloudPrint Kiosk 0" 
+                  className="w-full h-full object-contain" 
                 />
-                {/* Dynamic Screen Overlay over the kiosk display panel */}
-                <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
-                  {steps.map((step, idx) => (
-                    <div
-                      key={step.title}
-                      className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
-                        activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                      }`}
-                    >
-                      <div className="text-xl mb-1">{step.icon}</div>
-                      <p className="text-[9px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
-                    </div>
-                  ))}
+                <div className="absolute top-[16.5%] left-[35.5%] w-[32%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]">
+                  <div className="text-[10px] mb-0.5">{steps[0].icon}</div>
+                  <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[0].phoneLabel}</p>
+                </div>
+              </>
+            )}
+            {activeStep === 1 && (
+              <>
+                <img 
+                  src={kiosk45} 
+                  alt="CloudPrint Kiosk 45" 
+                  className="w-full h-full object-contain" 
+                />
+                <div className="absolute top-[16.5%] left-[33.5%] w-[26%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]" style={{ transform: "skewY(-2deg)" }}>
+                  <div className="text-[10px] mb-0.5">{steps[1].icon}</div>
+                  <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[1].phoneLabel}</p>
+                </div>
+              </>
+            )}
+            {activeStep === 2 && (
+              <img 
+                src={kiosk90} 
+                alt="CloudPrint Kiosk 90" 
+                className="w-full h-full object-contain" 
+              />
+            )}
+            {activeStep === 3 && (
+              <>
+                <img 
+                  src={kiosk315} 
+                  alt="CloudPrint Kiosk 315" 
+                  className="w-full h-full object-contain" 
+                />
+                <div className="absolute top-[16.5%] left-[40.5%] w-[26%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]" style={{ transform: "skewY(2deg)" }}>
+                  <div className="text-[10px] mb-0.5">{steps[3].icon}</div>
+                  <p className="text-[5px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[3].phoneLabel}</p>
                 </div>
               </>
             )}
@@ -2391,35 +2410,52 @@ function ScrollSteps3D({ steps }) {
         {/* Mobile: compact tiltable kiosk/upload photo card */}
         <div className="lg:hidden mt-2 mb-10">
           <TiltCard
-            className="w-full max-w-[260px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative transition-all duration-500"
+            className="w-full max-w-[260px] h-[390px] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl mx-auto relative transition-all duration-500 bg-slate-950"
             tiltOptions={{ maxTilt: 10, scale: 1.02 }}
           >
-            {activeStep === 0 ? (
-              <img 
-                src={stepUpload} 
-                alt="Upload PDF mockup" 
-                className="w-full h-full object-contain bg-slate-950 p-2" 
-              />
-            ) : (
+            {activeStep === 0 && (
               <>
                 <img 
-                  src={printKioskBg} 
-                  alt="CloudPrint Kiosk" 
-                  className="w-full h-full object-cover" 
+                  src={kiosk0} 
+                  alt="CloudPrint Kiosk 0" 
+                  className="w-full h-full object-contain" 
                 />
-                {/* Dynamic Screen Overlay over the kiosk display panel */}
-                <div className="absolute top-[11.5%] left-[35%] w-[49.5%] h-[15.5%] bg-black/95 flex flex-col items-center justify-center p-2 text-center select-none border border-blue-500/20 rounded-[4px]">
-                  {steps.map((step, idx) => (
-                    <div
-                      key={step.title}
-                      className={`absolute inset-0 flex flex-col items-center justify-center p-2 transition-all duration-500 ${
-                        activeStep === idx ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                      }`}
-                    >
-                      <div className="text-lg mb-0.5">{step.icon}</div>
-                      <p className="text-[8px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{step.phoneLabel}</p>
-                    </div>
-                  ))}
+                <div className="absolute top-[16.5%] left-[35.5%] w-[32%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]">
+                  <div className="text-[8px] mb-0.5">{steps[0].icon}</div>
+                  <p className="text-[4px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[0].phoneLabel}</p>
+                </div>
+              </>
+            )}
+            {activeStep === 1 && (
+              <>
+                <img 
+                  src={kiosk45} 
+                  alt="CloudPrint Kiosk 45" 
+                  className="w-full h-full object-contain" 
+                />
+                <div className="absolute top-[16.5%] left-[33.5%] w-[26%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]" style={{ transform: "skewY(-2deg)" }}>
+                  <div className="text-[8px] mb-0.5">{steps[1].icon}</div>
+                  <p className="text-[4px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[1].phoneLabel}</p>
+                </div>
+              </>
+            )}
+            {activeStep === 2 && (
+              <img 
+                src={kiosk90} 
+                alt="CloudPrint Kiosk 90" 
+                className="w-full h-full object-contain" 
+              />
+            )}
+            {activeStep === 3 && (
+              <>
+                <img 
+                  src={kiosk315} 
+                  alt="CloudPrint Kiosk 315" 
+                  className="w-full h-full object-contain" 
+                />
+                <div className="absolute top-[16.5%] left-[40.5%] w-[26%] h-[11%] bg-black flex flex-col items-center justify-center p-1 text-center select-none border border-blue-500/20 rounded-[2px]" style={{ transform: "skewY(2deg)" }}>
+                  <div className="text-[8px] mb-0.5">{steps[3].icon}</div>
+                  <p className="text-[4px] font-black text-blue-400 tracking-wider uppercase truncate max-w-full">{steps[3].phoneLabel}</p>
                 </div>
               </>
             )}
