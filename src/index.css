@@ -95,7 +95,7 @@ button:disabled {
 }
 
 .auth-shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   place-items: center;
   padding: 0;
@@ -121,7 +121,7 @@ button:disabled {
 
 .auth-grid {
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: 7fr 3fr;
   overflow: hidden;
@@ -726,16 +726,68 @@ button:disabled {
 }
 
 @media (max-width: 920px) {
-  .auth-grid {
+  .auth-shell, .auth-shell-admin {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  .auth-grid, .auth-grid-admin {
     grid-template-columns: 1fr;
+    position: relative;
+    width: 100vw;
+    height: auto;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
   .auth-visual {
-    min-height: 240px;
+    position: absolute !important;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    z-index: 0;
   }
 
-  .auth-card {
-    padding: 28px;
+  .auth-visual .z-20 {
+    display: none !important;
+  }
+
+  .auth-visual video {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .auth-card, .auth-card-admin {
+    position: relative;
+    z-index: 10;
+    width: calc(100% - 32px);
+    max-width: 420px;
+    padding: 36px 28px;
+    margin: 32px auto;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .auth-card-admin {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .page-shell {
@@ -754,12 +806,8 @@ button:disabled {
     padding: 0px;
   }
 
-  .auth-visual {
-    display: none;
-  }
-
-  .auth-card {
-    padding: 24px;
+  .auth-card, .auth-card-admin {
+    padding: 24px 20px;
   }
 
   .title {
@@ -773,10 +821,10 @@ button:disabled {
 
 /* Admin Login Custom CSS */
 .auth-shell-admin {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 0;
   position: relative;
   overflow: hidden;
   background:
@@ -799,7 +847,7 @@ button:disabled {
 
 .auth-grid-admin {
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: 7fr 3fr;
   overflow: hidden;
@@ -853,11 +901,8 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
-  .auth-grid-admin {
-    grid-template-columns: 1fr;
-  }
   .auth-card-admin {
-    padding: 24px;
+    padding: 24px 20px;
   }
 }
 
