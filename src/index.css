@@ -144,6 +144,13 @@ button:disabled {
   overflow: hidden;
 }
 
+@media (min-width: 921px) {
+  .auth-visual {
+    clip-path: url(#auth-clip);
+    -webkit-clip-path: url(#auth-clip);
+  }
+}
+
 .auth-visual::before {
   content: "";
   position: absolute;

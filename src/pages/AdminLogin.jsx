@@ -60,6 +60,14 @@ function AdminLogin() {
     return (
 
         <main className="auth-shell-admin">
+            {/* Inline SVG Clip Path definition */}
+            <svg className="h-0 w-0 absolute pointer-events-none" aria-hidden="true">
+                <defs>
+                    <clipPath id="auth-clip" clipPathUnits="objectBoundingBox">
+                        <path d="M 0,0 L 1.0,0 Q 0.93,0.5 1.0,1 L 0,1 Z" />
+                    </clipPath>
+                </defs>
+            </svg>
 
             <motion.section
                 className="auth-grid-admin"
@@ -79,6 +87,11 @@ function AdminLogin() {
                         <source src="/login_video.mp4" type="video/mp4" />
                     </video>
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-950/85 via-fuchsia-950/60 to-slate-950/85 z-10 pointer-events-none" />
+
+                    {/* Curved Divider Line (Fuchsia glow for admin) */}
+                    <svg className="absolute inset-y-0 right-0 w-12 h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ marginRight: '-6px' }}>
+                        <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#D946EF" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(217,70,239,0.9)]" vectorEffect="non-scaling-stroke" />
+                    </svg>
 
                     <div className="z-20 relative">
                         <div className="brand-mark btn-admin-glow">AD</div>
