@@ -4,6 +4,7 @@ import api from "../services/api";
 import QueueCard from "../components/QueueCard";
 import { getBlockTheme } from "../config/blockThemes";
 import studentAd from "../assets/cloud_print_student_offers_ad.png";
+import collectVideo from "../assets/collect.mp4";
 
 function DisplayPanel() {
     const [orders, setOrders] = useState([]);
@@ -354,6 +355,17 @@ function DisplayPanel() {
                                             <span>🖨️ Counter Release successful</span>
                                         </div>
                                     </motion.div>
+
+                                    <div className="mt-8 max-w-md mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                                        <video
+                                            src={collectVideo}
+                                            autoPlay
+                                            loop
+                                            muted
+                                            playsInline
+                                            style={{ width: "100%", display: "block" }}
+                                        />
+                                    </div>
                                 </motion.div>
                             ) : hasActiveOrPendingOrders ? (
                                 <motion.div
@@ -593,7 +605,7 @@ function DisplayPanel() {
             </motion.div>
 
             <AnimatePresence>
-                {showFullscreenAd && !activePickup && (
+                {false && showFullscreenAd && !activePickup && (
                     <motion.div
                         className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-md"
                         initial={{ opacity: 0, scale: 0.95 }}
