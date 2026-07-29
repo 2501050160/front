@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { registerUser, persistUser } from "../services/auth";
 import api, { API_BASE } from "../services/api";
-import loginHero from "../assets/login_hero10.mp4";
+import loginHero from "../assets/intro.mp4";
 
 function Register() {
   const [name, setName] = useState("");

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../services/api";
-import loginHero from "../assets/login_hero10.mp4";
+import loginHero from "../assets/intro.mp4";
 import otpLoading from "../assets/otp_loading.mp4";
 
 function VerifyOtp() {
