@@ -149,6 +149,15 @@ button:disabled {
     clip-path: url(#auth-clip);
     -webkit-clip-path: url(#auth-clip);
   }
+
+  .auth-visual video {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    left: 0;
+    top: 0;
+    object-fit: cover;
+  }
 }
 
 .auth-visual::before {
