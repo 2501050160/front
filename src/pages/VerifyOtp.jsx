@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import api from "../services/api";
 import loginHero from "../assets/intro.mp4";
 import otpLoading from "../assets/otp_loading.mp4";
+import { Printer } from "lucide-react";
 
 function VerifyOtp() {
     const [searchParams] = useSearchParams();
@@ -114,8 +115,13 @@ function VerifyOtp() {
 
 
 
-                    <div className="z-20 relative">
-                        <div className="brand-mark">CP</div>
+                    <div className="z-20 relative flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 animate-pulse">
+                            <Printer className="w-5 h-5" />
+                        </div>
+                        <span className="text-xl font-black tracking-tight text-white">
+                            CloudPrint
+                        </span>
                     </div>
 
                     <div className="z-20 relative">

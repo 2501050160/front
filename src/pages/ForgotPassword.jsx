@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../services/api";
+import { Printer } from "lucide-react";
 
 function ForgotPassword() {
     const [email, setEmail] = useState("");
@@ -76,8 +77,13 @@ function ForgotPassword() {
 
 
 
-                    <div className="z-20 relative">
-                        <div className="brand-mark">CP</div>
+                    <div className="z-20 relative flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 animate-pulse">
+                            <Printer className="w-5 h-5" />
+                        </div>
+                        <span className="text-xl font-black tracking-tight text-white">
+                            CloudPrint
+                        </span>
                     </div>
 
                     <div className="z-20 relative">

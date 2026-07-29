@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import api from "../services/api";
+import { Printer } from "lucide-react";
 
 function AdminLogin() {
 
@@ -95,8 +96,13 @@ function AdminLogin() {
 
 
 
-                    <div className="z-20 relative">
-                        <div className="brand-mark btn-admin-glow">AD</div>
+                    <div className="z-20 relative flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-md shadow-pink-500/20 animate-pulse">
+                            <Printer className="w-5 h-5" />
+                        </div>
+                        <span className="text-xl font-black tracking-tight text-white">
+                            CloudPrint Admin
+                        </span>
                     </div>
 
                     <div className="z-20 relative">
