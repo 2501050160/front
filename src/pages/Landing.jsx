@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import introVideo from "../assets/intro.mp4";
+import introVideo from "../assets/login_hero10.mp4";
 import demoVideo from "../assets/demo.mp4";
 import inVideo from "../assets/in.mp4";
 import api from "../services/api";
