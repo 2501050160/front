@@ -279,12 +279,12 @@ function DisplayPanel() {
                 >
                     <div>
                         <p
-                            className="text-sm font-black uppercase tracking-[0.22em]"
+                            className="text-xs font-black uppercase tracking-[0.22em]"
                             style={{ color: theme.accent }}
                         >
                             {theme.label}
                         </p>
-                        <h1 className="mt-2 text-4xl font-black md:text-6xl">
+                        <h1 className="mt-1 text-2xl font-black md:text-4xl">
                             {displayBlock}
                         </h1>
                     </div>
@@ -323,48 +323,47 @@ function DisplayPanel() {
                             {activePickup ? (
                                 <motion.div
                                     key={`pickup-${activePickup.id}`}
-                                    className="display-glass w-full max-w-none p-10 text-center mx-auto"
+                                    className="display-glass w-full max-w-none p-6 text-center mx-auto relative overflow-hidden min-h-[45vh] flex flex-col justify-center items-center"
                                     initial={{ opacity: 0, scale: 0.92 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.96 }}
                                 >
-                                    <p className="text-lg font-black uppercase tracking-[0.25em] text-green-300">
-                                        Ready for collection
-                                    </p>
-                                    <h2 className="mt-5 text-6xl font-black md:text-8xl">
-                                        {activePickup.orderId}
-                                    </h2>
-                                    <p className="mt-5 text-4xl font-black text-cyan-100 md:text-6xl">
-                                        {activePickup.customerName || "Customer"}
-                                    </p>
-                                    <motion.div
-                                        className="mx-auto mt-8 max-w-3xl rounded-2xl border border-green-300/40 bg-green-400/15 p-8"
-                                        animate={{
-                                            boxShadow: [
-                                                "0 0 0 rgba(74,222,128,0)",
-                                                "0 0 44px rgba(74,222,128,0.32)",
-                                                "0 0 0 rgba(74,222,128,0)"
-                                            ]
-                                        }}
-                                        transition={{ duration: 1.8, repeat: Infinity }}
-                                    >
-                                        <p className="text-xl font-bold text-slate-100">
-                                            Your printing is completed! Please collect your papers from the printer tray.
+                                    <video
+                                        src={collectVideo}
+                                        autoPlay
+                                        loop
+                                        muted
+                                        playsInline
+                                        className="absolute inset-0 w-full h-full object-cover opacity-25 z-0"
+                                    />
+                                    <div className="relative z-10 w-full">
+                                        <p className="text-sm font-black uppercase tracking-[0.25em] text-green-300">
+                                            Ready for collection
                                         </p>
-                                        <div className="mt-4 flex items-center justify-center gap-1.5 text-sm font-bold text-green-300">
-                                            <span>🖨️ Counter Release successful</span>
-                                        </div>
-                                    </motion.div>
-
-                                    <div className="mt-8 max-w-md mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                                        <video
-                                            src={collectVideo}
-                                            autoPlay
-                                            loop
-                                            muted
-                                            playsInline
-                                            style={{ width: "100%", display: "block" }}
-                                        />
+                                        <h2 className="mt-3 text-4xl font-black md:text-6xl">
+                                            {activePickup.orderId}
+                                        </h2>
+                                        <p className="mt-2 text-2xl font-black text-cyan-100 md:text-4xl">
+                                            {activePickup.customerName || "Customer"}
+                                        </p>
+                                        <motion.div
+                                            className="mx-auto mt-6 max-w-xl rounded-xl border border-green-300/40 bg-green-400/15 p-4"
+                                            animate={{
+                                                boxShadow: [
+                                                    "0 0 0 rgba(74,222,128,0)",
+                                                    "0 0 24px rgba(74,222,128,0.2)",
+                                                    "0 0 0 rgba(74,222,128,0)"
+                                                ]
+                                            }}
+                                            transition={{ duration: 1.8, repeat: Infinity }}
+                                        >
+                                            <p className="text-base font-bold text-slate-100">
+                                                Your printing is completed! Please collect your papers from the printer tray.
+                                            </p>
+                                            <div className="mt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-green-300">
+                                                <span>🖨️ Counter Release successful</span>
+                                            </div>
+                                        </motion.div>
                                     </div>
                                 </motion.div>
                             ) : hasActiveOrPendingOrders ? (
@@ -395,18 +394,18 @@ function DisplayPanel() {
 
                                             <motion.h2
                                                 key={currentOrder.orderId}
-                                                className="mt-5 text-6xl font-black md:text-8xl"
+                                                className="mt-3 text-4xl font-black md:text-6xl"
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                             >
                                                 {currentOrder.orderId}
                                             </motion.h2>
 
-                                            <p className="mt-4 text-4xl font-black text-white/90">
+                                            <p className="mt-2 text-2xl font-black text-white/90">
                                                 {currentOrder.customerName || "Customer"}
                                             </p>
 
-                                            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-3">
                                                 {[
                                                     ["Pages", currentOrder.selectedPages],
                                                     ["Copies", currentOrder.copies],
@@ -414,12 +413,12 @@ function DisplayPanel() {
                                                 ].map(([label, value]) => (
                                                     <div
                                                         key={label}
-                                                        className="rounded-xl bg-white/10 p-4 backdrop-blur"
+                                                        className="rounded-xl bg-white/10 p-3 backdrop-blur"
                                                     >
-                                                        <p className="text-sm font-bold text-slate-300">
+                                                        <p className="text-xs font-bold text-slate-300">
                                                             {label}
                                                         </p>
-                                                        <p className="mt-1 text-2xl font-black">
+                                                        <p className="mt-1 text-xl font-black">
                                                             {value}
                                                         </p>
                                                     </div>
@@ -501,18 +500,17 @@ function DisplayPanel() {
                                     >
                                         Welcome
                                     </motion.p>
-
                                     <motion.h2
-                                        className="mt-5 text-5xl font-black leading-tight md:text-7xl"
+                                        className="mt-3 text-3xl font-black leading-tight md:text-5xl"
                                         initial={{ opacity: 0, y: 16 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.08 }}
                                     >
                                         {currentSlide.title}
                                     </motion.h2>
-
-                                    <motion.p
-                                        className="mx-auto mt-7 max-w-3xl text-xl font-bold leading-relaxed text-slate-200 md:text-2xl"
+ 
+                                     <motion.p
+                                        className="mx-auto mt-4 max-w-2xl text-base font-bold leading-relaxed text-slate-200 md:text-lg"
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.16 }}
@@ -576,33 +574,33 @@ function DisplayPanel() {
                 </footer>
             </section>
 
-            <motion.div 
-                drag
-                dragMomentum={false}
-                className="fixed bottom-24 left-8 z-40 flex items-center gap-6 p-6 rounded-2xl bg-slate-950/90 backdrop-blur-md border border-white/10 shadow-2xl max-w-md transition-all hover:scale-105 cursor-grab active:cursor-grabbing"
-            >
-                <div className="p-2.5 bg-white rounded-xl shadow-md shrink-0">
-                    <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(window.location.origin)}&color=0f172a`} 
-                        alt="Kiosk QR Code"
-                        className="w-[170px] h-[170px] block"
-                    />
-                </div>
-                <div className="text-left">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                        No App Needed
-                    </span>
-                    <h4 className="text-xl font-black text-white mt-3">
-                        Scan to Print
-                    </h4>
-                    <p className="text-xs font-bold text-slate-400 mt-3">
-                        Website Link:
-                    </p>
-                    <code className="text-sm md:text-base font-black text-cyan-300 block mt-1 select-all">
-                        www.saipraveen.site
-                    </code>
-                </div>
-            </motion.div>
+             <motion.div 
+                 drag
+                 dragMomentum={false}
+                 className="fixed bottom-16 left-6 z-40 flex items-center gap-4 p-4 rounded-xl bg-slate-950/90 backdrop-blur-md border border-white/10 shadow-2xl max-w-sm transition-all hover:scale-105 cursor-grab active:cursor-grabbing"
+             >
+                 <div className="p-1.5 bg-white rounded-lg shadow-md shrink-0">
+                     <img 
+                         src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin)}&color=0f172a`} 
+                         alt="Kiosk QR Code"
+                         className="w-[100px] h-[100px] block"
+                     />
+                 </div>
+                 <div className="text-left">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                         No App Needed
+                     </span>
+                     <h4 className="text-base font-black text-white mt-2">
+                         Scan to Print
+                     </h4>
+                     <p className="text-[10px] font-bold text-slate-400 mt-1">
+                         Website Link:
+                     </p>
+                     <code className="text-xs font-black text-cyan-300 block mt-0.5 select-all">
+                         www.saipraveen.site
+                     </code>
+                 </div>
+             </motion.div>
 
             <AnimatePresence>
                 {false && showFullscreenAd && !activePickup && (
