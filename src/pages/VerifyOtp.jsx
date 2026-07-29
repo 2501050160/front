@@ -112,8 +112,7 @@ function VerifyOtp() {
                         <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
                     </svg>
 
-                    {/* Soft fade overlay to blend video with card gradient */}
-                    <div className="auth-fade-overlay hidden lg:block" />
+
 
                     <div className="z-20 relative">
                         <div className="brand-mark">CP</div>

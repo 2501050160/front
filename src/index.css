@@ -188,6 +188,10 @@ button:disabled {
   z-index: 1;
 }
 
+.auth-visual > .z-20 {
+  z-index: 20 !important;
+}
+
 .auth-card {
   padding: 40px;
   display: flex;
@@ -1062,33 +1066,5 @@ button:disabled {
 .kanban-card:hover {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   border-color: rgba(37, 99, 235, 0.2);
-}
-
-.auth-fade-overlay {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 160px;
-  background: linear-gradient(to left, #edf5ff, transparent);
-  z-index: 15;
-  pointer-events: none;
-}
-
-.auth-fade-overlay-admin {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 160px;
-  background: linear-gradient(to left, #0d1423, transparent);
-  z-index: 15;
-  pointer-events: none;
-}
-
-@media (max-width: 920px) {
-  .auth-fade-overlay, .auth-fade-overlay-admin {
-    display: none !important;
-  }
 }
 

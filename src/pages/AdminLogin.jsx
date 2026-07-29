@@ -93,8 +93,7 @@ function AdminLogin() {
                         <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#D946EF" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(217,70,239,0.9)]" vectorEffect="non-scaling-stroke" />
                     </svg>
 
-                    {/* Soft dark fuchsia fade overlay to blend video with admin dark gradient */}
-                    <div className="auth-fade-overlay-admin hidden lg:block" />
+
 
                     <div className="z-20 relative">
                         <div className="brand-mark btn-admin-glow">AD</div>
