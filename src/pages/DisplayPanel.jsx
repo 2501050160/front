@@ -316,26 +316,18 @@ function DisplayPanel() {
                     </div>
                 </motion.header>
 
-                <div className={`grid ${hasActiveOrPendingOrders ? "grid-cols-1" : "lg:grid-cols-[1.7fr_1fr]"} gap-8 flex-1 py-8 w-full`}>
+                <div className={`grid ${(hasActiveOrPendingOrders && !activePickup) ? "grid-cols-1" : "lg:grid-cols-[1.7fr_1fr]"} gap-8 flex-1 py-8 w-full`}>
                     {/* Left Column: Active order queue / Welcome message / Pickup alert */}
                     <div className="flex flex-col justify-center w-full">
                         <AnimatePresence mode="wait">
                             {activePickup ? (
                                 <motion.div
                                     key={`pickup-${activePickup.id}`}
-                                    className="display-glass w-full max-w-none p-6 text-center mx-auto relative overflow-hidden min-h-[45vh] flex flex-col justify-center items-center"
+                                    className="display-glass w-full max-w-none p-10 text-center mx-auto"
                                     initial={{ opacity: 0, scale: 0.92 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.96 }}
                                 >
-                                    <video
-                                        src={collectVideo}
-                                        autoPlay
-                                        loop
-                                        muted
-                                        playsInline
-                                        className="absolute inset-0 w-full h-full object-cover opacity-25 z-0"
-                                    />
                                     <div className="relative z-10 w-full">
                                         <p className="text-sm font-black uppercase tracking-[0.25em] text-green-300">
                                             Ready for collection
@@ -545,16 +537,17 @@ function DisplayPanel() {
                     </div>
 
                     {/* Right Column: Premium ambient loop video presentation */}
-                    {!hasActiveOrPendingOrders && (
+                    {(!hasActiveOrPendingOrders || activePickup) && (
                         <div className="hidden lg:block relative overflow-hidden h-[calc(100vh-210px)] w-full rounded-3xl">
                             <video
+                                key={activePickup ? "collect" : "ambient"}
                                 autoPlay
                                 loop
                                 muted
                                 playsInline
                                 className="w-full h-full object-cover opacity-80"
                             >
-                                <source src="/assets/printer_rollers.mp4" type="video/mp4" />
+                                <source src={activePickup ? collectVideo : "/assets/printer_rollers.mp4"} type="video/mp4" />
                             </video>
                             {/* Smooth horizontal gradient overlay that blends into the background on the left side */}
                             <div 
