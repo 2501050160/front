@@ -17,6 +17,7 @@ function DisplayPanel() {
     const [queuePageIndex, setQueuePageIndex] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showFullscreenAd, setShowFullscreenAd] = useState(false);
+    const [isReleasing, setIsReleasing] = useState(true);
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -151,12 +152,25 @@ function DisplayPanel() {
     }, [pickupQueue, activePickup]);
 
     useEffect(() => {
+        if (!activePickup) {
+            setIsReleasing(true);
+            return;
+        }
+
+        const releaseTimer = setTimeout(() => {
+            setIsReleasing(false);
+        }, 5000);
+
+        return () => clearTimeout(releaseTimer);
+    }, [activePickup]);
+
+    useEffect(() => {
         if (!activePickup) return;
 
         const timer = setTimeout(() => {
             setActivePickup(null);
             window.location.reload();
-        }, 7000);
+        }, 12000);
 
         return () => clearTimeout(timer);
     }, [activePickup]);
@@ -316,7 +330,7 @@ function DisplayPanel() {
                     </div>
                 </motion.header>
 
-                <div className={`grid ${(hasActiveOrPendingOrders && !activePickup) ? "grid-cols-1" : "lg:grid-cols-[1.7fr_1fr]"} gap-8 flex-1 py-8 w-full`}>
+                <div className={`grid ${(hasActiveOrPendingOrders && !activePickup) ? "grid-cols-1" : activePickup ? "lg:grid-cols-[1fr_1.3fr]" : "lg:grid-cols-[1.7fr_1fr]"} gap-8 flex-1 py-8 w-full`}>
                     {/* Left Column: Active order queue / Welcome message / Pickup alert */}
                     <div className="flex flex-col justify-center w-full">
                         <AnimatePresence mode="wait">
@@ -329,8 +343,8 @@ function DisplayPanel() {
                                     exit={{ opacity: 0, scale: 0.96 }}
                                 >
                                     <div className="relative z-10 w-full">
-                                        <p className="text-sm font-black uppercase tracking-[0.25em] text-green-300">
-                                            Ready for collection
+                                        <p className={`text-sm font-black uppercase tracking-[0.25em] ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
+                                            {isReleasing ? "Printing in progress" : "Ready for collection"}
                                         </p>
                                         <h2 className="mt-3 text-4xl font-black md:text-6xl">
                                             {activePickup.orderId}
@@ -339,21 +353,29 @@ function DisplayPanel() {
                                             {activePickup.customerName || "Customer"}
                                         </p>
                                         <motion.div
-                                            className="mx-auto mt-6 max-w-xl rounded-xl border border-green-300/40 bg-green-400/15 p-4"
+                                            className={`mx-auto mt-6 max-w-xl rounded-xl border p-4 ${isReleasing ? "border-amber-400/40 bg-amber-400/10" : "border-green-300/40 bg-green-400/15"}`}
                                             animate={{
-                                                boxShadow: [
-                                                    "0 0 0 rgba(74,222,128,0)",
-                                                    "0 0 24px rgba(74,222,128,0.2)",
-                                                    "0 0 0 rgba(74,222,128,0)"
-                                                ]
+                                                boxShadow: isReleasing 
+                                                    ? [
+                                                        "0 0 0 rgba(245,158,11,0)",
+                                                        "0 0 24px rgba(245,158,11,0.2)",
+                                                        "0 0 0 rgba(245,158,11,0)"
+                                                      ]
+                                                    : [
+                                                        "0 0 0 rgba(74,222,128,0)",
+                                                        "0 0 24px rgba(74,222,128,0.2)",
+                                                        "0 0 0 rgba(74,222,128,0)"
+                                                      ]
                                             }}
                                             transition={{ duration: 1.8, repeat: Infinity }}
                                         >
                                             <p className="text-base font-bold text-slate-100">
-                                                Your printing is completed! Please collect your papers from the printer tray.
+                                                {isReleasing 
+                                                    ? "Spooling hardware... your prints are releasing in 5 seconds."
+                                                    : "Your printing is completed! Please collect your papers from the printer tray."}
                                             </p>
-                                            <div className="mt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-green-300">
-                                                <span>🖨️ Counter Release successful</span>
+                                            <div className={`mt-2 flex items-center justify-center gap-1.5 text-xs font-bold ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
+                                                <span>{isReleasing ? "🖨️ Hardware releasing prints..." : "🖨️ Counter Release successful"}</span>
                                             </div>
                                         </motion.div>
                                     </div>
