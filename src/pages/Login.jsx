@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { loginUser, persistUser } from "../services/auth";
 import api, { API_BASE } from "../services/api";
 import PopupManager from "../components/PopupManager";
-import loginHero from "../assets/login_hero.mp4";
+import loginHero from "../assets/login_hero10.mp4";
 
 function Login() {
     const [email, setEmail] = useState("");
