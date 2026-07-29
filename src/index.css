@@ -140,7 +140,8 @@ button:disabled {
     url("/src/assets/hero.png") center/cover;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 32px;
   overflow: hidden;
 }
 
