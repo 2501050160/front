@@ -77,7 +77,7 @@ function AdminLogin() {
                 transition={{ duration: 0.55, ease: "easeOut" }}
             >
 
-                <div className="auth-visual">
+                <div className="auth-visual overflow-hidden relative flex flex-col justify-center items-center text-center p-8 lg:p-12">
                     <video 
                         autoPlay 
                         loop 
@@ -94,25 +94,24 @@ function AdminLogin() {
                         <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#D946EF" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(217,70,239,0.9)]" vectorEffect="non-scaling-stroke" />
                     </svg>
 
-
-
-                    <div className="z-20 relative flex items-center gap-2.5">
-                        <div className="p-2 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-md shadow-pink-500/20 animate-pulse">
-                            <Printer className="w-5 h-5" />
+                    {/* Centered Admin Branding Block */}
+                    <div className="z-20 relative flex flex-col items-center gap-6">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-xl shadow-pink-500/25 animate-pulse">
+                                <Printer className="w-10 h-10" />
+                            </div>
+                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white mt-2">
+                                CloudPrint Admin
+                            </span>
                         </div>
-                        <span className="text-xl font-black tracking-tight text-white">
-                            CloudPrint Admin
-                        </span>
-                    </div>
-
-                    <div className="z-20 relative">
-                        <p className="text-sm uppercase tracking-[0.18em] text-pink-300 font-bold">
-                            Control Panel
-                        </p>
-
-                        <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent pb-1">
-                            Monitor live prints, set rates, and manage local shops.
-                        </h1>
+                        
+                        <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full" />
+                        
+                        <div className="flex flex-col items-center">
+                            <p className="text-xl lg:text-2xl uppercase tracking-[0.25em] text-pink-300 font-extrabold bg-gradient-to-r from-indigo-300 to-pink-300 bg-clip-text text-transparent">
+                                Control Panel
+                            </p>
+                        </div>
                     </div>
 
                 </div>

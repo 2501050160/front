@@ -299,12 +299,18 @@ function Landing() {
       {/* Floating Transparent Navbar */}
       <header className="sticky top-0 z-50 w-full h-20 transition-all bg-transparent flex items-center" style={{ width: '100vw', left: 0, right: 0 }}>
         <nav className="w-full h-full px-[40px] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-              <Printer className="w-5 h-5" />
+          <div className="flex items-center gap-2 lg:gap-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+                <Printer className="w-5 h-5" />
+              </div>
+              <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                CloudPrint
+              </span>
             </div>
-            <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              CloudPrint
+            <div className="hidden lg:block w-px h-6 bg-white/20" />
+            <span className="hidden lg:inline-block text-xs font-bold text-slate-400">
+              Upload anywhere. Print here. Collect in minutes.
             </span>
           </div>
 

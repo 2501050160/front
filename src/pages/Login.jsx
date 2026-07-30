@@ -247,17 +247,17 @@ function Login() {
 
 
 
-                    <div className="z-20 relative flex items-center gap-2.5">
-                        <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 animate-pulse">
-                            <Printer className="w-5 h-5" />
+                    <div className="z-20 relative flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 animate-pulse">
+                                <Printer className="w-5 h-5" />
+                            </div>
+                            <span className="text-xl font-black tracking-tight text-white">
+                                CloudPrint
+                            </span>
                         </div>
-                        <span className="text-xl font-black tracking-tight text-white">
-                            CloudPrint
-                        </span>
-                    </div>
-
-                    <div className="z-20 relative">
-                        <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
+                        <div className="hidden lg:block w-px h-6 bg-white/20 shrink-0" />
+                        <h1 className="text-xl lg:text-2xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
                             Upload anywhere. Print here. Collect in minutes.
                         </h1>
                     </div>
