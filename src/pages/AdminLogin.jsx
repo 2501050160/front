@@ -96,11 +96,11 @@ function AdminLogin() {
 
                     {/* Centered Admin Branding Block */}
                     <div className="z-20 relative flex flex-col items-center gap-6">
-                        <div className="flex flex-col items-center gap-3">
+                        <div className="flex flex-row items-center gap-4">
                             <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-xl shadow-pink-500/25 animate-pulse">
                                 <Printer className="w-10 h-10" />
                             </div>
-                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white mt-2">
+                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white">
                                 CloudPrint Admin
                             </span>
                         </div>

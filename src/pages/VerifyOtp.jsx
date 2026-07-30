@@ -115,11 +115,11 @@ function VerifyOtp() {
 
                     {/* Centered Customer Branding Block */}
                     <div className="z-20 relative flex flex-col items-center gap-6">
-                        <div className="flex flex-col items-center gap-3">
+                        <div className="flex flex-row items-center gap-4">
                             <div className="p-4 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-500/25 animate-pulse">
                                 <Printer className="w-10 h-10" />
                             </div>
-                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white mt-2">
+                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white">
                                 CloudPrint
                             </span>
                         </div>
@@ -127,12 +127,9 @@ function VerifyOtp() {
                         <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
                         
                         <div className="flex flex-col items-center">
-                            <p className="text-sm uppercase tracking-[0.18em] text-sky-100 font-bold mb-1">
-                                Email Verification
+                            <p className="text-xl lg:text-2xl uppercase tracking-[0.25em] text-blue-300 font-extrabold bg-gradient-to-r from-blue-300 to-purple-400 bg-clip-text text-transparent">
+                                Customer Portal
                             </p>
-                            <h1 className="text-2xl lg:text-3xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
-                                Verify your email address to activate your printing account.
-                            </h1>
                         </div>
                     </div>
 
