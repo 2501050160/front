@@ -110,7 +110,7 @@ function AdminLogin() {
                             Control Panel
                         </p>
 
-                        <h1 className="mt-3 text-4xl font-black leading-tight text-white">
+                        <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent pb-1">
                             Monitor live prints, set rates, and manage local shops.
                         </h1>
                     </div>

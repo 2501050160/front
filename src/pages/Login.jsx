@@ -261,10 +261,8 @@ function Login() {
                             Shop print console
                         </p>
  
-                        <h1 className="mt-3 text-4xl font-black leading-tight">
-                            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent inline-block">Upload anywhere.</span>{" "}
-                            <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent inline-block">Print here.</span>{" "}
-                            <span className="bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent inline-block">Collect in minutes.</span>
+                        <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
+                            Upload anywhere. Print here. Collect in minutes.
                         </h1>
                     </div>
 

@@ -129,7 +129,7 @@ function VerifyOtp() {
                             Email Verification
                         </p>
 
-                        <h1 className="mt-3 text-4xl font-black leading-tight text-white">
+                        <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
                             Verify your email address to activate your printing account.
                         </h1>
                     </div>
