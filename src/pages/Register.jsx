@@ -71,16 +71,16 @@ function Register() {
 
       {/* Mobile/Tablet Fullscreen Background Video Fallback */}
       <div className="absolute inset-0 z-0 lg:hidden pointer-events-none overflow-hidden">
-          <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline 
-              className="w-full h-full object-cover"
-          >
-              <source src={loginHero} type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-slate-950/15" />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src={loginHero} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-slate-950/15" />
       </div>
 
       <AnimatePresence>
@@ -108,43 +108,41 @@ function Register() {
       >
 
         <div className="auth-visual overflow-hidden relative flex flex-col justify-center items-center text-center p-8 lg:p-12">
-          <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
           >
-              <source src={loginHero} type="video/mp4" />
+            <source src={loginHero} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-slate-950/15 z-10 pointer-events-none" />
 
           {/* Curved Divider Line */}
           <svg className="absolute inset-y-0 right-0 w-12 h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ marginRight: '-6px' }}>
-              <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
+            <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
           </svg>
 
           {/* Centered Customer Branding Block */}
           <div className="z-20 relative flex flex-col items-center gap-6">
-              <div className="flex flex-col items-center gap-3">
-                  <div className="p-4 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-500/25 animate-pulse">
-                      <Printer className="w-10 h-10" />
-                  </div>
-                  <span className="text-3xl lg:text-4xl font-black tracking-tight text-white mt-2">
-                      CloudPrint
-                  </span>
+            <div className="flex flex-col items-center gap-3">
+              <div className="p-4 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-500/25 animate-pulse">
+                <Printer className="w-10 h-10" />
               </div>
-              
-              <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
-              
-              <div className="flex flex-col items-center">
-                  <p className="text-sm uppercase tracking-[0.18em] text-sky-100 font-bold mb-1">
-                      Customer portal
-                  </p>
-                  <h1 className="text-2xl lg:text-3xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
-                      Create orders that arrive directly in the print queue.
-                  </h1>
-              </div>
+              <span className="text-3xl lg:text-4xl font-black tracking-tight text-white mt-2">
+                CloudPrint
+              </span>
+            </div>
+
+            <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+
+            <div className="flex flex-col items-center">
+              <p className="text-sm uppercase tracking-[0.18em] text-sky-100 font-bold mb-1">
+                Customer portal
+              </p>
+
+            </div>
           </div>
 
         </div>
