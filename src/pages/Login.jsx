@@ -248,18 +248,18 @@ function Login() {
                     {/* Top Header Row */}
                     <div className="absolute top-0 left-0 right-0 w-full flex items-center justify-between p-6 lg:p-8 z-20">
                         {/* Logo and CloudPrint text at left side */}
-                        <div className="flex flex-row items-center gap-3">
-                            <div className="p-2.5 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/25">
-                                <Printer className="w-6 h-6" />
+                        <div className="flex flex-row items-center gap-4">
+                            <div className="p-3 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/25">
+                                <Printer className="w-8 h-8" />
                             </div>
-                            <span className="text-2xl lg:text-3xl font-black tracking-tight text-white">
+                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white">
                                 CloudPrint
                             </span>
                         </div>
                         
-                        {/* Customer Portal centered */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2">
-                            <p className="text-lg lg:text-xl uppercase tracking-[0.25em] text-blue-300 font-extrabold bg-gradient-to-r from-blue-300 to-purple-400 bg-clip-text text-transparent whitespace-nowrap">
+                        {/* Customer Portal at right side */}
+                        <div>
+                            <p className="text-xl lg:text-2xl uppercase tracking-[0.25em] text-blue-300 font-extrabold bg-gradient-to-r from-blue-300 to-purple-400 bg-clip-text text-transparent whitespace-nowrap">
                                 Customer Portal
                             </p>
                         </div>
