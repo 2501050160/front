@@ -107,7 +107,7 @@ function Register() {
         transition={{ duration: 0.55, ease: "easeOut" }}
       >
 
-        <div className="auth-visual overflow-hidden relative">
+        <div className="auth-visual overflow-hidden relative flex flex-col justify-center items-center text-center p-8 lg:p-12">
           <video 
               autoPlay 
               loop 
@@ -124,25 +124,27 @@ function Register() {
               <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#3B82F6" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(59,130,246,0.9)]" vectorEffect="non-scaling-stroke" />
           </svg>
 
-
-
-          <div className="z-20 relative flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 animate-pulse">
-              <Printer className="w-5 h-5" />
-            </div>
-            <span className="text-xl font-black tracking-tight text-white">
-              CloudPrint
-            </span>
-          </div>
-
-          <div className="z-20 relative">
-            <p className="text-sm uppercase tracking-[0.18em] text-sky-100 font-bold">
-              Customer portal
-            </p>
-
-            <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
-              Create orders that arrive directly in the print queue.
-            </h1>
+          {/* Centered Customer Branding Block */}
+          <div className="z-20 relative flex flex-col items-center gap-6">
+              <div className="flex flex-col items-center gap-3">
+                  <div className="p-4 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-500/25 animate-pulse">
+                      <Printer className="w-10 h-10" />
+                  </div>
+                  <span className="text-3xl lg:text-4xl font-black tracking-tight text-white mt-2">
+                      CloudPrint
+                  </span>
+              </div>
+              
+              <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+              
+              <div className="flex flex-col items-center">
+                  <p className="text-sm uppercase tracking-[0.18em] text-sky-100 font-bold mb-1">
+                      Customer portal
+                  </p>
+                  <h1 className="text-2xl lg:text-3xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
+                      Create orders that arrive directly in the print queue.
+                  </h1>
+              </div>
           </div>
 
         </div>
