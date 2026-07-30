@@ -95,7 +95,7 @@ function AdminLogin() {
                     </svg>
 
                     {/* Top Header Row */}
-                    <div className="lg:absolute lg:top-0 lg:left-0 lg:right-0 w-full flex items-center justify-between p-6 lg:p-8 z-[20] mb-10 relative">
+                    <div className="lg:absolute lg:top-0 lg:left-0 lg:right-0 w-full flex items-center justify-between p-6 lg:p-8 z-20 mb-10 relative">
                         {/* Logo and CloudPrint text at left side */}
                         <div className="flex flex-row items-center gap-4">
                             <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-lg shadow-pink-500/25">
