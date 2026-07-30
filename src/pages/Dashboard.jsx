@@ -760,7 +760,7 @@ function Dashboard() {
                 )}
 
                 {/* Welcome Card & Statistics Row */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6 mt-4">
+                <div className="grid gap-6 md:grid-cols-2 mb-6 mt-4">
                     <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
                         <div>
                             <p className="text-xs font-black uppercase tracking-wider text-slate-400">Welcome Back</p>
@@ -776,26 +776,6 @@ function Dashboard() {
                             <p className="text-xs font-black uppercase tracking-wider text-blue-100">Wallet Balance</p>
                             <h3 className="text-3xl font-black mt-1">₹{walletBalance}</h3>
                         </div>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Reward Balance</p>
-                            <h3 className="text-2xl font-black text-slate-900 mt-1">{rewardPoints || "0"} pts</h3>
-                        </div>
-                        <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded w-fit mt-4">
-                          Redeem Credits
-                        </span>
-                    </div>
-
-                    <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Order Analytics</p>
-                            <h3 className="text-2xl font-black text-slate-900 mt-1">{orders.length} prints</h3>
-                        </div>
-                        <p className="text-xs font-bold text-emerald-600 mt-4">
-                          🎉 Money Saved: ₹{(orders.length * 1.5).toFixed(2)}
-                        </p>
                     </div>
                 </div>
 
