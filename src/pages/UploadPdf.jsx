@@ -39,7 +39,7 @@ function UploadPdf() {
       );
 
       await axios.post(
-        "https://printer-backend-34ih.onrender.com/api/pdf/upload",
+        `${import.meta.env.VITE_API_URL || "https://printer-backend-1.onrender.com"}/api/pdf/upload`,
         formData
       );
 

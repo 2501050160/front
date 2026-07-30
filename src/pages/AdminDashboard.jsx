@@ -1267,7 +1267,7 @@ function AdminDashboard() {
             ];
 
         const configObj = {
-            backendUrl: import.meta.env.VITE_API_URL || "https://printer-backend-34ih.onrender.com",
+            backendUrl: import.meta.env.VITE_API_URL || "https://printer-backend-1.onrender.com",
             pollIntervalMs: 5000,
             blocks: blocksArray
         };

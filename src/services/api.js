@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const API_BASE =
     import.meta.env.VITE_API_URL ||
-    "https://printer-backend-34ih.onrender.com";
+    "https://printer-backend-1.onrender.com";
 
 const api = axios.create({
     baseURL: `${API_BASE}/api`
