@@ -94,6 +94,7 @@ function Dashboard() {
     });
 
     const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
+    const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
     const showAlert = (title, message, type = "info") => {
         setModalConfig({
@@ -691,9 +692,6 @@ function Dashboard() {
                     title="Cloud Print Dashboard"
                     subtitle="Customer Workspace"
                     badge={blockLocation || "No block"}
-                    tabs={tabs}
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
                     actions={[
                         { label: `Wallet: ₹${walletBalance}`, onClick: () => setShowWalletModal(true), className: "btn success cursor-pointer !border-emerald-500 !bg-emerald-600/20 !text-emerald-400" },
                         { label: "Change Location", path: "/blocks", className: "btn secondary" }
@@ -759,8 +757,69 @@ function Dashboard() {
                     </div>
                 )}
 
-                {/* Welcome Card & Statistics Row */}
-                <div className="grid gap-6 md:grid-cols-2 mb-6 mt-4">
+                {/* Main Dashboard Layout below Navbar */}
+                <div className="flex flex-col md:flex-row gap-6 mt-6 items-start">
+                    {/* Left Sidebar / Top Mobile Icons Row */}
+                    <div className={`shrink-0 flex transition-all duration-300 bg-white border border-slate-200/80 rounded-2xl shadow-sm p-3 ${
+                        isSidebarExpanded 
+                            ? "w-full md:w-60 flex-col" 
+                            : "w-full md:w-20 flex-row md:flex-col items-center md:items-stretch justify-around md:justify-start"
+                    }`}>
+                        {/* Hamburger / Toggle Header */}
+                        <div className={`flex items-center ${isSidebarExpanded ? "justify-between mb-4 px-2" : "justify-center mb-0 md:mb-4"}`}>
+                            {isSidebarExpanded && (
+                                <span className="text-xs font-black uppercase tracking-wider text-slate-400">Navigation</span>
+                            )}
+                            <button 
+                                onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+                                className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer active:scale-95 transition-all"
+                                title={isSidebarExpanded ? "Collapse Menu" : "Expand Menu"}
+                            >
+                                {isSidebarExpanded ? (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Navigation Buttons */}
+                        <div className={`flex ${isSidebarExpanded ? "flex-col gap-1.5" : "flex-row md:flex-col gap-1.5 flex-1 md:flex-initial w-full justify-around md:justify-start"}`}>
+                            {tabs.map((tab) => {
+                                const isActive = activeTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`font-black text-sm rounded-xl transition-all flex items-center justify-center cursor-pointer ${
+                                            isSidebarExpanded 
+                                                ? "w-full text-left justify-start px-4 py-3 gap-3" 
+                                                : "w-12 h-12 md:w-full justify-center px-0 py-0"
+                                        } ${
+                                            isActive 
+                                                ? "bg-sky-600 text-white shadow-md shadow-sky-500/20" 
+                                                : "text-slate-600 hover:bg-slate-100/60"
+                                        }`}
+                                        title={tab.label}
+                                    >
+                                        <span className="text-lg shrink-0">{tab.icon}</span>
+                                        {isSidebarExpanded && (
+                                            <span className="truncate">{tab.label}</span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Right Content Pane */}
+                    <div className="flex-1 min-w-0 w-full">
+                        {/* Welcome Card & Statistics Row */}
+                        <div className="grid gap-6 md:grid-cols-2 mb-6 mt-0">
                     <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
                         <div>
                             <p className="text-xs font-black uppercase tracking-wider text-slate-400">Welcome Back</p>
@@ -1561,6 +1620,8 @@ function Dashboard() {
                         </form>
                     </motion.section>
                 )}
+                    </div> {/* Close Right Content Pane */}
+                </div> {/* Close Main flex layout row */}
             </div>
 
             {/* Privacy Policy Modal */}
