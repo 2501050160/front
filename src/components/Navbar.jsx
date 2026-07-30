@@ -31,7 +31,7 @@ function Navbar({ title, subtitle, actions = [], badge, tabs = [], activeTab, on
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
         >
-            <div className="flex items-center gap-4 pr-36 md:pr-0">
+            <div className="flex items-center gap-4 pr-14 md:pr-0">
                 <div className="brand-mark brand-mark-sm">CP</div>
                 <div>
                     {subtitle && (
@@ -68,7 +68,7 @@ function Navbar({ title, subtitle, actions = [], badge, tabs = [], activeTab, on
                 </div>
             )}
 
-            <div className="flex flex-wrap gap-3 items-center pr-36 md:pr-0">
+            <div className="flex flex-wrap gap-2.5 items-center w-full md:w-auto pr-14 md:pr-0 mt-2 md:mt-0">
                 {actions.map((action) => {
                     if (action.to) {
                         return (

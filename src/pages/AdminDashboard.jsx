@@ -1542,7 +1542,7 @@ function AdminDashboard() {
 
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root">
-            <div className="!max-w-none !w-full px-8 py-6">
+            <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6">
                 <Navbar
                     title="Admin Dashboard"
                     subtitle="Operations Control Panel"

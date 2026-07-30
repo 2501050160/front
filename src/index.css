@@ -1180,13 +1180,29 @@ button:disabled {
   opacity: 0;
 }
 
-/* Responsive mobile scale zoom for the Admin Dashboard */
+/* Responsive mobile layout adjustments for the Admin Dashboard */
 @media (max-width: 920px) {
   .admin-dashboard-root {
-    zoom: 0.6;
-    -moz-transform: scale(0.6);
-    -moz-transform-origin: top left;
-    width: 166.6% !important; /* Counter Firefox scale factor (1 / 0.6) */
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    font-size: 0.85rem !important; /* Slightly smaller base font-size on mobile for better fit */
+  }
+  
+  .revenue-filter {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    border-radius: 16px !important;
+    justify-content: center !important;
+    width: 100% !important;
+    gap: 4px !important;
+  }
+  
+  .revenue-filter-btn {
+    flex: 1 1 auto !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    text-align: center !important;
   }
 }
 
