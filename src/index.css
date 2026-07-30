@@ -1180,3 +1180,13 @@ button:disabled {
   opacity: 0;
 }
 
+/* Responsive mobile scale zoom for the Admin Dashboard */
+@media (max-width: 920px) {
+  .admin-dashboard-root {
+    zoom: 0.6;
+    -moz-transform: scale(0.6);
+    -moz-transform-origin: top left;
+    width: 166.6% !important; /* Counter Firefox scale factor (1 / 0.6) */
+  }
+}
+
