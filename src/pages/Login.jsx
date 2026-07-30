@@ -257,10 +257,6 @@ function Login() {
                     </div>
 
                     <div className="z-20 relative">
-                        <p className="text-sm uppercase tracking-[0.18em] text-sky-100 font-bold">
-                            Shop print console
-                        </p>
- 
                         <h1 className="mt-3 text-4xl font-black leading-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent pb-1">
                             Upload anywhere. Print here. Collect in minutes.
                         </h1>
