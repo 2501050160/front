@@ -126,11 +126,11 @@ function AdminLogin() {
 
                         <p className="eyebrow text-pink-400">Admin Console</p>
 
-                        <h2 className="title">
+                        <h2 className="title hidden sm:block">
                             Shop Dashboard
                         </h2>
 
-                        <p className="subtitle">
+                        <p className="subtitle hidden sm:block">
                             Sign in on the print PC to manage rates and printer mappings.
                         </p>
 
