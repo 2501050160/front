@@ -212,11 +212,11 @@ function Login() {
                     loop 
                     muted 
                     playsInline 
-                    className="w-full h-full object-cover opacity-25"
+                    className="w-full h-full object-cover"
                 >
                     <source src={loginHero} type="video/mp4" />
                 </video>
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 to-slate-950/80" />
+                <div className="absolute inset-0 bg-slate-950/15" />
             </div>
 
             <PopupManager page="LOGIN" />
@@ -238,7 +238,7 @@ function Login() {
                     >
                         <source src={loginHero} type="video/mp4" />
                     </video>
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-950/85 via-sky-950/75 to-slate-950/85 z-10 pointer-events-none" />
+                    <div className="absolute inset-0 bg-slate-950/15 z-10 pointer-events-none" />
 
                     {/* Curved Divider Line */}
                     <svg className="absolute inset-y-0 right-0 w-12 h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ marginRight: '-6px' }}>
@@ -261,8 +261,10 @@ function Login() {
                             Shop print console
                         </p>
  
-                        <h1 className="mt-3 text-4xl font-black leading-tight text-white">
-                            Upload anywhere. Print here. Collect in minutes.
+                        <h1 className="mt-3 text-4xl font-black leading-tight">
+                            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent inline-block">Upload anywhere.</span>{" "}
+                            <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent inline-block">Print here.</span>{" "}
+                            <span className="bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent inline-block">Collect in minutes.</span>
                         </h1>
                     </div>
 

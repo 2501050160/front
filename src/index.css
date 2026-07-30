@@ -180,7 +180,7 @@ button:disabled {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 20, 32, 0.18), rgba(10, 20, 32, 0.5));
+  background: transparent;
 }
 
 .auth-visual > *:not(.absolute) {

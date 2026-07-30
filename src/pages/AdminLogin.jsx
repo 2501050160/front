@@ -87,7 +87,7 @@ function AdminLogin() {
                     >
                         <source src="/login_video.mp4" type="video/mp4" />
                     </video>
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-950/85 via-fuchsia-950/60 to-slate-950/85 z-10 pointer-events-none" />
+                    <div className="absolute inset-0 bg-slate-950/15 z-10 pointer-events-none" />
 
                     {/* Curved Divider Line (Fuchsia glow for admin) */}
                     <svg className="absolute inset-y-0 right-0 w-12 h-full pointer-events-none z-20 overflow-visible hidden lg:block" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ marginRight: '-6px' }}>
