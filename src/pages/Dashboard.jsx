@@ -686,87 +686,18 @@ function Dashboard() {
     };
 
     return (
-        <main className="page-shell page-shell-decorated">
-            <div className="content-wrap">
-                <Navbar
-                    title="Cloud Print Dashboard"
-                    subtitle="Customer Workspace"
-                    badge={blockLocation || "No block"}
-                    actions={[
-                        { label: `Wallet: ₹${walletBalance}`, onClick: () => setShowWalletModal(true), className: "btn success cursor-pointer !border-emerald-500 !bg-emerald-600/20 !text-emerald-400" },
-                        { label: "Change Location", path: "/blocks", className: "btn secondary" }
-                    ]}
-                />
-
-                {/* Non-intrusive Referral Advertisement Banner */}
-                {displayAdText && (
-                    <div style={{
-                        background: "linear-gradient(90deg, #1e293b, #0f172a)",
-                        border: "1px solid #0284c7",
-                        color: "#cbd5e1",
-                        padding: "8px 20px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        marginTop: "16px",
-                        marginBottom: "16px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 0 15px rgba(2, 132, 199, 0.15)"
-                    }}>
-                        <marquee scrollamount="4">
-                            {displayAdText}
-                        </marquee>
-                    </div>
-                )}
-
-                {/* Maintenance mode marquee alert */}
-                {systemStatus.maintenance && (
-                    <div style={{
-                        background: "#f97316",
-                        color: "#ffffff",
-                        padding: "10px 16px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        marginBottom: "16px",
-                        boxShadow: "0 0 15px rgba(249, 115, 22, 0.3)"
-                    }}>
-                        <marquee scrollamount="4">
-                            ⚠️ Please try again later as the machine is under maintenance.
-                        </marquee>
-                    </div>
-                )}
-
-                {/* Connectivity guards marquee alert */}
-                {(!systemStatus.databaseConnected || !systemStatus.agentOnline || !systemStatus.printerConfigured) && (
-                    <div style={{
-                        background: "#ef4444",
-                        color: "#ffffff",
-                        padding: "10px 16px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        marginBottom: "16px",
-                        boxShadow: "0 0 15px rgba(239, 68, 68, 0.3)"
-                    }}>
-                        <marquee scrollamount="5">
-                            connection is not available
-                        </marquee>
-                    </div>
-                )}
-
-                {/* Main Dashboard Layout below Navbar */}
-                <div className="flex flex-col md:flex-row gap-6 mt-6 items-start">
-                    {/* Left Sidebar / Top Mobile Icons Row */}
-                    <div className={`shrink-0 flex transition-all duration-300 bg-white border border-slate-200/80 rounded-2xl shadow-sm p-3 ${
-                        isSidebarExpanded 
-                            ? "w-full md:w-60 flex-col" 
-                            : "w-full md:w-20 flex-row md:flex-col items-center md:items-stretch justify-around md:justify-start"
-                    }`}>
+        <main className="page-shell page-shell-decorated !px-0 !py-0 min-h-screen">
+            {/* Flex row container that places the sidebar at the very left edge of the page */}
+            <div className="flex flex-col md:flex-row min-h-screen w-full">
+                {/* Left Sidebar / Top Mobile Icons Row */}
+                <div className={`shrink-0 flex transition-all duration-300 bg-white border-r border-slate-200/80 p-4 sticky top-0 z-30 ${
+                    isSidebarExpanded 
+                        ? "w-full md:w-60 flex-col h-auto md:h-screen justify-between" 
+                        : "w-full md:w-20 flex-row md:flex-col items-center justify-around md:justify-start h-auto md:h-screen gap-6"
+                }`}>
+                    <div>
                         {/* Hamburger / Toggle Header */}
-                        <div className={`flex items-center ${isSidebarExpanded ? "justify-between mb-4 px-2" : "justify-center mb-0 md:mb-4"}`}>
+                        <div className={`flex items-center ${isSidebarExpanded ? "justify-between w-full mb-6" : "justify-center mb-0 md:mb-6"}`}>
                             {isSidebarExpanded && (
                                 <span className="text-xs font-black uppercase tracking-wider text-slate-400">Navigation</span>
                             )}
@@ -788,7 +719,7 @@ function Dashboard() {
                         </div>
 
                         {/* Navigation Buttons */}
-                        <div className={`flex ${isSidebarExpanded ? "flex-col gap-1.5" : "flex-row md:flex-col gap-1.5 flex-1 md:flex-initial w-full justify-around md:justify-start"}`}>
+                        <div className={`flex ${isSidebarExpanded ? "flex-col gap-2 w-full" : "flex-row md:flex-col gap-3 flex-1 md:flex-initial w-full justify-around md:justify-start"}`}>
                             {tabs.map((tab) => {
                                 const isActive = activeTab === tab.id;
                                 return (
@@ -798,7 +729,7 @@ function Dashboard() {
                                         className={`font-black text-sm rounded-xl transition-all flex items-center justify-center cursor-pointer ${
                                             isSidebarExpanded 
                                                 ? "w-full text-left justify-start px-4 py-3 gap-3" 
-                                                : "w-12 h-12 md:w-full justify-center px-0 py-0"
+                                                : "w-12 h-12 md:w-12 justify-center px-0 py-0"
                                         } ${
                                             isActive 
                                                 ? "bg-sky-600 text-white shadow-md shadow-sky-500/20" 
@@ -816,10 +747,84 @@ function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Right Content Pane */}
-                    <div className="flex-1 min-w-0 w-full">
-                        {/* Welcome Card & Statistics Row */}
-                        <div className="grid gap-6 md:grid-cols-2 mb-6 mt-0">
+                    {/* Bottom Profile Details in expanded state */}
+                    {isSidebarExpanded && (
+                        <div className="pt-6 border-t border-slate-150 w-full mt-auto hidden md:block">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logged In As</p>
+                            <p className="text-sm font-black text-slate-900 truncate mt-0.5">{userName || "Customer"}</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Right Content Pane (Navbar + Subpages) */}
+                <div className="flex-1 min-w-0 w-full px-4 py-4 md:px-8 md:py-6 flex flex-col gap-6">
+                    <Navbar
+                        title="Cloud Print Dashboard"
+                        subtitle="Customer Workspace"
+                        badge={blockLocation || "No block"}
+                        actions={[
+                            { label: `Wallet: ₹${walletBalance}`, onClick: () => setShowWalletModal(true), className: "btn success cursor-pointer !border-emerald-500 !bg-emerald-600/20 !text-emerald-400" },
+                            { label: "Change Location", path: "/blocks", className: "btn secondary" }
+                        ]}
+                    />
+
+                    {/* Non-intrusive Referral Advertisement Banner */}
+                    {displayAdText && (
+                        <div style={{
+                            background: "linear-gradient(90deg, #1e293b, #0f172a)",
+                            border: "1px solid #0284c7",
+                            color: "#cbd5e1",
+                            padding: "8px 20px",
+                            borderRadius: "10px",
+                            fontSize: "13px",
+                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 0 15px rgba(2, 132, 199, 0.15)"
+                        }}>
+                            <marquee scrollamount="4">
+                                {displayAdText}
+                            </marquee>
+                        </div>
+                    )}
+
+                    {/* Maintenance mode marquee alert */}
+                    {systemStatus.maintenance && (
+                        <div style={{
+                            background: "#f97316",
+                            color: "#ffffff",
+                            padding: "10px 16px",
+                            borderRadius: "10px",
+                            fontSize: "13px",
+                            fontWeight: "bold",
+                            boxShadow: "0 0 15px rgba(249, 115, 22, 0.3)"
+                        }}>
+                            <marquee scrollamount="4">
+                                ⚠️ Please try again later as the machine is under maintenance.
+                            </marquee>
+                        </div>
+                    )}
+
+                    {/* Connectivity guards marquee alert */}
+                    {(!systemStatus.databaseConnected || !systemStatus.agentOnline || !systemStatus.printerConfigured) && (
+                        <div style={{
+                            background: "#ef4444",
+                            color: "#ffffff",
+                            padding: "10px 16px",
+                            borderRadius: "10px",
+                            fontSize: "13px",
+                            fontWeight: "bold",
+                            boxShadow: "0 0 15px rgba(239, 68, 68, 0.3)"
+                        }}>
+                            <marquee scrollamount="5">
+                                connection is not available
+                            </marquee>
+                        </div>
+                    )}
+
+                    {/* Welcome Card & Statistics Row */}
+                    <div className="grid gap-6 md:grid-cols-2 mb-0">
                     <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
                         <div>
                             <p className="text-xs font-black uppercase tracking-wider text-slate-400">Welcome Back</p>
@@ -1622,7 +1627,6 @@ function Dashboard() {
                 )}
                     </div> {/* Close Right Content Pane */}
                 </div> {/* Close Main flex layout row */}
-            </div>
 
             {/* Privacy Policy Modal */}
             <AnimatePresence>
