@@ -11,6 +11,7 @@ function MyOrders() {
 
     const [orders, setOrders] = useState([]);
     const [walletBalance, setWalletBalance] = useState(getStoredWalletBalance());
+    const [isLoading, setIsLoading] = useState(true);
 
     // OTP Verification Modal states
     const [releasingOrder, setReleasingOrder] = useState(null);
@@ -43,6 +44,8 @@ function MyOrders() {
             setOrders(response.data);
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -140,74 +143,89 @@ function MyOrders() {
                         </thead>
 
                         <tbody>
-                            {orders.map((order, index) => (
-                                <motion.tr
-                                    key={order.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.04 }}
-                                >
-                                    <td className="font-black">{order.orderId}</td>
-                                    <td className="font-bold">
-                                        {order.customerName || "Customer"}
-                                    </td>
-                                    <td>{order.blockLocation || "C Block"}</td>
-                                    <td>{order.selectedPages}</td>
-                                    <td>{order.copies}</td>
-                                    <td className="font-black">Rs. {order.price}</td>
-                                    <td>
-                                        <div className="flex items-center gap-2">
-                                            <span className={statusClass(order.status)}>
-                                                {order.status === "PENDING_SCAN" ? "PENDING SCAN" : order.status}
-                                            </span>
-                                            {order.status === "PENDING_SCAN" && (
+                            {isLoading ? (
+                                Array.from({ length: 4 }).map((_, idx) => (
+                                    <tr key={`skeleton-${idx}`}>
+                                        <td><div className="skeleton-box" style={{ width: '80px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '120px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '70px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '40px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '40px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '60px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '100px', height: '16px' }} /></td>
+                                        <td><div className="skeleton-box" style={{ width: '70px', height: '16px' }} /></td>
+                                    </tr>
+                                ))
+                            ) : (
+                                orders.map((order, index) => (
+                                    <motion.tr
+                                        key={order.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.04 }}
+                                    >
+                                        <td className="font-black">{order.orderId}</td>
+                                        <td className="font-bold">
+                                            {order.customerName || "Customer"}
+                                        </td>
+                                        <td>{order.blockLocation || "C Block"}</td>
+                                        <td>{order.selectedPages}</td>
+                                        <td>{order.copies}</td>
+                                        <td className="font-black">Rs. {order.price}</td>
+                                        <td>
+                                            <div className="flex items-center gap-2">
+                                                <span className={statusClass(order.status)}>
+                                                    {order.status === "PENDING_SCAN" ? "PENDING SCAN" : order.status}
+                                                </span>
+                                                {order.status === "PENDING_SCAN" && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setReleasingOrder(order);
+                                                            setMobileOtp("");
+                                                            setMobileOtpError("");
+                                                        }}
+                                                        className="bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-black px-3 py-1 rounded text-xs transition-all cursor-pointer flex items-center gap-1 shadow"
+                                                    >
+                                                        Release 🔑
+                                                    </button>
+                                                )}
+                                                {(order.status === "PRINTING" || order.status === "QUEUE") && (
+                                                    <div className="flex items-center justify-center text-sky-500">
+                                                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {order.paymentStatus === "PAID" && (
                                                 <button
-                                                    onClick={() => {
-                                                        setReleasingOrder(order);
-                                                        setMobileOtp("");
-                                                        setMobileOtpError("");
+                                                    onClick={async () => {
+                                                        try {
+                                                            const response = await api.get("/pdf/details", {
+                                                                params: { orderId: order.orderId }
+                                                            });
+                                                            setSelectedInvoiceOrder(response.data);
+                                                            setTimeout(() => {
+                                                                window.print();
+                                                            }, 200);
+                                                        } catch (err) {
+                                                            console.error("Failed to load invoice details:", err);
+                                                        }
                                                     }}
-                                                    className="bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-black px-3 py-1 rounded text-xs transition-all cursor-pointer flex items-center gap-1 shadow"
+                                                    className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black px-2 py-1 rounded text-xs transition-all cursor-pointer shadow flex items-center gap-1"
                                                 >
-                                                    Release 🔑
+                                                    Receipt 🧾
                                                 </button>
                                             )}
-                                            {(order.status === "PRINTING" || order.status === "QUEUE") && (
-                                                <div className="flex items-center justify-center text-sky-500">
-                                                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {order.paymentStatus === "PAID" && (
-                                            <button
-                                                onClick={async () => {
-                                                    try {
-                                                        const response = await api.get("/pdf/details", {
-                                                            params: { orderId: order.orderId }
-                                                        });
-                                                        setSelectedInvoiceOrder(response.data);
-                                                        setTimeout(() => {
-                                                            window.print();
-                                                        }, 200);
-                                                    } catch (err) {
-                                                        console.error("Failed to load invoice details:", err);
-                                                    }
-                                                }}
-                                                className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black px-2 py-1 rounded text-xs transition-all cursor-pointer shadow flex items-center gap-1"
-                                            >
-                                                Receipt 🧾
-                                            </button>
-                                        )}
-                                    </td>
-                                </motion.tr>
-                            ))}
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            )}
 
-                            {orders.length === 0 && (
+                            {!isLoading && orders.length === 0 && (
                                 <tr>
                                     <td colSpan="8">
                                         <div className="empty-state">

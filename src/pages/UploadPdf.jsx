@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import CustomModal from "../components/CustomModal";
 
 function UploadPdf() {
 
@@ -12,10 +13,26 @@ function UploadPdf() {
     "selectedBlock"
   );
 
+  const [modalConfig, setModalConfig] = useState({
+      isOpen: false,
+      title: "",
+      message: "",
+      type: "info"
+  });
+
+  const showAlert = (title, message, type = "info") => {
+      setModalConfig({
+          isOpen: true,
+          title,
+          message,
+          type
+      });
+  };
+
   const uploadPdf = async () => {
 
     if (!file) {
-      alert("Please select a PDF");
+      showAlert("Selection Required", "Please select a PDF file before uploading.", "warning");
       return;
     }
 
@@ -43,9 +60,7 @@ function UploadPdf() {
         formData
       );
 
-      alert(
-        "PDF Uploaded Successfully"
-      );
+      showAlert("Success", "Your PDF has been successfully uploaded and is ready to print!", "success");
 
       setFile(null);
 
@@ -53,9 +68,7 @@ function UploadPdf() {
 
       console.error(error);
 
-      alert(
-        "Upload Failed"
-      );
+      showAlert("Upload Failed", "There was an error uploading your PDF. Please try again.", "error");
     }
   };
 
@@ -119,6 +132,14 @@ function UploadPdf() {
         </button>
 
       </motion.section>
+
+      <CustomModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+      />
 
     </main>
   );

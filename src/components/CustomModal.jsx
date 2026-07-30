@@ -69,6 +69,37 @@ function CustomModal({
                         exit={{ scale: 0.93, opacity: 0, y: 15 }}
                         transition={{ type: "spring", damping: 25, stiffness: 350 }}
                     >
+                        {/* Confetti celebration shower for success type */}
+                        {type === "success" && (
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl">
+                                {Array.from({ length: 30 }).map((_, i) => {
+                                    const randomLeft = Math.random() * 100;
+                                    const randomDelay = Math.random() * 1.2;
+                                    const randomDuration = 1.5 + Math.random() * 1.5;
+                                    const colors = ['#38bdf8', '#34d399', '#f472b6', '#fbbf24', '#a78bfa', '#f87171'];
+                                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                                    const randomSize = 6 + Math.random() * 8;
+                                    const isCircle = Math.random() > 0.5;
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            className="confetti-particle"
+                                            style={{
+                                                left: `${randomLeft}%`,
+                                                backgroundColor: randomColor,
+                                                width: `${randomSize}px`,
+                                                height: `${randomSize}px`,
+                                                borderRadius: isCircle ? '50%' : '2px',
+                                                animationDelay: `${randomDelay}s`,
+                                                animationDuration: `${randomDuration}s`
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
+
                         {/* Drag Handle */}
                         <div className="w-12 h-1.5 bg-slate-200 hover:bg-slate-300 transition-colors rounded-full mx-auto mb-4 cursor-grab" />
                         
