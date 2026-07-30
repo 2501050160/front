@@ -90,7 +90,7 @@ function ResetPassword() {
                     </svg>
 
                     {/* Top Header Row */}
-                    <div className="absolute top-0 left-0 right-0 w-full flex items-center justify-between p-6 lg:p-8 z-20">
+                    <div className="lg:absolute lg:top-0 lg:left-0 lg:right-0 w-full flex items-center justify-between p-6 lg:p-8 z-20 mb-10 relative">
                         {/* Logo and CloudPrint text at left side */}
                         <div className="flex flex-row items-center gap-4">
                             <div className="p-3 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/25">
