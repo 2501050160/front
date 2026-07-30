@@ -94,22 +94,22 @@ function AdminLogin() {
                         <path d="M 100,0 Q 93,50 100,100" fill="none" stroke="#D946EF" strokeWidth="2" className="filter drop-shadow-[0_0_20px_rgba(217,70,239,0.9)]" vectorEffect="non-scaling-stroke" />
                     </svg>
 
-                    {/* Centered Admin Branding Block */}
-                    <div className="z-20 relative flex flex-col items-center gap-6">
-                        <div className="flex flex-row items-center gap-4">
-                            <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-xl shadow-pink-500/25 animate-pulse">
-                                <Printer className="w-10 h-10" />
+                    {/* Top Header Row */}
+                    <div className="absolute top-0 left-0 right-0 w-full flex items-center justify-between p-6 lg:p-8 z-20">
+                        {/* Logo and CloudPrint text at left side */}
+                        <div className="flex flex-row items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-lg shadow-pink-500/25">
+                                <Printer className="w-6 h-6" />
                             </div>
-                            <span className="text-3xl lg:text-4xl font-black tracking-tight text-white">
-                                CloudPrint Admin
+                            <span className="text-2xl lg:text-3xl font-black tracking-tight text-white">
+                                CloudPrint
                             </span>
                         </div>
                         
-                        <div className="w-16 h-1 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full" />
-                        
-                        <div className="flex flex-col items-center">
-                            <p className="text-xl lg:text-2xl uppercase tracking-[0.25em] text-pink-300 font-extrabold bg-gradient-to-r from-indigo-300 to-pink-300 bg-clip-text text-transparent">
-                                Control Panel
+                        {/* Admin Console centered */}
+                        <div className="absolute left-1/2 transform -translate-x-1/2">
+                            <p className="text-lg lg:text-xl uppercase tracking-[0.25em] text-pink-300 font-extrabold bg-gradient-to-r from-indigo-300 to-pink-300 bg-clip-text text-transparent whitespace-nowrap">
+                                Admin Console
                             </p>
                         </div>
                     </div>
