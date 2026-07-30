@@ -1180,7 +1180,7 @@ button:disabled {
   opacity: 0;
 }
 
-/* Responsive mobile layout adjustments for the Admin Dashboard */
+/* Responsive mobile layout adjustments for the Admin Dashboard and all dashboard pages */
 @media (max-width: 920px) {
   .admin-dashboard-root {
     width: 100% !important;
@@ -1203,6 +1203,41 @@ button:disabled {
     padding: 6px 10px !important;
     font-size: 11px !important;
     text-align: center !important;
+  }
+
+  /* Universal mobile styles for dashboard and internal layout pages */
+  .page-shell {
+    padding: 12px 8px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .page-shell .field,
+  .page-shell .btn {
+    font-size: 0.82rem !important;
+  }
+
+  .page-shell h1 {
+    font-size: 1.5rem !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  .page-shell h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .page-shell h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .page-shell .panel {
+    padding: 16px 12px !important;
+    border-radius: 16px !important;
+  }
+
+  .page-shell header,
+  .page-shell .section-header {
+    gap: 8px !important;
+    padding-bottom: 12px !important;
   }
 }
 
