@@ -1559,194 +1559,198 @@ function AdminDashboard() {
                     ]}
                 />
 
-                {/* Tabs Navigation */}
-                <div className="flex flex-wrap gap-2 border-b border-slate-200/60 pb-3 mb-6 mt-6">
-                    <button
-                        onClick={() => setActiveTab("queue")}
-                        className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                            activeTab === "queue"
-                                ? "bg-slate-900 text-white shadow-md"
-                                : "text-slate-600 hover:bg-slate-100/60"
-                        }`}
-                    >
-                        Queue & Analytics
-                    </button>
+                {/* Flex container for sidebar + main content panel */}
+                <div className="flex flex-col lg:flex-row gap-6 mt-6 items-start">
+                    {/* Left Sidebar Navigation */}
+                    <div className="w-full lg:w-64 shrink-0 flex flex-row lg:flex-col flex-wrap lg:flex-nowrap gap-1.5 bg-slate-50/60 lg:bg-transparent p-3 lg:p-0 rounded-2xl border border-slate-200/50 lg:border-0">
+                        <button
+                            onClick={() => setActiveTab("queue")}
+                            className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                activeTab === "queue"
+                                    ? "bg-slate-900 text-white shadow-md"
+                                    : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                            }`}
+                        >
+                            📊 Queue & Analytics
+                        </button>
 
-                    <button
-                        onClick={() => {
-                            setActiveTab("settings");
-                            fetchPrices(selectedPricingBlock);
-                            fetchCoupons();
-                            fetchBlocks();
-                            fetchRewards();
-                            fetchSystemSettings();
-                        }}
-                        className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                            activeTab === "settings"
-                                ? "bg-slate-900 text-white shadow-md"
-                                : "text-slate-600 hover:bg-slate-100/60"
-                        }`}
-                    >
-                        Pricing & Coupons
-                    </button>
-                    {loggedInAdminRole !== "MANAGER" && (
                         <button
                             onClick={() => {
-                                setActiveTab("blocks");
+                                setActiveTab("settings");
+                                fetchPrices(selectedPricingBlock);
+                                fetchCoupons();
                                 fetchBlocks();
-                                fetchSuspendedColleges();
+                                fetchRewards();
+                                fetchSystemSettings();
                             }}
-                            className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                activeTab === "blocks"
+                            className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                activeTab === "settings"
                                     ? "bg-slate-900 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100/60"
+                                    : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
                             }`}
                         >
-                            🏛️ Manage Blocks
+                            🎁 Pricing & Coupons
                         </button>
-                    )}
-                    <button
-                        onClick={() => {
-                            setActiveTab("printers");
-                            fetchPrinters();
-                            fetchBlocks();
-                        }}
-                        className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                            activeTab === "printers"
-                                ? "bg-slate-900 text-white shadow-md"
-                                : "text-slate-600 hover:bg-slate-100/60"
-                        }`}
-                    >
-                        🖨️ Manage Printers
-                    </button>
-                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                        <button
-                            onClick={() => {
-                                setActiveTab("colleges");
-                                fetchBlocks();
-                                fetchSuspendedColleges();
-                                fetchCollegeConfigs();
-                            }}
-                            className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                activeTab === "colleges"
-                                    ? "bg-slate-900 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100/60"
-                            }`}
-                        >
-                            🏫 College Management
-                        </button>
-                    )}
-                    <button
-                        onClick={() => {
-                            setActiveTab("users");
-                            fetchUsers();
-                        }}
-                        className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                            activeTab === "users"
-                                ? "bg-slate-900 text-white shadow-md"
-                                : "text-slate-600 hover:bg-slate-100/60"
-                        }`}
-                    >
-                        User Moderation
-                    </button>
-                    {loggedInAdminRole !== "MANAGER" && (
-                        <>
+                        {loggedInAdminRole !== "MANAGER" && (
                             <button
                                 onClick={() => {
-                                    setActiveTab("support");
-                                    fetchSupportTickets();
-                                }}
-                                className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                    activeTab === "support"
-                                        ? "bg-slate-900 text-white shadow-md"
-                                        : "text-slate-600 hover:bg-slate-100/60"
-                                }`}
-                            >
-                                Support Tickets
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab("frontend");
-                                    fetchSystemSettings();
-                                    fetchSections();
-                                }}
-                                className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                    activeTab === "frontend"
-                                        ? "bg-slate-900 text-white shadow-md"
-                                        : "text-slate-600 hover:bg-slate-100/60"
-                                }`}
-                            >
-                                Frontend Manager
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab("system");
-                                    fetchSystemSettings();
+                                    setActiveTab("blocks");
                                     fetchBlocks();
-                                    fetchPrinters();
+                                    fetchSuspendedColleges();
                                 }}
-                                className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                    activeTab === "system"
+                                className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                    activeTab === "blocks"
                                         ? "bg-slate-900 text-white shadow-md"
-                                        : "text-slate-600 hover:bg-slate-100/60"
+                                        : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
                                 }`}
                             >
-                                System Config
+                                🏛️ Manage Blocks
                             </button>
-                        </>
-                    )}
-
-                    
-                    {loggedInAdminRole !== "MANAGER" && (
+                        )}
                         <button
                             onClick={() => {
-                                setActiveTab("subadmins");
-                                fetchSubAdmins();
-                                fetchManagerLogs();
+                                setActiveTab("printers");
+                                fetchPrinters();
+                                fetchBlocks();
                             }}
-                            className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                activeTab === "subadmins"
+                            className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                activeTab === "printers"
                                     ? "bg-slate-900 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100/60"
+                                    : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
                             }`}
                         >
-                            🔑 Manage Staff
+                            🖨️ Manage Printers
                         </button>
-                    )}
-
-                    {loggedInAdminRole !== "MANAGER" && (
+                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                            <button
+                                onClick={() => {
+                                    setActiveTab("colleges");
+                                    fetchBlocks();
+                                    fetchSuspendedColleges();
+                                    fetchCollegeConfigs();
+                                }}
+                                className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                    activeTab === "colleges"
+                                        ? "bg-slate-900 text-white shadow-md"
+                                        : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                }`}
+                            >
+                                🏫 College Management
+                            </button>
+                        )}
                         <button
                             onClick={() => {
-                                setActiveTab("notifications");
-                                fetchNotifications();
+                                setActiveTab("users");
+                                fetchUsers();
                             }}
-                            className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                activeTab === "notifications"
+                            className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                activeTab === "users"
                                     ? "bg-slate-900 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100/60"
+                                    : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
                             }`}
                         >
-                            🔔 Notifications
+                            👥 User Moderation
                         </button>
-                    )}
+                        {loggedInAdminRole !== "MANAGER" && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("support");
+                                        fetchSupportTickets();
+                                    }}
+                                    className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                        activeTab === "support"
+                                            ? "bg-slate-900 text-white shadow-md"
+                                            : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                    }`}
+                                >
+                                    📞 Support Tickets
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("frontend");
+                                        fetchSystemSettings();
+                                        fetchSections();
+                                    }}
+                                    className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                        activeTab === "frontend"
+                                            ? "bg-slate-900 text-white shadow-md"
+                                            : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                    }`}
+                                >
+                                    🌐 Frontend Manager
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("system");
+                                        fetchSystemSettings();
+                                        fetchBlocks();
+                                        fetchPrinters();
+                                    }}
+                                    className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                        activeTab === "system"
+                                            ? "bg-slate-950 text-white shadow-md"
+                                            : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                    }`}
+                                >
+                                    ⚙️ System Config
+                                </button>
+                            </>
+                        )}
 
-                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                        <button
-                            onClick={() => {
-                                setActiveTab("sql");
-                                setSqlResult(null);
-                                setSqlError("");
-                            }}
-                            className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
-                                activeTab === "sql"
-                                    ? "bg-slate-900 text-white shadow-md"
-                                    : "text-slate-600 hover:bg-slate-100/60"
-                            }`}
-                        >
-                            SQL Terminal
-                        </button>
-                    )}
-                </div>
+                        {loggedInAdminRole !== "MANAGER" && (
+                            <button
+                                onClick={() => {
+                                    setActiveTab("subadmins");
+                                    fetchSubAdmins();
+                                    fetchManagerLogs();
+                                }}
+                                className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                    activeTab === "subadmins"
+                                        ? "bg-slate-900 text-white shadow-md"
+                                        : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                }`}
+                            >
+                                🔑 Manage Staff
+                            </button>
+                        )}
+
+                        {loggedInAdminRole !== "MANAGER" && (
+                            <button
+                                onClick={() => {
+                                    setActiveTab("notifications");
+                                    fetchNotifications();
+                                }}
+                                className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                    activeTab === "notifications"
+                                        ? "bg-slate-900 text-white shadow-md"
+                                        : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                }`}
+                            >
+                                🔔 Notifications
+                            </button>
+                        )}
+
+                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                            <button
+                                onClick={() => {
+                                    setActiveTab("sql");
+                                    setSqlResult(null);
+                                    setSqlError("");
+                                }}
+                                className={`w-auto lg:w-full lg:text-left px-4 py-2.5 font-bold text-sm rounded-xl transition-all flex items-center gap-2 ${
+                                    activeTab === "sql"
+                                        ? "bg-slate-900 text-white shadow-md"
+                                        : "text-slate-600 hover:bg-slate-100/60 lg:hover:bg-slate-100"
+                                }`}
+                            >
+                                💻 SQL Terminal
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Right Content Pane */}
+                    <div className="flex-1 min-w-0 w-full mt-2 lg:mt-0">
 
                 {/* Queue & Analytics Tab */}
                 {activeTab === "queue" && (
@@ -4525,6 +4529,8 @@ function AdminDashboard() {
                         )}
                     </div>
                 )}
+                    </div> {/* Close Right Content Pane */}
+                </div> {/* Close Main flex layout row */}
             </div>
 
             {/* Payment Config Modal */}
