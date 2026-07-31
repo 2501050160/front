@@ -36,6 +36,10 @@ function Dashboard() {
     const [endPage, setEndPage] = useState("");
     const [nupLayout, setNupLayout] = useState("1-up");
     const [doubleSided, setDoubleSided] = useState(false);
+    const [haveCoupon, setHaveCoupon] = useState(false);
+    const [couponCode, setCouponCode] = useState("");
+    const [couponApplied, setCouponApplied] = useState(false);
+    const [couponDetails, setCouponDetails] = useState(null);
 
     // Active Navigation Tab
     const [activeTab, setActiveTab] = useState("print");
@@ -311,6 +315,10 @@ function Dashboard() {
             setTotalPages(response.data.totalPages);
             setOrderId(response.data.orderId);
             setUploaded(true);
+            setHaveCoupon(false);
+            setCouponCode("");
+            setCouponApplied(false);
+            setCouponDetails(null);
             showAlert("Success", "Files processed and uploaded successfully!", "success");
         } catch (error) {
             console.error(error);
@@ -391,6 +399,35 @@ function Dashboard() {
         }
     };
 
+    const applyCoupon = async () => {
+        if (couponApplied) {
+            showAlert("Already Applied", "Coupon has already been applied.", "warning");
+            return;
+        }
+
+        if (!couponCode) {
+            showAlert("Required Field", "Please enter coupon code.", "warning");
+            return;
+        }
+
+        try {
+            const response = await api.get("/coupon/validate", {
+                params: {
+                    couponCode
+                }
+            });
+
+            const coupon = response.data;
+            setCouponDetails(coupon);
+            setCouponApplied(true);
+
+            showAlert("Success", "Coupon Applied Successfully", "success");
+        } catch (error) {
+            console.error(error);
+            showAlert("Invalid Coupon", "The entered coupon code is invalid or expired.", "error");
+        }
+    };
+
     const payWithWalletDirect = async () => {
         if (!uploaded) {
             showAlert("Files Not Uploaded", "Please upload selected files first.", "warning");
@@ -442,6 +479,26 @@ function Dashboard() {
             );
 
             const finalOrder = response.data;
+
+            // Apply coupon updates and validate before wallet payment
+            if (couponApplied && couponDetails) {
+                const discount = (finalOrder.price * couponDetails.discountPercentage) / 100;
+                const discountedPrice = finalOrder.price - discount;
+                
+                await api.post("/pdf/updatePrice", null, {
+                    params: {
+                        orderId: finalOrder.orderId,
+                        price: discountedPrice,
+                        originalPrice: finalOrder.price,
+                        discountAmount: finalOrder.discountAmount + discount
+                    }
+                });
+
+                // Mark coupon as used only when payment succeeds
+                await api.post("/coupon/use", null, {
+                    params: { couponCode }
+                }).catch(err => console.error("Failed to mark coupon as used:", err));
+            }
 
             // 2. Pay using wallet balance
             await api.post("/pdf/payWithWallet", null, {
@@ -508,10 +565,25 @@ function Dashboard() {
 
             const finalOrder = response.data;
 
+            let paymentAmount = finalOrder.price;
+            if (couponApplied && couponDetails) {
+                const discount = (finalOrder.price * couponDetails.discountPercentage) / 100;
+                paymentAmount = finalOrder.price - discount;
+
+                await api.post("/pdf/updatePrice", null, {
+                    params: {
+                        orderId: finalOrder.orderId,
+                        price: paymentAmount,
+                        originalPrice: finalOrder.price,
+                        discountAmount: finalOrder.discountAmount + discount
+                    }
+                });
+            }
+
             // 2. Create Razorpay Order
             const rzpRes = await api.post("/payment/createOrder", null, {
                 params: {
-                    amount: finalOrder.price,
+                    amount: paymentAmount,
                     appOrderId: finalOrder.orderId
                 }
             });
@@ -527,6 +599,12 @@ function Dashboard() {
                 order_id: orderData.id,
                 handler: async function (response) {
                     try {
+                        if (couponApplied && couponCode) {
+                            await api.post("/coupon/use", null, {
+                                params: { couponCode }
+                            }).catch(err => console.error("Failed to mark coupon as used:", err));
+                        }
+
                         await api.post("/pdf/paymentSuccess", null, {
                             params: {
                                 orderId: finalOrder.orderId,
@@ -665,7 +743,8 @@ function Dashboard() {
     const sheetsToPrint = Math.ceil(selectedPageCount / divisor);
     const estimatedTotalPages = sheetsToPrint * Number(copies || 1);
     const isLowPaper = uploaded && estimatedTotalPages > paperCount;
-    const estimatedTotal = sheetsToPrint * Number(copies || 1) * rate;
+    const basePrice = sheetsToPrint * Number(copies || 1) * rate;
+    const estimatedTotal = couponApplied && couponDetails ? Math.max(0, basePrice - (basePrice * couponDetails.discountPercentage) / 100) : basePrice;
     const isPrintingDisabled = !systemStatus.databaseConnected || !systemStatus.agentOnline || !systemStatus.printerConfigured || isLowPaper || systemStatus.maintenance;
 
     const displayAdText = settings.adEnabled && settings.adText ? settings.adText.replace("{referralCode}", referralCode) : "";
@@ -1084,6 +1163,45 @@ function Dashboard() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Coupon Section */}
+                            {uploaded && (
+                                <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="haveCoupon"
+                                            checked={haveCoupon || couponApplied}
+                                            onChange={(e) => setHaveCoupon(e.target.checked)}
+                                            disabled={couponApplied}
+                                            className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                                        />
+                                        <label htmlFor="haveCoupon" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
+                                            I have a coupon
+                                        </label>
+                                    </div>
+
+                                    {(haveCoupon || couponApplied) && (
+                                        <div className="mt-3 flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Coupon code"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value)}
+                                                className="field text-xs py-1.5"
+                                                disabled={couponApplied}
+                                            />
+                                            <button
+                                                onClick={applyCoupon}
+                                                disabled={couponApplied}
+                                                className={couponApplied ? "btn secondary text-xs py-1.5 px-3" : "btn text-xs py-1.5 px-3"}
+                                            >
+                                                {couponApplied ? "Applied" : "Apply"}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </motion.aside>
 
                         <AnimatePresence>
