@@ -1179,7 +1179,7 @@ function Dashboard() {
                                         type="button"
                                         onClick={() => !couponApplied && setHaveCoupon(!haveCoupon)}
                                         disabled={couponApplied}
-                                        className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all relative overflow-hidden group cursor-pointer ${
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all relative overflow-hidden group cursor-pointer ${
                                             couponApplied 
                                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 cursor-default' 
                                             : 'bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border-sky-500/25 hover:border-sky-500/50 text-sky-400 hover:text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.07)] hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:scale-[1.01]'
@@ -1189,17 +1189,8 @@ function Dashboard() {
                                         {!couponApplied && (
                                             <div className="absolute inset-0 w-[500%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
                                         )}
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm">🎟️</span>
-                                            <span>{couponApplied ? "Coupon Applied!" : "Have a discount coupon?"}</span>
-                                        </div>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-lg border font-black transition-all ${
-                                            couponApplied 
-                                            ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' 
-                                            : 'bg-sky-500/20 border-sky-500/30 text-sky-400 group-hover:bg-sky-500/35'
-                                        }`}>
-                                            {couponApplied ? "SAVED" : "REDEEM"}
-                                        </span>
+                                        <span>🎟️</span>
+                                        <span>{couponApplied ? "Coupon Applied!" : "Apply Coupon"}</span>
                                     </button>
 
                                     {(haveCoupon || couponApplied) && (
