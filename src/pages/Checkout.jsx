@@ -493,8 +493,8 @@ function Checkout() {
                                 {!couponApplied && (
                                     <div className="absolute inset-0 w-[500%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
                                 )}
-                                <span>🎟️</span>
-                                <span>{couponApplied ? "Coupon Applied!" : "Apply Coupon"}</span>
+                                <span className="text-2xl">🎟️</span>
+                                <span>{couponApplied ? "Coupon Applied!" : "Have a Coupon?"}</span>
                             </button>
                         </div>
 
