@@ -17,6 +17,7 @@ function Checkout() {
     const [discount, setDiscount] = useState(0);
     const [finalAmount, setFinalAmount] = useState(order?.price || 0);
     const [couponApplied, setCouponApplied] = useState(false);
+    const [haveCoupon, setHaveCoupon] = useState(false);
     const [walletBalance, setWalletBalance] = useState(getStoredWalletBalance());
     const [referralCode, setReferralCode] = useState(order?.appliedReferralCode || "");
     const [referralApplied, setReferralApplied] = useState(!!order?.appliedReferralCode);
@@ -272,16 +273,21 @@ function Checkout() {
 
         setPaymentMethod("wallet");
         try {
-            await saveScheduledInfo();
-            await api.post("/pdf/payWithWallet", null, {
-                params: {
-                    orderId: order.orderId
-                }
-            });
+            // Run scheduling save and payment in parallel to speed up execution
+            await Promise.all([
+                saveScheduledInfo(),
+                api.post("/pdf/payWithWallet", null, {
+                    params: {
+                        orderId: order.orderId
+                    }
+                })
+            ]);
 
-            await getWalletBalance(userId);
+            // Update wallet balance in the background; do not block navigation
+            getWalletBalance(userId).catch(err => console.error("Failed to update wallet balance in background:", err));
+            
             localStorage.removeItem("order");
-            navigate(`/payment-success?orderId=${order.orderId}`);
+            navigate(`/payment-success?orderId=${order.orderId}&paymentMethod=wallet`);
         } catch (error) {
             console.error(error);
             showAlert("Error", error.response?.data?.message || "Wallet payment failed", "error");
@@ -454,23 +460,41 @@ function Checkout() {
                             </div>
                         </div>
 
-                        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+                        {/* Coupon Checkbox */}
+                        <div className="mt-5 flex items-center gap-2">
                             <input
-                                type="text"
-                                placeholder="Coupon code"
-                                value={couponCode}
-                                onChange={(e) => setCouponCode(e.target.value)}
-                                className="field"
-                            />
-
-                            <button
-                                onClick={applyCoupon}
+                                type="checkbox"
+                                id="haveCoupon"
+                                checked={haveCoupon || couponApplied}
+                                onChange={(e) => setHaveCoupon(e.target.checked)}
                                 disabled={couponApplied}
-                                className={couponApplied ? "btn secondary" : "btn"}
-                            >
-                                {couponApplied ? "Applied" : "Apply"}
-                            </button>
+                                className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                            />
+                            <label htmlFor="haveCoupon" className="text-sm font-bold text-slate-300 cursor-pointer select-none">
+                                I have a coupon
+                            </label>
                         </div>
+
+                        {(haveCoupon || couponApplied) && (
+                            <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                                <input
+                                    type="text"
+                                    placeholder="Coupon code"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value)}
+                                    className="field"
+                                    disabled={couponApplied}
+                                />
+
+                                <button
+                                    onClick={applyCoupon}
+                                    disabled={couponApplied}
+                                    className={couponApplied ? "btn secondary" : "btn"}
+                                >
+                                    {couponApplied ? "Applied" : "Apply"}
+                                </button>
+                            </div>
+                        )}
 
                         {referralEnabled && (
                             <div className="mt-4 border-t border-slate-100 pt-4">

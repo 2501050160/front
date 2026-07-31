@@ -25,6 +25,7 @@ function PaymentSuccess() {
     const otpRef = useRef("");
     const fileNameRef = useRef("");
     const blockLocationRef = useRef("");
+    const autoProceedStartedRef = useRef(false);
 
     useEffect(() => {
         if (!orderId) return;
@@ -121,6 +122,16 @@ function PaymentSuccess() {
 
                 if (response.data.status !== "CANCEL_WINDOW") {
                     navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`);
+                } else {
+                    // Check if it is a wallet payment to trigger auto-proceed
+                    const isWallet = searchParams.get("paymentMethod") === "wallet";
+                    if (isWallet && !autoProceedStartedRef.current) {
+                        autoProceedStartedRef.current = true;
+                        // Auto-proceed after a brief delay (1.5 seconds)
+                        setTimeout(() => {
+                            proceedOrder();
+                        }, 1500);
+                    }
                 }
             }
         } catch (error) {
@@ -193,9 +204,11 @@ function PaymentSuccess() {
                     <p className="eyebrow text-emerald-300 font-bold tracking-widest text-xs uppercase mb-2">Payment Successful</p>
                     <h1 className="title text-3xl text-white font-black mb-2">Order Confirmed</h1>
                     <p className="subtitle mx-auto max-w-sm text-sm text-slate-200 font-medium leading-relaxed">
-                        Order <strong>{orderId}</strong> is paid. You can cancel
-                        within the countdown and the amount will be credited to your
-                        wallet.
+                        {searchParams.get("paymentMethod") === "wallet" ? (
+                            <>Order <strong>{orderId}</strong> paid via Wallet. Redirecting to your print job...</>
+                        ) : (
+                            <>Order <strong>{orderId}</strong> is paid. You can cancel within the countdown and the amount will be credited to your wallet.</>
+                        )}
                     </p>
 
                     <div className="mx-auto mt-6 flex flex-col items-center">
