@@ -5,6 +5,7 @@ import api, { RAZORPAY_KEY } from "../services/api";
 import { getStoredWalletBalance, getWalletBalance } from "../services/auth";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
+import referralIcon from "../assets/referral-icon.jpg";
 
 function Checkout() {
     const navigate = useNavigate();
@@ -559,8 +560,13 @@ function Checkout() {
                                             <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
                                             <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
                                             
-                                            {/* Megaphone icon */}
-                                            <span className="text-2xl animate-pulse" style={{ animationDuration: '2s' }}>📣</span>
+                                            {/* Megaphone icon image from assets */}
+                                            <img 
+                                                src={referralIcon} 
+                                                alt="Refer a Friend" 
+                                                className="w-10 h-10 object-contain rounded-md animate-pulse" 
+                                                style={{ animationDuration: '3s' }}
+                                            />
                                         </div>
 
                                         {/* Right section: Dark slate and orange text block */}
