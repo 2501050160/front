@@ -1174,23 +1174,42 @@ function Dashboard() {
                             {/* Coupon Section */}
                             {uploaded && (
                                 <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                                    {/* Premium Shiny Coupon Button */}
+                                    {/* Premium Ticket Coupon Button */}
                                     <button
                                         type="button"
                                         onClick={() => !couponApplied && setHaveCoupon(!haveCoupon)}
                                         disabled={couponApplied}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all relative overflow-hidden group cursor-pointer ${
+                                        className={`w-fit h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
                                             couponApplied 
-                                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 cursor-default' 
-                                            : 'bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border-sky-500/25 hover:border-sky-500/50 text-sky-400 hover:text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.07)] hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:scale-[1.01]'
+                                            ? 'bg-emerald-600 border-emerald-700/30' 
+                                            : 'bg-red-600 border-red-700/30 shadow-[0_4px_15px_rgba(220,38,38,0.25)]'
                                         }`}
                                     >
-                                        {/* Shiny Overlay Animation */}
-                                        {!couponApplied && (
-                                            <div className="absolute inset-0 w-[500%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
-                                        )}
-                                        <span className="text-2xl">🎟️</span>
-                                        <span>{couponApplied ? "Coupon Applied!" : "Have a Coupon?"}</span>
+                                        {/* Left section: White barcode */}
+                                        <div className="w-12 bg-white flex items-center justify-center relative border-r border-dashed border-slate-300">
+                                            {/* Top and Bottom Scallop cutouts */}
+                                            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
+                                            
+                                            {/* Barcode representation */}
+                                            <div className="flex gap-[1.5px] items-center justify-center h-8">
+                                                <div className="w-[1.5px] h-full bg-slate-900" />
+                                                <div className="w-[3px] h-full bg-slate-900" />
+                                                <div className="w-[1px] h-full bg-slate-900" />
+                                                <div className="w-[2px] h-full bg-slate-900" />
+                                                <div className="w-[1px] h-full bg-slate-900" />
+                                                <div className="w-[3px] h-full bg-slate-900" />
+                                                <div className="w-[1.5px] h-full bg-slate-900" />
+                                            </div>
+                                        </div>
+
+                                        {/* Right section: Red/Green Coupon text */}
+                                        <div className="px-3.5 flex flex-col justify-center text-left text-white">
+                                            <span className="text-[8px] font-black tracking-widest uppercase opacity-85">COUPON</span>
+                                            <span className="text-xs font-black whitespace-nowrap mt-0.5">
+                                                {couponApplied ? "COUPON SAVED!" : "HAVE A COUPON?"}
+                                            </span>
+                                        </div>
                                     </button>
 
                                     {(haveCoupon || couponApplied) && (
