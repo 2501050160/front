@@ -291,6 +291,10 @@ button:disabled {
 .top-bar-glass {
   margin-bottom: 24px;
   border-radius: 18px;
+  background: linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(224, 242, 254, 0.9)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.1), 0 8px 10px -6px rgba(56, 189, 248, 0.1) !important;
+  backdrop-filter: blur(18px) !important;
 }
 
 .eyebrow {
