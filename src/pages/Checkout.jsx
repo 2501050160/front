@@ -216,6 +216,13 @@ function Checkout() {
                 order_id: orderData.id,
                 handler: async function (response) {
                     try {
+                        // Mark coupon as used only after payment succeeds
+                        if (couponApplied && couponCode) {
+                            await api.post("/coupon/use", null, {
+                                params: { couponCode }
+                            }).catch(err => console.error("Failed to mark coupon as used:", err));
+                        }
+
                         await api.post("/pdf/paymentSuccess", null, {
                             params: {
                                 orderId: order.orderId,
@@ -273,15 +280,21 @@ function Checkout() {
 
         setPaymentMethod("wallet");
         try {
-            // Run scheduling save and payment in parallel to speed up execution
-            await Promise.all([
-                saveScheduledInfo(),
-                api.post("/pdf/payWithWallet", null, {
-                    params: {
-                        orderId: order.orderId
-                    }
-                })
-            ]);
+            // Execute calls sequentially to prevent PostgreSQL transaction conflicts on the same order row
+            await saveScheduledInfo();
+            
+            // Mark coupon as used only when payment is actually executed
+            if (couponApplied && couponCode) {
+                await api.post("/coupon/use", null, {
+                    params: { couponCode }
+                }).catch(err => console.error("Failed to mark coupon as used:", err));
+            }
+
+            await api.post("/pdf/payWithWallet", null, {
+                params: {
+                    orderId: order.orderId
+                }
+            });
 
             // Update wallet balance in the background; do not block navigation
             getWalletBalance(userId).catch(err => console.error("Failed to update wallet balance in background:", err));
@@ -327,12 +340,6 @@ function Checkout() {
                     price: finalPrice,
                     originalPrice: order.price,
                     discountAmount: discountAmount
-                }
-            });
-
-            await api.post("/coupon/use", null, {
-                params: {
-                    couponCode
                 }
             });
 
