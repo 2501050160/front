@@ -18,6 +18,7 @@ function Checkout() {
     const [finalAmount, setFinalAmount] = useState(order?.price || 0);
     const [couponApplied, setCouponApplied] = useState(false);
     const [haveCoupon, setHaveCoupon] = useState(false);
+    const [haveReferral, setHaveReferral] = useState(false);
     const [walletBalance, setWalletBalance] = useState(getStoredWalletBalance());
     const [referralCode, setReferralCode] = useState(order?.appliedReferralCode || "");
     const [referralApplied, setReferralApplied] = useState(!!order?.appliedReferralCode);
@@ -539,27 +540,64 @@ function Checkout() {
                         )}
 
                         {referralEnabled && (
-                            <div className="mt-4 border-t border-slate-100 pt-4">
-                                <p className="text-sm font-bold text-slate-500 mb-2">Refer & Earn (Referee gets Rs. 5 & Referrer gets Rs. 10)</p>
-                                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter referral code"
-                                        value={referralCode}
-                                        onChange={(e) => setReferralCode(e.target.value)}
-                                        className="field uppercase"
-                                        disabled={referralApplied}
-                                    />
-
+                            <>
+                                {/* Premium Megaphone Refer a Friend Button */}
+                                <div className="mt-4">
                                     <button
-                                        onClick={applyReferral}
+                                        type="button"
+                                        onClick={() => !referralApplied && setHaveReferral(!haveReferral)}
                                         disabled={referralApplied}
-                                        className={referralApplied ? "btn secondary" : "btn"}
+                                        className={`w-fit h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
+                                            referralApplied 
+                                            ? 'bg-emerald-600 border-emerald-700/30' 
+                                            : 'bg-slate-900 border-slate-800 shadow-[0_4px_15px_rgba(15,23,42,0.25)]'
+                                        }`}
                                     >
-                                        {referralApplied ? "Applied" : "Apply Code"}
+                                        {/* Left section: Yellow/Orange background with Megaphone */}
+                                        <div className="w-12 bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center relative border-r border-dashed border-orange-400/30">
+                                            {/* Top and Bottom cutouts */}
+                                            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
+                                            
+                                            {/* Megaphone icon */}
+                                            <span className="text-2xl animate-pulse" style={{ animationDuration: '2s' }}>📣</span>
+                                        </div>
+
+                                        {/* Right section: Dark slate and orange text block */}
+                                        <div className="px-3.5 flex flex-col justify-center text-left text-white">
+                                            <span className="text-[8px] font-black tracking-widest uppercase text-amber-400">REFER A</span>
+                                            <span className="text-xs font-black whitespace-nowrap mt-0.5 text-white">
+                                                {referralApplied ? "REFERRAL APPLIED!" : "FRIEND?"}
+                                            </span>
+                                        </div>
                                     </button>
                                 </div>
-                            </div>
+
+                                {(haveReferral || referralApplied) && (
+                                    <div className="mt-3 border-t border-slate-100/50 pt-3">
+                                        <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                                            Refer & Earn (You get Rs. 5 & Referrer gets Rs. 10)
+                                        </p>
+                                        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                                            <input
+                                                type="text"
+                                                placeholder="Enter referral code"
+                                                value={referralCode}
+                                                onChange={(e) => setReferralCode(e.target.value)}
+                                                className="field uppercase"
+                                                disabled={referralApplied}
+                                            />
+                                            <button
+                                                onClick={applyReferral}
+                                                disabled={referralApplied}
+                                                className={referralApplied ? "btn secondary" : "btn"}
+                                            >
+                                                {referralApplied ? "Applied" : "Apply Code"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {/* Scheduling & Notifications */}
