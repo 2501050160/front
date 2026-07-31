@@ -470,7 +470,7 @@ function Checkout() {
                                 disabled={couponApplied}
                                 className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
                             />
-                            <label htmlFor="haveCoupon" className="text-sm font-bold text-slate-300 cursor-pointer select-none">
+                            <label htmlFor="haveCoupon" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
                                 I have a coupon
                             </label>
                         </div>
