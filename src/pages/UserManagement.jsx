@@ -66,14 +66,18 @@ function UserManagement() {
 
   const handleAddWallet = async () => {
     const amt = parseFloat(creditAmount);
-    if (isNaN(amt) || amt <= 0) {
-      alert("Please enter a valid positive amount");
+    if (isNaN(amt) || amt === 0) {
+      alert("Please enter a valid non-zero amount");
       return;
     }
     try {
       await api.post(`/admin/users/wallet/add?id=${selectedUser.id}&amount=${amt}`);
       fetchUsers();
-      alert(`Successfully added ₹${amt} to user wallet.`);
+      if (amt > 0) {
+        alert(`Successfully added ₹${amt} to user wallet.`);
+      } else {
+        alert(`Successfully deducted ₹${Math.abs(amt)} from user wallet.`);
+      }
       setCreditAmount("");
       setShowModal(false);
       setSelectedUser(null);
@@ -239,13 +243,13 @@ function UserManagement() {
           )}
         </div>
 
-        {/* Modal: Top-up Wallet Balance */}
+        {/* Modal: Top-up / Adjust Wallet Balance */}
         {showModal && selectedUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
             <div className="bg-white rounded-3xl p-8 max-w-sm w-full border border-slate-200 shadow-2xl relative">
-              <h3 className="text-xl font-black text-slate-900">Add Wallet Credits</h3>
+              <h3 className="text-xl font-black text-slate-900">Adjust Wallet Credits</h3>
               <p className="mt-1 text-sm font-bold text-slate-500">
-                Crediting money for: <strong className="text-slate-700">{selectedUser.username || selectedUser.email}</strong>
+                Adjusting balance for: <strong className="text-slate-700">{selectedUser.username || selectedUser.email}</strong>
               </p>
 
               <div className="mt-6 flex flex-col gap-2">
@@ -254,7 +258,7 @@ function UserManagement() {
                 </label>
                 <input
                   type="number"
-                  placeholder="Enter amount to credit"
+                  placeholder="e.g. 50 to add, -50 to deduct"
                   value={creditAmount}
                   onChange={(e) => setCreditAmount(e.target.value)}
                   className="field py-3 px-4 font-black"
@@ -276,7 +280,7 @@ function UserManagement() {
                   onClick={handleAddWallet}
                   className="btn success px-6 py-2.5 text-sm font-black"
                 >
-                  Credit Wallet 💰
+                  Update Balance 💰
                 </button>
               </div>
             </div>

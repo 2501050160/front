@@ -1141,7 +1141,6 @@ function Dashboard() {
                             </div>
                         </div>
                     </div>
-                </div>
 
                 {/* TAB CONTENT: PRINT DASHBOARD */}
                 {activeTab === "print" && (
