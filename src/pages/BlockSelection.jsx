@@ -320,6 +320,25 @@ function BlockSelection() {
                         ]);
                         setSelectedOrderId(redirectOrderId);
                         setFetchingOrders(false);
+
+                        // Auto release print
+                        (async () => {
+                            setReleasing(true);
+                            try {
+                                await api.post("/pdf/releasePrint", null, {
+                                    params: { orderId: redirectOrderId, otp: redirectOtp.trim() }
+                                });
+                                setOtpError("");
+                                setTrackingOrderId(redirectOrderId);
+                                setTrackingOrderStatus("RELEASING");
+                                fetchPendingOrders();
+                            } catch (err) {
+                                console.error("Auto print release via QR failed:", err);
+                                setOtpError(err.response?.data?.message || "QR Release failed. Please enter the OTP manually below.");
+                            } finally {
+                                setReleasing(false);
+                            }
+                        })();
                     } else {
                         setFetchingOrders(true);
                         try {
