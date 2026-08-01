@@ -12,6 +12,8 @@ import walletVideo from "../assets/wallet_video.mp4";
 import myOrdersVideo from "../assets/my_orders_video.mp4";
 import ordersLoading from "../assets/orders_loading.mp4";
 import referralIcon from "../assets/referral-icon.jpg";
+import printKioskBg from "../assets/print-kiosk-bg.png";
+import kioskFront from "../assets/kiosk-front.png";
 import {
     FileText,
     Gift,
@@ -828,17 +830,56 @@ function Dashboard() {
     };
 
     return (
-        <main className="page-shell page-shell-decorated !px-0 !py-0 min-h-screen bg-[linear-gradient(135deg,#f8fbff_0%,#edf7f6_45%,#fff7ed_100%)]">
+        <main className="premium-dashboard-bg page-shell page-shell-decorated !px-0 !py-0 min-h-screen">
             <style>{`
+                .premium-dashboard-bg {
+                    position: relative;
+                    overflow: hidden;
+                    background:
+                        radial-gradient(circle at 76% 12%, rgba(45, 212, 191, 0.26), transparent 24rem),
+                        radial-gradient(circle at 16% 28%, rgba(14, 165, 233, 0.28), transparent 28rem),
+                        linear-gradient(135deg, #020617 0%, #082f49 42%, #0f766e 100%);
+                }
+                .premium-dashboard-bg::before {
+                    content: "";
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    background:
+                        linear-gradient(115deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 38px),
+                        linear-gradient(to bottom, rgba(2,6,23,0.12), rgba(2,6,23,0.72));
+                    opacity: 0.9;
+                }
+                .premium-dashboard-bg::after {
+                    content: "";
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    background-image: radial-gradient(rgba(255, 255, 255, 0.11) 1px, transparent 1px);
+                    background-size: 22px 22px;
+                    mask-image: linear-gradient(to bottom, transparent, black 22%, black 82%, transparent);
+                }
                 .user-dash-card {
-                    border: 1px solid rgba(148, 163, 184, 0.22);
-                    background: rgba(255, 255, 255, 0.86);
-                    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
-                    backdrop-filter: blur(18px);
+                    position: relative;
+                    border: 1px solid rgba(255, 255, 255, 0.16);
+                    background:
+                        linear-gradient(180deg, rgba(15, 23, 42, 0.76), rgba(8, 47, 73, 0.62));
+                    color: #f8fafc;
+                    box-shadow: 0 30px 90px rgba(2, 6, 23, 0.38);
+                    backdrop-filter: blur(26px);
+                }
+                .user-dash-card::before {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    border-radius: inherit;
+                    pointer-events: none;
+                    background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 38%);
                 }
                 .user-dash-sidebar {
-                    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9));
-                    box-shadow: 12px 0 40px rgba(15, 23, 42, 0.06);
+                    background: linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(8, 47, 73, 0.94));
+                    border-color: rgba(255,255,255,0.08);
+                    box-shadow: 16px 0 50px rgba(2, 6, 23, 0.22);
                 }
                 .user-dash-stat {
                     position: relative;
@@ -855,11 +896,54 @@ function Dashboard() {
                 }
                 .user-dash-upload {
                     background:
-                        linear-gradient(135deg, rgba(14,165,233,0.08), rgba(16,185,129,0.08)),
-                        #ffffff;
-                    border: 1.5px dashed rgba(14, 116, 144, 0.35);
+                        linear-gradient(135deg, rgba(34,211,238,0.12), rgba(16,185,129,0.1)),
+                        rgba(255,255,255,0.08);
+                    border: 1.5px dashed rgba(125, 211, 252, 0.42);
+                    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 16px 35px rgba(8, 145, 178, 0.12);
+                }
+                .user-dash-sidebar button:not(.bg-gradient-to-r) {
+                    color: rgba(226, 232, 240, 0.82);
+                }
+                .user-dash-sidebar button:not(.bg-gradient-to-r):hover {
+                    background: rgba(255,255,255,0.08);
+                    color: #ffffff;
+                }
+                .dashboard-immersive-image {
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    background-position: center;
+                    background-size: cover;
+                    opacity: 0.22;
+                    mix-blend-mode: screen;
+                    filter: saturate(1.16) contrast(1.04);
+                }
+                .dashboard-stage-card {
+                    min-height: 220px;
+                    overflow: hidden;
+                    border: 1px solid rgba(255,255,255,0.16);
+                    background:
+                        linear-gradient(120deg, rgba(2,6,23,0.84), rgba(8,47,73,0.62)),
+                        linear-gradient(135deg, rgba(34,211,238,0.16), rgba(16,185,129,0.08));
+                    box-shadow: 0 34px 90px rgba(2,6,23,0.42);
+                }
+                .premium-dashboard-bg .top-bar-glass {
+                    background: rgba(255,255,255,0.1) !important;
+                    border: 1px solid rgba(255,255,255,0.14) !important;
+                    box-shadow: 0 26px 70px rgba(2,6,23,0.35) !important;
+                    backdrop-filter: blur(26px) !important;
+                }
+                .premium-dashboard-bg .top-bar-glass .title,
+                .premium-dashboard-bg .top-bar-glass .eyebrow {
+                    color: #ffffff !important;
+                }
+                .premium-dashboard-bg .top-bar-glass .brand-mark {
+                    background: rgba(255,255,255,0.14);
+                    color: #ffffff;
+                    border: 1px solid rgba(255,255,255,0.16);
                 }
             `}</style>
+            <div className="dashboard-immersive-image" style={{ backgroundImage: `url(${printKioskBg})` }} />
             {/* Flex row container that places the sidebar at the very left edge of the page */}
             <div className="flex flex-col md:flex-row min-h-screen w-full">
                 {/* Left Sidebar / Top Mobile Icons Row */}
@@ -876,7 +960,7 @@ function Dashboard() {
                             )}
                             <button 
                                 onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-                                className="p-2 rounded-xl hover:bg-cyan-50 text-slate-600 cursor-pointer active:scale-95 transition-all"
+                                className="p-2 rounded-xl hover:bg-white/10 text-slate-200 cursor-pointer active:scale-95 transition-all"
                                 title={isSidebarExpanded ? "Collapse Menu" : "Expand Menu"}
                             >
                                 {isSidebarExpanded ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -899,7 +983,7 @@ function Dashboard() {
                                         } ${
                                             isActive 
                                                 ? "bg-gradient-to-r from-cyan-600 to-emerald-600 text-white shadow-md shadow-cyan-500/20" 
-                                                : "text-slate-600 hover:bg-cyan-50 hover:text-cyan-800"
+                                                : "text-slate-300 hover:bg-white/10 hover:text-white"
                                         }`}
                                         title={tab.label}
                                     >
@@ -917,13 +1001,13 @@ function Dashboard() {
                     {isSidebarExpanded && (
                         <div className="pt-6 border-t border-slate-150 w-full mt-auto hidden md:block">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logged In As</p>
-                            <p className="text-sm font-black text-slate-900 truncate mt-0.5">{userName || "Customer"}</p>
+                            <p className="text-sm font-black text-white truncate mt-0.5">{userName || "Customer"}</p>
                         </div>
                     )}
                 </div>
 
                 {/* Right Content Pane (Navbar + Subpages) */}
-                <div className="flex-1 min-w-0 w-full px-4 py-4 md:px-8 md:py-6 flex flex-col gap-6">
+                <div className="relative z-10 flex-1 min-w-0 w-full px-4 py-4 md:px-8 md:py-6 flex flex-col gap-6">
                     <Navbar
                         title="Cloud Print Dashboard"
                         subtitle="Customer Workspace"
@@ -933,6 +1017,26 @@ function Dashboard() {
                             { label: "Change Location", path: "/blocks", className: "btn secondary" }
                         ]}
                     />
+
+                    <section className="dashboard-stage-card relative rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                        <div className="relative z-10 max-w-2xl">
+                            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Premium Print Workspace</p>
+                            <h1 className="mt-3 text-4xl md:text-5xl font-black leading-tight text-white">
+                                Upload. Pay. Print from your campus kiosk.
+                            </h1>
+                            <p className="mt-4 text-sm md:text-base font-semibold leading-relaxed text-cyan-50/76">
+                                A focused command center for print jobs, wallet payments, pricing, and live printer readiness.
+                            </p>
+                        </div>
+                        <div className="relative h-44 w-full md:w-72 shrink-0">
+                            <div className="absolute inset-0 rounded-[24px] bg-cyan-300/10 blur-2xl" />
+                            <img
+                                src={kioskFront}
+                                alt=""
+                                className="relative z-10 h-full w-full object-contain drop-shadow-[0_30px_45px_rgba(0,0,0,0.45)]"
+                            />
+                        </div>
+                    </section>
 
                     {/* Non-intrusive Referral Advertisement Banner */}
                     {displayAdText && (
@@ -991,21 +1095,22 @@ function Dashboard() {
 
                     {/* Welcome Card & Statistics Row */}
                     <div className="grid gap-6 md:grid-cols-3 mb-0">
-                    <div className="user-dash-card user-dash-stat p-6 rounded-3xl flex flex-col justify-between md:col-span-2">
+                    <div className="user-dash-card user-dash-stat p-6 rounded-3xl flex flex-col justify-between md:col-span-2 overflow-hidden">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400" />
                         <div className="relative z-10">
-                            <p className="text-xs font-black uppercase tracking-wider text-cyan-700">Welcome Back</p>
-                            <h3 className="text-2xl font-black text-slate-950 mt-1">Hello, {userName || "Sai"}</h3>
-                            <p className="text-sm font-bold text-slate-500 mt-3 max-w-xl">
+                            <p className="text-xs font-black uppercase tracking-wider text-cyan-200">Welcome Back</p>
+                            <h3 className="text-2xl font-black text-white mt-1">Hello, {userName || "Sai"}</h3>
+                            <p className="text-sm font-bold text-cyan-50/70 mt-3 max-w-xl">
                                 Your selected counter is ready at {blockLocation || "your campus block"}. Upload, tune settings, and send the job to print from one workspace.
                             </p>
                         </div>
-                        <p className="relative z-10 text-xs font-bold text-slate-500 mt-4 flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-emerald-600" />
+                        <p className="relative z-10 text-xs font-bold text-cyan-50/70 mt-4 flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-emerald-300" />
                             {new Date().getHours() < 12 ? "Good Morning" : new Date().getHours() < 17 ? "Good Afternoon" : "Good Evening"}
                         </p>
                     </div>
 
-                    <div className="user-dash-stat p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-900 to-emerald-800 text-white shadow-xl flex flex-col justify-between">
+                    <div className="user-dash-stat p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl shadow-cyan-950/25 flex flex-col justify-between border border-white/10">
                         <div className="relative z-10">
                             <div className="w-11 h-11 rounded-2xl bg-white/12 border border-white/15 flex items-center justify-center mb-4">
                                 <Wallet className="w-5 h-5" />
@@ -1028,7 +1133,7 @@ function Dashboard() {
                             <div className="section-header">
                                 <div>
                                     <p className="eyebrow">Step 1</p>
-                                    <h2 className="text-2xl font-black text-slate-900">
+                                    <h2 className="text-2xl font-black text-white">
                                         Upload Files
                                     </h2>
                                 </div>
@@ -1039,10 +1144,10 @@ function Dashboard() {
                             </div>
 
                             <div className="mb-4 text-left">
-                                <span className="mb-2 block text-sm font-black text-slate-700">
+                                <span className="mb-2 block text-sm font-black text-cyan-50/80">
                                     Printing Location
                                 </span>
-                                <div className="field">
+                                <div className="field !bg-white/10 !border-white/15 !text-white">
                                     {blockLocation}
                                 </div>
                             </div>
@@ -1084,7 +1189,7 @@ function Dashboard() {
                                                 <UploadCloud className="w-8 h-8" />
                                             </div>
                                         )}
-                                        <span className="text-sm font-black text-slate-900 leading-tight">
+                                        <span className="text-sm font-black text-cyan-50 leading-tight">
                                             {selectedFiles.length > 0 
                                                 ? `${selectedFiles.length} file(s) selected`
                                                 : "Choose files (PDF, PNG, JPG)"}
@@ -1148,7 +1253,7 @@ function Dashboard() {
                             transition={{ delay: 0.1, duration: 0.4 }}
                         >
                             <p className="eyebrow">Live Pricing</p>
-                            <h2 className="mt-2 text-2xl font-black text-slate-900">
+                            <h2 className="mt-2 text-2xl font-black text-white">
                                 Estimate
                             </h2>
 
