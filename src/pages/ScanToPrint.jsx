@@ -466,152 +466,122 @@ function ScanToPrint() {
                                 <p className="text-xs font-semibold text-slate-400 mt-0.5">Check the 4-digit OTP or barcode on the Kiosk TV display.</p>
                             </div>
 
-                            {/* Tabs */}
-                            <div className="grid grid-cols-2 border-b border-white/10">
-                                <button
-                                    onClick={() => {
-                                        setOtpTab("scan");
-                                        setMobileOtpError("");
-                                    }}
-                                    className={`py-3 text-xs font-black uppercase tracking-widest transition-all ${
-                                        otpTab === "scan"
-                                            ? "text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5"
-                                            : "text-slate-500 hover:text-slate-300"
-                                    }`}
-                                >
-                                    📷 Scan Barcode
-                                </button>
-                                <button
-                                    onClick={() => setOtpTab("keypad")}
-                                    className={`py-3 text-xs font-black uppercase tracking-widest transition-all ${
-                                        otpTab === "keypad"
-                                            ? "text-sky-400 border-b-2 border-sky-400 bg-sky-500/5"
-                                            : "text-slate-500 hover:text-slate-300"
-                                    }`}
-                                >
-                                    🔢 Enter OTP
-                                </button>
-                            </div>
+                            {/* Modal Body: Unified Camera Scanner + OTP Keypad */}
+                            <div className="px-5 pt-4 pb-5 space-y-4 max-h-[85vh] overflow-y-auto">
+                                {/* Top: Camera Scanner */}
+                                <OtpBarcodeScanner
+                                    active={!!verifyingOrder}
+                                    onResult={(decoded) => {
+                                        // Barcode is formatted as `${orderId}-${userId}-${otpCode}`
+                                        const parts = decoded.split("-");
+                                        let scannedOrderId = null;
+                                        let scannedUserId = null;
+                                        let scannedOtp = "";
 
-                            <div className="px-5 pt-4 pb-5">
-                                {otpTab === "scan" ? (
-                                    /* ---- SCAN TAB ---- */
-                                    <OtpBarcodeScanner
-                                        active={otpTab === "scan" && !!verifyingOrder}
-                                        onResult={(decoded) => {
-                                            // Barcode is formatted as `${orderId}-${userId}-${otpCode}`
-                                            const parts = decoded.split("-");
-                                            let scannedOrderId = null;
-                                            let scannedUserId = null;
-                                            let scannedOtp = "";
+                                        if (parts.length >= 3) {
+                                            scannedOrderId = parts[0].trim();
+                                            scannedUserId = parts[1].trim();
+                                            scannedOtp = parts[2].replace(/\D/g, "").slice(0, 4);
+                                        } else if (parts.length === 2) {
+                                            scannedOrderId = parts[0].trim();
+                                            scannedOtp = parts[1].replace(/\D/g, "").slice(0, 4);
+                                        } else {
+                                            scannedOtp = decoded.replace(/\D/g, "").slice(0, 4);
+                                        }
 
-                                            if (parts.length >= 3) {
-                                                scannedOrderId = parts[0].trim();
-                                                scannedUserId = parts[1].trim();
-                                                scannedOtp = parts[2].replace(/\D/g, "").slice(0, 4);
-                                            } else if (parts.length === 2) {
-                                                scannedOrderId = parts[0].trim();
-                                                scannedOtp = parts[1].replace(/\D/g, "").slice(0, 4);
-                                            } else {
-                                                scannedOtp = decoded.replace(/\D/g, "").slice(0, 4);
-                                            }
+                                        const currentUserId = String(localStorage.getItem("userId") || "");
+                                        const currentUserEmail = localStorage.getItem("userEmail") || "your account";
 
-                                            const currentUserId = String(localStorage.getItem("userId") || "");
-                                            const currentUserEmail = localStorage.getItem("userEmail") || "your account";
+                                        // STRICT SECURITY CHECK 1: Verify scannedUserId matches logged-in user's account ID
+                                        if (scannedUserId && currentUserId && String(scannedUserId) !== currentUserId) {
+                                            setMobileOtpError(`⛔ Access Denied: Barcode belongs to another account (${scannedUserId}), not your account (${currentUserEmail})!`);
+                                            return;
+                                        }
 
-                                            // STRICT SECURITY CHECK 1: Verify scannedUserId matches logged-in user's account ID
-                                            if (scannedUserId && currentUserId && String(scannedUserId) !== currentUserId) {
-                                                setMobileOtpError(`⛔ Access Denied: Barcode belongs to another account (${scannedUserId}), not your registered email/account (${currentUserEmail})!`);
-                                                setOtpTab("keypad");
+                                        // STRICT SECURITY CHECK 2: Verify orderId belongs to logged-in user's pending order queue
+                                        if (scannedOrderId) {
+                                            const matchingUserOrder = orders.find(o => String(o.orderId) === String(scannedOrderId));
+                                            if (!matchingUserOrder) {
+                                                setMobileOtpError(`⛔ Access Denied: Order ${scannedOrderId} does not belong to your account (${currentUserEmail})!`);
                                                 return;
                                             }
+                                            setVerifyingOrder(matchingUserOrder);
+                                        }
 
-                                            // STRICT SECURITY CHECK 2: Verify orderId belongs to logged-in user's pending order queue
-                                            if (scannedOrderId) {
-                                                const matchingUserOrder = orders.find(o => String(o.orderId) === String(scannedOrderId));
-                                                if (!matchingUserOrder) {
-                                                    setMobileOtpError(`⛔ Access Denied: Order ${scannedOrderId} does not belong to your account (${currentUserEmail})!`);
-                                                    setOtpTab("keypad");
-                                                    return;
-                                                }
-                                                // Target matching user order
-                                                setVerifyingOrder(matchingUserOrder);
-                                            }
+                                        if (scannedOtp.length === 4) {
+                                            setMobileOtp(scannedOtp);
+                                            setMobileOtpError("");
+                                        } else {
+                                            setMobileOtpError("Invalid barcode format. Please try scanning again or enter OTP manually.");
+                                        }
+                                    }}
+                                />
 
-                                            if (scannedOtp.length === 4) {
-                                                setMobileOtp(scannedOtp);
-                                                setMobileOtpError("");
-                                                setOtpTab("keypad");
-                                            } else {
-                                                setMobileOtpError("Invalid barcode format. Please try scanning again or enter OTP manually.");
-                                                setOtpTab("keypad");
-                                            }
-                                        }}
-                                    />
-                                ) : (
-                                    /* ---- KEYPAD TAB ---- */
-                                    <>
-                                        {/* OTP Display Field */}
-                                        <div className="my-4 flex justify-center gap-3">
-                                            {Array.from({ length: 4 }).map((_, i) => (
-                                                <div 
-                                                    key={i} 
-                                                    className={`w-12 h-14 rounded-xl border flex items-center justify-center text-2xl font-black transition-all duration-150 ${
-                                                        mobileOtp[i] 
-                                                            ? "border-sky-500 bg-sky-500/10 text-sky-400" 
-                                                            : "border-white/10 bg-white/5 text-slate-600"
-                                                    }`}
-                                                >
-                                                    {mobileOtp[i] || "•"}
-                                                </div>
-                                            ))}
+                                {/* Divider */}
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 h-px bg-white/10" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">OR ENTER OTP MANUALLY</span>
+                                    <div className="flex-1 h-px bg-white/10" />
+                                </div>
+
+                                {/* Bottom: OTP Display Field + Keypad */}
+                                <div className="flex justify-center gap-3 my-2">
+                                    {Array.from({ length: 4 }).map((_, i) => (
+                                        <div 
+                                            key={i} 
+                                            className={`w-11 h-12 rounded-xl border flex items-center justify-center text-xl font-black transition-all duration-150 ${
+                                                mobileOtp[i] 
+                                                    ? "border-sky-500 bg-sky-500/10 text-sky-400" 
+                                                    : "border-white/10 bg-white/5 text-slate-600"
+                                            }`}
+                                        >
+                                            {mobileOtp[i] || "•"}
                                         </div>
+                                    ))}
+                                </div>
 
-                                        {mobileOtpError && (
-                                            <p className="text-xs font-bold text-rose-500 mb-3 bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-xl">
-                                                ⚠️ {mobileOtpError}
-                                            </p>
-                                        )}
-
-                                        {/* Keypad Grid */}
-                                        <div className="grid grid-cols-3 gap-2.5">
-                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                                                <button 
-                                                    key={num}
-                                                    onClick={() => handleKeypadPress(String(num))}
-                                                    className="h-12 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer border border-white/8"
-                                                >
-                                                    {num}
-                                                </button>
-                                            ))}
-                                            <button 
-                                                onClick={handleKeypadClear}
-                                                className="h-12 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-xs font-black text-rose-400 transition-all cursor-pointer border border-rose-500/20"
-                                            >
-                                                Clear
-                                            </button>
-                                            <button 
-                                                onClick={() => handleKeypadPress("0")}
-                                                className="h-12 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer border border-white/8"
-                                            >
-                                                0
-                                            </button>
-                                            <button 
-                                                onClick={handleKeypadBackspace}
-                                                className="h-12 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer flex items-center justify-center border border-white/8"
-                                            >
-                                                ⌫
-                                            </button>
-                                        </div>
-                                    </>
+                                {mobileOtpError && (
+                                    <p className="text-xs font-bold text-rose-500 bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-xl">
+                                        ⚠️ {mobileOtpError}
+                                    </p>
                                 )}
 
+                                {/* Keypad Grid */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                                        <button 
+                                            key={num}
+                                            onClick={() => handleKeypadPress(String(num))}
+                                            className="h-10 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-base font-bold text-white transition-all cursor-pointer border border-white/8"
+                                        >
+                                            {num}
+                                        </button>
+                                    ))}
+                                    <button 
+                                        onClick={handleKeypadClear}
+                                        className="h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-xs font-black text-rose-400 transition-all cursor-pointer border border-rose-500/20"
+                                    >
+                                        Clear
+                                    </button>
+                                    <button 
+                                        onClick={() => handleKeypadPress("0")}
+                                        className="h-10 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-base font-bold text-white transition-all cursor-pointer border border-white/8"
+                                    >
+                                        0
+                                    </button>
+                                    <button 
+                                        onClick={handleKeypadBackspace}
+                                        className="h-10 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer flex items-center justify-center border border-white/8"
+                                    >
+                                        ⌫
+                                    </button>
+                                </div>
+
                                 {/* Actions */}
-                                <div className="mt-5 grid grid-cols-2 gap-3">
+                                <div className="mt-4 grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
                                     <button
                                         onClick={() => {
                                             setVerifyingOrder(null);
-                                            setOtpTab("keypad");
                                             setMobileOtp("");
                                             setMobileOtpError("");
                                         }}
