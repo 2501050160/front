@@ -212,6 +212,7 @@ function Login() {
                     loop 
                     muted 
                     playsInline 
+                    preload="auto"
                     className="w-full h-full object-cover"
                 >
                     <source src={loginHero} type="video/mp4" />
@@ -234,6 +235,7 @@ function Login() {
                         loop 
                         muted 
                         playsInline
+                        preload="auto"
                         className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
                     >
                         <source src={loginHero} type="video/mp4" />
