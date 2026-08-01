@@ -765,7 +765,7 @@ function BlockSelection() {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.55 }}
-                        className="lg:col-span-7 flex items-center justify-center py-4"
+                        className="lg:col-span-7 flex items-center justify-center lg:justify-end py-4"
                     >
                         {!showDirectOtpForm ? (
                             <motion.div
