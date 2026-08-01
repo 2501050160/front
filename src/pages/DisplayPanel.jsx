@@ -150,7 +150,7 @@ function DisplayPanel() {
         const [nextPickup, ...remaining] = pickupQueue;
         setActivePickup(nextPickup);
         setTotalPagesToPrint(nextPickup.totalPages || 1);
-        setCurrentPagePrinted(1);
+        setCurrentPagePrinted(0);
         setIsReleasing(true);
         setPickupQueue(remaining);
     }, [pickupQueue, activePickup]);
@@ -158,18 +158,41 @@ function DisplayPanel() {
     useEffect(() => {
         if (!activePickup || !isReleasing) return;
 
-        const interval = setInterval(() => {
-            setCurrentPagePrinted(prev => {
-                if (prev >= totalPagesToPrint) {
-                    clearInterval(interval);
-                    setIsReleasing(false);
-                    return prev;
-                }
-                return prev + 1;
-            });
-        }, 5500);
+        let timerId;
 
-        return () => clearInterval(interval);
+        // Step 1: Warmup delay of 5 seconds
+        timerId = setTimeout(() => {
+            setCurrentPagePrinted(1);
+
+            if (totalPagesToPrint === 1) {
+                // If only 1 page, wait 5.5s for the page to print before completing
+                timerId = setTimeout(() => {
+                    setIsReleasing(false);
+                }, 5500);
+            } else {
+                // If multiple pages, start the 5.5s interval
+                let current = 1;
+                const intervalId = setInterval(() => {
+                    current += 1;
+                    setCurrentPagePrinted(current);
+
+                    if (current >= totalPagesToPrint) {
+                        clearInterval(intervalId);
+                        // Wait one final 5.5s for the last page to finish printing
+                        timerId = setTimeout(() => {
+                            setIsReleasing(false);
+                        }, 5500);
+                    }
+                }, 5500);
+
+                timerId = intervalId;
+            }
+        }, 5000);
+
+        return () => {
+            clearTimeout(timerId);
+            clearInterval(timerId);
+        };
     }, [activePickup, isReleasing, totalPagesToPrint]);
 
     useEffect(() => {
@@ -386,7 +409,9 @@ function DisplayPanel() {
                                                 <span>{isReleasing ? "🖨️ Hardware releasing prints..." : "🖨️ Counter Release successful"}</span>
                                                 {isReleasing && (
                                                     <span className="text-lg font-black text-white mt-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-xl">
-                                                        📄 Printing Page {currentPagePrinted} of {totalPagesToPrint}
+                                                        {currentPagePrinted === 0 
+                                                            ? "Preparing printer..." 
+                                                            : `📄 Printing Page ${currentPagePrinted} of ${totalPagesToPrint}`}
                                                     </span>
                                                 )}
                                             </div>

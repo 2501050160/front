@@ -354,7 +354,7 @@ function BlockSelection() {
                     if (response.data.status === "COMPLETED") {
                         // Switch from RELEASING to PRINTING animation stage!
                         setTrackingOrderStatus("PRINTING");
-                        setCurrentPagePrinted(1);
+                        setCurrentPagePrinted(0);
                     }
                 }
             } catch (err) {
@@ -372,18 +372,41 @@ function BlockSelection() {
     useEffect(() => {
         if (trackingOrderStatus !== "PRINTING") return;
 
-        const interval = setInterval(() => {
-            setCurrentPagePrinted(prev => {
-                if (prev >= totalPagesToPrint) {
-                    clearInterval(interval);
-                    setTrackingOrderStatus("COMPLETED");
-                    return prev;
-                }
-                return prev + 1;
-            });
-        }, 5500);
+        let timerId;
 
-        return () => clearInterval(interval);
+        // Step 1: Warmup delay of 5 seconds
+        timerId = setTimeout(() => {
+            setCurrentPagePrinted(1);
+
+            if (totalPagesToPrint === 1) {
+                // If only 1 page, wait 5.5s for the page to print before completing
+                timerId = setTimeout(() => {
+                    setTrackingOrderStatus("COMPLETED");
+                }, 5500);
+            } else {
+                // If multiple pages, start the 5.5s interval
+                let current = 1;
+                const intervalId = setInterval(() => {
+                    current += 1;
+                    setCurrentPagePrinted(current);
+
+                    if (current >= totalPagesToPrint) {
+                        clearInterval(intervalId);
+                        // Wait one final 5.5s for the last page to finish printing
+                        timerId = setTimeout(() => {
+                            setTrackingOrderStatus("COMPLETED");
+                        }, 5500);
+                    }
+                }, 5500);
+
+                timerId = intervalId;
+            }
+        }, 5000);
+
+        return () => {
+            clearTimeout(timerId);
+            clearInterval(timerId);
+        };
     }, [trackingOrderStatus, totalPagesToPrint]);
 
     const logout = () => {
@@ -493,7 +516,17 @@ function BlockSelection() {
             fetchPendingOrders();
         } catch (err) {
             console.error("Bulk injection failed:", err);
-            showAlert("Injection Failed", err.response?.data?.message || err.response?.data || err.message || "Failed to generate mock prints", "error");
+            let errMsg = "Failed to generate mock prints";
+            if (err.response?.data) {
+                if (typeof err.response.data === "string") {
+                    errMsg = err.response.data;
+                } else if (typeof err.response.data === "object") {
+                    errMsg = err.response.data.message || err.response.data.error || JSON.stringify(err.response.data);
+                }
+            } else if (err.message) {
+                errMsg = err.message;
+            }
+            showAlert("Injection Failed", errMsg, "error");
         } finally {
             setInjectingBulk(false);
             setInjectProgress("");
