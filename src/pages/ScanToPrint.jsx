@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Html5QrcodeScanner } from "html5-qrcode";
 import api from "../services/api";
 import Navbar from "../components/Navbar";
 import CustomModal from "../components/CustomModal";
@@ -25,6 +26,10 @@ function ScanToPrint() {
     const [otpQueue, setOtpQueue] = useState([]);
     const [successCount, setSuccessCount] = useState(0);
     const [failCount, setFailCount] = useState(0);
+    const [otpTab, setOtpTab] = useState("keypad"); // "keypad" | "scan"
+    const [scannerReady, setScannerReady] = useState(false);
+    const scannerRef = useRef(null);
+    const SCANNER_ID = "otp-barcode-scanner";
 
     // Custom Modal config
     const [modalConfig, setModalConfig] = useState({
@@ -407,99 +412,149 @@ function ScanToPrint() {
                 onConfirm={modalConfig.onConfirm}
             />
 
-            {/* Mobile OTP Verification Keypad Modal */}
+            {/* Mobile OTP Verification Modal (Keypad + Barcode Scanner tabs) */}
             <AnimatePresence>
                 {verifyingOrder && (
                     <motion.div 
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
                         <motion.div 
-                            className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center shadow-2xl"
+                            className="w-full max-w-sm rounded-[24px] border border-white/10 bg-[#0D1524] shadow-2xl overflow-hidden"
                             initial={{ scale: 0.95, y: 15 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 15 }}
                         >
-                            <p className="text-xs font-black uppercase tracking-widest text-sky-400">
-                                Verify Kiosk OTP
-                            </p>
-                            <h3 className="mt-2 text-xl font-black text-white">
-                                {verifyingOrder.orderId}
-                            </h3>
-                            <p className="text-sm font-semibold text-slate-400 mt-1">
-                                Enter the 4-digit OTP shown next to your order on the printer display panel.
-                            </p>
+                            {/* Accent line */}
+                            <div className="h-[3px] bg-gradient-to-r from-cyan-400 to-purple-500" />
 
-                            {/* OTP Display Field */}
-                            <div className="my-6 flex justify-center gap-3">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                    <div 
-                                        key={i} 
-                                        className={`w-12 h-14 rounded-xl border flex items-center justify-center text-2xl font-black transition-all duration-150 ${
-                                            mobileOtp[i] 
-                                                ? "border-sky-500 bg-sky-500/10 text-sky-400" 
-                                                : "border-slate-700 bg-slate-800 text-slate-500"
-                                        }`}
-                                    >
-                                        {mobileOtp[i] || "•"}
-                                    </div>
-                                ))}
+                            {/* Header */}
+                            <div className="px-6 pt-5 pb-4 border-b border-white/10">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Verify Kiosk OTP</p>
+                                <h3 className="mt-1 text-lg font-black text-white truncate">{verifyingOrder.orderId}</h3>
+                                <p className="text-xs font-semibold text-slate-400 mt-0.5">Check the 4-digit OTP or barcode on the Kiosk TV display.</p>
                             </div>
 
-                            {mobileOtpError && (
-                                <p className="text-xs font-bold text-rose-500 mb-4 bg-rose-500/10 border border-rose-500/20 py-2 rounded-lg">
-                                    ⚠️ {mobileOtpError}
-                                </p>
-                            )}
+                            {/* Tabs */}
+                            <div className="grid grid-cols-2 border-b border-white/10">
+                                <button
+                                    onClick={() => {
+                                        setOtpTab("scan");
+                                        setMobileOtpError("");
+                                    }}
+                                    className={`py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                                        otpTab === "scan"
+                                            ? "text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
+                                >
+                                    📷 Scan Barcode
+                                </button>
+                                <button
+                                    onClick={() => setOtpTab("keypad")}
+                                    className={`py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                                        otpTab === "keypad"
+                                            ? "text-sky-400 border-b-2 border-sky-400 bg-sky-500/5"
+                                            : "text-slate-500 hover:text-slate-300"
+                                    }`}
+                                >
+                                    🔢 Enter OTP
+                                </button>
+                            </div>
 
-                            {/* Keypad Grid */}
-                            <div className="grid grid-cols-3 gap-3">
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                                    <button 
-                                        key={num}
-                                        onClick={() => handleKeypadPress(String(num))}
-                                        className="h-12 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer"
+                            <div className="px-5 pt-4 pb-5">
+                                {otpTab === "scan" ? (
+                                    /* ---- SCAN TAB ---- */
+                                    <OtpBarcodeScanner
+                                        active={otpTab === "scan" && !!verifyingOrder}
+                                        onResult={(decoded) => {
+                                            // Extract only digits from the decoded string
+                                            const digits = decoded.replace(/\D/g, "").slice(0, 4);
+                                            setMobileOtp(digits);
+                                            setOtpTab("keypad"); // switch to keypad to confirm
+                                        }}
+                                    />
+                                ) : (
+                                    /* ---- KEYPAD TAB ---- */
+                                    <>
+                                        {/* OTP Display Field */}
+                                        <div className="my-4 flex justify-center gap-3">
+                                            {Array.from({ length: 4 }).map((_, i) => (
+                                                <div 
+                                                    key={i} 
+                                                    className={`w-12 h-14 rounded-xl border flex items-center justify-center text-2xl font-black transition-all duration-150 ${
+                                                        mobileOtp[i] 
+                                                            ? "border-sky-500 bg-sky-500/10 text-sky-400" 
+                                                            : "border-white/10 bg-white/5 text-slate-600"
+                                                    }`}
+                                                >
+                                                    {mobileOtp[i] || "•"}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {mobileOtpError && (
+                                            <p className="text-xs font-bold text-rose-500 mb-3 bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-xl">
+                                                ⚠️ {mobileOtpError}
+                                            </p>
+                                        )}
+
+                                        {/* Keypad Grid */}
+                                        <div className="grid grid-cols-3 gap-2.5">
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                                                <button 
+                                                    key={num}
+                                                    onClick={() => handleKeypadPress(String(num))}
+                                                    className="h-12 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer border border-white/8"
+                                                >
+                                                    {num}
+                                                </button>
+                                            ))}
+                                            <button 
+                                                onClick={handleKeypadClear}
+                                                className="h-12 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-xs font-black text-rose-400 transition-all cursor-pointer border border-rose-500/20"
+                                            >
+                                                Clear
+                                            </button>
+                                            <button 
+                                                onClick={() => handleKeypadPress("0")}
+                                                className="h-12 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer border border-white/8"
+                                            >
+                                                0
+                                            </button>
+                                            <button 
+                                                onClick={handleKeypadBackspace}
+                                                className="h-12 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer flex items-center justify-center border border-white/8"
+                                            >
+                                                ⌫
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Actions */}
+                                <div className="mt-5 grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setVerifyingOrder(null);
+                                            setOtpTab("keypad");
+                                            setMobileOtp("");
+                                            setMobileOtpError("");
+                                        }}
+                                        className="h-11 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors cursor-pointer"
                                     >
-                                        {num}
+                                        Cancel
                                     </button>
-                                ))}
-                                <button 
-                                    onClick={handleKeypadClear}
-                                    className="h-12 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-xs font-black text-rose-400 transition-all cursor-pointer"
-                                >
-                                    Clear
-                                </button>
-                                <button 
-                                    onClick={() => handleKeypadPress("0")}
-                                    className="h-12 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-lg font-bold text-white transition-all cursor-pointer"
-                                >
-                                    0
-                                </button>
-                                <button 
-                                    onClick={handleKeypadBackspace}
-                                    className="h-12 rounded-xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-md font-bold text-white transition-all cursor-pointer flex items-center justify-center"
-                                >
-                                    ⌫
-                                </button>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="mt-6 grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => setVerifyingOrder(null)}
-                                    className="h-11 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleReleaseVerify}
-                                    disabled={releasing}
-                                    className="h-11 rounded-xl bg-sky-500 hover:bg-sky-600 text-xs font-black text-white transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                    {releasing ? "Releasing..." : "Verify & Print"}
-                                </button>
+                                    <button
+                                        onClick={handleReleaseVerify}
+                                        disabled={releasing || mobileOtp.length !== 4}
+                                        className="h-11 rounded-xl bg-sky-500 hover:bg-sky-600 text-xs font-black text-white transition-colors cursor-pointer disabled:opacity-40"
+                                    >
+                                        {releasing ? "Releasing..." : "Verify & Print"}
+                                    </button>
+                                </div>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -510,3 +565,56 @@ function ScanToPrint() {
 }
 
 export default ScanToPrint;
+
+/* -----------------------------------------------------------------------
+   OtpBarcodeScanner – inline barcode / QR scanner for OTP verification
+----------------------------------------------------------------------- */
+function OtpBarcodeScanner({ active, onResult }) {
+    const scannerRef = useRef(null);
+    const SCANNER_ID = "otp-qr-scanner";
+
+    useEffect(() => {
+        if (!active) return;
+
+        const timer = setTimeout(() => {
+            if (scannerRef.current) return; // already mounted
+            try {
+                const scanner = new Html5QrcodeScanner(
+                    SCANNER_ID,
+                    { fps: 10, qrbox: { width: 240, height: 100 }, showTorchButtonIfSupported: true },
+                    false
+                );
+                scanner.render(
+                    (decodedText) => {
+                        scanner.clear().catch(() => {});
+                        scannerRef.current = null;
+                        onResult(decodedText);
+                    },
+                    () => {}
+                );
+                scannerRef.current = scanner;
+            } catch (e) {
+                console.warn("Scanner init failed:", e);
+            }
+        }, 200);
+
+        return () => {
+            clearTimeout(timer);
+            if (scannerRef.current) {
+                scannerRef.current.clear().catch(() => {});
+                scannerRef.current = null;
+            }
+        };
+    }, [active]);
+
+    return (
+        <div className="space-y-2">
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-black min-h-[200px]">
+                <div id={SCANNER_ID} />
+            </div>
+            <p className="text-[11px] text-slate-400 font-semibold text-center">
+                📺 Point your camera at the barcode shown on the Kiosk TV screen
+            </p>
+        </div>
+    );
+}
