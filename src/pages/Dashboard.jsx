@@ -1094,29 +1094,51 @@ function Dashboard() {
                     )}
 
                     {/* Welcome Card & Statistics Row */}
-                    <div className="grid gap-6 md:grid-cols-3 mb-0">
-                    <div className="user-dash-card user-dash-stat p-6 rounded-3xl flex flex-col justify-between md:col-span-2 overflow-hidden">
-                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400" />
-                        <div className="relative z-10">
-                            <p className="text-xs font-black uppercase tracking-wider text-cyan-200">Welcome Back</p>
-                            <h3 className="text-2xl font-black text-white mt-1">Hello, {userName || "Sai"}</h3>
-                            <p className="text-sm font-bold text-cyan-50/70 mt-3 max-w-xl">
-                                Your selected counter is ready at {blockLocation || "your campus block"}. Upload, tune settings, and send the job to print from one workspace.
+                    {/* Desktop View: Combined single card row */}
+                    <div className="hidden md:flex items-center justify-between p-6 rounded-[24px] user-dash-card border border-white/10 relative overflow-hidden shadow-xl bg-gradient-to-r from-slate-950 via-cyan-950 to-emerald-900 text-white min-h-[110px] mb-0">
+                        <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-cyan-500 via-emerald-500 to-amber-400" />
+                        <div className="relative z-10 flex flex-col">
+                            <span className="text-xs font-black uppercase tracking-wider text-cyan-200">Welcome Back</span>
+                            <h3 className="text-2xl font-black mt-1 text-white leading-none">Hello, {userName || "Sai"} 👋</h3>
+                            <p className="text-xs font-semibold text-cyan-50/70 mt-2 max-w-xl flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-emerald-300" />
+                                Selected printer counter: <strong className="text-white">{blockLocation}</strong>
                             </p>
                         </div>
-                        <p className="relative z-10 text-xs font-bold text-cyan-50/70 mt-4 flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-emerald-300" />
-                            {new Date().getHours() < 12 ? "Good Morning" : new Date().getHours() < 17 ? "Good Afternoon" : "Good Evening"}
-                        </p>
-                    </div>
-
-                    <div className="user-dash-stat p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl shadow-cyan-950/25 flex flex-col justify-between border border-white/10">
-                        <div className="relative z-10">
-                            <div className="w-11 h-11 rounded-2xl bg-white/12 border border-white/15 flex items-center justify-center mb-4">
+                        <div className="relative z-10 flex items-center gap-4 bg-white/10 border border-white/15 px-5 py-3 rounded-2xl shadow-inner">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/20 flex items-center justify-center text-cyan-300">
                                 <Wallet className="w-5 h-5" />
                             </div>
-                            <p className="text-xs font-black uppercase tracking-wider text-cyan-100">Wallet Balance</p>
-                            <h3 className="text-3xl font-black mt-1">₹{walletBalance}</h3>
+                            <div className="flex flex-col text-right">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-cyan-200">Wallet Balance</span>
+                                <span className="text-2xl font-black mt-0.5 text-white">₹{walletBalance}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile View: Keep the original stacked/two-card columns layout */}
+                    <div className="flex flex-col gap-4 md:hidden mb-0">
+                        <div className="user-dash-card user-dash-stat p-6 rounded-3xl flex flex-col justify-between overflow-hidden relative">
+                            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400" />
+                            <div className="relative z-10">
+                                <p className="text-xs font-black uppercase tracking-wider text-cyan-200">Welcome Back</p>
+                                <h3 className="text-2xl font-black text-white mt-1">Hello, {userName || "Sai"}</h3>
+                                <p className="text-sm font-bold text-cyan-50/70 mt-2">
+                                    Counter: {blockLocation}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="user-dash-stat p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl flex flex-col justify-between border border-white/10">
+                            <div className="relative z-10 flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center">
+                                    <Wallet className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black uppercase tracking-wider text-cyan-100">Wallet Balance</p>
+                                    <h3 className="text-2xl font-black mt-0.5">₹{walletBalance}</h3>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
