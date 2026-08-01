@@ -1021,7 +1021,7 @@ function Dashboard() {
 
                     <section className="dashboard-stage-card relative rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                         <div className="relative z-10 max-w-2xl text-left">
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Premium Print Workspace</p>
+                            <p className="text-2xl md:text-3xl font-black uppercase tracking-wider text-cyan-200">Cloud Print</p>
                             
                             {/* Visual steps flow */}
                             <div className="mt-6 flex flex-col sm:flex-row gap-4 sm:items-center">
