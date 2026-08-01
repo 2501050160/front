@@ -88,6 +88,8 @@ function BlockSelection() {
     const [showDirectOtpForm, setShowDirectOtpForm] = useState(false);
     const [trackingOrderId, setTrackingOrderId] = useState("");
     const [trackingOrderStatus, setTrackingOrderStatus] = useState("");
+    const [totalPagesToPrint, setTotalPagesToPrint] = useState(1);
+    const [currentPagePrinted, setCurrentPagePrinted] = useState(0);
 
     const parseBackendDate = (dateVal) => {
         if (!dateVal) return null;
@@ -341,8 +343,13 @@ function BlockSelection() {
                 const response = await api.get("/pdf/details", {
                     params: { orderId: trackingOrderId }
                 });
-                if (response.data && response.data.status === "COMPLETED" && active) {
-                    setTrackingOrderStatus("COMPLETED");
+                if (response.data && active) {
+                    setTotalPagesToPrint(response.data.totalPages || 1);
+                    if (response.data.status === "COMPLETED") {
+                        // Switch from RELEASING to PRINTING animation stage!
+                        setTrackingOrderStatus("PRINTING");
+                        setCurrentPagePrinted(1);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to check order status:", err);
@@ -355,6 +362,23 @@ function BlockSelection() {
             clearInterval(interval);
         };
     }, [trackingOrderId, trackingOrderStatus]);
+
+    useEffect(() => {
+        if (trackingOrderStatus !== "PRINTING") return;
+
+        const interval = setInterval(() => {
+            setCurrentPagePrinted(prev => {
+                if (prev >= totalPagesToPrint) {
+                    clearInterval(interval);
+                    setTrackingOrderStatus("COMPLETED");
+                    return prev;
+                }
+                return prev + 1;
+            });
+        }, 1200);
+
+        return () => clearInterval(interval);
+    }, [trackingOrderStatus, totalPagesToPrint]);
 
     const logout = () => {
         clearUserSession();
@@ -1201,7 +1225,7 @@ function BlockSelection() {
                 {trackingOrderId && (
                     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 bg-slate-950/98 backdrop-blur-lg text-white">
                         <div className="max-w-xl w-full text-center space-y-8">
-                            {trackingOrderStatus === "RELEASING" ? (
+                            {trackingOrderStatus === "RELEASING" && (
                                 <motion.div 
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -1214,11 +1238,35 @@ function BlockSelection() {
                                     </div>
                                     <div className="space-y-2">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">Spooling Queue</span>
-                                        <h2 className="text-3xl font-black tracking-tight mt-3">Printing in Progress</h2>
+                                        <h2 className="text-3xl font-black tracking-tight mt-3">Spooling Hardware...</h2>
                                         <p className="text-sm text-cyan-200/60 font-semibold">Your print job {trackingOrderId} is being sent to the kiosk. Please wait...</p>
                                     </div>
                                 </motion.div>
-                            ) : (
+                            )}
+
+                            {trackingOrderStatus === "PRINTING" && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="w-48 h-48 mx-auto relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900/50 flex items-center justify-center p-2">
+                                        <div className="absolute inset-0 border-4 border-t-amber-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+                                        <span className="text-6xl animate-bounce" style={{ animationDuration: '0.8s' }}>📄</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">Printing in progress</span>
+                                        <h2 className="text-3xl font-black tracking-tight mt-3 text-amber-300">Printing Document</h2>
+                                        <p className="text-sm text-cyan-200/60 font-semibold">Hardware active. Please stay near the kiosk tray.</p>
+                                        <p className="text-lg font-black text-white mt-4 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl max-w-xs mx-auto">
+                                            📄 Printing Page <span className="text-cyan-300">{currentPagePrinted}</span> of <span className="text-cyan-300">{totalPagesToPrint}</span>
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {trackingOrderStatus === "COMPLETED" && (
                                 <motion.div 
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -1242,13 +1290,16 @@ function BlockSelection() {
                                         <p className="text-sm text-slate-300 font-semibold leading-relaxed">
                                             Your print job is completed! Please collect your papers from the printer tray.
                                         </p>
+                                        <p className="text-xs font-bold text-slate-500 pt-1">
+                                            Total Pages: {totalPagesToPrint} · Order: {trackingOrderId}
+                                        </p>
                                     </div>
                                     <button 
                                         onClick={() => {
                                             setTrackingOrderId("");
                                             setTrackingOrderStatus("");
                                         }}
-                                        className="mt-6 px-8 h-12 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-slate-100 transition-all cursor-pointer"
+                                        className="mt-6 px-8 h-12 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-slate-100 transition-all cursor-pointer shadow-lg shadow-white/5"
                                     >
                                         Done / Dismiss
                                     </button>
