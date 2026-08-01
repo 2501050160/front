@@ -628,14 +628,14 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-3 py-2 shadow-lg ${palette.chip} ${palette.glow} flex flex-col items-center justify-center gap-2`}>
-                                                                            <div className="text-center">
-                                                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
-                                                                                <p className="font-mono text-3xl font-black tracking-wider text-white mt-1.5 leading-none">
+                                                                        <div className={`rounded-2xl border px-3 py-2 shadow-lg ${palette.chip} ${palette.glow} flex flex-row items-center justify-center gap-3`}>
+                                                                            <div className="text-center shrink-0">
+                                                                                <p className="text-[9px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
+                                                                                <p className="font-mono text-2xl font-black tracking-wider text-white mt-1 leading-none">
                                                                                     {order.otpCode}
                                                                                 </p>
                                                                             </div>
-                                                                            <div className="h-14 w-44 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
+                                                                            <div className="h-12 w-36 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
                                                                                 <img 
                                                                                     src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.otpCode}&includeText=false&height=50`} 
                                                                                     alt="Barcode"
