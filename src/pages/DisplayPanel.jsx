@@ -159,7 +159,7 @@ function DisplayPanel() {
 
         const releaseTimer = setTimeout(() => {
             setIsReleasing(false);
-        }, 5000);
+        }, 200);
 
         return () => clearTimeout(releaseTimer);
     }, [activePickup]);
