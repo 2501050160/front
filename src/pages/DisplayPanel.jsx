@@ -237,13 +237,14 @@ function DisplayPanel() {
                 return;
             }
 
-            const previousStatus =
-                previousStatusesRef.current.get(order.id);
+            const previousStatus = previousStatusesRef.current.get(order.id);
+            const isPrintingOrCompleted = order.status === "PRINTING" || order.status === "COMPLETED";
+            const wasPrintingOrCompleted = previousStatus === "PRINTING" || previousStatus === "COMPLETED";
 
             if (
                 previousStatus &&
-                previousStatus !== "COMPLETED" &&
-                order.status === "COMPLETED" &&
+                !wasPrintingOrCompleted &&
+                isPrintingOrCompleted &&
                 order.paymentStatus === "PAID"
             ) {
                 setPickupQueue((currentQueue) => [
