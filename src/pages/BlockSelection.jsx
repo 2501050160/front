@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "../services/api";
 import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
-import mapPin from "../assets/map_pin.mp4";
 import CustomModal from "../components/CustomModal";
 import { 
   User, 
@@ -428,11 +427,11 @@ function BlockSelection() {
                 .glass-panel {
                     position: relative;
                     background:
-                        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.86));
+                        linear-gradient(180deg, rgba(15, 23, 42, 0.42), rgba(8, 47, 73, 0.28));
                     backdrop-filter: blur(22px);
                     -webkit-backdrop-filter: blur(22px);
-                    border: 1px solid rgba(255, 255, 255, 0.78);
-                    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.14);
+                    border: 1px solid rgba(255, 255, 255, 0.16);
+                    box-shadow: 0 28px 80px rgba(2, 6, 23, 0.34);
                 }
                 .glass-panel::before {
                     content: "";
@@ -440,7 +439,16 @@ function BlockSelection() {
                     inset: 0;
                     border-radius: inherit;
                     pointer-events: none;
-                    background: linear-gradient(135deg, rgba(255,255,255,0.72), transparent 36%);
+                    background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 36%);
+                }
+                .premium-block-bg .glass-panel .text-slate-950,
+                .premium-block-bg .glass-panel .text-slate-800,
+                .premium-block-bg .glass-panel .text-slate-700 {
+                    color: #ffffff !important;
+                }
+                .premium-block-bg .glass-panel .text-slate-500,
+                .premium-block-bg .glass-panel .text-slate-600 {
+                    color: rgba(207, 250, 254, 0.72) !important;
                 }
                 .glow-btn {
                     background: linear-gradient(135deg, #0891b2 0%, #059669 100%);
@@ -514,7 +522,7 @@ function BlockSelection() {
                     height: 100%;
                     object-fit: cover;
                     pointer-events: none;
-                    opacity: 0.26;
+                    opacity: 0.42;
                     mix-blend-mode: screen;
                     filter: saturate(1.25) contrast(1.04);
                 }
@@ -523,13 +531,13 @@ function BlockSelection() {
                     inset: 0;
                     pointer-events: none;
                     background:
-                        linear-gradient(180deg, rgba(2,6,23,0.68), rgba(2,6,23,0.22) 42%, rgba(241,245,249,0.92) 86%),
+                        linear-gradient(180deg, rgba(2,6,23,0.76), rgba(2,6,23,0.36) 44%, rgba(2,6,23,0.54) 100%),
                         radial-gradient(circle at 70% 16%, rgba(125,211,252,0.18), transparent 28rem);
                 }
             `}} />
 
             <video autoPlay loop muted playsInline className="block-video-bg">
-                <source src={mapPin} type="video/mp4" />
+                <source src="/blocks.mp4" type="video/mp4" />
             </video>
             <div className="block-ambient-scrim" />
 
@@ -761,7 +769,7 @@ function BlockSelection() {
                             playsInline
                             className="absolute inset-0 w-full h-full object-cover z-0 opacity-80 brightness-[0.85] group-hover:scale-[1.01] transition-transform duration-700 ease-out"
                         >
-                            <source src={mapPin} type="video/mp4" />
+                            <source src="/blocks.mp4" type="video/mp4" />
                         </video>
 
                         <div className="absolute top-4 left-4 z-20 bg-slate-950/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2.5 shadow-lg">

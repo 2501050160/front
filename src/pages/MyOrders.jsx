@@ -4,6 +4,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "../services/api";
 import Navbar from "../components/Navbar";
 import { getStoredWalletBalance, getWalletBalance } from "../services/auth";
+import myOrdersVideo from "../assets/my_orders_video.mp4";
+import {
+    ArrowRight,
+    FileText,
+    History,
+    MapPin,
+    Printer,
+    ReceiptText,
+    Search,
+    ShieldCheck,
+    Wallet,
+    Zap
+} from "lucide-react";
 
 function MyOrders() {
     const navigate = useNavigate();
@@ -19,6 +32,7 @@ function MyOrders() {
     const [mobileOtpError, setMobileOtpError] = useState("");
     const [isSubmittingOtp, setIsSubmittingOtp] = useState(false);
     const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (!userId) {
@@ -109,9 +123,89 @@ function MyOrders() {
         return "status-pill status-created";
     };
 
+    const filteredOrders = orders.filter((order) => {
+        const query = searchTerm.trim().toLowerCase();
+        if (!query) return true;
+        return [
+            order.orderId,
+            order.customerName,
+            order.blockLocation,
+            order.fileName,
+            order.status,
+            order.paymentStatus
+        ].some((value) => String(value || "").toLowerCase().includes(query));
+    });
+
+    const paidOrders = orders.filter(order => order.paymentStatus === "PAID").length;
+    const activeOrders = orders.filter(order => ["PENDING_SCAN", "QUEUE", "PRINTING", "CANCEL_WINDOW"].includes(order.status)).length;
+    const completedOrders = orders.filter(order => order.status === "COMPLETED").length;
+
+    const statusTone = (status) => {
+        if (status === "COMPLETED") return "border-emerald-400/30 bg-emerald-400/12 text-emerald-100";
+        if (status === "PRINTING" || status === "QUEUE") return "border-cyan-300/30 bg-cyan-300/12 text-cyan-100";
+        if (status === "PENDING_SCAN" || status === "CANCEL_WINDOW") return "border-amber-300/35 bg-amber-300/14 text-amber-100";
+        if (status === "CANCELLED") return "border-rose-300/35 bg-rose-300/14 text-rose-100";
+        return "border-white/15 bg-white/10 text-slate-100";
+    };
+
     return (
-        <main className="page-shell page-shell-decorated">
-            <div className="content-wrap">
+        <main className="orders-premium-shell page-shell !px-0 !py-0 min-h-screen">
+            <style>{`
+                .orders-premium-shell {
+                    position: relative;
+                    overflow: hidden;
+                    background:
+                        radial-gradient(circle at 72% 8%, rgba(45, 212, 191, 0.24), transparent 24rem),
+                        radial-gradient(circle at 18% 24%, rgba(14, 165, 233, 0.28), transparent 28rem),
+                        linear-gradient(135deg, #020617 0%, #082f49 46%, #0f766e 100%);
+                }
+                .orders-premium-shell::before {
+                    content: "";
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    background:
+                        linear-gradient(115deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 42px),
+                        linear-gradient(to bottom, rgba(2,6,23,0.12), rgba(2,6,23,0.7));
+                }
+                .orders-premium-shell::after {
+                    content: "";
+                    position: fixed;
+                    inset: 0;
+                    pointer-events: none;
+                    background-image: radial-gradient(rgba(255,255,255,0.11) 1px, transparent 1px);
+                    background-size: 22px 22px;
+                    mask-image: linear-gradient(to bottom, transparent, black 18%, black 90%);
+                }
+                .orders-premium-shell .top-bar-glass {
+                    background: rgba(255,255,255,0.1) !important;
+                    border: 1px solid rgba(255,255,255,0.14) !important;
+                    box-shadow: 0 26px 70px rgba(2,6,23,0.35) !important;
+                    backdrop-filter: blur(26px) !important;
+                }
+                .orders-premium-shell .top-bar-glass .title,
+                .orders-premium-shell .top-bar-glass .eyebrow {
+                    color: #ffffff !important;
+                }
+                .orders-premium-shell .top-bar-glass .brand-mark {
+                    background: rgba(255,255,255,0.14);
+                    color: #ffffff;
+                    border: 1px solid rgba(255,255,255,0.16);
+                }
+                .orders-hero-card,
+                .orders-glass-card {
+                    border: 1px solid rgba(255,255,255,0.16);
+                    background: linear-gradient(180deg, rgba(15,23,42,0.72), rgba(8,47,73,0.54));
+                    box-shadow: 0 30px 90px rgba(2,6,23,0.38);
+                    backdrop-filter: blur(26px);
+                }
+            `}</style>
+
+            <video autoPlay loop muted playsInline className="fixed inset-0 w-full h-full object-cover opacity-[0.18] mix-blend-screen pointer-events-none">
+                <source src={myOrdersVideo} type="video/mp4" />
+            </video>
+
+            <div className="content-wrap relative z-10 py-6 px-4 md:px-0">
                 <Navbar
                     title="My Orders"
                     subtitle="Order History"
@@ -123,7 +217,169 @@ function MyOrders() {
                 />
 
                 <motion.section
-                    className="panel overflow-x-auto"
+                    className="orders-hero-card relative overflow-hidden rounded-[30px] p-6 md:p-8 mb-6"
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45 }}
+                >
+                    <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_320px] items-center">
+                        <div>
+                            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Order Command Center</p>
+                            <h1 className="mt-3 text-4xl md:text-5xl font-black leading-tight text-white">Track every print from upload to pickup.</h1>
+                            <p className="mt-4 max-w-2xl text-sm md:text-base font-semibold leading-relaxed text-cyan-50/72">
+                                Review paid jobs, release OTP pending prints, download receipts, and monitor live order progress.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-3 lg:grid-cols-1 gap-3">
+                            {[
+                                { label: "Total", value: orders.length, icon: History },
+                                { label: "Active", value: activeOrders, icon: Zap },
+                                { label: "Paid", value: paidOrders, icon: ShieldCheck }
+                            ].map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <div key={item.label} className="rounded-2xl border border-white/12 bg-white/10 p-4">
+                                        <Icon className="w-5 h-5 text-cyan-200" />
+                                        <p className="mt-3 text-2xl font-black text-white">{item.value}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-cyan-50/62">{item.label}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </motion.section>
+
+                <section className="grid gap-4 md:grid-cols-4 mb-6">
+                    <div className="orders-glass-card rounded-2xl p-5">
+                        <Wallet className="w-5 h-5 text-emerald-200" />
+                        <p className="mt-3 text-xs font-black uppercase tracking-wider text-cyan-50/62">Wallet</p>
+                        <p className="text-2xl font-black text-white">Rs. {walletBalance}</p>
+                    </div>
+                    <div className="orders-glass-card rounded-2xl p-5">
+                        <Printer className="w-5 h-5 text-cyan-200" />
+                        <p className="mt-3 text-xs font-black uppercase tracking-wider text-cyan-50/62">Completed</p>
+                        <p className="text-2xl font-black text-white">{completedOrders}</p>
+                    </div>
+                    <div className="orders-glass-card rounded-2xl p-5 md:col-span-2">
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-100/60" />
+                            <input
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search by order, file, status, or block..."
+                                className="w-full h-13 rounded-2xl border border-white/12 bg-white/10 pl-11 pr-4 text-sm font-bold text-white placeholder-cyan-50/46 outline-none focus:border-cyan-200/60 focus:ring-4 focus:ring-cyan-300/10"
+                            />
+                        </div>
+                    </div>
+                </section>
+
+                <motion.section
+                    className="orders-glass-card rounded-[28px] p-4 md:p-6"
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 }}
+                >
+                    {isLoading ? (
+                        <div className="grid gap-4">
+                            {Array.from({ length: 4 }).map((_, idx) => (
+                                <div key={`skeleton-card-${idx}`} className="h-32 rounded-2xl border border-white/10 bg-white/10 animate-pulse" />
+                            ))}
+                        </div>
+                    ) : filteredOrders.length > 0 ? (
+                        <div className="grid gap-4">
+                            {filteredOrders.map((order, index) => (
+                                <motion.article
+                                    key={order.id || order.orderId}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.04 }}
+                                    className="group rounded-2xl border border-white/12 bg-white/[0.09] p-5 transition-all hover:-translate-y-1 hover:bg-white/[0.13] hover:shadow-2xl hover:shadow-cyan-950/20"
+                                >
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                                        <div className="flex items-start gap-4 min-w-0">
+                                            <div className="w-12 h-12 rounded-2xl bg-cyan-300/12 border border-cyan-200/16 flex items-center justify-center shrink-0">
+                                                <FileText className="w-6 h-6 text-cyan-100" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="text-lg font-black text-white truncate">{order.orderId}</h3>
+                                                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusTone(order.status)}`}>
+                                                        {order.status === "PENDING_SCAN" ? "Pending Scan" : order.status}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-sm font-bold text-cyan-50/68 truncate">{order.fileName || order.customerName || "Print document"}</p>
+                                                <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold text-cyan-50/60">
+                                                    <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {order.blockLocation || "C Block"}</span>
+                                                    <span>{order.selectedPages || "ALL"} pages</span>
+                                                    <span>{order.copies || 1} copies</span>
+                                                    <span>{order.paymentStatus || "UNPAID"}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row lg:items-center gap-3 lg:justify-end">
+                                            <div className="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-3 text-left sm:text-right">
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-cyan-50/52">Amount</p>
+                                                <p className="text-xl font-black text-white">Rs. {order.price}</p>
+                                            </div>
+
+                                            {order.status === "PENDING_SCAN" && (
+                                                <button
+                                                    onClick={() => {
+                                                        setReleasingOrder(order);
+                                                        setMobileOtp("");
+                                                        setMobileOtpError("");
+                                                    }}
+                                                    className="h-11 rounded-xl bg-cyan-400 px-4 text-sm font-black text-slate-950 transition-all hover:bg-cyan-300 active:scale-95 flex items-center justify-center gap-2"
+                                                >
+                                                    Release <ArrowRight className="w-4 h-4" />
+                                                </button>
+                                            )}
+
+                                            {order.paymentStatus === "PAID" && (
+                                                <button
+                                                    onClick={async () => {
+                                                        try {
+                                                            const response = await api.get("/pdf/details", {
+                                                                params: { orderId: order.orderId }
+                                                            });
+                                                            setSelectedInvoiceOrder(response.data);
+                                                            setTimeout(() => {
+                                                                window.print();
+                                                            }, 200);
+                                                        } catch (err) {
+                                                            console.error("Failed to load invoice details:", err);
+                                                        }
+                                                    }}
+                                                    className="h-11 rounded-xl border border-white/12 bg-white/10 px-4 text-sm font-black text-white transition-all hover:bg-white/16 active:scale-95 flex items-center justify-center gap-2"
+                                                >
+                                                    <ReceiptText className="w-4 h-4" /> Receipt
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.article>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="py-16 text-center">
+                            <div className="mx-auto w-16 h-16 rounded-3xl bg-white/10 border border-white/12 flex items-center justify-center">
+                                <FileText className="w-8 h-8 text-cyan-100" />
+                            </div>
+                            <h3 className="mt-5 text-2xl font-black text-white">No orders found</h3>
+                            <p className="mt-2 text-sm font-semibold text-cyan-50/62">Start a new print job or clear your search.</p>
+                            <button
+                                onClick={() => navigate("/dashboard")}
+                                className="btn mt-5"
+                            >
+                                Start Printing
+                            </button>
+                        </div>
+                    )}
+                </motion.section>
+
+                <motion.section
+                    className="hidden"
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.08 }}
