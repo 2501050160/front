@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { clearUserSession } from "../services/auth";
 
-function Navbar({ title, subtitle, actions = [], badge, tabs = [], activeTab, onTabChange }) {
+function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], activeTab, onTabChange }) {
     const navigate = useNavigate();
     const [profileOpen, setProfileOpen] = useState(false);
 
@@ -43,6 +43,14 @@ function Navbar({ title, subtitle, actions = [], badge, tabs = [], activeTab, on
                             <span className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-2xl text-sm font-black uppercase tracking-wider bg-gradient-to-r from-cyan-500 via-sky-500 to-emerald-500 text-white shadow-[0_0_25px_rgba(6,182,212,0.4)] border border-white/20 animate-pulse" style={{ animationDuration: '3.5s' }}>
                                 📍 {badge}
                             </span>
+                        )}
+                        {badgeAction && (
+                            <button
+                                onClick={badgeAction.onClick || (() => navigate(badgeAction.path))}
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all active:scale-95 shadow-lg cursor-pointer"
+                            >
+                                🔄 {badgeAction.label}
+                            </button>
                         )}
                     </div>
                 </div>

@@ -1013,10 +1013,8 @@ function Dashboard() {
                         title=""
                         subtitle=""
                         badge={blockLocation || "No block"}
-                        actions={[
-                            { label: `Wallet: ₹${walletBalance}`, onClick: () => setShowWalletModal(true), className: "btn success cursor-pointer !border-emerald-500 !bg-emerald-600/20 !text-emerald-400" },
-                            { label: "Change Location", path: "/blocks", className: "btn secondary" }
-                        ]}
+                        badgeAction={{ label: "Change Location", path: "/blocks" }}
+                        actions={[]}
                     />
 
                     <section className="dashboard-stage-card relative rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
