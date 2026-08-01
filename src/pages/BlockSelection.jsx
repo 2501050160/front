@@ -437,11 +437,10 @@ function BlockSelection() {
                 }
                 .glass-panel {
                     position: relative;
-                    background:
-                        linear-gradient(180deg, rgba(15, 23, 42, 0.42), rgba(8, 47, 73, 0.28));
+                    background: rgba(255, 255, 255, 0.04);
                     backdrop-filter: blur(22px);
                     -webkit-backdrop-filter: blur(22px);
-                    border: 1px solid rgba(255, 255, 255, 0.16);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
                     box-shadow: 0 28px 80px rgba(2, 6, 23, 0.34);
                 }
                 .glass-panel::before {
@@ -880,15 +879,15 @@ function BlockSelection() {
                                                 <div className="absolute top-0 left-0 w-[4px] h-full" style={{backgroundColor: accent}} />
                                                 <div className="space-y-2">
                                                     <span className="text-4xl">🏫</span>
-                                                    <h3 className="text-2xl font-black text-slate-950 tracking-tight mt-3">{college} College</h3>
-                                                    <p className="text-xs text-slate-500 font-semibold">Active campus printing grid counters</p>
+                                                    <h3 className="text-2xl font-black text-white tracking-tight mt-3">{college} College</h3>
+                                                    <p className="text-xs text-cyan-200/60 font-semibold">Active campus printing grid counters</p>
                                                 </div>
 
-                                                <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
-                                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500" style={{color: accent}}>
+                                                <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300" style={{color: accent}}>
                                                         {count} Blocks Configured
                                                     </span>
-                                                    <span className="text-xs font-bold text-cyan-700 flex items-center gap-1">
+                                                    <span className="text-xs font-bold text-cyan-400 flex items-center gap-1">
                                                         Select Campus <ChevronRight className="w-4 h-4" />
                                                     </span>
                                                 </div>
@@ -925,7 +924,12 @@ function BlockSelection() {
                                             key={block.name}
                                             variants={cardHoverEffects}
                                             whileHover="hover"
-                                            className="glass-panel rounded-[20px] overflow-hidden flex flex-col justify-between text-left group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.14)] hover:border-cyan-200 relative min-h-[300px]"
+                                            onClick={() => {
+                                                if (!block.maintenance && block.isOnline) {
+                                                    selectBlock(block.name);
+                                                }
+                                            }}
+                                            className={`glass-panel rounded-[20px] overflow-hidden flex flex-col justify-between text-left group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.22)] hover:border-cyan-400 relative min-h-[300px] ${(!block.maintenance && block.isOnline) ? "cursor-pointer" : "opacity-60 cursor-not-allowed"}`}
                                         >
                                             {/* Colored Header banner strip */}
                                             <div className="h-1 w-full" style={{backgroundColor: block.accent}} />
@@ -949,35 +953,35 @@ function BlockSelection() {
                                                 {/* Header */}
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="flex items-center gap-2.5">
-                                                        <span className="text-2xl p-2 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center shrink-0">{block.icon}</span>
+                                                        <span className="text-2xl p-2 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">{block.icon}</span>
                                                         <div className="min-w-0">
-                                                            <h4 className="text-lg font-black text-slate-950 tracking-tight truncate">{block.name}</h4>
-                                                            <p className="text-[11px] text-slate-500 font-bold truncate">{block.description}</p>
+                                                            <h4 className="text-lg font-black text-white tracking-tight truncate">{block.name}</h4>
+                                                            <p className="text-[11px] text-cyan-200/70 font-bold truncate">{block.description}</p>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Details Grid (Without Distance field) */}
-                                                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100 text-[12px] text-slate-500">
+                                                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/10 text-[12px] text-slate-300">
                                                     <div>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Queue</p>
-                                                        <p className="font-extrabold text-slate-800 mt-0.5 truncate">{block.queueCount} waiting</p>
+                                                        <p className="text-[10px] font-black text-cyan-200/50 uppercase tracking-wider">Queue</p>
+                                                        <p className="font-extrabold text-white mt-0.5 truncate">{block.queueCount} waiting</p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Mode</p>
-                                                        <p className="font-extrabold text-slate-800 mt-0.5 truncate">
+                                                        <p className="text-[10px] font-black text-cyan-200/50 uppercase tracking-wider">Mode</p>
+                                                        <p className="font-extrabold text-white mt-0.5 truncate">
                                                             {block.colorSupported ? "Color & BW" : "Only BW"}
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Paper</p>
-                                                        <p className="font-extrabold text-emerald-700 mt-0.5 truncate">
+                                                        <p className="text-[10px] font-black text-cyan-200/50 uppercase tracking-wider">Paper</p>
+                                                        <p className="font-extrabold text-emerald-400 mt-0.5 truncate">
                                                             📄 {block.paperCount != null ? block.paperCount : 0} Sheets
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status</p>
-                                                        <p className="font-extrabold text-slate-800 mt-0.5 truncate">
+                                                        <p className="text-[10px] font-black text-cyan-200/50 uppercase tracking-wider">Status</p>
+                                                        <p className="font-extrabold text-white mt-0.5 truncate">
                                                             {block.isOnline ? "Ready" : "Offline"}
                                                         </p>
                                                     </div>
@@ -985,10 +989,9 @@ function BlockSelection() {
 
                                                 {/* Select button */}
                                                 <button
-                                                    onClick={() => selectBlock(block.name)}
-                                                    className="w-full h-10 rounded-xl bg-slate-950 hover:bg-gradient-to-r hover:from-cyan-700 hover:to-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 border border-slate-950 hover:border-transparent hover:shadow-lg hover:shadow-cyan-500/10 mt-3 flex items-center justify-center gap-1.5"
+                                                    className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 border border-white/10 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/10 mt-3 flex items-center justify-center gap-1.5 pointer-events-none"
                                                     disabled={block.maintenance || !block.isOnline}
-                                                    style={(block.maintenance || !block.isOnline) ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                                                    style={(block.maintenance || !block.isOnline) ? { opacity: 0.5 } : {}}
                                                 >
                                                     Select Print Counter <ChevronRight className="w-4 h-4" />
                                                 </button>
