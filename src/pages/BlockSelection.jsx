@@ -5,6 +5,7 @@ import api from "../services/api";
 import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
+import BarcodeScannerModal from "../components/BarcodeScannerModal";
 import blocksVideo from "../assets/blocks.mp4";
 import collectVideo from "../assets/collect.mp4";
 import inVideo from "../assets/in.mp4";
@@ -30,7 +31,8 @@ import {
   ExternalLink,
   Info,
   ChevronDown,
-  ArrowLeft
+  ArrowLeft,
+  ScanLine
 } from "lucide-react";
 
 const defaultIcons = ["🏛️", "⚡", "📘", "🏛️", "⚡", "📘"];
@@ -79,6 +81,7 @@ function BlockSelection() {
 
     // Direct OTP Release State
     const [showOtpModal, setShowOtpModal] = useState(false);
+    const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
     const [pendingOrders, setPendingOrders] = useState([]);
     const [fetchingOrders, setFetchingOrders] = useState(false);
     const [selectedOrderId, setSelectedOrderId] = useState("");
@@ -483,6 +486,58 @@ function BlockSelection() {
             fetchPendingOrders();
         } catch (err) {
             setOtpError(err.response?.data?.message || "Invalid OTP or Order.");
+        } finally {
+            setReleasing(false);
+        }
+    };
+
+    const parseScannedReleaseCode = (decodedText) => {
+        const raw = String(decodedText || "").trim();
+        if (!raw) return null;
+
+        try {
+            const url = new URL(raw);
+            const orderId = url.searchParams.get("orderId");
+            const otp = url.searchParams.get("otp");
+            if (orderId && otp) {
+                return { orderId: orderId.trim(), otp: otp.trim() };
+            }
+        } catch {
+            // Plain barcode payloads are expected too, for example ORDER1234-5678.
+        }
+
+        const match = raw.match(/^(.+)-(\d{4})$/);
+        if (!match) return null;
+        return { orderId: match[1].trim(), otp: match[2].trim() };
+    };
+
+    const handleScannedRelease = async (decodedText) => {
+        const parsed = parseScannedReleaseCode(decodedText);
+        setShowBarcodeScanner(false);
+        setOtpError("");
+
+        if (!parsed) {
+            setShowDirectOtpForm(true);
+            setOtpError("Could not read the QR/barcode. Please scan again or enter the OTP manually.");
+            return;
+        }
+
+        setReleasing(true);
+        try {
+            await api.post("/pdf/releasePrint", null, {
+                params: { orderId: parsed.orderId, otp: parsed.otp }
+            });
+            setSelectedOrderId(parsed.orderId);
+            setInputOtp("");
+            setShowDirectOtpForm(false);
+            setTrackingOrderId(parsed.orderId);
+            setTrackingOrderStatus("RELEASING");
+            fetchPendingOrders();
+        } catch (err) {
+            setShowDirectOtpForm(true);
+            setSelectedOrderId(parsed.orderId);
+            setInputOtp(parsed.otp);
+            setOtpError(err.response?.data?.message || "QR/barcode release failed. Please verify the order and OTP.");
         } finally {
             setReleasing(false);
         }
@@ -950,6 +1005,7 @@ function BlockSelection() {
                         className="lg:col-span-7 flex items-center justify-center lg:justify-end py-4"
                     >
                         {!showDirectOtpForm ? (
+                            <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
                             <motion.div
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
@@ -974,7 +1030,7 @@ function BlockSelection() {
                                         .catch(() => setOtpError("Failed to fetch pending orders."))
                                         .finally(() => setFetchingOrders(false));
                                 }}
-                                className="glass-panel p-6 rounded-[24px] text-center cursor-pointer max-w-xs w-full border border-white/10 hover:border-amber-400/40 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
+                                className="glass-panel min-h-[190px] p-6 rounded-[24px] text-center cursor-pointer w-full border border-white/10 hover:border-amber-400/40 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
                                 style={{ background: 'rgba(255, 255, 255, 0.03)' }}
                             >
                                 <div className="absolute top-[-10%] right-[-10%] w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
@@ -984,6 +1040,31 @@ function BlockSelection() {
                                     <p className="text-[11px] text-cyan-200/60 mt-0.5 font-bold">Release your print job here</p>
                                 </div>
                             </motion.div>
+
+                            <motion.div
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => {
+                                    if (!userId) {
+                                        showAlert("Not Logged In", "Please log in to release your prints.", "warning");
+                                        return;
+                                    }
+                                    setOtpError("");
+                                    setShowBarcodeScanner(true);
+                                }}
+                                className="glass-panel min-h-[190px] p-6 rounded-[24px] text-center cursor-pointer w-full border border-white/10 hover:border-cyan-300/50 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
+                                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                            >
+                                <div className="absolute bottom-[-10%] left-[-10%] w-24 h-24 bg-cyan-400/10 rounded-full blur-xl pointer-events-none" />
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
+                                    <ScanLine className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-white tracking-tight">Scan QR / Barcode</h3>
+                                    <p className="text-[11px] text-cyan-200/60 mt-0.5 font-bold">Point camera at kiosk display</p>
+                                </div>
+                            </motion.div>
+                            </div>
                         ) : (
                             <motion.div 
                                 initial={{ opacity: 0, y: 10 }}
@@ -1313,6 +1394,12 @@ function BlockSelection() {
                 message={modalConfig.message}
                 type={modalConfig.type}
                 onConfirm={modalConfig.onConfirm}
+            />
+
+            <BarcodeScannerModal
+                isOpen={showBarcodeScanner}
+                onClose={() => setShowBarcodeScanner(false)}
+                onResult={handleScannedRelease}
             />
 
             {/* Verification OTP Modal Overlay */}

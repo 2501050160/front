@@ -538,7 +538,7 @@ function DisplayPanel() {
 
                                         <div className="p-7">
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
-                                                <div className="grid grid-cols-[64px_0.45fr_0.35fr_1fr_70px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                <div className="grid grid-cols-[56px_0.24fr_0.24fr_1.52fr_62px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
                                                     <span>Order</span>
                                                     <span>Student</span>
@@ -598,7 +598,7 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[64px_0.45fr_0.35fr_1fr_70px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[56px_0.24fr_0.24fr_1.52fr_62px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
@@ -635,9 +635,9 @@ function DisplayPanel() {
                                                                                     {order.otpCode}
                                                                                 </p>
                                                                             </div>
-                                                                            <div className="h-24 w-80 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
+                                                                            <div className="h-32 w-[34rem] max-w-full shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
                                                                                 <img 
-                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.otpCode}&includeText=false&height=100`} 
+                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.otpCode}&includeText=false&height=130`} 
                                                                                     alt="Barcode"
                                                                                     className="w-full h-full object-fill"
                                                                                 />
