@@ -602,85 +602,110 @@ export default ScanToPrint;
 function OtpBarcodeScanner({ active, onResult }) {
     const SCANNER_ID = "otp-barcode-video-container";
     const html5QrCodeRef = useRef(null);
+    const [cameraState, setCameraState] = useState("initializing"); // "initializing" | "running" | "error"
+    const [errorMsg, setErrorMsg] = useState("");
 
     useEffect(() => {
         if (!active) return;
-        let isMounted = true;
+        let isCancelled = false;
 
-        const initCamera = async () => {
+        const startCamera = async () => {
+            setCameraState("initializing");
+            setErrorMsg("");
+
             try {
-                // Stop any previous instance
+                // Ensure target container element exists in DOM
+                const container = document.getElementById(SCANNER_ID);
+                if (!container) return;
+
+                // Stop previous scanner if any
                 if (html5QrCodeRef.current) {
                     try {
-                        await html5QrCodeRef.current.stop();
+                        if (html5QrCodeRef.current.isScanning) {
+                            await html5QrCodeRef.current.stop();
+                        }
                         html5QrCodeRef.current.clear();
                     } catch (e) {}
                     html5QrCodeRef.current = null;
                 }
 
-                const scannerInstance = new Html5Qrcode(SCANNER_ID);
-                html5QrCodeRef.current = scannerInstance;
+                const scanner = new Html5Qrcode(SCANNER_ID);
+                html5QrCodeRef.current = scanner;
 
-                const scanConfig = {
-                    fps: 15,
-                    qrbox: { width: 240, height: 100 },
-                    aspectRatio: 1.5
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 100 },
+                    aspectRatio: 1.33
                 };
 
-                await scannerInstance.start(
-                    { facingMode: "environment" },
-                    scanConfig,
-                    (decodedText) => {
-                        if (!isMounted) return;
-                        // Stop scanner smoothly before returning result
-                        scannerInstance.stop().then(() => {
-                            try { scannerInstance.clear(); } catch (e) {}
-                            html5QrCodeRef.current = null;
-                            onResult(decodedText);
-                        }).catch(() => {
-                            onResult(decodedText);
-                        });
-                    },
-                    () => {} // silent on scan failure frame
-                );
-            } catch (err) {
-                console.warn("Environmental camera failed, falling back to default camera:", err);
-                if (isMounted && html5QrCodeRef.current) {
+                const onScanSuccess = async (decodedText) => {
+                    if (isCancelled) return;
                     try {
-                        await html5QrCodeRef.current.start(
-                            { facingMode: "user" },
-                            { fps: 10, qrbox: { width: 220, height: 90 } },
-                            (decodedText) => {
-                                onResult(decodedText);
-                            },
-                            () => {}
-                        );
-                    } catch (e2) {
-                        console.error("Camera access error:", e2);
-                    }
+                        if (scanner.isScanning) {
+                            await scanner.stop();
+                        }
+                        scanner.clear();
+                    } catch (e) {}
+                    html5QrCodeRef.current = null;
+                    onResult(decodedText);
+                };
+
+                // Attempt environment camera first, fallback to default camera
+                try {
+                    await scanner.start({ facingMode: "environment" }, config, onScanSuccess, () => {});
+                } catch (envErr) {
+                    console.warn("Back camera failed, trying default camera:", envErr);
+                    if (isCancelled) return;
+                    await scanner.start({ facingMode: "user" }, config, onScanSuccess, () => {});
+                }
+
+                if (!isCancelled) {
+                    setCameraState("running");
+                }
+            } catch (err) {
+                console.error("Camera access failed:", err);
+                if (!isCancelled) {
+                    setCameraState("error");
+                    setErrorMsg("Camera access blocked or not supported on this device.");
                 }
             }
         };
 
-        const timer = setTimeout(initCamera, 100);
+        startCamera();
 
         return () => {
-            isMounted = false;
-            clearTimeout(timer);
+            isCancelled = true;
             if (html5QrCodeRef.current) {
                 const instance = html5QrCodeRef.current;
                 html5QrCodeRef.current = null;
-                instance.stop().then(() => {
+                if (instance.isScanning) {
+                    instance.stop().then(() => {
+                        try { instance.clear(); } catch (e) {}
+                    }).catch(() => {});
+                } else {
                     try { instance.clear(); } catch (e) {}
-                }).catch(() => {});
+                }
             }
         };
     }, [active]);
 
     return (
-        <div className="space-y-2">
-            <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 bg-black min-h-[210px] max-h-[250px] flex items-center justify-center shadow-inner">
+        <div className="space-y-3">
+            <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 bg-black min-h-[220px] max-h-[260px] flex items-center justify-center shadow-inner">
                 <div id={SCANNER_ID} className="w-full h-full object-cover" />
+                {cameraState === "initializing" && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 text-cyan-400 p-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mb-2" />
+                        <p className="text-xs font-bold">Starting camera...</p>
+                    </div>
+                )}
+                {cameraState === "error" && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-rose-400 p-4 text-center">
+                        <span className="text-2xl mb-1">📷⚠️</span>
+                        <p className="text-xs font-bold">{errorMsg}</p>
+                        <p className="text-[10px] text-slate-400 mt-2">Please switch to "Enter OTP" tab to enter digits manually.</p>
+                    </div>
+                )}
             </div>
             <p className="text-[11px] text-slate-400 font-semibold text-center">
                 📺 Point camera directly at the barcode on the Kiosk TV display
