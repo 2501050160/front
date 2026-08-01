@@ -12,6 +12,17 @@ import walletVideo from "../assets/wallet_video.mp4";
 import myOrdersVideo from "../assets/my_orders_video.mp4";
 import ordersLoading from "../assets/orders_loading.mp4";
 import referralIcon from "../assets/referral-icon.jpg";
+import {
+    FileText,
+    Gift,
+    Headphones,
+    MapPin,
+    Menu,
+    PanelLeftClose,
+    Printer,
+    UploadCloud,
+    Wallet
+} from "lucide-react";
 
 function Dashboard() {
     const [bwPrice, setBwPrice] = useState(2);
@@ -802,10 +813,10 @@ function Dashboard() {
     const displayAdText = settings.adEnabled && settings.adText ? settings.adText.replace("{referralCode}", referralCode) : "";
 
     const tabs = [
-        { id: "print", label: "Print Dashboard", icon: "🖨️" },
-        { id: "orders", label: "My Orders", icon: "📄" },
-        { id: "coupons", label: "Coupons & Rewards", icon: "🎁" },
-        { id: "support", label: "Support Desk", icon: "📞" }
+        { id: "print", label: "Print Dashboard", icon: Printer },
+        { id: "orders", label: "My Orders", icon: FileText },
+        { id: "coupons", label: "Coupons & Rewards", icon: Gift },
+        { id: "support", label: "Support Desk", icon: Headphones }
     ];
 
     const orderStatusClass = (status) => {
@@ -817,11 +828,42 @@ function Dashboard() {
     };
 
     return (
-        <main className="page-shell page-shell-decorated !px-0 !py-0 min-h-screen">
+        <main className="page-shell page-shell-decorated !px-0 !py-0 min-h-screen bg-[linear-gradient(135deg,#f8fbff_0%,#edf7f6_45%,#fff7ed_100%)]">
+            <style>{`
+                .user-dash-card {
+                    border: 1px solid rgba(148, 163, 184, 0.22);
+                    background: rgba(255, 255, 255, 0.86);
+                    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
+                    backdrop-filter: blur(18px);
+                }
+                .user-dash-sidebar {
+                    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9));
+                    box-shadow: 12px 0 40px rgba(15, 23, 42, 0.06);
+                }
+                .user-dash-stat {
+                    position: relative;
+                    overflow: hidden;
+                }
+                .user-dash-stat::after {
+                    content: "";
+                    position: absolute;
+                    inset: auto -18px -34px auto;
+                    width: 110px;
+                    height: 110px;
+                    border-radius: 999px;
+                    background: rgba(255,255,255,0.16);
+                }
+                .user-dash-upload {
+                    background:
+                        linear-gradient(135deg, rgba(14,165,233,0.08), rgba(16,185,129,0.08)),
+                        #ffffff;
+                    border: 1.5px dashed rgba(14, 116, 144, 0.35);
+                }
+            `}</style>
             {/* Flex row container that places the sidebar at the very left edge of the page */}
             <div className="flex flex-col md:flex-row min-h-screen w-full">
                 {/* Left Sidebar / Top Mobile Icons Row */}
-                <div className={`shrink-0 flex transition-all duration-300 bg-white border-r border-slate-200/80 p-4 sticky top-0 z-30 ${
+                <div className={`shrink-0 flex transition-all duration-300 user-dash-sidebar border-r border-slate-200/80 p-4 sticky top-0 z-30 ${
                     isSidebarExpanded 
                         ? "w-full md:w-60 flex-col h-auto md:h-screen justify-between" 
                         : "w-full md:w-20 flex-row md:flex-col items-center justify-around md:justify-start h-auto md:h-screen gap-6"
@@ -834,18 +876,10 @@ function Dashboard() {
                             )}
                             <button 
                                 onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-                                className="p-2 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer active:scale-95 transition-all"
+                                className="p-2 rounded-xl hover:bg-cyan-50 text-slate-600 cursor-pointer active:scale-95 transition-all"
                                 title={isSidebarExpanded ? "Collapse Menu" : "Expand Menu"}
                             >
-                                {isSidebarExpanded ? (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
-                                )}
+                                {isSidebarExpanded ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                             </button>
                         </div>
 
@@ -853,6 +887,7 @@ function Dashboard() {
                         <div className={`flex ${isSidebarExpanded ? "flex-col gap-2 w-full" : "flex-row md:flex-col gap-3 flex-1 md:flex-initial w-full justify-around md:justify-start"}`}>
                             {tabs.map((tab) => {
                                 const isActive = activeTab === tab.id;
+                                const TabIcon = tab.icon;
                                 return (
                                     <button
                                         key={tab.id}
@@ -863,12 +898,12 @@ function Dashboard() {
                                                 : "w-12 h-12 md:w-12 justify-center px-0 py-0"
                                         } ${
                                             isActive 
-                                                ? "bg-sky-600 text-white shadow-md shadow-sky-500/20" 
-                                                : "text-slate-600 hover:bg-slate-100/60"
+                                                ? "bg-gradient-to-r from-cyan-600 to-emerald-600 text-white shadow-md shadow-cyan-500/20" 
+                                                : "text-slate-600 hover:bg-cyan-50 hover:text-cyan-800"
                                         }`}
                                         title={tab.label}
                                     >
-                                        <span className="text-lg shrink-0">{tab.icon}</span>
+                                        <TabIcon className="w-5 h-5 shrink-0" />
                                         {isSidebarExpanded && (
                                             <span className="truncate">{tab.label}</span>
                                         )}
@@ -955,20 +990,27 @@ function Dashboard() {
                     )}
 
                     {/* Welcome Card & Statistics Row */}
-                    <div className="grid gap-6 md:grid-cols-2 mb-0">
-                    <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Welcome Back</p>
-                            <h3 className="text-2xl font-black text-slate-900 mt-1">Hello, {userName || "Sai"} 👋</h3>
+                    <div className="grid gap-6 md:grid-cols-3 mb-0">
+                    <div className="user-dash-card user-dash-stat p-6 rounded-3xl flex flex-col justify-between md:col-span-2">
+                        <div className="relative z-10">
+                            <p className="text-xs font-black uppercase tracking-wider text-cyan-700">Welcome Back</p>
+                            <h3 className="text-2xl font-black text-slate-950 mt-1">Hello, {userName || "Sai"}</h3>
+                            <p className="text-sm font-bold text-slate-500 mt-3 max-w-xl">
+                                Your selected counter is ready at {blockLocation || "your campus block"}. Upload, tune settings, and send the job to print from one workspace.
+                            </p>
                         </div>
-                        <p className="text-xs font-bold text-slate-500 mt-4">
+                        <p className="relative z-10 text-xs font-bold text-slate-500 mt-4 flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-emerald-600" />
                             {new Date().getHours() < 12 ? "Good Morning" : new Date().getHours() < 17 ? "Good Afternoon" : "Good Evening"}
                         </p>
                     </div>
 
-                    <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md flex flex-col justify-between">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-wider text-blue-100">Wallet Balance</p>
+                    <div className="user-dash-stat p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-900 to-emerald-800 text-white shadow-xl flex flex-col justify-between">
+                        <div className="relative z-10">
+                            <div className="w-11 h-11 rounded-2xl bg-white/12 border border-white/15 flex items-center justify-center mb-4">
+                                <Wallet className="w-5 h-5" />
+                            </div>
+                            <p className="text-xs font-black uppercase tracking-wider text-cyan-100">Wallet Balance</p>
                             <h3 className="text-3xl font-black mt-1">₹{walletBalance}</h3>
                         </div>
                     </div>
@@ -978,7 +1020,7 @@ function Dashboard() {
                 {activeTab === "print" && (
                     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                         <motion.section
-                            className="panel p-6"
+                            className="user-dash-card p-6 rounded-3xl"
                             initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
@@ -987,7 +1029,7 @@ function Dashboard() {
                                 <div>
                                     <p className="eyebrow">Step 1</p>
                                     <h2 className="text-2xl font-black text-slate-900">
-                                        Upload PDFs / Images
+                                        Upload Files
                                     </h2>
                                 </div>
 
@@ -1024,7 +1066,7 @@ function Dashboard() {
 
                                 {/* Right side: Existing Upload Dropzone */}
                                 <label 
-                                    className="upload-zone block !mt-0 h-[220px] flex flex-col items-center justify-center p-4 cursor-pointer" 
+                                    className="user-dash-upload block !mt-0 h-[220px] rounded-2xl flex flex-col items-center justify-center p-4 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-xl" 
                                     style={!systemStatus.databaseConnected ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                                 >
                                     <input
@@ -1038,10 +1080,8 @@ function Dashboard() {
 
                                     <div className="flex flex-col items-center gap-2 text-center">
                                         {selectedFiles.length === 0 && (
-                                            <div className="w-14 h-14 mb-2 flex items-center justify-center bg-slate-100 text-sky-500 rounded-2xl border border-slate-200/50 shadow-sm animate-bounce" style={{ animationDuration: '2.5s' }}>
-                                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                                                </svg>
+                                            <div className="w-14 h-14 mb-2 flex items-center justify-center bg-white text-cyan-600 rounded-2xl border border-cyan-100 shadow-sm animate-bounce" style={{ animationDuration: '2.5s' }}>
+                                                <UploadCloud className="w-8 h-8" />
                                             </div>
                                         )}
                                         <span className="text-sm font-black text-slate-900 leading-tight">
@@ -1102,7 +1142,7 @@ function Dashboard() {
                         </motion.section>
 
                         <motion.aside
-                            className="panel p-6"
+                            className="user-dash-card p-6 rounded-3xl"
                             initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1, duration: 0.4 }}

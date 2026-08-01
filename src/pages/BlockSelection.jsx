@@ -392,28 +392,28 @@ function BlockSelection() {
     });
 
     return (
-        <main className="min-h-screen bg-[#060B17] py-8 px-0 sm:px-4 md:px-8 xl:px-12 relative overflow-hidden font-sans text-white flex flex-col justify-between">
+        <main className="min-h-screen bg-[linear-gradient(135deg,#f8fbff_0%,#eef8f4_48%,#fff7ed_100%)] py-6 px-0 sm:px-4 md:px-8 xl:px-12 relative overflow-hidden font-sans text-slate-950 flex flex-col justify-between">
             {/* Styles for glassmorphism, background, and maintenance stamp */}
             <style dangerouslySetInnerHTML={{__html: `
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
                 body {
                     font-family: 'Plus Jakarta Sans', sans-serif;
-                    background-color: #060B17;
+                    background-color: #f8fbff;
                 }
                 .glass-panel {
-                    background: rgba(18, 25, 45, 0.65);
-                    backdrop-filter: blur(24px);
-                    -webkit-backdrop-filter: blur(24px);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+                    background: rgba(255, 255, 255, 0.84);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(148, 163, 184, 0.24);
+                    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.08);
                 }
                 .glow-btn {
-                    background: linear-gradient(135deg, #6C63FF 0%, #8B5CFF 100%);
-                    box-shadow: 0 4px 20px rgba(108, 99, 255, 0.35);
+                    background: linear-gradient(135deg, #0891b2 0%, #059669 100%);
+                    box-shadow: 0 12px 28px rgba(8, 145, 178, 0.24);
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .glow-btn:hover {
-                    box-shadow: 0 6px 24px rgba(108, 99, 255, 0.5);
+                    box-shadow: 0 16px 34px rgba(5, 150, 105, 0.28);
                     transform: scale(1.03);
                 }
                 .maintenance-stamp {
@@ -421,55 +421,52 @@ function BlockSelection() {
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%) rotate(-12deg);
-                    border: 3px double #FF5C7A;
-                    color: #FF5C7A;
-                    background-color: rgba(255, 92, 122, 0.07);
-                    font-family: 'Impact', sans-serif;
-                    font-size: 22px;
+                    border: 2px solid #e11d48;
+                    color: #be123c;
+                    background-color: rgba(255, 241, 242, 0.92);
+                    font-size: 13px;
                     font-weight: 900;
-                    letter-spacing: 2px;
-                    padding: 8px 16px;
+                    letter-spacing: 1px;
+                    padding: 7px 12px;
                     text-transform: uppercase;
-                    border-radius: 4px;
-                    box-shadow: 0 0 15px rgba(255, 92, 122, 0.15);
+                    border-radius: 999px;
+                    box-shadow: 0 12px 26px rgba(225, 29, 72, 0.16);
                     pointer-events: none;
                     z-index: 20;
                 }
                 .offline-stamp {
                     position: absolute;
-                    top: 25px;
-                    right: 15px;
-                    transform: rotate(-12deg);
-                    border: 3px double #94a3b8;
-                    color: #94a3b8;
-                    background-color: rgba(148, 163, 184, 0.07);
-                    font-family: 'Impact', sans-serif;
-                    font-size: 22px;
+                    top: 18px;
+                    right: 18px;
+                    transform: none;
+                    border: 1px solid #cbd5e1;
+                    color: #64748b;
+                    background-color: rgba(248, 250, 252, 0.92);
+                    font-size: 11px;
                     font-weight: 900;
-                    letter-spacing: 2px;
-                    padding: 8px 16px;
+                    letter-spacing: 0.08em;
+                    padding: 6px 10px;
                     text-transform: uppercase;
-                    border-radius: 4px;
-                    box-shadow: 0 0 15px rgba(148, 163, 184, 0.15);
+                    border-radius: 999px;
+                    box-shadow: 0 10px 24px rgba(100, 116, 139, 0.14);
                     pointer-events: none;
                     z-index: 20;
                 }
                 .online-stamp {
                     position: absolute;
-                    top: 25px;
-                    right: 15px;
-                    transform: rotate(-12deg);
-                    border: 3px double #37E67D;
-                    color: #37E67D;
-                    background-color: rgba(55, 230, 125, 0.07);
-                    font-family: 'Impact', sans-serif;
-                    font-size: 22px;
+                    top: 18px;
+                    right: 18px;
+                    transform: none;
+                    border: 1px solid rgba(5, 150, 105, 0.24);
+                    color: #047857;
+                    background-color: rgba(236, 253, 245, 0.94);
+                    font-size: 11px;
                     font-weight: 900;
-                    letter-spacing: 2px;
-                    padding: 8px 16px;
+                    letter-spacing: 0.08em;
+                    padding: 6px 10px;
                     text-transform: uppercase;
-                    border-radius: 4px;
-                    box-shadow: 0 0 15px rgba(55, 230, 125, 0.15);
+                    border-radius: 999px;
+                    box-shadow: 0 10px 24px rgba(5, 150, 105, 0.14);
                     pointer-events: none;
                     z-index: 20;
                 }
@@ -478,12 +475,10 @@ function BlockSelection() {
             `}} />
 
             {/* Glowing Refined Accents */}
-            <div className="absolute top-[-15%] left-[-15%] w-[65rem] h-[65rem] bg-indigo-500/[0.08] rounded-full blur-[190px] pointer-events-none" />
-            <div className="absolute bottom-[-15%] right-[-15%] w-[55rem] h-[55rem] bg-purple-500/[0.07] rounded-full blur-[170px] pointer-events-none" />
-            <div className="absolute top-[35%] right-[5%] w-[50rem] h-[50rem] bg-[#4F9DFF]/[0.06] rounded-full blur-[165px] pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(rgba(8,145,178,0.08)_1px,transparent_1px)] bg-[size:22px_22px] opacity-70 pointer-events-none" />
 
             {/* Premium Cyber grid background pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:5rem_5rem] opacity-30 pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/80 to-transparent pointer-events-none" />
 
             {/* === SUSPENSION SCREEN OVERLAY === */}
             {isCollegeSuspended && (
@@ -596,7 +591,7 @@ function BlockSelection() {
                 >
                     <div className="flex items-center gap-3">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#37E67D] animate-pulse" />
-                        <span className="text-[12px] font-extrabold uppercase tracking-widest text-[#4F9DFF]">
+                            <span className="text-[12px] font-extrabold uppercase tracking-widest text-cyan-700">
                             {selectedCollege ? `Block Selection • ${selectedCollege}` : "College Selection • Pick a Campus"}
                         </span>
                     </div>
@@ -608,7 +603,7 @@ function BlockSelection() {
                             placeholder="Search campus buildings, blocks, or services..." 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-900/60 border border-white/5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#6C63FF] transition-all"
+                            className="w-full h-10 pl-10 pr-4 rounded-xl bg-white/90 border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all"
                         />
                     </div>
 
@@ -616,7 +611,7 @@ function BlockSelection() {
                     <div className="flex items-center gap-4 relative">
                         <button
                             onClick={() => setShowNotifPanel(true)}
-                            className="relative w-10 h-10 rounded-xl bg-slate-900/60 border border-white/5 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                            className="relative w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-cyan-700 hover:border-cyan-200 transition-colors"
                         >
                             <Bell className="w-4 h-4" />
                             {notifications.length > 0 && (
@@ -624,15 +619,15 @@ function BlockSelection() {
                             )}
                         </button>
 
-                        <div className="flex items-center gap-3 pl-3 border-l border-white/10 relative z-50">
+                        <div className="flex items-center gap-3 pl-3 border-l border-slate-200 relative z-50">
                             <button 
                                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                                className="flex items-center gap-2 text-left hover:opacity-90 transition-all bg-slate-900/40 p-1.5 rounded-xl border border-white/5"
+                                className="flex items-center gap-2 text-left hover:opacity-90 transition-all bg-white p-1.5 rounded-xl border border-slate-200"
                             >
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#6C63FF] to-[#9F6BFF] flex items-center justify-center font-bold text-xs text-white shadow-md">
                                     {userName.substring(0, 2).toUpperCase()}
                                 </div>
-                                <span className="hidden sm:block text-xs font-bold text-slate-200">{userName}</span>
+                                <span className="hidden sm:block text-xs font-bold text-slate-700">{userName}</span>
                                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                             </button>
 
@@ -672,10 +667,10 @@ function BlockSelection() {
                         className="lg:col-span-5 flex flex-col justify-between gap-6"
                     >
                         <div className="space-y-4">
-                            <h1 className="text-5xl lg:text-5xl xl:text-[56px] font-extrabold tracking-tight text-white leading-[1.08]">
+                            <h1 className="text-5xl lg:text-5xl xl:text-[56px] font-extrabold tracking-tight text-slate-950 leading-[1.08]">
                                 {selectedCollege ? "Choose Print Block" : "Select Your College"}
                             </h1>
-                            <p className="text-[16px] text-slate-400 font-medium leading-relaxed max-w-lg">
+                            <p className="text-[16px] text-slate-600 font-medium leading-relaxed max-w-lg">
                                 {selectedCollege 
                                     ? `Showing active printing blocks located in ${selectedCollege}. Choose a printer node to route your papers.`
                                     : "Pick your college campus. You will be redirected to choose block locations and spoolers within that campus."
@@ -686,12 +681,12 @@ function BlockSelection() {
                         {/* Direct action links */}
                         <div className="glass-panel p-6 rounded-[24px] flex items-center justify-between gap-4">
                             <div>
-                                <p className="text-xs font-bold text-slate-400">Ready to upload files?</p>
+                                <p className="text-xs font-bold text-slate-700">Ready to upload files?</p>
                                 <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Proceed to document upload directly</p>
                             </div>
                             <button 
                                 onClick={() => navigate("/my-orders")}
-                                className="px-5 h-11 rounded-xl bg-slate-900 border border-white/5 hover:border-white/10 hover:bg-slate-900 text-xs font-bold text-slate-300 flex items-center gap-2 transition-all"
+                                className="px-5 h-11 rounded-xl bg-slate-950 border border-slate-900 hover:bg-cyan-700 hover:border-cyan-700 text-xs font-bold text-white flex items-center gap-2 transition-all"
                             >
                                 View Order History <ArrowRight className="w-4 h-4 text-slate-400" />
                             </button>
@@ -703,9 +698,9 @@ function BlockSelection() {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.55 }}
-                        className="lg:col-span-7 rounded-[26px] overflow-hidden border border-white/5 bg-[#12192D]/40 backdrop-blur-md relative h-[300px] lg:h-auto flex flex-col justify-end shadow-2xl group"
+                        className="lg:col-span-7 rounded-[26px] overflow-hidden border border-white bg-white/70 backdrop-blur-md relative h-[300px] lg:h-auto flex flex-col justify-end shadow-2xl group"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#060B17] via-transparent to-transparent z-10 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent z-10 pointer-events-none" />
                         <video 
                             autoPlay 
                             loop 
@@ -747,8 +742,8 @@ function BlockSelection() {
                                 <span className="text-[10px] font-black uppercase tracking-wider text-[#F8B84E] bg-[#F8B84E]/10 border border-[#F8B84E]/20 px-2.5 py-1 rounded-full">Secure release</span>
                             </div>
 
-                            <h3 className="text-xl font-extrabold text-white mt-4 tracking-tight">Already Have an OTP?</h3>
-                            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                            <h3 className="text-xl font-extrabold text-slate-950 mt-4 tracking-tight">Already Have an OTP?</h3>
+                            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                                 Enter your code to release your queued print job instantly at any printer node.
                             </p>
 
@@ -773,9 +768,9 @@ function BlockSelection() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-6"
                             >
-                                <div className="border-b border-white/5 pb-4">
-                                    <h2 className="text-2xl font-extrabold tracking-tight text-white">Select Campus / College</h2>
-                                    <p className="text-xs text-slate-400 mt-1 font-semibold">Choose a college campus to list its available blocks and printers</p>
+                                <div className="border-b border-slate-200 pb-4">
+                                    <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">Select Campus / College</h2>
+                                    <p className="text-xs text-slate-500 mt-1 font-semibold">Choose a college campus to list its available blocks and printers</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -788,20 +783,20 @@ function BlockSelection() {
                                                 onClick={() => setSelectedCollege(college)}
                                                 variants={cardHoverEffects}
                                                 whileHover="hover"
-                                                className="glass-panel p-8 rounded-[24px] text-left relative overflow-hidden transition-all duration-300 hover:shadow-2xl border-white/5 hover:border-white/15 w-full group flex flex-col justify-between min-h-[160px]"
+                                                className="glass-panel p-8 rounded-[24px] text-left relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-cyan-200 w-full group flex flex-col justify-between min-h-[160px]"
                                             >
                                                 <div className="absolute top-0 left-0 w-[4px] h-full" style={{backgroundColor: accent}} />
                                                 <div className="space-y-2">
                                                     <span className="text-4xl">🏫</span>
-                                                    <h3 className="text-2xl font-black text-white tracking-tight mt-3">{college} College</h3>
-                                                    <p className="text-xs text-slate-400 font-semibold">Active campus printing grid counters</p>
+                                                    <h3 className="text-2xl font-black text-slate-950 tracking-tight mt-3">{college} College</h3>
+                                                    <p className="text-xs text-slate-500 font-semibold">Active campus printing grid counters</p>
                                                 </div>
 
-                                                <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
-                                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400" style={{color: accent}}>
+                                                <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500" style={{color: accent}}>
                                                         {count} Blocks Configured
                                                     </span>
-                                                    <span className="text-xs font-bold text-[#4F9DFF] flex items-center gap-1">
+                                                    <span className="text-xs font-bold text-cyan-700 flex items-center gap-1">
                                                         Select Campus <ChevronRight className="w-4 h-4" />
                                                     </span>
                                                 </div>
@@ -817,18 +812,18 @@ function BlockSelection() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-6"
                             >
-                                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                                     <div>
                                         {(isAdminUser || !userCollege) && (
                                             <button 
                                                 onClick={() => setSelectedCollege("")}
-                                                className="text-xs font-bold text-[#4F9DFF] hover:underline flex items-center gap-1.5 mb-2 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-white/5"
+                                                className="text-xs font-bold text-cyan-700 hover:underline flex items-center gap-1.5 mb-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200"
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Back to Campus Directory
                                             </button>
                                         )}
-                                        <h2 className="text-2xl font-extrabold tracking-tight text-white">Available Print Locations</h2>
-                                        <p className="text-xs text-slate-400 mt-1 font-semibold">Select a building block within {selectedCollege} College</p>
+                                        <h2 className="text-2xl font-extrabold tracking-tight text-slate-950">Available Print Locations</h2>
+                                        <p className="text-xs text-slate-500 mt-1 font-semibold">Select a building block within {selectedCollege} College</p>
                                     </div>
                                 </div>
 
@@ -838,7 +833,7 @@ function BlockSelection() {
                                             key={block.name}
                                             variants={cardHoverEffects}
                                             whileHover="hover"
-                                            className="glass-panel rounded-[24px] overflow-hidden flex flex-col justify-between text-left group transition-all duration-300 hover:shadow-[0_16px_35px_rgba(0,0,0,0.5)] border-white/5 hover:border-[#6C63FF]/30 relative"
+                                            className="glass-panel rounded-[24px] overflow-hidden flex flex-col justify-between text-left group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.14)] hover:border-cyan-200 relative"
                                         >
                                             {/* Colored Header banner strip */}
                                             <div className="h-1.5 w-full" style={{backgroundColor: block.accent}} />
@@ -862,35 +857,35 @@ function BlockSelection() {
                                                 {/* Header */}
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-3xl p-2.5 rounded-xl bg-slate-900/80 border border-white/5">{block.icon}</span>
+                                                        <span className="text-3xl p-2.5 rounded-xl bg-cyan-50 border border-cyan-100">{block.icon}</span>
                                                         <div>
-                                                            <h4 className="text-xl font-bold text-white tracking-tight">{block.name}</h4>
-                                                            <p className="text-sm text-slate-400 font-semibold">{block.description}</p>
+                                                            <h4 className="text-xl font-bold text-slate-950 tracking-tight">{block.name}</h4>
+                                                            <p className="text-sm text-slate-500 font-semibold">{block.description}</p>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Details Grid (Without Distance field) */}
-                                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/5 text-[13px] text-slate-400">
+                                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-[13px] text-slate-500">
                                                     <div>
                                                         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Prints in Queue</p>
-                                                        <p className="font-extrabold text-slate-200 mt-0.5">⏳ {block.queueCount} prints waiting</p>
+                                                        <p className="font-extrabold text-slate-800 mt-0.5">{block.queueCount} prints waiting</p>
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Support Mode</p>
-                                                        <p className="font-extrabold text-slate-200 mt-0.5">
+                                                        <p className="font-extrabold text-slate-800 mt-0.5">
                                                             {block.colorSupported ? "Color & BW Available" : "Only BW Available"}
                                                         </p>
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Paper Count</p>
-                                                        <p className="font-extrabold text-[#37E67D] mt-0.5">
+                                                        <p className="font-extrabold text-emerald-700 mt-0.5">
                                                             📄 {block.paperCount != null ? block.paperCount : 0} Sheets
                                                         </p>
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Printer Status</p>
-                                                        <p className="font-extrabold text-slate-200 mt-0.5">
+                                                        <p className="font-extrabold text-slate-800 mt-0.5">
                                                             {block.isOnline ? "Ready to spool" : "Spooler offline"}
                                                         </p>
                                                     </div>
@@ -899,7 +894,7 @@ function BlockSelection() {
                                                 {/* Select button */}
                                                 <button
                                                     onClick={() => selectBlock(block.name)}
-                                                    className="w-full h-11 rounded-xl bg-slate-900/80 hover:bg-gradient-to-r hover:from-[#6C63FF] hover:to-[#8B5CFF] text-white font-bold text-sm uppercase tracking-wider transition-all duration-300 border border-white/5 hover:border-transparent hover:shadow-lg hover:shadow-indigo-500/10 mt-4 flex items-center justify-center gap-2"
+                                                    className="w-full h-11 rounded-xl bg-slate-950 hover:bg-gradient-to-r hover:from-cyan-700 hover:to-emerald-700 text-white font-bold text-sm uppercase tracking-wider transition-all duration-300 border border-slate-950 hover:border-transparent hover:shadow-lg hover:shadow-cyan-500/10 mt-4 flex items-center justify-center gap-2"
                                                     disabled={block.maintenance || !block.isOnline}
                                                     style={(block.maintenance || !block.isOnline) ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                                                 >
