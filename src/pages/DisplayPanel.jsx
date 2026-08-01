@@ -363,9 +363,9 @@ function DisplayPanel() {
                     </div>
                 </motion.header>
 
-                <div className={`grid ${(hasActiveOrPendingOrders && !activePickup) ? "grid-cols-1" : activePickup ? "lg:grid-cols-[1fr_1.3fr]" : "lg:grid-cols-[1.7fr_1fr]"} gap-8 flex-1 py-8 w-full`}>
+                <div className={`grid ${(hasActiveOrPendingOrders && !activePickup) ? "grid-cols-1" : activePickup ? "lg:grid-cols-[1fr_1.3fr]" : "lg:grid-cols-[1.7fr_1fr]"} gap-6 flex-1 pt-3 pb-4 w-full`}>
                     {/* Left Column: Active order queue / Welcome message / Pickup alert */}
-                    <div className="flex flex-col justify-center w-full">
+                    <div className={`flex flex-col w-full ${(hasActiveOrPendingOrders && !activePickup) ? "justify-start" : "justify-center"}`}>
                         <AnimatePresence mode="wait">
                             {activePickup ? (
                                 <motion.div
@@ -437,7 +437,7 @@ function DisplayPanel() {
                             ) : hasActiveOrPendingOrders ? (
                                 <motion.div
                                     key={`queue-${displayBlock}`}
-                                    className="grid gap-6 w-full max-w-none mx-auto"
+                                    className="grid gap-4 w-full max-w-none mx-auto"
                                     initial={{ opacity: 0, y: 16 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -16 }}
@@ -509,8 +509,8 @@ function DisplayPanel() {
                                     )}
 
                                     <section className="display-glass overflow-hidden p-0">
-                                        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-                                            <div className="p-7 pb-0">
+                                        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+                                            <div className="px-6 pt-5 pb-0">
                                                 <p
                                                     className="text-sm font-black uppercase tracking-[0.25em]"
                                                     style={{ color: theme.accent }}
@@ -524,7 +524,7 @@ function DisplayPanel() {
                                                     Students can find their OTP and queue position here.
                                                 </p>
                                             </div>
-                                            <div className="flex gap-3 p-7 pb-0">
+                                            <div className="flex gap-3 px-6 pt-5 pb-0">
                                                 <div className="rounded-2xl border border-white/12 bg-white/10 px-5 py-3 text-center">
                                                     <p className="text-3xl font-black text-white">{queueOrders.length}</p>
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-cyan-50/58">Total</p>
@@ -536,9 +536,9 @@ function DisplayPanel() {
                                             </div>
                                         </div>
 
-                                        <div className="p-7">
+                                        <div className="p-5">
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
-                                                <div className="grid grid-cols-[56px_0.24fr_0.24fr_1.52fr_62px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                <div className="grid grid-cols-[48px_0.14fr_0.15fr_2.25fr_44px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
                                                     <span>Order</span>
                                                     <span>Student</span>
@@ -598,7 +598,7 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[56px_0.24fr_0.24fr_1.52fr_62px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[48px_0.14fr_0.15fr_2.25fr_44px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-4 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
@@ -628,16 +628,16 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-3 py-2 shadow-lg ${palette.chip} ${palette.glow} flex flex-row items-center justify-center gap-4`}>
+                                                                        <div className={`rounded-2xl border px-4 py-2 shadow-lg ${palette.chip} ${palette.glow} flex flex-row items-center justify-center gap-6`}>
                                                                             <div className="text-center shrink-0">
                                                                                 <p className="text-[9px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
                                                                                 <p className="font-mono text-4xl font-black tracking-wider text-white mt-1 leading-none">
                                                                                     {order.otpCode}
                                                                                 </p>
                                                                             </div>
-                                                                            <div className="h-32 w-[34rem] max-w-full shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
+                                                                            <div className="h-44 min-w-[42rem] flex-1 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
                                                                                 <img 
-                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.otpCode}&includeText=false&height=130`} 
+                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.otpCode}&includeText=false&height=190`} 
                                                                                     alt="Barcode"
                                                                                     className="w-full h-full object-fill"
                                                                                 />
