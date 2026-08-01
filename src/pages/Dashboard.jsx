@@ -1270,43 +1270,45 @@ function Dashboard() {
                                 Estimate
                             </h2>
 
-                            <div className="mt-5 grid grid-cols-2 gap-3">
-                                <div className="rounded-lg bg-slate-100 p-4">
-                                    <p className="text-sm font-bold text-slate-500">BW</p>
-                                    <p className="mt-1 text-2xl font-black text-slate-900">Rs. {bwPrice}</p>
-                                </div>
+                             <div className="mt-5 grid grid-cols-2 gap-3">
+                                 {/* Sleek Black & White (Monochrome) Box */}
+                                 <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px]">
+                                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Black & White (BW)</span>
+                                     <p className="mt-2 text-2xl font-black text-white">Rs. {bwPrice}</p>
+                                 </div>
 
-                                <div className="rounded-lg bg-slate-100 p-4">
-                                    <p className="text-sm font-bold text-slate-500">Color</p>
-                                    <p className="mt-1 text-2xl font-black text-slate-900">Rs. {colorPrice}</p>
-                                </div>
-                            </div>
+                                 {/* Colorful Glowing Neon/Rainbow Gradient Box */}
+                                 <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 via-indigo-950/50 to-purple-950/60 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px] shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                                     <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">Color Print</span>
+                                     <p className="mt-2 text-2xl font-black text-white bg-gradient-to-r from-cyan-300 via-pink-300 to-amber-200 bg-clip-text text-transparent">Rs. {colorPrice}</p>
+                                 </div>
+                             </div>
 
-                            <div className="mt-5 rounded-lg bg-slate-900 p-5 text-white">
-                                <p className="text-sm font-bold text-slate-300">Estimated Total</p>
-                                <motion.p
-                                    key={estimatedTotal}
-                                    className="mt-2 text-4xl font-black"
-                                    initial={{ scale: 0.96, opacity: 0.5 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                >
-                                    Rs. {estimatedTotal || 0}
-                                </motion.p>
-                            </div>
+                             <div className="mt-5 rounded-lg bg-slate-900 p-5 text-white">
+                                 <p className="text-sm font-bold text-slate-300">Estimated Total</p>
+                                 <motion.p
+                                     key={estimatedTotal}
+                                     className="mt-2 text-4xl font-black"
+                                     initial={{ scale: 0.96, opacity: 0.5 }}
+                                     animate={{ scale: 1, opacity: 1 }}
+                                 >
+                                     Rs. {estimatedTotal || 0}
+                                 </motion.p>
+                             </div>
 
-                            {/* Wallet Visual Card */}
-                            <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4 flex items-center gap-4">
-                                <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/50 shadow-sm animate-pulse" style={{ animationDuration: '2s' }}>
-                                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h1a2 2 0 012 2v2a2 2 0 01-2 2h-1m2-6h1a2 2 0 012 2v2a2 2 0 01-2 2h-1m-4-6v10m-3-3h12" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="eyebrow">Your Wallet</p>
-                                    <p className="text-xl font-black text-slate-900">₹{walletBalance}</p>
-                                </div>
-                            </div>
+                             {/* Wallet Visual Card - Sleek Dark Theme */}
+                             <div className="mt-6 rounded-xl border border-white/10 bg-slate-950/40 p-4 flex items-center gap-4">
+                                 <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/20 shadow-sm animate-pulse" style={{ animationDuration: '2s' }}>
+                                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h1a2 2 0 012 2v2a2 2 0 01-2 2h-1m2-6h1a2 2 0 012 2v2a2 2 0 01-2 2h-1m-4-6v10m-3-3h12" />
+                                     </svg>
+                                 </div>
+                                 <div>
+                                     <p className="eyebrow text-cyan-200">Your Wallet</p>
+                                     <p className="text-xl font-black text-white">₹{walletBalance}</p>
+                                 </div>
+                             </div>
 
                             {uploaded && (
                                 <div className="mt-5 space-y-3">
@@ -1503,15 +1505,15 @@ function Dashboard() {
                         <AnimatePresence>
                             {uploaded && (
                                 <motion.section
-                                    className="panel mt-6 p-6 lg:col-span-2"
+                                    className="user-dash-card mt-6 p-6 lg:col-span-2 rounded-3xl text-left"
                                     initial={{ opacity: 0, y: 18 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 18 }}
                                 >
                                     <div className="section-header">
                                         <div>
-                                            <p className="eyebrow">Step 2</p>
-                                            <h2 className="text-2xl font-black text-slate-900">
+                                            <p className="eyebrow text-cyan-200">Step 2</p>
+                                            <h2 className="text-2xl font-black text-white">
                                                 Print Settings
                                             </h2>
                                         </div>
@@ -1535,7 +1537,7 @@ function Dashboard() {
 
                                     <div className="grid gap-4 md:grid-cols-5">
                                         <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-slate-700">
+                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
                                                 Copies
                                             </span>
                                             <input
@@ -1543,69 +1545,69 @@ function Dashboard() {
                                                 min="1"
                                                 value={copies}
                                                 onChange={(e) => setCopies(e.target.value)}
-                                                className="field"
+                                                className="field !bg-white/10 !border-white/15 !text-white"
                                             />
                                         </label>
 
                                         <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-slate-700">
+                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
                                                 Print Type
                                             </span>
                                             <select
                                                 value={printType}
                                                 onChange={(e) => setPrintType(e.target.value)}
-                                                className="field"
+                                                className="field !bg-white/10 !border-white/15 !text-white"
                                             >
-                                                <option value="BW">Black & White</option>
+                                                <option value="BW" className="bg-slate-900 text-white">Black & White</option>
                                                 {colorSupported && (
-                                                    <option value="COLOR">Color</option>
+                                                    <option value="COLOR" className="bg-slate-900 text-white">Color</option>
                                                 )}
                                             </select>
                                         </label>
 
                                         <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-slate-700">
+                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
                                                 Pages
                                             </span>
                                             <select
                                                 value={pageOption}
                                                 onChange={(e) => setPageOption(e.target.value)}
-                                                className="field"
+                                                className="field !bg-white/10 !border-white/15 !text-white"
                                             >
-                                                <option value="ALL">All Pages</option>
-                                                <option value="CUSTOM">Custom Range</option>
+                                                <option value="ALL" className="bg-slate-900 text-white">All Pages</option>
+                                                <option value="CUSTOM" className="bg-slate-900 text-white">Custom Range</option>
                                             </select>
                                         </label>
 
                                         <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-slate-700">
+                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
                                                 Pages Per Sheet
                                             </span>
                                             <select
                                                 value={nupLayout}
                                                 onChange={(e) => setNupLayout(e.target.value)}
-                                                className="field"
+                                                className="field !bg-white/10 !border-white/15 !text-white"
                                             >
-                                                <option value="1-up">1-up (Normal)</option>
-                                                <option value="2-up">2-up (Saver)</option>
-                                                <option value="4-up">4-up (Compact)</option>
-                                                <option value="6-up">6-up (Micro)</option>
-                                                <option value="8-up">8-up (Mini)</option>
-                                                <option value="9-up">9-up (Nano)</option>
+                                                <option value="1-up" className="bg-slate-900 text-white">1-up (Normal)</option>
+                                                <option value="2-up" className="bg-slate-900 text-white">2-up (Saver)</option>
+                                                <option value="4-up" className="bg-slate-900 text-white">4-up (Compact)</option>
+                                                <option value="6-up" className="bg-slate-900 text-white">6-up (Micro)</option>
+                                                <option value="8-up" className="bg-slate-900 text-white">8-up (Mini)</option>
+                                                <option value="9-up" className="bg-slate-900 text-white">9-up (Nano)</option>
                                             </select>
                                         </label>
 
                                         <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-slate-700">
+                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
                                                 Print Sides
                                             </span>
                                             <select
                                                 value={doubleSided ? "double" : "single"}
                                                 onChange={(e) => setDoubleSided(e.target.value === "double")}
-                                                className="field"
+                                                className="field !bg-white/10 !border-white/15 !text-white"
                                             >
-                                                <option value="single">Single Sided</option>
-                                                <option value="double">Double Sided (Duplex)</option>
+                                                <option value="single" className="bg-slate-900 text-white">Single Sided</option>
+                                                <option value="double" className="bg-slate-900 text-white">Double Sided (Duplex)</option>
                                             </select>
                                         </label>
                                     </div>
@@ -1892,25 +1894,25 @@ function Dashboard() {
                 {/* TAB CONTENT: COUPONS & REWARDS */}
                 {activeTab === "coupons" && (
                     <div className="grid gap-6 md:grid-cols-2">
-                        {/* Referral Stats Panel */}
+                        {/* Referral Stats Panel - Sleek Dark Theme */}
                         <motion.section
-                            className="panel p-6 flex flex-col justify-between"
+                            className="user-dash-card p-6 flex flex-col justify-between rounded-3xl"
                             initial={{ opacity: 0, x: -18 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.4 }}
                         >
                             <div>
-                                <p className="eyebrow">Refer & Earn</p>
-                                <h2 className="text-2xl font-black text-slate-900 mt-1 mb-4">Share the Service</h2>
+                                <p className="eyebrow text-cyan-200">Refer & Earn</p>
+                                <h2 className="text-2xl font-black text-white mt-1 mb-4">Share the Service</h2>
                                 
-                                <p className="text-sm font-semibold text-slate-600 mb-6 leading-relaxed">
-                                    Invite your friends to try Cloud Print! When they register using your custom link or enter your referral customer ID on their first checkout, you earn <span className="text-emerald-500 font-bold">Rs. 10</span> and they get <span className="text-cyan-500 font-bold">Rs. 5</span> in wallet balance credits.
+                                <p className="text-sm font-semibold text-cyan-50/70 mb-6 leading-relaxed">
+                                    Invite your friends to try Cloud Print! When they register using your custom link or enter your referral customer ID on their first checkout, you earn <span className="text-emerald-400 font-bold">Rs. 10</span> and they get <span className="text-cyan-400 font-bold">Rs. 5</span> in wallet balance credits.
                                 </p>
 
-                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-6">
+                                <div className="bg-slate-950/40 border border-white/10 rounded-xl p-4 mb-6">
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Referral ID / Code</span>
                                     <div className="flex items-center justify-between mt-2 gap-3">
-                                        <code className="text-2xl font-black text-slate-900 select-all tracking-wider">
+                                        <code className="text-2xl font-black text-cyan-300 select-all tracking-wider">
                                             {referralCode || userId || "N/A"}
                                         </code>
                                         {referralCode && (
@@ -1929,27 +1931,27 @@ function Dashboard() {
                                 </div>
                             </div>
 
-                            <div className="text-xs font-bold text-slate-400 bg-slate-100 border border-slate-200/60 p-3 rounded-lg">
+                            <div className="text-xs font-bold text-cyan-100/70 bg-slate-950/40 border border-white/10 p-3 rounded-lg">
                                 ℹ️ Note: Credits are added instantly after the referred customer places their first paid print order.
                             </div>
                         </motion.section>
 
-                        {/* Claim Promo Code Panel */}
+                        {/* Claim Promo Code Panel - Sleek Dark Theme */}
                         <motion.section
-                            className="panel p-6"
+                            className="user-dash-card p-6 rounded-3xl"
                             initial={{ opacity: 0, x: 18 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.4 }}
                         >
-                            <p className="eyebrow">Claim Credit</p>
-                            <h2 className="text-2xl font-black text-slate-900 mt-1 mb-4">Redeem Rewards</h2>
+                            <p className="eyebrow text-cyan-200">Claim Credit</p>
+                            <h2 className="text-2xl font-black text-white mt-1 mb-4">Redeem Rewards</h2>
                             
-                            <p className="text-sm font-semibold text-slate-600 mb-6 leading-relaxed">
+                            <p className="text-sm font-semibold text-cyan-50/70 mb-6 leading-relaxed">
                                 Received a promo card, code, or special administrator voucher? Enter the claim code below to deposit reward balance directly into your wallet.
                             </p>
 
                              <div className="flex justify-center mb-5">
-                                 <div className="w-16 h-16 flex items-center justify-center bg-purple-50 text-purple-600 rounded-2xl border border-purple-100/50 shadow-sm animate-bounce" style={{ animationDuration: '2s' }}>
+                                 <div className="w-16 h-16 flex items-center justify-center bg-purple-500/20 text-purple-300 rounded-2xl border border-purple-500/30 shadow-sm animate-bounce" style={{ animationDuration: '2s' }}>
                                      <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h17.25c.621 0 1.125-.504 1.125-1.125V8.625c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                                      </svg>
@@ -1958,11 +1960,11 @@ function Dashboard() {
 
                              <form onSubmit={handleClaimReward} className="space-y-4">
                                 <label className="block">
-                                    <span className="block text-sm font-bold text-slate-700 mb-2">Claim Code / Voucher Code</span>
+                                    <span className="block text-sm font-bold text-cyan-50/80 mb-2">Claim Code / Voucher Code</span>
                                     <input 
                                         type="text" 
                                         placeholder="e.g. SAVE100, FREE50, ADMINREWARD" 
-                                        className="field uppercase tracking-wider font-mono font-black"
+                                        className="field uppercase tracking-wider font-mono font-black !bg-white/10 !border-white/15 !text-white"
                                         value={rewardCode}
                                         onChange={(e) => setRewardCode(e.target.value)}
                                         required
@@ -1984,23 +1986,23 @@ function Dashboard() {
                 {/* TAB CONTENT: SUPPORT DESK */}
                 {activeTab === "support" && (
                     <motion.section
-                        className="panel p-6 max-w-2xl mx-auto"
+                        className="user-dash-card p-6 max-w-2xl mx-auto rounded-3xl"
                         initial={{ opacity: 0, y: 18 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
                     >
-                        <p className="eyebrow">Help & Feedback</p>
-                        <h2 className="text-2xl font-black text-slate-900 mt-1 mb-2">📞 Support Desk</h2>
-                        <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                            Submit your request below. Tickets will be processed by our administration. Once solved, work related mails are dispatched to <span className="font-bold text-sky-600">saipraveendasari2@gmail.com</span>, and we will contact you back immediately.
+                        <p className="eyebrow text-cyan-200">Help & Feedback</p>
+                        <h2 className="text-2xl font-black text-white mt-1 mb-2">📞 Support Desk</h2>
+                        <p className="text-sm text-cyan-50/70 mb-6 leading-relaxed">
+                            Submit your request below. Tickets will be processed by our administration. Once solved, work related mails are dispatched to <span className="font-bold text-sky-400">saipraveendasari2@gmail.com</span>, and we will contact you back immediately.
                         </p>
 
                         <form onSubmit={handleSupportSubmit} className="space-y-4">
                             <label className="block">
-                                <span className="block text-sm font-bold text-slate-700 mb-1">Your Name</span>
+                                <span className="block text-sm font-bold text-cyan-50/80 mb-1">Your Name</span>
                                 <input 
                                     type="text" 
-                                    className="field w-full font-bold" 
+                                    className="field w-full font-bold !bg-white/10 !border-white/15 !text-white" 
                                     value={supportName} 
                                     onChange={(e) => setSupportName(e.target.value)}
                                     required
@@ -2008,10 +2010,10 @@ function Dashboard() {
                             </label>
 
                             <label className="block">
-                                <span className="block text-sm font-bold text-slate-700 mb-1">Email Address</span>
+                                <span className="block text-sm font-bold text-cyan-50/80 mb-1">Email Address</span>
                                 <input 
                                     type="email" 
-                                    className="field w-full font-bold" 
+                                    className="field w-full font-bold !bg-white/10 !border-white/15 !text-white" 
                                     value={supportEmail} 
                                     onChange={(e) => setSupportEmail(e.target.value)}
                                     required
@@ -2019,9 +2021,9 @@ function Dashboard() {
                             </label>
 
                             <label className="block">
-                                <span className="block text-sm font-bold text-slate-700 mb-1">Inquiry / Message</span>
+                                <span className="block text-sm font-bold text-cyan-50/80 mb-1">Inquiry / Message</span>
                                 <textarea 
-                                    className="field w-full min-h-[120px]" 
+                                    className="field w-full min-h-[120px] !bg-white/10 !border-white/15 !text-white" 
                                     placeholder="Explain your problem, request refunds, or query order details..."
                                     value={supportMessage} 
                                     onChange={(e) => setSupportMessage(e.target.value)}
