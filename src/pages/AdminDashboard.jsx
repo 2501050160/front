@@ -3951,6 +3951,55 @@ function AdminDashboard() {
                                         )}
                                     </div>
                                 </motion.section>
+
+                                {/* Tester Mode Controls */}
+                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                <motion.section 
+                                    className="panel p-6 border border-purple-500/20 bg-purple-500/5 mt-6"
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.15 }}
+                                >
+                                    <div className="section-header mb-4">
+                                        <div>
+                                            <p className="eyebrow text-purple-700">Tester Mode Controls</p>
+                                            <h2 className="text-2xl font-black text-purple-950">Tester Mode Access</h2>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={saveSystemSettings} className="space-y-4">
+                                        <div className="flex items-center justify-between bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                            <div>
+                                                <p className="font-black text-purple-950 text-sm">Enable Tester Access</p>
+                                                <p className="text-xs text-purple-700/60 font-semibold mt-0.5">
+                                                    Allow designated testers to place prints for free.
+                                                </p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={systemSettings.testerModeEnabled || false}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, testerModeEnabled: e.target.checked})}
+                                                />
+                                                <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                            </label>
+                                        </div>
+
+                                        <label className="block">
+                                            <span className="block text-xs font-bold text-slate-500 mb-1">Tester Usernames / Emails (Comma Separated)</span>
+                                            <textarea 
+                                                className="field min-h-[70px] border-slate-200 focus:border-purple-600 font-bold" 
+                                                placeholder="e.g. tester1, tester2, test@gmail.com" 
+                                                value={systemSettings.testerUsernames || ""} 
+                                                onChange={(e) => setSystemSettings({...systemSettings, testerUsernames: e.target.value})}
+                                                disabled={!systemSettings.testerModeEnabled}
+                                            />
+                                        </label>
+                                        
+                                        <button type="submit" className="btn bg-purple-600 hover:bg-purple-500 text-white w-full mt-2 font-black text-xs uppercase tracking-wider">Save Tester settings</button>
+                                    </form>
+                                </motion.section>
+                                )}
                             </div>
                         </div>
                     </div>
