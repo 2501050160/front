@@ -4,6 +4,7 @@ import api from "../services/api";
 import { getBlockTheme } from "../config/blockThemes";
 import studentAd from "../assets/cloud_print_student_offers_ad.png";
 import collectVideo from "../assets/collect.mp4";
+import inVideo from "../assets/in.mp4";
 
 function DisplayPanel() {
     const [orders, setOrders] = useState([]);
@@ -165,12 +166,12 @@ function DisplayPanel() {
             setCurrentPagePrinted(1);
 
             if (totalPagesToPrint === 1) {
-                // If only 1 page, wait 5.5s for the page to print before completing
+                // If only 1 page, wait 5.0s for the page to print before completing
                 timerId = setTimeout(() => {
                     setIsReleasing(false);
-                }, 5500);
+                }, 5000);
             } else {
-                // If multiple pages, start the 5.5s interval
+                // If multiple pages, start the 5.0s interval
                 let current = 1;
                 const intervalId = setInterval(() => {
                     current += 1;
@@ -178,12 +179,12 @@ function DisplayPanel() {
 
                     if (current >= totalPagesToPrint) {
                         clearInterval(intervalId);
-                        // Wait one final 5.5s for the last page to finish printing
+                        // Wait one final 5.0s for the last page to finish printing
                         timerId = setTimeout(() => {
                             setIsReleasing(false);
-                        }, 5500);
+                        }, 5000);
                     }
-                }, 5500);
+                }, 5000);
 
                 timerId = intervalId;
             }
@@ -385,7 +386,7 @@ function DisplayPanel() {
                                             {activePickup.customerName || "Customer"}
                                         </p>
                                         <motion.div
-                                            className={`mx-auto mt-6 max-w-xl rounded-xl border p-4 ${isReleasing ? "border-amber-400/40 bg-amber-400/10" : "border-green-300/40 bg-green-400/15"}`}
+                                            className={`mx-auto mt-6 max-w-xl rounded-2xl border overflow-hidden ${isReleasing ? "border-amber-400/40 bg-amber-400/10" : "border-green-300/40 bg-green-400/15"}`}
                                             animate={{
                                                 boxShadow: isReleasing 
                                                     ? [
@@ -401,20 +402,34 @@ function DisplayPanel() {
                                             }}
                                             transition={{ duration: 1.8, repeat: Infinity }}
                                         >
-                                            <p className="text-base font-bold text-slate-100">
-                                                {isReleasing 
-                                                    ? "Printing document pages... Please wait."
-                                                    : "Your printing is completed! Please collect your papers from the printer tray."}
-                                            </p>
-                                            <div className={`mt-2 flex flex-col items-center justify-center gap-1.5 text-xs font-bold ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
-                                                <span>{isReleasing ? "🖨️ Hardware releasing prints..." : "🖨️ Counter Release successful"}</span>
-                                                {isReleasing && (
-                                                    <span className="text-lg font-black text-white mt-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-xl">
-                                                        {currentPagePrinted === 0 
-                                                            ? "Preparing printer..." 
-                                                            : `📄 Printing Page ${currentPagePrinted} of ${totalPagesToPrint}`}
-                                                    </span>
-                                                )}
+                                            {isReleasing && (
+                                                <div className="w-full h-48 relative border-b border-white/10 bg-slate-950/40">
+                                                    <video 
+                                                        src={inVideo} 
+                                                        autoPlay 
+                                                        loop 
+                                                        muted 
+                                                        playsInline 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="p-5">
+                                                <p className="text-base font-bold text-slate-100">
+                                                    {isReleasing 
+                                                        ? "Printing document pages... Please wait."
+                                                        : "Your printing is completed! Please collect your papers from the printer tray."}
+                                                </p>
+                                                <div className={`mt-2 flex flex-col items-center justify-center gap-1.5 text-xs font-bold ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
+                                                    <span>{isReleasing ? "🖨️ Hardware releasing prints..." : "🖨️ Counter Release successful"}</span>
+                                                    {isReleasing && (
+                                                        <span className="text-lg font-black text-white mt-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-xl">
+                                                            {currentPagePrinted === 0 
+                                                                ? "Preparing printer..." 
+                                                                : `📄 Printing Page ${currentPagePrinted} of ${totalPagesToPrint}`}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </motion.div>
                                     </div>
@@ -613,11 +628,20 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-4 py-2 shadow-lg ${palette.chip} ${palette.glow}`}>
-                                                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/66">OTP</p>
-                                                                            <p className="font-mono text-3xl font-black tracking-[0.16em] text-white">
-                                                                                {order.otpCode}
-                                                                            </p>
+                                                                        <div className={`rounded-2xl border px-3 py-1.5 shadow-lg ${palette.chip} ${palette.glow} flex items-center justify-between gap-2.5`}>
+                                                                            <div className="text-left">
+                                                                                <p className="text-[9px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
+                                                                                <p className="font-mono text-2xl font-black tracking-wider text-white mt-1 leading-none">
+                                                                                    {order.otpCode}
+                                                                                </p>
+                                                                            </div>
+                                                                            <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-0.5">
+                                                                                <img 
+                                                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=40x40&data=${encodeURIComponent(`https://saipraveen.site/blocks?orderId=${order.orderId}&otp=${order.otpCode}&block=${encodeURIComponent(order.blockLocation)}&fileName=${encodeURIComponent(order.fileName)}`)}`} 
+                                                                                    alt="QR"
+                                                                                    className="w-full h-full object-contain"
+                                                                                />
+                                                                            </div>
                                                                         </div>
                                                                     ) : (
                                                                         <div className={`rounded-2xl border px-4 py-3 shadow-lg ${palette.chip} ${palette.glow}`}>

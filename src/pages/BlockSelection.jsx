@@ -7,6 +7,7 @@ import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
 import blocksVideo from "../assets/blocks.mp4";
 import collectVideo from "../assets/collect.mp4";
+import inVideo from "../assets/in.mp4";
 import { 
   User, 
   LogOut, 
@@ -379,12 +380,12 @@ function BlockSelection() {
             setCurrentPagePrinted(1);
 
             if (totalPagesToPrint === 1) {
-                // If only 1 page, wait 5.5s for the page to print before completing
+                // If only 1 page, wait 5.0s for the page to print before completing
                 timerId = setTimeout(() => {
                     setTrackingOrderStatus("COMPLETED");
-                }, 5500);
+                }, 5000);
             } else {
-                // If multiple pages, start the 5.5s interval
+                // If multiple pages, start the 5.0s interval
                 let current = 1;
                 const intervalId = setInterval(() => {
                     current += 1;
@@ -392,12 +393,12 @@ function BlockSelection() {
 
                     if (current >= totalPagesToPrint) {
                         clearInterval(intervalId);
-                        // Wait one final 5.5s for the last page to finish printing
+                        // Wait one final 5.0s for the last page to finish printing
                         timerId = setTimeout(() => {
                             setTrackingOrderStatus("COMPLETED");
-                        }, 5500);
+                        }, 5000);
                     }
-                }, 5500);
+                }, 5000);
 
                 timerId = intervalId;
             }
@@ -1422,16 +1423,25 @@ function BlockSelection() {
                                     exit={{ opacity: 0 }}
                                     className="space-y-6"
                                 >
-                                    <div className="w-48 h-48 mx-auto relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900/50 flex items-center justify-center p-2">
-                                        <div className="absolute inset-0 border-4 border-t-amber-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
-                                        <span className="text-6xl animate-bounce" style={{ animationDuration: '0.8s' }}>📄</span>
+                                    <div className="w-64 h-64 mx-auto relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900/50 flex items-center justify-center">
+                                        <video 
+                                            src={inVideo} 
+                                            autoPlay 
+                                            loop 
+                                            muted 
+                                            playsInline 
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">Printing in progress</span>
                                         <h2 className="text-3xl font-black tracking-tight mt-3 text-amber-300">Printing Document</h2>
                                         <p className="text-sm text-cyan-200/60 font-semibold">Hardware active. Please stay near the kiosk tray.</p>
                                         <p className="text-lg font-black text-white mt-4 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl max-w-xs mx-auto">
-                                            📄 Printing Page <span className="text-cyan-300">{currentPagePrinted}</span> of <span className="text-cyan-300">{totalPagesToPrint}</span>
+                                            {currentPagePrinted === 0 
+                                                ? "Preparing printer..." 
+                                                : <span>📄 Printing Page <span className="text-cyan-300">{currentPagePrinted}</span> of <span className="text-cyan-300">{totalPagesToPrint}</span></span>
+                                            }
                                         </p>
                                     </div>
                                 </motion.div>
