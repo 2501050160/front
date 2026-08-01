@@ -1022,9 +1022,6 @@ function Dashboard() {
                     <section className="dashboard-stage-card relative rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                         <div className="relative z-10 max-w-2xl text-left">
                             <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Premium Print Workspace</p>
-                            <h1 className="mt-3 text-4xl md:text-5xl font-black leading-tight text-white">
-                                Upload. Pay. Print from your campus kiosk.
-                            </h1>
                             
                             {/* Visual steps flow */}
                             <div className="mt-6 flex flex-col sm:flex-row gap-4 sm:items-center">
@@ -1170,29 +1167,7 @@ function Dashboard() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
                         >
-                            <div className="section-header">
-                                <div>
-                                    <p className="eyebrow">Step 1</p>
-                                    <h2 className="text-2xl font-black text-white">
-                                        Upload Files
-                                    </h2>
-                                </div>
-
-                                <span className={uploaded ? "status-pill status-created" : "status-pill status-unpaid"}>
-                                    {uploaded ? "Uploaded" : "Waiting"}
-                                </span>
-                            </div>
-
-                            <div className="mb-4 text-left">
-                                <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                    Printing Location
-                                </span>
-                                <div className="field !bg-white/10 !border-white/15 !text-white">
-                                    {blockLocation}
-                                </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6 mt-4">
+                            <div className="grid md:grid-cols-2 gap-6">
                                 {/* Left side: How to Upload Video */}
                                 <div className="rounded-xl border border-slate-200/60 overflow-hidden bg-slate-50 relative flex items-center justify-center p-1.5 h-[220px]">
                                     <video 
