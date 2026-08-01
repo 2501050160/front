@@ -449,7 +449,14 @@ function BlockSelection() {
         setInjectingBulk(true);
         setInjectProgress("Initializing mock file...");
         try {
-            const blob = new Blob(["%PDF-1.4 mock pdf data"], { type: "application/pdf" });
+            const base64Pdf = "JVBERi0xLjQKMSAwIG9iaikKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBSCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9UeXBlIC9QYWdlcwovS2lkcyBbMyAwIFJdCi9Db3VudCAxCj4+CmVuZG9iagozIDAgb2JqCjw8Ci9UeXBlIC9QYWdlCi9QYXJlbnQgMiAwIFIKL01lZGlhQm94IFswIDAgNTk1IDg0Ml0KL1Jlc291cmNlcyA8PAo+PgovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA1NQo+PgpzdHJlYW0KQlQKL0YxIDEyIFRmCjcyIDcxMiBUZAkKKGVsbG8gV29ybGQpIFRqCkVOCmVuZHN0cmVhbQplbmRvYmoKeHRyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMDcwIDAwMDAwIG4gCjAwMDAwMDAxMjAgMDAwMDAgbCAKMDAwMDAwMDIxOSAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDUKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjMyNgolJUVPRg==";
+            const byteCharacters = atob(base64Pdf);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: "application/pdf" });
             const mockFile = new File([blob], `test_kiosk_${blockName.replace(/\s+/g, "_")}.pdf`, { type: "application/pdf" });
 
             for (let i = 1; i <= count; i++) {

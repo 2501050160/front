@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import api from "../services/api";
-import QueueCard from "../components/QueueCard";
 import { getBlockTheme } from "../config/blockThemes";
 import studentAd from "../assets/cloud_print_student_offers_ad.png";
 import collectVideo from "../assets/collect.mp4";
@@ -468,9 +467,9 @@ function DisplayPanel() {
                                         </section>
                                     )}
 
-                                    <section className="display-glass p-7">
+                                    <section className="display-glass overflow-hidden p-0">
                                         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-                                            <div>
+                                            <div className="p-7 pb-0">
                                                 <p
                                                     className="text-sm font-black uppercase tracking-[0.25em]"
                                                     style={{ color: theme.accent }}
@@ -484,7 +483,7 @@ function DisplayPanel() {
                                                     Students can find their OTP and queue position here.
                                                 </p>
                                             </div>
-                                            <div className="flex gap-3">
+                                            <div className="flex gap-3 p-7 pb-0">
                                                 <div className="rounded-2xl border border-white/12 bg-white/10 px-5 py-3 text-center">
                                                     <p className="text-3xl font-black text-white">{queueOrders.length}</p>
                                                     <p className="text-[10px] font-black uppercase tracking-wider text-cyan-50/58">Total</p>
@@ -496,25 +495,83 @@ function DisplayPanel() {
                                             </div>
                                         </div>
 
-                                        <div className={`mt-6 grid gap-5 ${
-                                            waitingOrders.length === 1 ? "grid-cols-1" :
-                                            waitingOrders.length === 2 ? "grid-cols-2" :
-                                            waitingOrders.length === 3 ? "grid-cols-3" :
-                                            "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                                        }`}>
-                                            {waitingOrders.slice(queuePageIndex * 6, (queuePageIndex + 1) * 6).map((order, index) => (
-                                                <QueueCard
-                                                    key={order.id}
-                                                    order={order}
-                                                    index={index}
-                                                />
-                                            ))}
-
-                                            {waitingOrders.length === 0 && (
-                                                <div className="col-span-full rounded-xl bg-white/10 p-10 text-center text-2xl font-black text-slate-300">
-                                                    No waiting orders
+                                        <div className="p-7">
+                                            <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
+                                                <div className="grid grid-cols-[90px_1.4fr_1fr_170px_150px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                    <span>Pos</span>
+                                                    <span>Order</span>
+                                                    <span>Student</span>
+                                                    <span className="text-center">OTP / Status</span>
+                                                    <span className="text-right">Details</span>
                                                 </div>
-                                            )}
+
+                                                <div className="divide-y divide-white/10">
+                                                    {waitingOrders.slice(queuePageIndex * 6, (queuePageIndex + 1) * 6).map((order, index) => {
+                                                        const isPendingScan = order.status === "PENDING_SCAN";
+                                                        return (
+                                                            <motion.div
+                                                                key={order.id}
+                                                                className="grid grid-cols-[90px_1.4fr_1fr_170px_150px] items-center gap-0 px-5 py-5 transition-colors hover:bg-white/8"
+                                                                initial={{ opacity: 0, x: -18 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: index * 0.04 }}
+                                                            >
+                                                                <div>
+                                                                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/10 text-xl font-black text-white">
+                                                                        {queuePageIndex * 6 + index + 1}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <p className="truncate text-3xl font-black leading-none text-white">
+                                                                        {order.orderId}
+                                                                    </p>
+                                                                    <p className="mt-1 text-xs font-black uppercase tracking-widest text-cyan-50/46">
+                                                                        Waiting for print release
+                                                                    </p>
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <p className="truncate text-2xl font-black text-cyan-50">
+                                                                        {order.customerName || "Customer"}
+                                                                    </p>
+                                                                    <p className="mt-1 text-xs font-bold text-cyan-50/52">
+                                                                        {order.printType || "BW"} print
+                                                                    </p>
+                                                                </div>
+                                                                <div className="text-center">
+                                                                    {isPendingScan ? (
+                                                                        <div className="rounded-2xl border border-cyan-300/26 bg-cyan-300/12 px-4 py-2">
+                                                                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-100/62">OTP</p>
+                                                                            <p className="font-mono text-3xl font-black tracking-[0.16em] text-white">
+                                                                                {order.otpCode}
+                                                                            </p>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="rounded-2xl border border-amber-300/26 bg-amber-300/12 px-4 py-3">
+                                                                            <p className="text-xl font-black uppercase tracking-wider text-amber-100">
+                                                                                {order.status === "CANCEL_WINDOW" ? "Confirming" : "Waiting"}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="text-lg font-black text-white">
+                                                                        {order.selectedPages || "ALL"}
+                                                                    </p>
+                                                                    <p className="mt-1 text-xs font-black uppercase tracking-wider text-cyan-50/52">
+                                                                        {order.copies || 1} copies
+                                                                    </p>
+                                                                </div>
+                                                            </motion.div>
+                                                        );
+                                                    })}
+
+                                                    {waitingOrders.length === 0 && (
+                                                        <div className="p-12 text-center text-2xl font-black text-slate-300">
+                                                            No waiting orders
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </section>
                                 </motion.div>
