@@ -11,6 +11,7 @@ import howToUpload from "../assets/how_to_upload.mp4";
 import walletVideo from "../assets/wallet_video.mp4";
 import myOrdersVideo from "../assets/my_orders_video.mp4";
 import ordersLoading from "../assets/orders_loading.mp4";
+import referralIcon from "../assets/referral-icon.jpg";
 
 function Dashboard() {
     const [bwPrice, setBwPrice] = useState(2);
@@ -40,6 +41,11 @@ function Dashboard() {
     const [couponCode, setCouponCode] = useState("");
     const [couponApplied, setCouponApplied] = useState(false);
     const [couponDetails, setCouponDetails] = useState(null);
+    
+    // Referral states
+    const [haveReferral, setHaveReferral] = useState(false);
+    const [enteredReferralCode, setEnteredReferralCode] = useState("");
+    const [referralApplied, setReferralApplied] = useState(false);
 
     // Active Navigation Tab
     const [activeTab, setActiveTab] = useState("print");
@@ -319,10 +325,16 @@ function Dashboard() {
             setCouponCode("");
             setCouponApplied(false);
             setCouponDetails(null);
+            
+            // Reset referrals
+            setHaveReferral(false);
+            setEnteredReferralCode("");
+            setReferralApplied(false);
             showAlert("Success", "Files processed and uploaded successfully!", "success");
         } catch (error) {
             console.error(error);
-            showAlert("Upload Failed", "Could not upload and process the files.", "error");
+            const detailedError = error.response?.data?.message || error.response?.data || error.message || "Could not upload and process the files.";
+            showAlert("Upload Failed", detailedError, "error");
         } finally {
             setUploading(false);
         }
@@ -425,6 +437,39 @@ function Dashboard() {
         } catch (error) {
             console.error(error);
             showAlert("Invalid Coupon", "The entered coupon code is invalid or expired.", "error");
+        }
+    };
+
+    const applyReferral = async () => {
+        if (referralApplied) {
+            showAlert("Already Applied", "Referral code has already been applied.", "warning");
+            return;
+        }
+        if (!enteredReferralCode) {
+            showAlert("Required Field", "Please enter referral code.", "warning");
+            return;
+        }
+        try {
+            const formData = new URLSearchParams();
+            formData.append("orderId", orderId);
+            formData.append("referralCode", enteredReferralCode);
+            formData.append("userId", userId);
+
+            const response = await api.post("/pdf/applyReferral", formData, {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            });
+
+            if (response.data && response.data.message && response.data.message.toLowerCase().includes("successfully")) {
+                setReferralApplied(true);
+                showAlert("Success", response.data.message, "success");
+            } else {
+                showAlert("Referral Failed", response.data.message || "Failed to apply referral code", "error");
+            }
+        } catch (error) {
+            console.error(error);
+            showAlert("Referral Failed", error.response?.data?.message || error.response?.data || "Could not apply referral code.", "error");
         }
     };
 
@@ -1172,65 +1217,127 @@ function Dashboard() {
                             </div>
 
                             {/* Coupon Section */}
+                            {/* Coupon & Referral Section (Side by Side) */}
                             {uploaded && (
-                                <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                                    {/* Premium Ticket Coupon Button */}
-                                    <button
-                                        type="button"
-                                        onClick={() => !couponApplied && setHaveCoupon(!haveCoupon)}
-                                        disabled={couponApplied}
-                                        className={`w-fit h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
-                                            couponApplied 
-                                            ? 'bg-emerald-600 border-emerald-700/30' 
-                                            : 'bg-red-600 border-red-700/30 shadow-[0_4px_15px_rgba(220,38,38,0.25)]'
-                                        }`}
-                                    >
-                                        {/* Left section: White barcode */}
-                                        <div className="w-12 bg-white flex items-center justify-center relative border-r border-dashed border-slate-300">
-                                            {/* Top and Bottom Scallop cutouts */}
-                                            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
-                                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
-                                            
-                                            {/* Barcode representation */}
-                                            <div className="flex gap-[1.5px] items-center justify-center h-8">
-                                                <div className="w-[1.5px] h-full bg-slate-900" />
-                                                <div className="w-[3px] h-full bg-slate-900" />
-                                                <div className="w-[1px] h-full bg-slate-900" />
-                                                <div className="w-[2px] h-full bg-slate-900" />
-                                                <div className="w-[1px] h-full bg-slate-900" />
-                                                <div className="w-[3px] h-full bg-slate-900" />
-                                                <div className="w-[1.5px] h-full bg-slate-900" />
-                                            </div>
-                                        </div>
-
-                                        {/* Right section: Red/Green Coupon text */}
-                                        <div className="px-3.5 flex flex-col justify-center text-left text-white">
-                                            <span className="text-[8px] font-black tracking-widest uppercase opacity-85">COUPON</span>
-                                            <span className="text-xs font-black whitespace-nowrap mt-0.5">
-                                                {couponApplied ? "COUPON SAVED!" : "HAVE A COUPON?"}
-                                            </span>
-                                        </div>
-                                    </button>
-
-                                    {(haveCoupon || couponApplied) && (
-                                        <div className="mt-3 flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Coupon code"
-                                                value={couponCode}
-                                                onChange={(e) => setCouponCode(e.target.value)}
-                                                className="field text-xs py-1.5"
-                                                disabled={couponApplied}
-                                            />
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    {/* Coupon Section */}
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 flex flex-col justify-between">
+                                        <div>
                                             <button
-                                                onClick={applyCoupon}
+                                                type="button"
+                                                onClick={() => !couponApplied && setHaveCoupon(!haveCoupon)}
                                                 disabled={couponApplied}
-                                                className={couponApplied ? "btn secondary text-xs py-1.5 px-3" : "btn text-xs py-1.5 px-3"}
+                                                className={`w-full h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
+                                                    couponApplied 
+                                                    ? 'bg-emerald-600 border-emerald-700/30' 
+                                                    : 'bg-red-600 border-red-700/30 shadow-[0_4px_15px_rgba(220,38,38,0.25)]'
+                                                }`}
                                             >
-                                                {couponApplied ? "Applied" : "Apply"}
+                                                {/* Left section: White barcode */}
+                                                <div className="w-16 bg-white flex items-center justify-center relative border-r border-dashed border-slate-300">
+                                                    {/* Top and Bottom Scallop cutouts */}
+                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
+                                                    
+                                                    {/* Barcode representation */}
+                                                    <div className="flex gap-[2px] items-center justify-center h-10">
+                                                        <div className="w-[2px] h-full bg-slate-900" />
+                                                        <div className="w-[4px] h-full bg-slate-900" />
+                                                        <div className="w-[1.5px] h-full bg-slate-900" />
+                                                        <div className="w-[3px] h-full bg-slate-900" />
+                                                        <div className="w-[1.5px] h-full bg-slate-900" />
+                                                        <div className="w-[4px] h-full bg-slate-900" />
+                                                        <div className="w-[2px] h-full bg-slate-900" />
+                                                    </div>
+                                                </div>
+
+                                                {/* Right section: Red/Green Coupon text */}
+                                                <div className="px-3.5 flex flex-col justify-center text-left text-white">
+                                                    <span className="text-[8px] font-black tracking-widest uppercase opacity-85">COUPON</span>
+                                                    <span className="text-xs font-black whitespace-nowrap mt-0.5">
+                                                        {couponApplied ? "APPLIED!" : "HAVE COUPON?"}
+                                                    </span>
+                                                </div>
                                             </button>
                                         </div>
-                                    )}
+
+                                        {(haveCoupon || couponApplied) && (
+                                            <div className="mt-3 flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Coupon code"
+                                                    value={couponCode}
+                                                    onChange={(e) => setCouponCode(e.target.value)}
+                                                    className="field text-xs py-1.5 w-full"
+                                                    disabled={couponApplied}
+                                                />
+                                                <button
+                                                    onClick={applyCoupon}
+                                                    disabled={couponApplied}
+                                                    className={couponApplied ? "btn secondary text-xs py-1.5 px-3" : "btn text-xs py-1.5 px-3"}
+                                                >
+                                                    {couponApplied ? "Applied" : "Apply"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Referral Section */}
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 flex flex-col justify-between">
+                                        <div>
+                                            <button
+                                                type="button"
+                                                onClick={() => !referralApplied && setHaveReferral(!haveReferral)}
+                                                disabled={referralApplied}
+                                                className={`w-full h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer bg-white ${
+                                                    referralApplied 
+                                                    ? 'bg-emerald-600 border-emerald-700/30' 
+                                                    : 'border-slate-200'
+                                                }`}
+                                            >
+                                                {/* Left section: Referral icon image */}
+                                                <div className="w-16 bg-white flex items-center justify-center relative border-r border-dashed border-slate-200">
+                                                    {/* Top and Bottom Scallop cutouts */}
+                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
+                                                    
+                                                    <img
+                                                        src={referralIcon}
+                                                        alt="Referral"
+                                                        className="w-10 h-10 object-contain rounded-md"
+                                                    />
+                                                </div>
+
+                                                {/* Right section: Referral text */}
+                                                <div className={`px-3.5 flex flex-col justify-center text-left ${referralApplied ? 'text-white' : 'text-slate-800'}`}>
+                                                    <span className={`text-[8px] font-black tracking-widest uppercase ${referralApplied ? 'text-white/80' : 'text-slate-400'}`}>REFERRAL</span>
+                                                    <span className="text-xs font-black whitespace-nowrap mt-0.5">
+                                                        {referralApplied ? "APPLIED!" : "REFERRAL CODE?"}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </div>
+
+                                        {(haveReferral || referralApplied) && (
+                                            <div className="mt-3 flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Referral code"
+                                                    value={enteredReferralCode}
+                                                    onChange={(e) => setEnteredReferralCode(e.target.value)}
+                                                    className="field text-xs py-1.5 w-full"
+                                                    disabled={referralApplied}
+                                                />
+                                                <button
+                                                    onClick={applyReferral}
+                                                    disabled={referralApplied}
+                                                    className={referralApplied ? "btn secondary text-xs py-1.5 px-3" : "btn text-xs py-1.5 px-3"}
+                                                >
+                                                    {referralApplied ? "Applied" : "Apply"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </motion.aside>
