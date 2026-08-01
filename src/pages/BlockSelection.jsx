@@ -681,10 +681,17 @@ function BlockSelection() {
                     </div>
 
                     {/* Profile & Dropdown Sign Out */}
-                    <div className="flex items-center gap-4 relative">
+                    <div className="flex items-center gap-3 relative">
+                        <button
+                            onClick={() => navigate("/my-orders")}
+                            className="px-4 py-2 h-10 rounded-xl bg-white/12 border border-white/15 text-white hover:border-cyan-200/50 hover:bg-white/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                            View Orders
+                        </button>
+
                         <button
                             onClick={() => setShowNotifPanel(true)}
-                            className="relative w-10 h-10 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center text-cyan-50 hover:text-white hover:border-cyan-200/50 transition-colors"
+                            className="relative w-10 h-10 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center text-cyan-50 hover:text-white hover:border-cyan-200/50 transition-colors cursor-pointer"
                         >
                             <Bell className="w-4 h-4" />
                             {notifications.length > 0 && (
@@ -751,19 +758,6 @@ function BlockSelection() {
                             </p>
                         </div>
 
-                        {/* Direct action links */}
-                        <div className="p-6 rounded-[24px] flex items-center justify-between gap-4 border border-white/12 bg-white/10 backdrop-blur-2xl shadow-2xl shadow-slate-950/20">
-                            <div>
-                                <p className="text-xs font-bold text-white">Ready to upload files?</p>
-                                <p className="text-[10px] text-cyan-50/65 font-semibold mt-0.5">Proceed to document upload directly</p>
-                            </div>
-                            <button 
-                                onClick={() => navigate("/my-orders")}
-                                className="px-5 h-11 rounded-xl bg-white text-slate-950 border border-white hover:bg-cyan-50 text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-cyan-950/20"
-                            >
-                                View Order History <ArrowRight className="w-4 h-4 text-slate-400" />
-                            </button>
-                        </div>
                     </motion.div>
 
                     {/* Right (7 columns: Simple, transparent, and smaller 'Have OTP' action card / inline release form) */}
