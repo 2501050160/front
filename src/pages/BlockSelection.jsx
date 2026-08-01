@@ -517,6 +517,14 @@ function BlockSelection() {
             .some(t => t && (t === userName.toLowerCase() || t === userEmail.toLowerCase()))
     );
 
+    console.log("=== Tester Sandbox Debug ===", {
+        testerModeEnabled: systemSettings?.testerModeEnabled,
+        allowedTestersList: systemSettings?.testerUsernames,
+        currentUserName: userName,
+        currentUserEmail: userEmail,
+        isDetectedAsTester: !!isTester
+    });
+
     return (
         <main className="premium-block-bg min-h-screen py-6 px-0 sm:px-4 md:px-8 xl:px-12 relative overflow-hidden font-sans text-slate-950 flex flex-col justify-between">
             {/* Styles for glassmorphism, background, and maintenance stamp */}
