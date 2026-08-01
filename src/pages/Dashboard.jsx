@@ -1041,7 +1041,7 @@ function Dashboard() {
                         </div>
                         
                         {/* Looping Machine Video */}
-                        <div className="relative h-48 w-full md:w-80 shrink-0 rounded-[20px] overflow-hidden border border-white/10 shadow-2xl bg-slate-900/50 p-1 flex items-center justify-center">
+                        <div className="relative h-64 w-full md:w-[460px] shrink-0 rounded-[20px] overflow-hidden border border-white/10 shadow-2xl bg-slate-900/50 p-1 flex items-center justify-center">
                             <video 
                                 autoPlay 
                                 loop 
@@ -1347,41 +1347,40 @@ function Dashboard() {
                                 </div>
                             )}
 
-                            {/* Printer Info Panel */}
-                            <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
-                                <p className="eyebrow">Printer Details</p>
-                                <h3 className="mt-1 text-sm font-black text-slate-900">
+                              {/* Printer Info Panel - Sleek Dark Theme */}
+                            <div className="mt-6 rounded-xl border border-white/10 bg-slate-950/40 p-4">
+                                <p className="eyebrow text-cyan-200">Printer Details</p>
+                                <h3 className="mt-1 text-sm font-black text-white">
                                     {blockLocation} Status
                                 </h3>
                                 
                                 <div className="mt-3 space-y-2">
                                     <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-500">Connection</span>
+                                        <span className="font-bold text-slate-300">Connection</span>
                                         <span className={`status-pill ${systemStatus.agentOnline ? 'status-completed' : 'status-unpaid'}`} style={{ minHeight: '20px', fontSize: '9px', padding: '2px 8px' }}>
                                             {systemStatus.agentOnline ? 'ONLINE' : 'OFFLINE'}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-500">Configured</span>
+                                        <span className="font-bold text-slate-300">Configured</span>
                                         <span className={`status-pill ${systemStatus.printerConfigured ? 'status-completed' : 'status-unpaid'}`} style={{ minHeight: '20px', fontSize: '9px', padding: '2px 8px' }}>
                                             {systemStatus.printerConfigured ? 'YES' : 'NO'}
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs border-t border-slate-200/60 pt-2 mt-2">
-                                        <span className="font-bold text-slate-500">Paper Remaining</span>
-                                        <span className={`font-black ${paperCount < 50 ? 'text-rose-500' : 'text-emerald-600'}`}>
+                                    <div className="flex items-center justify-between text-xs border-t border-white/10 pt-2 mt-2">
+                                        <span className="font-bold text-slate-300">Paper Remaining</span>
+                                        <span className={`font-black ${paperCount < 50 ? 'text-rose-400' : 'text-emerald-400'}`}>
                                             {paperCount} sheets
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Coupon Section */}
-                            {/* Coupon & Referral Section (Side by Side) */}
+                            {/* Coupon & Referral Section (Side by Side) - Sleek Dark Theme */}
                             {uploaded && (
                                 <div className="grid grid-cols-2 gap-4 mt-4">
                                     {/* Coupon Section */}
-                                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 flex flex-col justify-between">
+                                    <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between">
                                         <div>
                                             <button
                                                 type="button"
@@ -1396,8 +1395,8 @@ function Dashboard() {
                                                 {/* Left section: White barcode */}
                                                 <div className="w-16 bg-white flex items-center justify-center relative border-r border-dashed border-slate-300">
                                                     {/* Top and Bottom Scallop cutouts */}
-                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
-                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
+                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 translate-y-1/2" />
                                                     
                                                     {/* Barcode representation */}
                                                     <div className="flex gap-[2px] items-center justify-center h-10">
@@ -1428,13 +1427,13 @@ function Dashboard() {
                                                     placeholder="Coupon code"
                                                     value={couponCode}
                                                     onChange={(e) => setCouponCode(e.target.value)}
-                                                    className="field text-xs py-1.5 w-full"
+                                                    className="field text-xs py-1.5 w-full !bg-white/10 !border-white/15 !text-white"
                                                     disabled={couponApplied}
                                                 />
                                                 <button
                                                     onClick={applyCoupon}
                                                     disabled={couponApplied}
-                                                    className={couponApplied ? "btn secondary text-xs py-1.5 px-3" : "btn text-xs py-1.5 px-3"}
+                                                    className={couponApplied ? "btn secondary text-xs py-1.5 px-3 cursor-pointer" : "btn text-xs py-1.5 px-3 cursor-pointer"}
                                                 >
                                                     {couponApplied ? "Applied" : "Apply"}
                                                 </button>
@@ -1443,23 +1442,23 @@ function Dashboard() {
                                     </div>
 
                                     {/* Referral Section */}
-                                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 flex flex-col justify-between">
+                                    <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between">
                                         <div>
                                             <button
                                                 type="button"
                                                 onClick={() => !referralApplied && setHaveReferral(!haveReferral)}
                                                 disabled={referralApplied}
-                                                className={`w-full h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer bg-white ${
+                                                className={`w-full h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer bg-white/10 ${
                                                     referralApplied 
                                                     ? 'bg-emerald-600 border-emerald-700/30' 
-                                                    : 'border-slate-200'
+                                                    : 'border-white/10'
                                                 }`}
                                             >
                                                 {/* Left section: Referral icon image */}
-                                                <div className="w-16 bg-white flex items-center justify-center relative border-r border-dashed border-slate-200">
+                                                <div className="w-16 bg-white/10 flex items-center justify-center relative border-r border-dashed border-white/10">
                                                     {/* Top and Bottom Scallop cutouts */}
-                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 -translate-y-1/2" />
-                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-900 rounded-full translate-x-1/2 translate-y-1/2" />
+                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 translate-y-1/2" />
                                                     
                                                     <img
                                                         src={referralIcon}
@@ -1469,8 +1468,8 @@ function Dashboard() {
                                                 </div>
 
                                                 {/* Right section: Referral text */}
-                                                <div className={`px-3.5 flex flex-col justify-center text-left ${referralApplied ? 'text-white' : 'text-slate-800'}`}>
-                                                    <span className={`text-[8px] font-black tracking-widest uppercase ${referralApplied ? 'text-white/80' : 'text-slate-400'}`}>REFERRAL</span>
+                                                <div className="px-3.5 flex flex-col justify-center text-left text-white">
+                                                    <span className="text-[8px] font-black tracking-widest uppercase opacity-85">REFERRAL</span>
                                                     <span className="text-xs font-black whitespace-nowrap mt-0.5">
                                                         {referralApplied ? "APPLIED!" : "REFERRAL CODE?"}
                                                     </span>
@@ -1485,13 +1484,13 @@ function Dashboard() {
                                                     placeholder="Referral code"
                                                     value={enteredReferralCode}
                                                     onChange={(e) => setEnteredReferralCode(e.target.value)}
-                                                    className="field text-xs py-1.5 w-full"
+                                                    className="field text-xs py-1.5 w-full !bg-white/10 !border-white/15 !text-white"
                                                     disabled={referralApplied}
                                                 />
                                                 <button
                                                     onClick={applyReferral}
                                                     disabled={referralApplied}
-                                                    className={referralApplied ? "btn secondary text-xs py-1.5 px-3" : "btn text-xs py-1.5 px-3"}
+                                                    className={referralApplied ? "btn secondary text-xs py-1.5 px-3 cursor-pointer" : "btn text-xs py-1.5 px-3 cursor-pointer"}
                                                 >
                                                     {referralApplied ? "Applied" : "Apply"}
                                                 </button>
@@ -1500,6 +1499,7 @@ function Dashboard() {
                                     </div>
                                 </div>
                             )}
+
                         </motion.aside>
 
                         <AnimatePresence>
