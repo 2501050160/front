@@ -764,85 +764,27 @@ function BlockSelection() {
                         </div>
                     </motion.div>
 
-                    {/* Right (7 columns: Direct OTP verification area with transparent background) */}
+                    {/* Right (7 columns: Simple, transparent, and smaller 'Have OTP' action card) */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.55 }}
-                        className="lg:col-span-7 rounded-[30px] p-6 border border-white/10 bg-white/5 backdrop-blur-md relative flex flex-col justify-between shadow-2xl shadow-slate-950/20 text-left min-h-[340px]"
+                        className="lg:col-span-7 flex items-center justify-center py-4"
                     >
-                        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-amber-400 via-orange-400 to-[#9F6BFF] rounded-t-[30px]" />
-                        
-                        <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">🔑 Secure Release</span>
-                            <h2 className="text-3xl font-black text-white mt-4 tracking-tight">Direct Print Release</h2>
-                            <p className="text-xs text-cyan-50/70 mt-1 font-semibold">Enter your order ID and the 4-digit OTP received during checkout to release your print job instantly.</p>
-                        </div>
-
-                        <div className="mt-4 grid gap-4 md:grid-cols-2">
-                            <div className="space-y-1.5 text-left">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-300">Select Pending Order</label>
-                                {fetchingOrders ? (
-                                    <p className="text-slate-400 text-xs py-3 font-semibold">Loading your pending orders...</p>
-                                ) : pendingOrders.length === 0 ? (
-                                    <p className="text-rose-400 text-xs font-semibold bg-rose-500/10 py-3 px-4 rounded-xl border border-rose-500/20">
-                                        No pending prints to release.
-                                    </p>
-                                ) : (
-                                    <select
-                                        value={selectedOrderId}
-                                        onChange={(e) => {
-                                            setOtpError("");
-                                            setSelectedOrderId(e.target.value);
-                                        }}
-                                        className="w-full h-11 rounded-xl bg-slate-950/60 border border-white/10 text-xs font-bold text-white focus:border-amber-400 focus:outline-none appearance-none px-4 cursor-pointer"
-                                    >
-                                        {pendingOrders.map(order => (
-                                            <option key={order.orderId} value={order.orderId} className="bg-slate-950 text-white">
-                                                {order.orderId} - {order.fileName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
+                        <motion.div
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={handleOpenOtpModal}
+                            className="glass-panel p-6 rounded-[24px] text-center cursor-pointer max-w-xs w-full border border-white/10 hover:border-amber-400/40 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
+                            style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+                        >
+                            <div className="absolute top-[-10%] right-[-10%] w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+                            <span className="text-4xl animate-pulse">🔑</span>
+                            <div>
+                                <h3 className="text-lg font-black text-white tracking-tight">Have OTP?</h3>
+                                <p className="text-[11px] text-cyan-200/60 mt-0.5 font-bold">Release your print job here</p>
                             </div>
-
-                            <div className="space-y-1.5 text-left">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-300">4-Digit OTP Code</label>
-                                <input
-                                    type="text"
-                                    maxLength={4}
-                                    placeholder="••••"
-                                    value={inputOtp}
-                                    onChange={(e) => {
-                                        setOtpError("");
-                                        setInputOtp(e.target.value);
-                                    }}
-                                    className="w-full h-11 rounded-xl bg-slate-950/60 border border-white/10 text-center text-sm font-bold text-white placeholder-slate-600 tracking-[0.5em] focus:border-amber-400 focus:outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        {selectedOrderId && pendingOrders.find(o => o.orderId === selectedOrderId) && (
-                            <div className="mt-3 text-xs font-bold text-amber-300">
-                                ⏱️ OTP Expires in: <span className="font-mono text-sm font-black bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">{formatTime(otpTimeLeft)}</span>
-                            </div>
-                        )}
-
-                        {otpError && (
-                            <p className="text-xs font-bold text-rose-400 mt-3 bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-xl">
-                                ⚠️ {otpError}
-                            </p>
-                        )}
-
-                        <div className="mt-4 flex gap-4">
-                            <button
-                                onClick={handleDirectRelease}
-                                disabled={releasing || pendingOrders.length === 0}
-                                className="h-11 px-6 rounded-xl bg-gradient-to-r from-amber-300 to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {releasing ? "Releasing..." : "Verify & Print"} <ArrowRight className="w-4 h-4" />
-                            </button>
-                        </div>
+                        </motion.div>
                     </motion.div>
                 </div>
 
