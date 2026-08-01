@@ -332,7 +332,7 @@ function Checkout() {
                     }
 
                     // Directly proceed/finalize order status to spooling instantly
-                    await api.post("/pdf/proceedOrder", null, {
+                    await api.post("/queue/proceed", null, {
                         params: { orderId: order.orderId }
                     });
 

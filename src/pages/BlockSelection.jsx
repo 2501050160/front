@@ -476,7 +476,7 @@ function BlockSelection() {
                 });
 
                 setInjectProgress(`Spooling ${orderId} into print queue...`);
-                await api.post("/pdf/proceedOrder", null, {
+                await api.post("/queue/proceed", null, {
                     params: { orderId }
                 });
             }

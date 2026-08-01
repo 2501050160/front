@@ -404,56 +404,56 @@ function DisplayPanel() {
                                     transition={{ duration: 0.4 }}
                                 >
                                     {currentOrder && (
-                                        <section className="display-glass p-8 relative overflow-hidden">
-                                            <div className="absolute right-4 top-4 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-xs font-black uppercase text-emerald-300 animate-pulse">
-                                                Active
-                                            </div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-slate-300">
-                                                Currently Printing
-                                            </p>
-                                            <p className="mt-2 text-sm font-bold text-white/60">
-                                                {currentOrder.status === "PRINTING"
-                                                    ? "Printing in progress..."
-                                                    : currentOrder.status ===
-                                                      "CANCEL_WINDOW"
-                                                    ? "Confirming Payment"
-                                                    : "Up Next"}
-                                            </p>
-
-                                            <motion.h2
-                                                key={currentOrder.orderId}
-                                                className="mt-3 text-4xl font-black md:text-6xl"
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                            >
-                                                {currentOrder.orderId}
-                                            </motion.h2>
-
-                                            <p className="mt-2 text-2xl font-black text-white/90">
-                                                {currentOrder.customerName || "Customer"}
-                                            </p>
-
-                                            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                                                {[
-                                                    ["Pages", currentOrder.selectedPages],
-                                                    ["Copies", currentOrder.copies],
-                                                    ["Type", currentOrder.printType]
-                                                ].map(([label, value]) => (
-                                                    <div
-                                                        key={label}
-                                                        className="rounded-xl bg-white/10 p-3 backdrop-blur"
-                                                    >
-                                                        <p className="text-xs font-bold text-slate-300">
-                                                            {label}
-                                                        </p>
-                                                        <p className="mt-1 text-xl font-black">
-                                                            {value}
-                                                        </p>
+                                        <section className="display-glass relative overflow-hidden p-7">
+                                            <div className="absolute inset-x-0 top-0 h-1.5" style={{ background: theme.accent }} />
+                                            <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+                                            <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-center">
+                                                <div>
+                                                    <div className="flex flex-wrap items-center gap-3">
+                                                        <span className="rounded-full border border-emerald-300/30 bg-emerald-300/14 px-4 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-emerald-200">
+                                                            Live Print
+                                                        </span>
+                                                        <span className="rounded-full border border-white/12 bg-white/10 px-4 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-cyan-50/70">
+                                                            {currentOrder.status === "PRINTING" ? "In Progress" : currentOrder.status === "CANCEL_WINDOW" ? "Confirming" : "Next Up"}
+                                                        </span>
                                                     </div>
-                                                ))}
+
+                                                    <motion.h2
+                                                        key={currentOrder.orderId}
+                                                        className="mt-4 break-all text-5xl font-black leading-none md:text-7xl"
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                    >
+                                                        {currentOrder.orderId}
+                                                    </motion.h2>
+
+                                                    <p className="mt-3 text-3xl font-black text-cyan-50">
+                                                        {currentOrder.customerName || "Customer"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="grid gap-3">
+                                                    {[
+                                                        ["Pages", currentOrder.selectedPages || "ALL"],
+                                                        ["Copies", currentOrder.copies || 1],
+                                                        ["Print Type", currentOrder.printType || "BW"]
+                                                    ].map(([label, value]) => (
+                                                        <div
+                                                            key={label}
+                                                            className="rounded-2xl border border-white/12 bg-slate-950/28 p-4 backdrop-blur"
+                                                        >
+                                                            <p className="text-xs font-black uppercase tracking-widest text-cyan-50/58">
+                                                                {label}
+                                                            </p>
+                                                            <p className="mt-1 text-2xl font-black text-white">
+                                                                {value}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
 
-                                            <div className="mt-8 h-3 overflow-hidden rounded-full bg-white/10">
+                                            <div className="relative z-10 mt-7 h-3 overflow-hidden rounded-full bg-white/10">
                                                 <motion.div
                                                     className="h-full rounded-full"
                                                     style={{ background: theme.accent }}
@@ -468,28 +468,35 @@ function DisplayPanel() {
                                         </section>
                                     )}
 
-                                    <section className="display-glass p-8">
-                                        <div className="flex items-center justify-between gap-4">
+                                    <section className="display-glass p-7">
+                                        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
                                             <div>
                                                 <p
                                                     className="text-sm font-black uppercase tracking-[0.25em]"
                                                     style={{ color: theme.accent }}
                                                 >
-                                                    Queue
+                                                    Professional Queue
                                                 </p>
-                                                <h3 className="mt-2 text-3xl font-black">
-                                                    Next Orders
+                                                <h3 className="mt-2 text-3xl font-black md:text-4xl">
+                                                    Orders Waiting
                                                 </h3>
+                                                <p className="mt-1 text-sm font-bold text-cyan-50/60">
+                                                    Students can find their OTP and queue position here.
+                                                </p>
                                             </div>
-                                            <span
-                                                className="rounded-full px-4 py-2 text-lg font-black text-slate-950"
-                                                style={{ background: theme.accent }}
-                                            >
-                                                {queueOrders.length}
-                                            </span>
+                                            <div className="flex gap-3">
+                                                <div className="rounded-2xl border border-white/12 bg-white/10 px-5 py-3 text-center">
+                                                    <p className="text-3xl font-black text-white">{queueOrders.length}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-cyan-50/58">Total</p>
+                                                </div>
+                                                <div className="rounded-2xl border border-white/12 bg-white/10 px-5 py-3 text-center">
+                                                    <p className="text-3xl font-black text-white">{waitingOrders.length}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-wider text-cyan-50/58">Waiting</p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div className={`mt-6 grid gap-6 ${
+                                        <div className={`mt-6 grid gap-5 ${
                                             waitingOrders.length === 1 ? "grid-cols-1" :
                                             waitingOrders.length === 2 ? "grid-cols-2" :
                                             waitingOrders.length === 3 ? "grid-cols-3" :
@@ -603,33 +610,35 @@ function DisplayPanel() {
                 </footer>
             </section>
 
-             <motion.div 
-                 drag
-                 dragMomentum={false}
-                 className="fixed bottom-16 left-6 z-40 flex items-center gap-4 p-4 rounded-xl bg-slate-950/90 backdrop-blur-md border border-white/10 shadow-2xl max-w-sm transition-all hover:scale-105 cursor-grab active:cursor-grabbing"
-             >
-                 <div className="p-1.5 bg-white rounded-lg shadow-md shrink-0">
-                     <img 
-                         src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin)}&color=0f172a`} 
-                         alt="Kiosk QR Code"
-                         className="w-[100px] h-[100px] block"
-                     />
-                 </div>
-                 <div className="text-left">
-                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                         No App Needed
-                     </span>
-                     <h4 className="text-base font-black text-white mt-2">
-                         Scan to Print
-                     </h4>
-                     <p className="text-[10px] font-bold text-slate-400 mt-1">
-                         Website Link:
-                     </p>
-                     <code className="text-xs font-black text-cyan-300 block mt-0.5 select-all">
-                         www.saipraveen.site
-                     </code>
-                 </div>
-             </motion.div>
+            {!hasActiveOrPendingOrders && (
+                <motion.div 
+                    drag
+                    dragMomentum={false}
+                    className="fixed bottom-16 left-6 z-40 flex items-center gap-4 p-4 rounded-xl bg-slate-950/90 backdrop-blur-md border border-white/10 shadow-2xl max-w-sm transition-all hover:scale-105 cursor-grab active:cursor-grabbing"
+                >
+                    <div className="p-1.5 bg-white rounded-lg shadow-md shrink-0">
+                        <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin)}&color=0f172a`} 
+                            alt="Kiosk QR Code"
+                            className="w-[100px] h-[100px] block"
+                        />
+                    </div>
+                    <div className="text-left">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                            No App Needed
+                        </span>
+                        <h4 className="text-base font-black text-white mt-2">
+                            Scan to Print
+                        </h4>
+                        <p className="text-[10px] font-bold text-slate-400 mt-1">
+                            Website Link:
+                        </p>
+                        <code className="text-xs font-black text-cyan-300 block mt-0.5 select-all">
+                            www.saipraveen.site
+                        </code>
+                    </div>
+                </motion.div>
+            )}
 
             <AnimatePresence>
                 {false && showFullscreenAd && !activePickup && (
