@@ -308,11 +308,20 @@ function Checkout() {
                 });
             }
 
+            // Directly proceed/finalize order status to spooling instantly
+            try {
+                await api.post("/pdf/proceedOrder", null, {
+                    params: { orderId: order.orderId }
+                });
+            } catch (err) {
+                console.error("Failed to auto-proceed order:", err);
+            }
+
             // Update wallet balance in the background; do not block navigation
             getWalletBalance(userId).catch(err => console.error("Failed to update wallet balance in background:", err));
             
             localStorage.removeItem("order");
-            navigate(`/payment-success?orderId=${order.orderId}&paymentMethod=wallet`);
+            navigate(`/blocks?orderId=${order.orderId}&fileName=${encodeURIComponent(order.fileName)}&block=${encodeURIComponent(order.blockLocation || "")}`);
         } catch (error) {
             console.error(error);
             showAlert("Error", error.response?.data?.message || "Wallet payment failed", "error");
