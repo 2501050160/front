@@ -499,10 +499,38 @@ function ScanToPrint() {
                                     <OtpBarcodeScanner
                                         active={otpTab === "scan" && !!verifyingOrder}
                                         onResult={(decoded) => {
-                                            // Extract only digits from the decoded string
-                                            const digits = decoded.replace(/\D/g, "").slice(0, 4);
-                                            setMobileOtp(digits);
-                                            setOtpTab("keypad"); // switch to keypad to confirm
+                                            // Barcode is formatted as `${orderId}-${otpCode}`
+                                            const parts = decoded.split("-");
+                                            let scannedOrderId = null;
+                                            let scannedOtp = "";
+
+                                            if (parts.length >= 2) {
+                                                scannedOrderId = parts[0].trim();
+                                                scannedOtp = parts[1].replace(/\D/g, "").slice(0, 4);
+                                            } else {
+                                                scannedOtp = decoded.replace(/\D/g, "").slice(0, 4);
+                                            }
+
+                                            // SECURITY CHECK: Verify if orderId belongs to the logged-in user's pending queue
+                                            if (scannedOrderId) {
+                                                const matchingUserOrder = orders.find(o => o.orderId === scannedOrderId);
+                                                if (!matchingUserOrder) {
+                                                    setMobileOtpError(`⛔ Security Alert: Barcode (${scannedOrderId}) does not belong to any of your orders!`);
+                                                    setOtpTab("keypad");
+                                                    return;
+                                                }
+                                                // Target matching user order
+                                                setVerifyingOrder(matchingUserOrder);
+                                            }
+
+                                            if (scannedOtp.length === 4) {
+                                                setMobileOtp(scannedOtp);
+                                                setMobileOtpError("");
+                                                setOtpTab("keypad");
+                                            } else {
+                                                setMobileOtpError("Invalid barcode format. Please try scanning again or enter OTP manually.");
+                                                setOtpTab("keypad");
+                                            }
                                         }}
                                     />
                                 ) : (
