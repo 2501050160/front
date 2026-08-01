@@ -378,7 +378,7 @@ function ScanToPrint() {
                                 </div>
 
                                 {orders.length > 0 && (
-                                    <div className="mt-6 border-t border-slate-100 pt-6 flex flex-col gap-3">
+                                    <div className="mt-6 border-t border-slate-100 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {/* Scan Barcode button — opens modal on Scan tab */}
                                         <button
                                             onClick={() => {
@@ -401,25 +401,25 @@ function ScanToPrint() {
                                                 setOtpTab("scan"); // open directly on scan tab
                                             }}
                                             disabled={releasing || selectedOrderIds.length === 0}
-                                            className="w-full py-3.5 text-sm font-black tracking-wide shadow-xl flex items-center justify-center gap-2 rounded-xl border-2 border-cyan-400 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-700 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="py-3.5 px-4 text-xs md:text-sm font-black tracking-wide shadow-lg flex items-center justify-center gap-2 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
-                                            📷 Scan Barcode to Release ({selectedOrderIds.length} file{selectedOrderIds.length > 1 ? "s" : ""})
+                                            📷 Scan Barcode ({selectedOrderIds.length})
                                         </button>
 
                                         {/* Manual OTP button */}
                                         <button
                                             onClick={releaseSelectedOrders}
                                             disabled={releasing || selectedOrderIds.length === 0}
-                                            className="btn w-full py-3.5 text-sm font-black tracking-wide shadow-xl flex items-center justify-center gap-2"
+                                            className="btn py-3.5 px-4 text-xs md:text-sm font-black tracking-wide shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
                                         >
                                             {releasing ? (
                                                 <>
                                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                                                    Releasing Print Jobs...
+                                                    Releasing...
                                                 </>
                                             ) : (
                                                 <>
-                                                    🔢 Enter OTP Manually ({selectedOrderIds.length} file{selectedOrderIds.length > 1 ? "s" : ""})
+                                                    🔢 Enter OTP Manually ({selectedOrderIds.length})
                                                 </>
                                             )}
                                         </button>
