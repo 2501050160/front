@@ -492,27 +492,24 @@ function ScanToPrint() {
                                         const currentUserId = String(localStorage.getItem("userId") || "");
                                         const currentUserEmail = localStorage.getItem("userEmail") || "your account";
 
-                                        // STRICT SECURITY CHECK 1: Verify scannedUserId matches logged-in user's account ID
-                                        if (scannedUserId && currentUserId && String(scannedUserId) !== currentUserId) {
-                                            setMobileOtpError(`⛔ Access Denied: Barcode belongs to another account (${scannedUserId}), not your account (${currentUserEmail})!`);
-                                            return;
-                                        }
+                                        // Find matching order in user's pending queue
+                                        const matchingOrder = orders.find(o => 
+                                            (scannedOrderId && String(o.orderId) === String(scannedOrderId)) ||
+                                            (scannedOtp && String(o.otpCode) === String(scannedOtp) && String(o.userId) === String(currentUserId))
+                                        );
 
-                                        // STRICT SECURITY CHECK 2: Verify orderId belongs to logged-in user's pending order queue
-                                        if (scannedOrderId) {
-                                            const matchingUserOrder = orders.find(o => String(o.orderId) === String(scannedOrderId));
-                                            if (!matchingUserOrder) {
-                                                setMobileOtpError(`⛔ Access Denied: Order ${scannedOrderId} does not belong to your account (${currentUserEmail})!`);
-                                                return;
-                                            }
-                                            setVerifyingOrder(matchingUserOrder);
-                                        }
-
-                                        if (scannedOtp.length === 4) {
-                                            setMobileOtp(scannedOtp);
+                                        if (matchingOrder) {
+                                            // SUCCESS: Valid user order scanned on screen
+                                            setVerifyingOrder(matchingOrder);
+                                            setMobileOtp(matchingOrder.otpCode || scannedOtp);
                                             setMobileOtpError("");
                                         } else {
-                                            setMobileOtpError("Invalid barcode format. Please try scanning again or enter OTP manually.");
+                                            // WARNING: Scanned barcode does not belong to any valid order for this user
+                                            setMobileOtpError(
+                                                scannedOrderId 
+                                                    ? `⚠️ Warning: Order ${scannedOrderId} does not belong to your account (${currentUserEmail}). Please scan your own barcode.`
+                                                    : `⚠️ Warning: Scanned barcode is not valid for any of your pending print jobs.`
+                                            );
                                         }
                                     }}
                                 />
