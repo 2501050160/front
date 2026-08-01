@@ -919,66 +919,66 @@ function BlockSelection() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                                     {filteredBlocks.map((block) => (
                                         <motion.div
                                             key={block.name}
                                             variants={cardHoverEffects}
                                             whileHover="hover"
-                                            className="glass-panel rounded-[24px] overflow-hidden flex flex-col justify-between text-left group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.14)] hover:border-cyan-200 relative"
+                                            className="glass-panel rounded-[20px] overflow-hidden flex flex-col justify-between text-left group transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.14)] hover:border-cyan-200 relative min-h-[300px]"
                                         >
                                             {/* Colored Header banner strip */}
-                                            <div className="h-1.5 w-full" style={{backgroundColor: block.accent}} />
+                                            <div className="h-1 w-full" style={{backgroundColor: block.accent}} />
 
                                             {/* Stamp Overlays */}
                                             {block.maintenance ? (
-                                                <div className="maintenance-stamp">
+                                                <div className="maintenance-stamp !text-[9px] !px-2.5 !py-1">
                                                     UNDER MAINTENANCE
                                                 </div>
                                             ) : !block.isOnline ? (
-                                                <div className="offline-stamp">
+                                                <div className="offline-stamp !text-[9px] !px-2.5 !py-1">
                                                     OFFLINE
                                                 </div>
                                             ) : (
-                                                <div className="online-stamp">
+                                                <div className="online-stamp !text-[9px] !px-2.5 !py-1">
                                                     ONLINE
                                                 </div>
                                             )}
 
-                                            <div className="p-6 space-y-4">
+                                            <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                                                 {/* Header */}
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-3xl p-2.5 rounded-xl bg-cyan-50 border border-cyan-100">{block.icon}</span>
-                                                        <div>
-                                                            <h4 className="text-xl font-bold text-slate-950 tracking-tight">{block.name}</h4>
-                                                            <p className="text-sm text-slate-500 font-semibold">{block.description}</p>
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="text-2xl p-2 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center shrink-0">{block.icon}</span>
+                                                        <div className="min-w-0">
+                                                            <h4 className="text-lg font-black text-slate-950 tracking-tight truncate">{block.name}</h4>
+                                                            <p className="text-[11px] text-slate-500 font-bold truncate">{block.description}</p>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Details Grid (Without Distance field) */}
-                                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-[13px] text-slate-500">
+                                                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100 text-[12px] text-slate-500">
                                                     <div>
-                                                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Prints in Queue</p>
-                                                        <p className="font-extrabold text-slate-800 mt-0.5">{block.queueCount} prints waiting</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Queue</p>
+                                                        <p className="font-extrabold text-slate-800 mt-0.5 truncate">{block.queueCount} waiting</p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Support Mode</p>
-                                                        <p className="font-extrabold text-slate-800 mt-0.5">
-                                                            {block.colorSupported ? "Color & BW Available" : "Only BW Available"}
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Mode</p>
+                                                        <p className="font-extrabold text-slate-800 mt-0.5 truncate">
+                                                            {block.colorSupported ? "Color & BW" : "Only BW"}
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Paper Count</p>
-                                                        <p className="font-extrabold text-emerald-700 mt-0.5">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Paper</p>
+                                                        <p className="font-extrabold text-emerald-700 mt-0.5 truncate">
                                                             📄 {block.paperCount != null ? block.paperCount : 0} Sheets
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Printer Status</p>
-                                                        <p className="font-extrabold text-slate-800 mt-0.5">
-                                                            {block.isOnline ? "Ready to spool" : "Spooler offline"}
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status</p>
+                                                        <p className="font-extrabold text-slate-800 mt-0.5 truncate">
+                                                            {block.isOnline ? "Ready" : "Offline"}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -986,7 +986,7 @@ function BlockSelection() {
                                                 {/* Select button */}
                                                 <button
                                                     onClick={() => selectBlock(block.name)}
-                                                    className="w-full h-11 rounded-xl bg-slate-950 hover:bg-gradient-to-r hover:from-cyan-700 hover:to-emerald-700 text-white font-bold text-sm uppercase tracking-wider transition-all duration-300 border border-slate-950 hover:border-transparent hover:shadow-lg hover:shadow-cyan-500/10 mt-4 flex items-center justify-center gap-2"
+                                                    className="w-full h-10 rounded-xl bg-slate-950 hover:bg-gradient-to-r hover:from-cyan-700 hover:to-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 border border-slate-950 hover:border-transparent hover:shadow-lg hover:shadow-cyan-500/10 mt-3 flex items-center justify-center gap-1.5"
                                                     disabled={block.maintenance || !block.isOnline}
                                                     style={(block.maintenance || !block.isOnline) ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                                                 >
