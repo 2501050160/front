@@ -6,6 +6,7 @@ import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
 import blocksVideo from "../assets/blocks.mp4";
+import collectVideo from "../assets/collect.mp4";
 import { 
   User, 
   LogOut, 
@@ -85,6 +86,8 @@ function BlockSelection() {
     const [releasing, setReleasing] = useState(false);
     const [otpTimeLeft, setOtpTimeLeft] = useState(0);
     const [showDirectOtpForm, setShowDirectOtpForm] = useState(false);
+    const [trackingOrderId, setTrackingOrderId] = useState("");
+    const [trackingOrderStatus, setTrackingOrderStatus] = useState("");
 
     const parseBackendDate = (dateVal) => {
         if (!dateVal) return null;
@@ -329,6 +332,30 @@ function BlockSelection() {
         }
     }, [userId, searchParams, setSearchParams]);
 
+    useEffect(() => {
+        if (!trackingOrderId || trackingOrderStatus !== "RELEASING") return;
+
+        let active = true;
+        const checkStatus = async () => {
+            try {
+                const response = await api.get("/pdf/details", {
+                    params: { orderId: trackingOrderId }
+                });
+                if (response.data && response.data.status === "COMPLETED" && active) {
+                    setTrackingOrderStatus("COMPLETED");
+                }
+            } catch (err) {
+                console.error("Failed to check order status:", err);
+            }
+        };
+
+        const interval = setInterval(checkStatus, 1500);
+        return () => {
+            active = false;
+            clearInterval(interval);
+        };
+    }, [trackingOrderId, trackingOrderStatus]);
+
     const logout = () => {
         clearUserSession();
         navigate("/");
@@ -373,11 +400,13 @@ function BlockSelection() {
             await api.post("/pdf/releasePrint", null, {
                 params: { orderId: selectedOrderId, otp: inputOtp.trim() }
             });
+            const releasedId = selectedOrderId;
             setOtpError("");
             setShowOtpModal(false);
             setShowDirectOtpForm(false);
             setInputOtp("");
-            showAlert("Printing Started! 🖨️", "Successfully released your print job. Please collect your pages from the printer tray.", "success");
+            setTrackingOrderId(releasedId);
+            setTrackingOrderStatus("RELEASING");
             fetchPendingOrders();
         } catch (err) {
             setOtpError(err.response?.data?.message || "Invalid OTP or Order.");
@@ -1164,6 +1193,69 @@ function BlockSelection() {
                             </div>
                         </motion.div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Fullscreen Print Tracking Overlay */}
+            <AnimatePresence>
+                {trackingOrderId && (
+                    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 bg-slate-950/98 backdrop-blur-lg text-white">
+                        <div className="max-w-xl w-full text-center space-y-8">
+                            {trackingOrderStatus === "RELEASING" ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="w-48 h-48 mx-auto relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900/50 flex items-center justify-center p-2">
+                                        <div className="absolute inset-0 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+                                        <span className="text-6xl animate-pulse">🖨️</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">Spooling Queue</span>
+                                        <h2 className="text-3xl font-black tracking-tight mt-3">Printing in Progress</h2>
+                                        <p className="text-sm text-cyan-200/60 font-semibold">Your print job {trackingOrderId} is being sent to the kiosk. Please wait...</p>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="w-64 h-64 mx-auto relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900/50 flex items-center justify-center p-1">
+                                        <video 
+                                            autoPlay 
+                                            loop 
+                                            muted 
+                                            playsInline 
+                                            className="w-full h-full object-cover rounded-[20px]"
+                                        >
+                                            <source src={collectVideo} type="video/mp4" />
+                                        </video>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">Ready for collection</span>
+                                        <h2 className="text-4xl font-black tracking-tight mt-3 text-emerald-400">Collect Your Papers!</h2>
+                                        <p className="text-sm text-slate-300 font-semibold leading-relaxed">
+                                            Your print job is completed! Please collect your papers from the printer tray.
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            setTrackingOrderId("");
+                                            setTrackingOrderStatus("");
+                                        }}
+                                        className="mt-6 px-8 h-12 rounded-xl bg-white text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-slate-100 transition-all cursor-pointer"
+                                    >
+                                        Done / Dismiss
+                                    </button>
+                                </motion.div>
+                            )}
+                        </div>
+                    </div>
                 )}
             </AnimatePresence>
         </main>
