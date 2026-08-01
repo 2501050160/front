@@ -493,7 +493,7 @@ function BlockSelection() {
             fetchPendingOrders();
         } catch (err) {
             console.error("Bulk injection failed:", err);
-            showAlert("Injection Failed", err.message || "Failed to generate mock prints", "error");
+            showAlert("Injection Failed", err.response?.data?.message || err.response?.data || err.message || "Failed to generate mock prints", "error");
         } finally {
             setInjectingBulk(false);
             setInjectProgress("");
