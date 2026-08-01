@@ -1116,28 +1116,26 @@ function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Mobile View: Keep the original stacked/two-card columns layout */}
-                    <div className="flex flex-col gap-4 md:hidden mb-0">
-                        <div className="user-dash-card user-dash-stat p-6 rounded-3xl flex flex-col justify-between overflow-hidden relative">
-                            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400" />
-                            <div className="relative z-10">
-                                <p className="text-xs font-black uppercase tracking-wider text-cyan-200">Welcome Back</p>
-                                <h3 className="text-2xl font-black text-white mt-1">Hello, {userName || "Sai"}</h3>
-                                <p className="text-sm font-bold text-cyan-50/70 mt-2">
-                                    Counter: {blockLocation}
+                    {/* Mobile View: Side-by-side columns layout */}
+                    <div className="grid grid-cols-2 gap-3.5 md:hidden mb-0">
+                        <div className="user-dash-card user-dash-stat p-4.5 rounded-2xl flex flex-col justify-between overflow-hidden relative min-h-[100px]">
+                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-500 via-emerald-500 to-amber-400" />
+                            <div className="relative z-10 flex flex-col">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-cyan-200">Welcome Back</span>
+                                <h3 className="text-sm font-black text-white mt-1 leading-tight truncate">Hello, {userName || "Sai"}</h3>
+                                <p className="text-[10px] font-semibold text-cyan-50/70 mt-2">
+                                    Counter: <strong className="text-white">{blockLocation}</strong>
                                 </p>
                             </div>
                         </div>
 
-                        <div className="user-dash-stat p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl flex flex-col justify-between border border-white/10">
-                            <div className="relative z-10 flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center">
-                                    <Wallet className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-black uppercase tracking-wider text-cyan-100">Wallet Balance</p>
-                                    <h3 className="text-2xl font-black mt-0.5">₹{walletBalance}</h3>
-                                </div>
+                        <div className="user-dash-card p-4.5 rounded-2xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl flex items-center gap-3 border border-white/10 min-h-[100px]">
+                            <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                                <Wallet className="w-4 h-4 text-cyan-300" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-cyan-100">Wallet Balance</span>
+                                <h3 className="text-lg font-black mt-0.5 truncate">₹{walletBalance}</h3>
                             </div>
                         </div>
                     </div>
