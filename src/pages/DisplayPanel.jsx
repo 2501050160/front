@@ -285,12 +285,12 @@ function DisplayPanel() {
 
     useEffect(() => {
         setQueuePageIndex(0);
-        if (waitingOrders.length <= 6) {
+        if (waitingOrders.length <= 4) {
             return;
         }
         const interval = setInterval(() => {
             setQueuePageIndex((prev) => {
-                const totalPages = Math.ceil(waitingOrders.length / 6);
+                const totalPages = Math.ceil(waitingOrders.length / 4);
                 return (prev + 1) % totalPages;
             });
         }, 5000);
@@ -547,7 +547,7 @@ function DisplayPanel() {
                                                 </div>
 
                                                 <div className="space-y-3 p-3">
-                                                    {waitingOrders.slice(queuePageIndex * 6, (queuePageIndex + 1) * 6).map((order, index) => {
+                                                    {waitingOrders.slice(queuePageIndex * 4, (queuePageIndex + 1) * 4).map((order, index) => {
                                                         const isPendingScan = order.status === "PENDING_SCAN";
                                                         const queuePalettes = [
                                                             {
@@ -593,7 +593,7 @@ function DisplayPanel() {
                                                                 glow: "shadow-rose-500/20"
                                                             }
                                                         ];
-                                                        const queuePosition = queuePageIndex * 6 + index + 1;
+                                                        const queuePosition = queuePageIndex * 4 + index + 1;
                                                         const palette = queuePalettes[(queuePosition - 1) % queuePalettes.length];
                                                         return (
                                                             <motion.div
