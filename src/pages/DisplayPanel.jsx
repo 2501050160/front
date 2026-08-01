@@ -18,6 +18,8 @@ function DisplayPanel() {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showFullscreenAd, setShowFullscreenAd] = useState(false);
     const [isReleasing, setIsReleasing] = useState(true);
+    const [totalPagesToPrint, setTotalPagesToPrint] = useState(1);
+    const [currentPagePrinted, setCurrentPagePrinted] = useState(0);
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -148,32 +150,39 @@ function DisplayPanel() {
 
         const [nextPickup, ...remaining] = pickupQueue;
         setActivePickup(nextPickup);
+        setTotalPagesToPrint(nextPickup.totalPages || 1);
+        setCurrentPagePrinted(1);
+        setIsReleasing(true);
         setPickupQueue(remaining);
     }, [pickupQueue, activePickup]);
 
     useEffect(() => {
-        if (!activePickup) {
-            setIsReleasing(true);
-            return;
-        }
+        if (!activePickup || !isReleasing) return;
 
-        const releaseTimer = setTimeout(() => {
-            setIsReleasing(false);
-        }, 200);
+        const interval = setInterval(() => {
+            setCurrentPagePrinted(prev => {
+                if (prev >= totalPagesToPrint) {
+                    clearInterval(interval);
+                    setIsReleasing(false);
+                    return prev;
+                }
+                return prev + 1;
+            });
+        }, 5500);
 
-        return () => clearTimeout(releaseTimer);
-    }, [activePickup]);
+        return () => clearInterval(interval);
+    }, [activePickup, isReleasing, totalPagesToPrint]);
 
     useEffect(() => {
-        if (!activePickup) return;
+        if (!activePickup || isReleasing) return;
 
         const timer = setTimeout(() => {
             setActivePickup(null);
             window.location.reload();
-        }, 12000);
+        }, 10000);
 
         return () => clearTimeout(timer);
-    }, [activePickup]);
+    }, [activePickup, isReleasing]);
 
     const fetchOrders = async () => {
         try {
@@ -371,11 +380,16 @@ function DisplayPanel() {
                                         >
                                             <p className="text-base font-bold text-slate-100">
                                                 {isReleasing 
-                                                    ? "Spooling hardware... your prints are releasing in 5 seconds."
+                                                    ? "Printing document pages... Please wait."
                                                     : "Your printing is completed! Please collect your papers from the printer tray."}
                                             </p>
-                                            <div className={`mt-2 flex items-center justify-center gap-1.5 text-xs font-bold ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
+                                            <div className={`mt-2 flex flex-col items-center justify-center gap-1.5 text-xs font-bold ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
                                                 <span>{isReleasing ? "🖨️ Hardware releasing prints..." : "🖨️ Counter Release successful"}</span>
+                                                {isReleasing && (
+                                                    <span className="text-lg font-black text-white mt-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-xl">
+                                                        📄 Printing Page {currentPagePrinted} of {totalPagesToPrint}
+                                                    </span>
+                                                )}
                                             </div>
                                         </motion.div>
                                     </div>
