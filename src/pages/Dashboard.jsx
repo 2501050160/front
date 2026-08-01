@@ -14,6 +14,7 @@ import ordersLoading from "../assets/orders_loading.mp4";
 import referralIcon from "../assets/referral-icon.jpg";
 import printKioskBg from "../assets/print-kiosk-bg.png";
 import kioskFront from "../assets/kiosk-front.png";
+import machineVideo from "../assets/machine.mp4";
 import {
     FileText,
     Gift,
@@ -1019,22 +1020,42 @@ function Dashboard() {
                     />
 
                     <section className="dashboard-stage-card relative rounded-[28px] p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                        <div className="relative z-10 max-w-2xl">
+                        <div className="relative z-10 max-w-2xl text-left">
                             <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Premium Print Workspace</p>
                             <h1 className="mt-3 text-4xl md:text-5xl font-black leading-tight text-white">
                                 Upload. Pay. Print from your campus kiosk.
                             </h1>
-                            <p className="mt-4 text-sm md:text-base font-semibold leading-relaxed text-cyan-50/76">
-                                A focused command center for print jobs, wallet payments, pricing, and live printer readiness.
-                            </p>
+                            
+                            {/* Visual steps flow */}
+                            <div className="mt-6 flex flex-col sm:flex-row gap-4 sm:items-center">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 flex items-center justify-center text-xs font-black">1</span>
+                                    <span className="text-xs font-black text-white">Upload Files</span>
+                                </div>
+                                <div className="hidden sm:block text-cyan-500/50">➔</div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 flex items-center justify-center text-xs font-black">2</span>
+                                    <span className="text-xs font-black text-white">Pay (Wallet/UPI)</span>
+                                </div>
+                                <div className="hidden sm:block text-cyan-500/50">➔</div>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 flex items-center justify-center text-xs font-black">3</span>
+                                    <span className="text-xs font-black text-white">Enter OTP at Kiosk</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="relative h-44 w-full md:w-72 shrink-0">
-                            <div className="absolute inset-0 rounded-[24px] bg-cyan-300/10 blur-2xl" />
-                            <img
-                                src={kioskFront}
-                                alt=""
-                                className="relative z-10 h-full w-full object-contain drop-shadow-[0_30px_45px_rgba(0,0,0,0.45)]"
-                            />
+                        
+                        {/* Looping Machine Video */}
+                        <div className="relative h-48 w-full md:w-80 shrink-0 rounded-[20px] overflow-hidden border border-white/10 shadow-2xl bg-slate-900/50 p-1 flex items-center justify-center">
+                            <video 
+                                autoPlay 
+                                loop 
+                                muted 
+                                playsInline 
+                                className="w-full h-full object-cover rounded-lg shadow-sm"
+                            >
+                                <source src={machineVideo} type="video/mp4" />
+                            </video>
                         </div>
                     </section>
 
