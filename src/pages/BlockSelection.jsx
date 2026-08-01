@@ -90,6 +90,11 @@ function BlockSelection() {
     const [trackingOrderStatus, setTrackingOrderStatus] = useState("");
     const [totalPagesToPrint, setTotalPagesToPrint] = useState(1);
     const [currentPagePrinted, setCurrentPagePrinted] = useState(0);
+    const [systemSettings, setSystemSettings] = useState(null);
+    const [injectingBulk, setInjectingBulk] = useState(false);
+    const [injectProgress, setInjectProgress] = useState("");
+    const [bulkCount, setBulkCount] = useState(3);
+    const [bulkBlock, setBulkBlock] = useState("C Block");
 
     const parseBackendDate = (dateVal) => {
         if (!dateVal) return null;
@@ -180,6 +185,7 @@ function BlockSelection() {
         const checkSuspension = async () => {
             try {
                 const res = await api.get("/system/settings");
+                setSystemSettings(res.data);
                 const suspended = res.data?.suspendedColleges || "";
                 const suspendedList = suspended.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
                 if (suspendedList.includes(college.toUpperCase())) {
@@ -375,7 +381,7 @@ function BlockSelection() {
                 }
                 return prev + 1;
             });
-        }, 1200);
+        }, 5500);
 
         return () => clearInterval(interval);
     }, [trackingOrderStatus, totalPagesToPrint]);
@@ -439,6 +445,54 @@ function BlockSelection() {
         }
     };
 
+    const handleInjectBulk = async (count, blockName) => {
+        setInjectingBulk(true);
+        setInjectProgress("Initializing mock file...");
+        try {
+            const blob = new Blob(["%PDF-1.4 mock pdf data"], { type: "application/pdf" });
+            const mockFile = new File([blob], `test_kiosk_${blockName.replace(/\s+/g, "_")}.pdf`, { type: "application/pdf" });
+
+            for (let i = 1; i <= count; i++) {
+                setInjectProgress(`Uploading test print ${i} of ${count}...`);
+                const formData = new FormData();
+                formData.append("file", mockFile);
+                formData.append("userId", userId);
+                formData.append("customerName", userName || "Tester");
+                formData.append("blockLocation", blockName);
+
+                const uploadRes = await api.post("/pdf/upload", formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
+
+                const orderId = uploadRes.data.orderId;
+
+                setInjectProgress(`Bypassing payment for ${orderId}...`);
+                await api.post("/pdf/updatePrice", null, {
+                    params: { orderId, price: 0.0 }
+                });
+
+                await api.post("/pdf/payWithWallet", null, {
+                    params: { orderId }
+                });
+
+                setInjectProgress(`Spooling ${orderId} into print queue...`);
+                await api.post("/pdf/proceedOrder", null, {
+                    params: { orderId }
+                });
+            }
+
+            setInjectProgress("");
+            showAlert("Tester Injection Complete", `Successfully generated & spooled ${count} bulk test prints for ${blockName}!`, "success");
+            fetchPendingOrders();
+        } catch (err) {
+            console.error("Bulk injection failed:", err);
+            showAlert("Injection Failed", err.message || "Failed to generate mock prints", "error");
+        } finally {
+            setInjectingBulk(false);
+            setInjectProgress("");
+        }
+    };
+
     // Get unique list of colleges
     const collegesList = ["KLU", ...Array.from(new Set(blocks.map(b => b.college))).filter(c => c !== "KLU" && c)];
 
@@ -455,6 +509,13 @@ function BlockSelection() {
         if (!aReady && bReady) return 1;
         return 0;
     });
+
+    const isTester = systemSettings && systemSettings.testerModeEnabled && (
+        (systemSettings.testerUsernames || "")
+            .split(",")
+            .map(t => t.trim().toLowerCase())
+            .some(t => t && (t === userName.toLowerCase() || t === userEmail.toLowerCase()))
+    );
 
     return (
         <main className="premium-block-bg min-h-screen py-6 px-0 sm:px-4 md:px-8 xl:px-12 relative overflow-hidden font-sans text-slate-950 flex flex-col justify-between">
@@ -1100,6 +1161,68 @@ function BlockSelection() {
                         )}
                     </div>
                 </div>
+
+                {/* Tester Mode Sandbox Panel */}
+                {isTester && (
+                    <div className="glass-panel p-6 rounded-[24px] border border-purple-500/30 bg-purple-500/5 mt-8 shadow-2xl relative overflow-hidden text-left">
+                        <div className="absolute top-[-30px] right-[-30px] w-36 h-36 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                        
+                        <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
+                            <div>
+                                <h3 className="text-lg font-black text-purple-300 flex items-center gap-2">
+                                    <span>🧪</span> Tester Sandbox Panel
+                                </h3>
+                                <p className="text-xs text-cyan-200/60 font-semibold mt-1 max-w-xl">
+                                    Simulate printer loads and verify the queue display system. This tool injects multiple mock orders directly into the target spooler tray without requesting wallet deductions.
+                                </p>
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-3 shrink-0">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Order Count</span>
+                                    <select 
+                                        value={bulkCount} 
+                                        onChange={(e) => setBulkCount(parseInt(e.target.value))}
+                                        className="h-10 rounded-xl bg-slate-900 border border-white/10 px-3 text-xs font-bold text-white focus:border-purple-500 focus:outline-none"
+                                    >
+                                        <option value={2}>2 Orders</option>
+                                        <option value={3}>3 Orders</option>
+                                        <option value={5}>5 Orders</option>
+                                        <option value={8}>8 Orders</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Kiosk Target</span>
+                                    <select 
+                                        value={bulkBlock} 
+                                        onChange={(e) => setBulkBlock(e.target.value)}
+                                        className="h-10 rounded-xl bg-slate-900 border border-white/10 px-3 text-xs font-bold text-white focus:border-purple-500 focus:outline-none"
+                                    >
+                                        {blocks.map(b => (
+                                            <option key={b.id} value={b.name}>{b.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button
+                                    onClick={() => handleInjectBulk(bulkCount, bulkBlock)}
+                                    disabled={injectingBulk}
+                                    className="h-10 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-purple-900/50 text-white font-black text-xs uppercase tracking-wider transition-colors mt-4 sm:mt-0 flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    {injectingBulk ? "Injecting..." : "Inject bulk orders 🚀"}
+                                </button>
+                            </div>
+                        </div>
+
+                        {injectingBulk && (
+                            <div className="mt-4 p-3 bg-slate-950/80 rounded-xl border border-purple-500/20 text-xs font-bold text-purple-300 animate-pulse flex items-center gap-2">
+                                <span className="animate-spin text-sm">🌀</span>
+                                <span>{injectProgress}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Slim footer stats / verification security badges */}
                 <footer className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-6 text-slate-500 text-xs font-semibold">

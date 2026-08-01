@@ -8,7 +8,8 @@ import {
   Clock, 
   Megaphone, 
   Coins,
-  FileText
+  FileText,
+  Shield
 } from "lucide-react";
 import api from "../services/api";
 
@@ -26,7 +27,9 @@ function Settings() {
     thesisDiscountPages: 50.0,
     thesisDiscountPercent: 15.0,
     cancelWindowEnabled: true,
-    displayAdPhotoEnabled: true
+    displayAdPhotoEnabled: true,
+    testerModeEnabled: false,
+    testerUsernames: ""
   });
 
   const [pricing, setPricing] = useState({
@@ -285,6 +288,40 @@ function Settings() {
                   />
                 </div>
 
+              </div>
+            </div>
+
+            {/* Panel 4: Tester Mode settings */}
+            <div className="panel p-8 bg-white rounded-3xl border border-slate-200/80 flex flex-col gap-6">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-1.5 border-b border-slate-100 pb-3">
+                <Shield className="w-5 h-5 text-purple-600" /> Tester Mode Access Configuration
+              </h3>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between bg-purple-50 p-4 rounded-2xl border border-purple-100">
+                  <div>
+                    <h4 className="text-sm font-black text-purple-950">Enable Tester Access</h4>
+                    <p className="text-xs text-purple-700/60 font-bold">Allow designated testers to place prints for free.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.testerModeEnabled || false}
+                    onChange={(e) => setSettings({ ...settings, testerModeEnabled: e.target.checked })}
+                    className="w-5 h-5 accent-purple-600 cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-wider">Tester Usernames / Emails (Comma Separated)</label>
+                  <textarea
+                    rows="2"
+                    placeholder="e.g. tester1, tester2, test@gmail.com"
+                    value={settings.testerUsernames || ""}
+                    onChange={(e) => setSettings({ ...settings, testerUsernames: e.target.value })}
+                    className="field py-3 px-4 font-bold border-slate-200 focus:border-purple-600"
+                    disabled={!settings.testerModeEnabled}
+                  />
+                </div>
               </div>
             </div>
 
