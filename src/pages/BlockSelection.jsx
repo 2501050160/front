@@ -107,7 +107,7 @@ function BlockSelection() {
     };
 
     useEffect(() => {
-        if (!showOtpModal || !selectedOrderId) return;
+        if (!selectedOrderId) return;
         
         const selectedOrder = pendingOrders.find(o => o.orderId === selectedOrderId);
         if (!selectedOrder) return;
@@ -130,7 +130,7 @@ function BlockSelection() {
         updateTimer();
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
-    }, [showOtpModal, selectedOrderId, pendingOrders]);
+    }, [selectedOrderId, pendingOrders]);
 
     // Custom Modal config
     const [modalConfig, setModalConfig] = useState({
@@ -236,20 +236,29 @@ function BlockSelection() {
         }
     };
 
-    useEffect(() => {
-        const fetchPendingOrders = async () => {
-            if (!userId) return;
-            try {
-                const res = await api.get("/pdf/userOrders", { params: { userId } });
-                const pending = (res.data || []).filter(
-                    o => o.status === "PENDING_SCAN" || o.status === "CANCEL_WINDOW"
-                );
-                setPendingOrders(pending);
-            } catch (err) {
-                console.error("Failed to fetch pending orders on mount:", err);
+    const fetchPendingOrders = async () => {
+        if (!userId) return;
+        try {
+            const res = await api.get("/pdf/userOrders", { params: { userId } });
+            const pending = (res.data || []).filter(
+                o => o.status === "PENDING_SCAN" || o.status === "CANCEL_WINDOW"
+            );
+            setPendingOrders(pending);
+            if (pending.length > 0) {
+                // If there's no selected order or the current selected order is not in the list, set to the first one
+                const exists = pending.some(o => o.orderId === selectedOrderId);
+                if (!exists) {
+                    setSelectedOrderId(pending[0].orderId);
+                }
+            } else {
+                setSelectedOrderId("");
             }
-        };
+        } catch (err) {
+            console.error("Failed to fetch pending orders:", err);
+        }
+    };
 
+    useEffect(() => {
         fetchData();
         fetchPendingOrders();
     }, [userId]);
@@ -367,6 +376,7 @@ function BlockSelection() {
             setShowOtpModal(false);
             setInputOtp("");
             showAlert("Printing Started! 🖨️", "Successfully released your print job. Please collect your pages from the printer tray.", "success");
+            fetchPendingOrders();
         } catch (err) {
             setOtpError(err.response?.data?.message || "Invalid OTP or Order.");
         } finally {
@@ -755,34 +765,84 @@ function BlockSelection() {
                         </div>
                     </motion.div>
 
-                    {/* Right (60% columns equivalent: Campus Map Satellite centerpiece) */}
+                    {/* Right (7 columns: Direct OTP verification area with transparent background) */}
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.55 }}
-                        className="lg:col-span-7 rounded-[30px] overflow-hidden border border-white/16 bg-white/10 backdrop-blur-md relative h-[340px] lg:h-auto flex flex-col justify-end shadow-2xl shadow-slate-950/40 group"
+                        className="lg:col-span-7 rounded-[30px] p-6 border border-white/10 bg-white/5 backdrop-blur-md relative flex flex-col justify-between shadow-2xl shadow-slate-950/20 text-left min-h-[340px]"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/86 via-slate-950/10 to-transparent z-10 pointer-events-none" />
-                        <video 
-                            autoPlay 
-                            loop 
-                            muted 
-                            playsInline
-                            className="absolute inset-0 w-full h-full object-cover z-0 opacity-80 brightness-[0.85] group-hover:scale-[1.01] transition-transform duration-700 ease-out"
-                        >
-                            <source src={blocksVideo} type="video/mp4" />
-                        </video>
-
-                        <div className="absolute top-4 left-4 z-20 bg-slate-950/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2.5 shadow-lg">
-                            <span className="w-2 h-2 rounded-full bg-[#37E67D] animate-ping" />
-                            <span className="text-[10px] font-extrabold tracking-widest text-[#37E67D] uppercase">CAMPUS MAP SATELLITE</span>
+                        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-amber-400 via-orange-400 to-[#9F6BFF] rounded-t-[30px]" />
+                        
+                        <div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">🔑 Secure Release</span>
+                            <h2 className="text-3xl font-black text-white mt-4 tracking-tight">Direct Print Release</h2>
+                            <p className="text-xs text-cyan-50/70 mt-1 font-semibold">Enter your order ID and the 4-digit OTP received during checkout to release your print job instantly.</p>
                         </div>
 
-                        <div className="relative z-10 p-6 space-y-1 text-left bg-gradient-to-t from-[#12192D]/90 via-[#12192D]/60 to-transparent">
-                            <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#4F9DFF]">Map Preview</p>
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                Campus Printer Grid Network <ExternalLink className="w-4 h-4 text-slate-400" />
-                            </h3>
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1.5 text-left">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-300">Select Pending Order</label>
+                                {fetchingOrders ? (
+                                    <p className="text-slate-400 text-xs py-3 font-semibold">Loading your pending orders...</p>
+                                ) : pendingOrders.length === 0 ? (
+                                    <p className="text-rose-400 text-xs font-semibold bg-rose-500/10 py-3 px-4 rounded-xl border border-rose-500/20">
+                                        No pending prints to release.
+                                    </p>
+                                ) : (
+                                    <select
+                                        value={selectedOrderId}
+                                        onChange={(e) => {
+                                            setOtpError("");
+                                            setSelectedOrderId(e.target.value);
+                                        }}
+                                        className="w-full h-11 rounded-xl bg-slate-950/60 border border-white/10 text-xs font-bold text-white focus:border-amber-400 focus:outline-none appearance-none px-4 cursor-pointer"
+                                    >
+                                        {pendingOrders.map(order => (
+                                            <option key={order.orderId} value={order.orderId} className="bg-slate-950 text-white">
+                                                {order.orderId} - {order.fileName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            <div className="space-y-1.5 text-left">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-300">4-Digit OTP Code</label>
+                                <input
+                                    type="text"
+                                    maxLength={4}
+                                    placeholder="••••"
+                                    value={inputOtp}
+                                    onChange={(e) => {
+                                        setOtpError("");
+                                        setInputOtp(e.target.value);
+                                    }}
+                                    className="w-full h-11 rounded-xl bg-slate-950/60 border border-white/10 text-center text-sm font-bold text-white placeholder-slate-600 tracking-[0.5em] focus:border-amber-400 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {selectedOrderId && pendingOrders.find(o => o.orderId === selectedOrderId) && (
+                            <div className="mt-3 text-xs font-bold text-amber-300">
+                                ⏱️ OTP Expires in: <span className="font-mono text-sm font-black bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20">{formatTime(otpTimeLeft)}</span>
+                            </div>
+                        )}
+
+                        {otpError && (
+                            <p className="text-xs font-bold text-rose-400 mt-3 bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-xl">
+                                ⚠️ {otpError}
+                            </p>
+                        )}
+
+                        <div className="mt-4 flex gap-4">
+                            <button
+                                onClick={handleDirectRelease}
+                                disabled={releasing || pendingOrders.length === 0}
+                                className="h-11 px-6 rounded-xl bg-gradient-to-r from-amber-300 to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {releasing ? "Releasing..." : "Verify & Print"} <ArrowRight className="w-4 h-4" />
+                            </button>
                         </div>
                     </motion.div>
                 </div>
@@ -790,38 +850,8 @@ function BlockSelection() {
                 {/* MAIN CONTENT GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 items-start">
                     
-                    {/* LEFT PANEL COLUMN (Occupies 3 columns) */}
-                    <div className="lg:col-span-3 space-y-8">
-                        
-                        {/* Premium OTP Card */}
-                        <motion.div 
-                            whileHover={{ y: -5 }}
-                            className="glass-panel p-6 rounded-[24px] text-left relative overflow-hidden border-[#F8B84E]/20 hover:border-[#F8B84E]/40 transition-all duration-300"
-                        >
-                            <div className="absolute top-[-10%] right-[-10%] w-24 h-24 bg-[#F8B84E]/10 rounded-full blur-xl pointer-events-none" />
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl">🔑</span>
-                                <span className="text-[10px] font-black uppercase tracking-wider text-[#F8B84E] bg-[#F8B84E]/10 border border-[#F8B84E]/20 px-2.5 py-1 rounded-full">Secure release</span>
-                            </div>
-
-                            <h3 className="text-xl font-extrabold text-slate-950 mt-4 tracking-tight">Already Have an OTP?</h3>
-                            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                                Enter your code to release your queued print job instantly at any printer node.
-                            </p>
-
-                            <button 
-                                onClick={handleOpenOtpModal}
-                                className="w-full h-11 rounded-xl bg-gradient-to-r from-amber-300 to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all mt-5 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
-                            >
-                                Verify OTP Code <ArrowRight className="w-4 h-4" />
-                            </button>
-                        </motion.div>
-
-
-                    </div>
-
-                    {/* RIGHT PANEL COLUMN (Occupies 7 columns) */}
-                    <div className="lg:col-span-7 space-y-6">
+                    {/* FULL WIDTH COLUMN (Occupies 10 columns) */}
+                    <div className="lg:col-span-10 space-y-6">
                         
                         {/* CONDITIONAL VIEW 1: College Selection View (shown before college selection) */}
                         {!selectedCollege ? (
