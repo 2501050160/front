@@ -1009,8 +1009,8 @@ function Dashboard() {
                 {/* Right Content Pane (Navbar + Subpages) */}
                 <div className="relative z-10 flex-1 min-w-0 w-full px-4 py-4 md:px-8 md:py-6 flex flex-col gap-6">
                     <Navbar
-                        title="Cloud Print Dashboard"
-                        subtitle="Customer Workspace"
+                        title=""
+                        subtitle=""
                         badge={blockLocation || "No block"}
                         actions={[
                             { label: `Wallet: ₹${walletBalance}`, onClick: () => setShowWalletModal(true), className: "btn success cursor-pointer !border-emerald-500 !bg-emerald-600/20 !text-emerald-400" },

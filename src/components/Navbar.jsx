@@ -32,13 +32,13 @@ function Navbar({ title, subtitle, actions = [], badge, tabs = [], activeTab, on
             transition={{ duration: 0.45 }}
         >
             <div className="flex items-center gap-4 pr-14 md:pr-0">
-                <div className="brand-mark brand-mark-sm">CP</div>
+                {title && <div className="brand-mark brand-mark-sm">CP</div>}
                 <div>
                     {subtitle && (
                         <p className="eyebrow !mb-0">{subtitle}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="title !mt-0 !mb-0">{title}</h1>
+                        {title && <h1 className="title !mt-0 !mb-0">{title}</h1>}
                         {badge && (
                             <span className="status-pill status-created">
                                 {badge}
