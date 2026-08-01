@@ -127,10 +127,8 @@ function PaymentSuccess() {
                     const isWallet = searchParams.get("paymentMethod") === "wallet";
                     if (isWallet && !autoProceedStartedRef.current) {
                         autoProceedStartedRef.current = true;
-                        // Auto-proceed after a brief delay (1.5 seconds)
-                        setTimeout(() => {
-                            proceedOrder();
-                        }, 1500);
+                        // Auto-proceed immediately for wallet payments
+                        proceedOrder();
                     }
                 }
             }
