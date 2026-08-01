@@ -499,23 +499,38 @@ function ScanToPrint() {
                                     <OtpBarcodeScanner
                                         active={otpTab === "scan" && !!verifyingOrder}
                                         onResult={(decoded) => {
-                                            // Barcode is formatted as `${orderId}-${otpCode}`
+                                            // Barcode is formatted as `${orderId}-${userId}-${otpCode}`
                                             const parts = decoded.split("-");
                                             let scannedOrderId = null;
+                                            let scannedUserId = null;
                                             let scannedOtp = "";
 
-                                            if (parts.length >= 2) {
+                                            if (parts.length >= 3) {
+                                                scannedOrderId = parts[0].trim();
+                                                scannedUserId = parts[1].trim();
+                                                scannedOtp = parts[2].replace(/\D/g, "").slice(0, 4);
+                                            } else if (parts.length === 2) {
                                                 scannedOrderId = parts[0].trim();
                                                 scannedOtp = parts[1].replace(/\D/g, "").slice(0, 4);
                                             } else {
                                                 scannedOtp = decoded.replace(/\D/g, "").slice(0, 4);
                                             }
 
-                                            // SECURITY CHECK: Verify if orderId belongs to the logged-in user's pending queue
+                                            const currentUserId = String(localStorage.getItem("userId") || "");
+                                            const currentUserEmail = localStorage.getItem("userEmail") || "your account";
+
+                                            // STRICT SECURITY CHECK 1: Verify scannedUserId matches logged-in user's account ID
+                                            if (scannedUserId && currentUserId && String(scannedUserId) !== currentUserId) {
+                                                setMobileOtpError(`⛔ Access Denied: Barcode belongs to another account (${scannedUserId}), not your registered email/account (${currentUserEmail})!`);
+                                                setOtpTab("keypad");
+                                                return;
+                                            }
+
+                                            // STRICT SECURITY CHECK 2: Verify orderId belongs to logged-in user's pending order queue
                                             if (scannedOrderId) {
-                                                const matchingUserOrder = orders.find(o => o.orderId === scannedOrderId);
+                                                const matchingUserOrder = orders.find(o => String(o.orderId) === String(scannedOrderId));
                                                 if (!matchingUserOrder) {
-                                                    setMobileOtpError(`⛔ Security Alert: Barcode (${scannedOrderId}) does not belong to any of your orders!`);
+                                                    setMobileOtpError(`⛔ Access Denied: Order ${scannedOrderId} does not belong to your account (${currentUserEmail})!`);
                                                     setOtpTab("keypad");
                                                     return;
                                                 }

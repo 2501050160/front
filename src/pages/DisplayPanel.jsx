@@ -637,7 +637,7 @@ function DisplayPanel() {
                                                                             </div>
                                                                             <div className="h-16 w-56 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
                                                                                 <img 
-                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.otpCode}&includeText=false&height=65`} 
+                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.userId || '0'}-${order.otpCode}&includeText=false&height=65`} 
                                                                                     alt="Barcode"
                                                                                     className="w-full h-full object-fill"
                                                                                 />
