@@ -1337,6 +1337,9 @@ function BlockSelection() {
                             <h3 className="mt-2 text-xl font-extrabold text-white">
                                 Enter Order & OTP
                             </h3>
+                            <p className="text-[11px] text-cyan-200/50 mt-2 font-bold px-2">
+                                💡 Scan the QR Code on the Kiosk Display using your phone's native camera for instant release, or enter details manually below.
+                            </p>
                             
                             <div className="mt-6 space-y-4">
                                 {fetchingOrders ? (

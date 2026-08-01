@@ -538,7 +538,7 @@ function DisplayPanel() {
 
                                         <div className="p-7">
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
-                                                <div className="grid grid-cols-[90px_1.4fr_1fr_170px_150px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                <div className="grid grid-cols-[90px_1.3fr_1fr_240px_120px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
                                                     <span>Order</span>
                                                     <span>Student</span>
@@ -598,7 +598,7 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[90px_1.4fr_1fr_170px_150px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[90px_1.3fr_1fr_240px_120px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
@@ -628,16 +628,16 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-3 py-1.5 shadow-lg ${palette.chip} ${palette.glow} flex items-center justify-between gap-2.5`}>
+                                                                        <div className={`rounded-2xl border px-4 py-2.5 shadow-lg ${palette.chip} ${palette.glow} flex items-center justify-between gap-3`}>
                                                                             <div className="text-left">
-                                                                                <p className="text-[9px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
-                                                                                <p className="font-mono text-2xl font-black tracking-wider text-white mt-1 leading-none">
+                                                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
+                                                                                <p className="font-mono text-3xl font-black tracking-wider text-white mt-1.5 leading-none">
                                                                                     {order.otpCode}
                                                                                 </p>
                                                                             </div>
-                                                                            <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-0.5">
+                                                                            <div className="h-16 w-16 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
                                                                                 <img 
-                                                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=40x40&data=${encodeURIComponent(`https://saipraveen.site/blocks?orderId=${order.orderId}&otp=${order.otpCode}&block=${encodeURIComponent(order.blockLocation)}&fileName=${encodeURIComponent(order.fileName)}`)}`} 
+                                                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`https://saipraveen.site/blocks?orderId=${order.orderId}&otp=${order.otpCode}&block=${encodeURIComponent(order.blockLocation)}&fileName=${encodeURIComponent(order.fileName)}`)}`} 
                                                                                     alt="QR"
                                                                                     className="w-full h-full object-contain"
                                                                                 />
@@ -646,7 +646,7 @@ function DisplayPanel() {
                                                                     ) : (
                                                                         <div className={`rounded-2xl border px-4 py-3 shadow-lg ${palette.chip} ${palette.glow}`}>
                                                                             <p className="text-xl font-black uppercase tracking-wider text-white">
-                                                                                {order.status === "CANCEL_WINDOW" ? "Confirming" : "Waiting"}
+                                                                                {order.status === "PRINTING" ? "Printing" : order.status === "CANCEL_WINDOW" ? "Confirming" : "Waiting"}
                                                                             </p>
                                                                         </div>
                                                                     )}
