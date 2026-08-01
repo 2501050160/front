@@ -287,44 +287,70 @@ function Checkout() {
                 await saveScheduledInfo();
             }
             
-            if (couponApplied && couponCode) {
-                // Run coupon consumption and wallet payment in parallel to speed up execution
-                await Promise.all([
-                    api.post("/coupon/use", null, {
-                        params: { couponCode }
-                    }).catch(err => console.error("Failed to mark coupon as used:", err)),
-                    api.post("/pdf/payWithWallet", null, {
-                        params: {
-                            orderId: order.orderId
+            // Fire all payment and order progression calls in the background asynchronously
+            const executePaymentInBackground = async () => {
+                try {
+                    // Check if user is a configured tester to bypass payment
+                    const userName = localStorage.getItem("userName") || "";
+                    const userEmail = localStorage.getItem("userEmail") || "";
+                    let isTesterUser = false;
+                    
+                    try {
+                        const settingsRes = await api.get("/system/settings");
+                        if (settingsRes.data && settingsRes.data.testerModeEnabled) {
+                            const testers = (settingsRes.data.testerUsernames || "")
+                                .split(",")
+                                .map(t => t.trim().toLowerCase());
+                            if (testers.includes(userName.toLowerCase()) || testers.includes(userEmail.toLowerCase())) {
+                                isTesterUser = true;
+                            }
                         }
-                    })
-                ]);
-            } else {
-                // Pay immediately
-                await api.post("/pdf/payWithWallet", null, {
-                    params: {
-                        orderId: order.orderId
+                    } catch (e) {
+                        console.error("Failed to check tester settings:", e);
                     }
-                });
-            }
 
-            // Directly proceed/finalize order status to spooling instantly
-            try {
-                await api.post("/pdf/proceedOrder", null, {
-                    params: { orderId: order.orderId }
-                });
-            } catch (err) {
-                console.error("Failed to auto-proceed order:", err);
-            }
+                    if (isTesterUser) {
+                        // Tester bypass: set price to 0 and pay
+                        await api.post("/pdf/updatePrice", null, {
+                            params: { orderId: order.orderId, price: 0.0 }
+                        });
+                    }
 
-            // Update wallet balance in the background; do not block navigation
-            getWalletBalance(userId).catch(err => console.error("Failed to update wallet balance in background:", err));
+                    if (couponApplied && couponCode && !isTesterUser) {
+                        await Promise.all([
+                            api.post("/coupon/use", null, {
+                                params: { couponCode }
+                            }).catch(err => console.error("Failed to mark coupon as used:", err)),
+                            api.post("/pdf/payWithWallet", null, {
+                                params: { orderId: order.orderId }
+                            })
+                        ]);
+                    } else {
+                        await api.post("/pdf/payWithWallet", null, {
+                            params: { orderId: order.orderId }
+                        });
+                    }
+
+                    // Directly proceed/finalize order status to spooling instantly
+                    await api.post("/pdf/proceedOrder", null, {
+                        params: { orderId: order.orderId }
+                    });
+
+                    // Update wallet balance in the background
+                    getWalletBalance(userId).catch(err => console.error("Failed to update wallet balance in background:", err));
+                } catch (err) {
+                    console.error("Background payment processing failed:", err);
+                }
+            };
+
+            // Trigger background execution immediately
+            executePaymentInBackground();
             
             localStorage.removeItem("order");
             navigate(`/blocks?orderId=${order.orderId}&fileName=${encodeURIComponent(order.fileName)}&block=${encodeURIComponent(order.blockLocation || "")}`);
         } catch (error) {
             console.error(error);
-            showAlert("Error", error.response?.data?.message || "Wallet payment failed", "error");
+            showAlert("Error", "Wallet payment initiation failed", "error");
             setPaymentMethod("");
         }
     };
