@@ -538,7 +538,7 @@ function DisplayPanel() {
 
                                         <div className="p-7">
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
-                                                <div className="grid grid-cols-[64px_0.45fr_0.35fr_500px_70px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                <div className="grid grid-cols-[64px_0.45fr_0.35fr_1fr_70px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
                                                     <span>Order</span>
                                                     <span>Student</span>
@@ -598,7 +598,7 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[64px_0.45fr_0.35fr_500px_70px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[64px_0.45fr_0.35fr_1fr_70px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
@@ -655,7 +655,7 @@ function DisplayPanel() {
                                                                     <p className="text-2xl font-black text-white leading-none">
                                                                         {order.totalPages ? order.totalPages * (order.copies || 1) : "—"}
                                                                     </p>
-                                                                    <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-white/50">pages</p>
+                                                                    <p className="text-[10px] font-bold text-white/40 leading-none mt-0.5">pg</p>
                                                                 </div>
                                                             </motion.div>
                                                         );
