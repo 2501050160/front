@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeScanner } from "html5-qrcode";
 import api from "../services/api";
 import Navbar from "../components/Navbar";
 import CustomModal from "../components/CustomModal";
@@ -597,52 +597,93 @@ export default ScanToPrint;
 
 /* -----------------------------------------------------------------------
    OtpBarcodeScanner – inline barcode / QR scanner for OTP verification
+   Uses direct Html5Qrcode instance to prevent DOM flickering & UI rebuilds
 ----------------------------------------------------------------------- */
 function OtpBarcodeScanner({ active, onResult }) {
-    const scannerRef = useRef(null);
-    const SCANNER_ID = "otp-qr-scanner";
+    const SCANNER_ID = "otp-barcode-video-container";
+    const html5QrCodeRef = useRef(null);
 
     useEffect(() => {
         if (!active) return;
+        let isMounted = true;
 
-        const timer = setTimeout(() => {
-            if (scannerRef.current) return; // already mounted
+        const initCamera = async () => {
             try {
-                const scanner = new Html5QrcodeScanner(
-                    SCANNER_ID,
-                    { fps: 10, qrbox: { width: 240, height: 100 }, showTorchButtonIfSupported: true },
-                    false
-                );
-                scanner.render(
+                // Stop any previous instance
+                if (html5QrCodeRef.current) {
+                    try {
+                        await html5QrCodeRef.current.stop();
+                        html5QrCodeRef.current.clear();
+                    } catch (e) {}
+                    html5QrCodeRef.current = null;
+                }
+
+                const scannerInstance = new Html5Qrcode(SCANNER_ID);
+                html5QrCodeRef.current = scannerInstance;
+
+                const scanConfig = {
+                    fps: 15,
+                    qrbox: { width: 240, height: 100 },
+                    aspectRatio: 1.5
+                };
+
+                await scannerInstance.start(
+                    { facingMode: "environment" },
+                    scanConfig,
                     (decodedText) => {
-                        scanner.clear().catch(() => {});
-                        scannerRef.current = null;
-                        onResult(decodedText);
+                        if (!isMounted) return;
+                        // Stop scanner smoothly before returning result
+                        scannerInstance.stop().then(() => {
+                            try { scannerInstance.clear(); } catch (e) {}
+                            html5QrCodeRef.current = null;
+                            onResult(decodedText);
+                        }).catch(() => {
+                            onResult(decodedText);
+                        });
                     },
-                    () => {}
+                    () => {} // silent on scan failure frame
                 );
-                scannerRef.current = scanner;
-            } catch (e) {
-                console.warn("Scanner init failed:", e);
+            } catch (err) {
+                console.warn("Environmental camera failed, falling back to default camera:", err);
+                if (isMounted && html5QrCodeRef.current) {
+                    try {
+                        await html5QrCodeRef.current.start(
+                            { facingMode: "user" },
+                            { fps: 10, qrbox: { width: 220, height: 90 } },
+                            (decodedText) => {
+                                onResult(decodedText);
+                            },
+                            () => {}
+                        );
+                    } catch (e2) {
+                        console.error("Camera access error:", e2);
+                    }
+                }
             }
-        }, 200);
+        };
+
+        const timer = setTimeout(initCamera, 100);
 
         return () => {
+            isMounted = false;
             clearTimeout(timer);
-            if (scannerRef.current) {
-                scannerRef.current.clear().catch(() => {});
-                scannerRef.current = null;
+            if (html5QrCodeRef.current) {
+                const instance = html5QrCodeRef.current;
+                html5QrCodeRef.current = null;
+                instance.stop().then(() => {
+                    try { instance.clear(); } catch (e) {}
+                }).catch(() => {});
             }
         };
     }, [active]);
 
     return (
         <div className="space-y-2">
-            <div className="rounded-2xl overflow-hidden border border-white/10 bg-black min-h-[200px]">
-                <div id={SCANNER_ID} />
+            <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 bg-black min-h-[210px] max-h-[250px] flex items-center justify-center shadow-inner">
+                <div id={SCANNER_ID} className="w-full h-full object-cover" />
             </div>
             <p className="text-[11px] text-slate-400 font-semibold text-center">
-                📺 Point your camera at the barcode shown on the Kiosk TV screen
+                📺 Point camera directly at the barcode on the Kiosk TV display
             </p>
         </div>
     );
