@@ -5,6 +5,7 @@ import api from "../services/api";
 import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
+import blocksVideo from "../assets/blocks.mp4";
 import { 
   User, 
   LogOut, 
@@ -537,7 +538,7 @@ function BlockSelection() {
             `}} />
 
             <video autoPlay loop muted playsInline className="block-video-bg">
-                <source src="/blocks.mp4" type="video/mp4" />
+                <source src={blocksVideo} type="video/mp4" />
             </video>
             <div className="block-ambient-scrim" />
 
@@ -769,7 +770,7 @@ function BlockSelection() {
                             playsInline
                             className="absolute inset-0 w-full h-full object-cover z-0 opacity-80 brightness-[0.85] group-hover:scale-[1.01] transition-transform duration-700 ease-out"
                         >
-                            <source src="/blocks.mp4" type="video/mp4" />
+                            <source src={blocksVideo} type="video/mp4" />
                         </video>
 
                         <div className="absolute top-4 left-4 z-20 bg-slate-950/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2.5 shadow-lg">
