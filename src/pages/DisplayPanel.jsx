@@ -505,59 +505,107 @@ function DisplayPanel() {
                                                     <span className="text-right">Details</span>
                                                 </div>
 
-                                                <div className="divide-y divide-white/10">
+                                                <div className="space-y-3 p-3">
                                                     {waitingOrders.slice(queuePageIndex * 6, (queuePageIndex + 1) * 6).map((order, index) => {
                                                         const isPendingScan = order.status === "PENDING_SCAN";
+                                                        const queuePalettes = [
+                                                            {
+                                                                rail: "from-cyan-300 to-blue-500",
+                                                                row: "from-cyan-500/24 via-blue-500/14 to-slate-950/14",
+                                                                badge: "border-cyan-200/45 bg-cyan-300/20 text-cyan-50",
+                                                                chip: "border-cyan-200/45 bg-cyan-300/18 text-cyan-50",
+                                                                glow: "shadow-cyan-500/20"
+                                                            },
+                                                            {
+                                                                rail: "from-emerald-300 to-lime-400",
+                                                                row: "from-emerald-500/24 via-lime-500/12 to-slate-950/14",
+                                                                badge: "border-emerald-200/45 bg-emerald-300/20 text-emerald-50",
+                                                                chip: "border-emerald-200/45 bg-emerald-300/18 text-emerald-50",
+                                                                glow: "shadow-emerald-500/20"
+                                                            },
+                                                            {
+                                                                rail: "from-fuchsia-300 to-pink-500",
+                                                                row: "from-fuchsia-500/24 via-pink-500/12 to-slate-950/14",
+                                                                badge: "border-fuchsia-200/45 bg-fuchsia-300/20 text-fuchsia-50",
+                                                                chip: "border-fuchsia-200/45 bg-fuchsia-300/18 text-fuchsia-50",
+                                                                glow: "shadow-fuchsia-500/20"
+                                                            },
+                                                            {
+                                                                rail: "from-amber-300 to-orange-500",
+                                                                row: "from-amber-500/26 via-orange-500/12 to-slate-950/14",
+                                                                badge: "border-amber-200/45 bg-amber-300/20 text-amber-50",
+                                                                chip: "border-amber-200/45 bg-amber-300/18 text-amber-50",
+                                                                glow: "shadow-amber-500/20"
+                                                            },
+                                                            {
+                                                                rail: "from-violet-300 to-indigo-500",
+                                                                row: "from-violet-500/24 via-indigo-500/12 to-slate-950/14",
+                                                                badge: "border-violet-200/45 bg-violet-300/20 text-violet-50",
+                                                                chip: "border-violet-200/45 bg-violet-300/18 text-violet-50",
+                                                                glow: "shadow-violet-500/20"
+                                                            },
+                                                            {
+                                                                rail: "from-rose-300 to-red-500",
+                                                                row: "from-rose-500/24 via-red-500/12 to-slate-950/14",
+                                                                badge: "border-rose-200/45 bg-rose-300/20 text-rose-50",
+                                                                chip: "border-rose-200/45 bg-rose-300/18 text-rose-50",
+                                                                glow: "shadow-rose-500/20"
+                                                            }
+                                                        ];
+                                                        const queuePosition = queuePageIndex * 6 + index + 1;
+                                                        const palette = queuePalettes[(queuePosition - 1) % queuePalettes.length];
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className="grid grid-cols-[90px_1.4fr_1fr_170px_150px] items-center gap-0 px-5 py-5 transition-colors hover:bg-white/8"
+                                                                className={`relative grid grid-cols-[90px_1.4fr_1fr_170px_150px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-5 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
                                                             >
+                                                                <div className={`absolute inset-y-0 left-0 w-2 bg-gradient-to-b ${palette.rail}`} />
+                                                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(90deg,rgba(255,255,255,0.08),transparent_45%)]" />
                                                                 <div>
-                                                                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/10 text-xl font-black text-white">
-                                                                        {queuePageIndex * 6 + index + 1}
+                                                                    <span className={`relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border text-xl font-black shadow-lg ${palette.badge}`}>
+                                                                        {queuePosition}
                                                                     </span>
                                                                 </div>
-                                                                <div className="min-w-0">
+                                                                <div className="relative min-w-0">
                                                                     <p className="truncate text-3xl font-black leading-none text-white">
                                                                         {order.orderId}
                                                                     </p>
-                                                                    <p className="mt-1 text-xs font-black uppercase tracking-widest text-cyan-50/46">
+                                                                    <p className="mt-1 text-xs font-black uppercase tracking-widest text-white/58">
                                                                         Waiting for print release
                                                                     </p>
                                                                 </div>
-                                                                <div className="min-w-0">
-                                                                    <p className="truncate text-2xl font-black text-cyan-50">
+                                                                <div className="relative min-w-0">
+                                                                    <p className="truncate text-2xl font-black text-white">
                                                                         {order.customerName || "Customer"}
                                                                     </p>
-                                                                    <p className="mt-1 text-xs font-bold text-cyan-50/52">
+                                                                    <p className="mt-1 text-xs font-bold text-white/58">
                                                                         {order.printType || "BW"} print
                                                                     </p>
                                                                 </div>
-                                                                <div className="text-center">
+                                                                <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className="rounded-2xl border border-cyan-300/26 bg-cyan-300/12 px-4 py-2">
-                                                                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-100/62">OTP</p>
+                                                                        <div className={`rounded-2xl border px-4 py-2 shadow-lg ${palette.chip} ${palette.glow}`}>
+                                                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/66">OTP</p>
                                                                             <p className="font-mono text-3xl font-black tracking-[0.16em] text-white">
                                                                                 {order.otpCode}
                                                                             </p>
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="rounded-2xl border border-amber-300/26 bg-amber-300/12 px-4 py-3">
-                                                                            <p className="text-xl font-black uppercase tracking-wider text-amber-100">
+                                                                        <div className={`rounded-2xl border px-4 py-3 shadow-lg ${palette.chip} ${palette.glow}`}>
+                                                                            <p className="text-xl font-black uppercase tracking-wider text-white">
                                                                                 {order.status === "CANCEL_WINDOW" ? "Confirming" : "Waiting"}
                                                                             </p>
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <div className="text-right">
+                                                                <div className="relative text-right">
                                                                     <p className="text-lg font-black text-white">
                                                                         {order.selectedPages || "ALL"}
                                                                     </p>
-                                                                    <p className="mt-1 text-xs font-black uppercase tracking-wider text-cyan-50/52">
+                                                                    <p className="mt-1 text-xs font-black uppercase tracking-wider text-white/58">
                                                                         {order.copies || 1} copies
                                                                     </p>
                                                                 </div>
