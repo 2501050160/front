@@ -526,7 +526,7 @@ function BlockSelection() {
             } else if (err.message) {
                 errMsg = err.message;
             }
-            showAlert("Injection Failed", errMsg, "error");
+            showAlert("Injection Failed", `Step: "${injectProgress}" failed | Error: ${errMsg}`, "error");
         } finally {
             setInjectingBulk(false);
             setInjectProgress("");
