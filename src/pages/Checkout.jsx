@@ -132,10 +132,21 @@ function Checkout() {
     const [paperCount, setPaperCount] = useState(9999);
 
     useEffect(() => {
-        if (!userId) {
-            navigate("/");
+        const queryParams = new URLSearchParams(window.location.search);
+        const paramOrderId = queryParams.get("orderId");
+        if (paramOrderId) {
+            api.get("/pdf/orderStatus", { params: { orderId: paramOrderId } })
+                .then((res) => {
+                    if (res.data) {
+                        setCurrentOrder(res.data);
+                        localStorage.setItem("order", JSON.stringify(res.data));
+                        setFinalAmount(res.data.price || 0);
+                        setNupLayout(res.data.nupLayout || "1-up");
+                    }
+                })
+                .catch((err) => console.error("Failed to load order from query param:", err));
         }
-    }, [userId, navigate]);
+    }, []);
 
     useEffect(() => {
         if (userId) {
