@@ -39,6 +39,9 @@ function Dashboard() {
     const [printType, setPrintType] = useState("BW");
     const [allowBw, setAllowBw] = useState(true);
     const [allowColor, setAllowColor] = useState(true);
+    const [bwDuplexPrice, setBwDuplexPrice] = useState(1.5);
+    const [colorDuplexPrice, setColorDuplexPrice] = useState(4.0);
+    const [isCollegeSuspended, setIsCollegeSuspended] = useState(false);
     const blockLocation = localStorage.getItem("selectedBlock");
     
     // Multiple files support
@@ -265,6 +268,14 @@ function Dashboard() {
                 const settingsRes = await api.get("/system/settings");
                 const publicSettings = settingsRes.data;
                 setSettings(publicSettings);
+
+                // Check College Suspension
+                const suspendedStr = publicSettings.suspendedColleges || "";
+                const suspendedList = suspendedStr.split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
+                const userCol = (localStorage.getItem("userCollege") || "KLU").toUpperCase();
+                if (suspendedList.includes(userCol)) {
+                    setIsCollegeSuspended(true);
+                }
 
                 // Check General Announcement Popup
                 if (publicSettings.generalPopupEnabled === true || publicSettings.generalPopupEnabled === "true") {
@@ -1313,20 +1324,28 @@ function Dashboard() {
                                 Estimate
                             </h2>
 
-                             <div className={`mt-5 grid ${allowBw && allowColor ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
-                                 {/* Sleek Black & White (Monochrome) Box */}
+                             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                 {/* Sleek Black & White Single Sided Box */}
                                  {allowBw && (
-                                     <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px]">
-                                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Black & White (BW)</span>
-                                         <p className="mt-2 text-2xl font-black text-white">Rs. {bwPrice}</p>
+                                     <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
+                                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">B&W (Single Side)</span>
+                                         <p className="mt-1 text-xl font-black text-white">Rs. {bwPrice} / pg</p>
                                      </div>
                                  )}
 
-                                 {/* Colorful Glowing Neon/Rainbow Gradient Box */}
+                                 {/* Sleek Black & White Duplex Box */}
+                                 {allowBw && (
+                                     <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-3 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
+                                         <span className="text-[10px] font-black uppercase tracking-wider text-blue-300">B&W (Duplex / Both Sides)</span>
+                                         <p className="mt-1 text-xl font-black text-blue-100">Rs. {bwDuplexPrice} / pg</p>
+                                     </div>
+                                 )}
+
+                                 {/* Color Single Sided Box */}
                                  {allowColor && (
-                                     <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 via-indigo-950/50 to-purple-950/60 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px] shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-                                         <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">Color Print</span>
-                                         <p className="mt-2 text-2xl font-black text-white bg-gradient-to-r from-cyan-300 via-pink-300 to-amber-200 bg-clip-text text-transparent">Rs. {colorPrice}</p>
+                                     <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-indigo-950/50 p-3 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
+                                         <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300">Color (Single Side Only)</span>
+                                         <p className="mt-1 text-xl font-black text-white">Rs. {colorPrice} / pg</p>
                                      </div>
                                  )}
                              </div>
@@ -1647,13 +1666,21 @@ function Dashboard() {
                                                 Print Sides
                                             </span>
                                             <select
-                                                value={doubleSided ? "double" : "single"}
+                                                value={doubleSided && printType !== "COLOR" ? "double" : "single"}
                                                 onChange={(e) => setDoubleSided(e.target.value === "double")}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
+                                                disabled={printType === "COLOR"}
+                                                className="field !bg-white/10 !border-white/15 !text-white disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                                 <option value="single" className="bg-slate-900 text-white">Single Sided</option>
-                                                <option value="double" className="bg-slate-900 text-white">Double Sided (Duplex)</option>
+                                                {printType !== "COLOR" && (
+                                                    <option value="double" className="bg-slate-900 text-white">Double Sided (Duplex)</option>
+                                                )}
                                             </select>
+                                            {printType === "COLOR" && (
+                                                <p className="mt-1 text-[11px] font-semibold text-amber-300">
+                                                    * Color print is supported in Single Sided only.
+                                                </p>
+                                            )}
                                         </label>
                                     </div>
 

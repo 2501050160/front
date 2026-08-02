@@ -588,33 +588,78 @@ function AdminDashboard() {
         });
     };
 
-    const [resetBlockLocation, setResetBlockLocation] = useState("ALL");
+    const [resetScope, setResetScope] = useState("GLOBAL");
+    const [resetTargetName, setResetTargetName] = useState("");
+    const [selectedAdminOrderIds, setSelectedAdminOrderIds] = useState([]);
 
     const resetStats = async () => {
         if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
             showAlert("Permission Denied", "Only the main admin has permission to reset database statistics.", "error");
             return;
         }
-        const msg = resetBlockLocation === "ALL"
-            ? "This will permanently delete ALL orders and printing history across ALL blocks. This action CANNOT be undone. Are you sure you want to proceed?"
-            : `This will permanently delete ALL orders and printing history for block '${resetBlockLocation}'. This action CANNOT be undone. Are you sure you want to proceed?`;
+
+        let msg = "This will permanently delete ALL orders and printing history across ALL colleges and blocks.";
+        if (resetScope === "COLLEGE") {
+            if (!resetTargetName) {
+                showAlert("Required", "Please select a target college to reset.", "warning");
+                return;
+            }
+            msg = `This will permanently delete ALL orders and printing history for College '${resetTargetName}'.`;
+        } else if (resetScope === "BLOCK") {
+            if (!resetTargetName) {
+                showAlert("Required", "Please select a target block to reset.", "warning");
+                return;
+            }
+            msg = `This will permanently delete ALL orders and printing history for Block '${resetTargetName}'.`;
+        }
+
         showConfirm(
             "CRITICAL WARNING",
-            msg,
+            `${msg} This action CANNOT be undone. Are you sure you want to proceed?`,
             async () => {
                 try {
                     await api.post("/admin/reset-stats", null, {
                         params: { 
                             adminUsername: loggedInAdminUser,
-                            blockLocation: resetBlockLocation
+                            scope: resetScope,
+                            targetName: resetTargetName
                         }
                     });
-                    showAlert("Reset Success", `Statistics for ${resetBlockLocation === "ALL" ? "all blocks" : resetBlockLocation} have been reset successfully.`, "success");
+                    showAlert("Reset Success", "Statistics reset successfully.", "success");
                     fetchStats();
                     fetchOrders();
                 } catch (error) {
                     console.error("Error resetting stats:", error);
                     showAlert("Error", error.response?.data || "Failed to reset statistics", "error");
+                }
+            }
+        );
+    };
+
+    const handleBulkDeleteOrders = async () => {
+        if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
+            showAlert("Permission Denied", "Only the main admin has permission to delete orders.", "error");
+            return;
+        }
+        if (selectedAdminOrderIds.length === 0) {
+            showAlert("No Orders Selected", "Please select at least one order to delete.", "warning");
+            return;
+        }
+        showConfirm(
+            "Confirm Delete",
+            `Are you sure you want to permanently delete ${selectedAdminOrderIds.length} selected order(s)? They will be removed from the database and user history.`,
+            async () => {
+                try {
+                    await api.post("/admin/orders/delete-bulk", selectedAdminOrderIds, {
+                        params: { adminUsername: loggedInAdminUser }
+                    });
+                    showAlert("Delete Success", `${selectedAdminOrderIds.length} order(s) deleted successfully.`, "success");
+                    setSelectedAdminOrderIds([]);
+                    fetchOrders();
+                    fetchStats();
+                } catch (error) {
+                    console.error("Error deleting orders:", error);
+                    showAlert("Error", error.response?.data || "Failed to delete orders", "error");
                 }
             }
         );
@@ -2041,17 +2086,43 @@ function AdminDashboard() {
                                         All Orders History
                                     </h2>
                                 </div>
-                                <button
-                                    onClick={() => exportToCSV(orders, "active_orders", ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"])}
-                                    className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
-                                >
-                                    📥 Export Excel
-                                </button>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
+                                        <button
+                                            onClick={handleBulkDeleteOrders}
+                                            className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                        >
+                                            🗑️ Delete Selected ({selectedAdminOrderIds.length})
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => exportToCSV(orders, "active_orders", ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"])}
+                                        className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
+                                    >
+                                        📥 Export Excel
+                                    </button>
+                                </div>
                             </div>
 
                             <table className="data-table">
                                 <thead>
                                     <tr>
+                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                            <th className="w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={orders.length > 0 && selectedAdminOrderIds.length === orders.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedAdminOrderIds(orders.map(o => o.orderId));
+                                                        } else {
+                                                            setSelectedAdminOrderIds([]);
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </th>
+                                        )}
                                         <th>Order ID</th>
                                         <th>Location</th>
                                         <th>Customer</th>
@@ -2071,6 +2142,22 @@ function AdminDashboard() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.03 }}
                                         >
+                                            {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                <td className="w-10">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedAdminOrderIds.includes(order.orderId)}
+                                                        onChange={() => {
+                                                            setSelectedAdminOrderIds(prev =>
+                                                                prev.includes(order.orderId)
+                                                                    ? prev.filter(id => id !== order.orderId)
+                                                                    : [...prev, order.orderId]
+                                                            );
+                                                        }}
+                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="font-black">
                                                 <span>{order.orderId}</span>
                                             </td>
@@ -2135,21 +2222,48 @@ function AdminDashboard() {
                                     Orders currently in the print pipeline. Refreshes every 3 seconds.
                                 </p>
                             </div>
-                            <button
-                                onClick={() => exportToCSV(
-                                    orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)),
-                                    "order_queue",
-                                    ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"]
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
+                                    <button
+                                        onClick={handleBulkDeleteOrders}
+                                        className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                    >
+                                        🗑️ Delete Selected ({selectedAdminOrderIds.length})
+                                    </button>
                                 )}
-                                className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
-                            >
-                                📥 Export Queue
-                            </button>
+                                <button
+                                    onClick={() => exportToCSV(
+                                        orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)),
+                                        "order_queue",
+                                        ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"]
+                                    )}
+                                    className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
+                                >
+                                    📥 Export Queue
+                                </button>
+                            </div>
                         </div>
 
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                        <th className="w-10">
+                                            <input
+                                                type="checkbox"
+                                                checked={orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).length > 0 && selectedAdminOrderIds.length > 0}
+                                                onChange={(e) => {
+                                                    const queueIds = orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).map(o => o.orderId);
+                                                    if (e.target.checked) {
+                                                        setSelectedAdminOrderIds(Array.from(new Set([...selectedAdminOrderIds, ...queueIds])));
+                                                    } else {
+                                                        setSelectedAdminOrderIds(selectedAdminOrderIds.filter(id => !queueIds.includes(id)));
+                                                    }
+                                                }}
+                                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            />
+                                        </th>
+                                    )}
                                     <th>Order ID</th>
                                     <th>Location</th>
                                     <th>Customer</th>
@@ -2171,6 +2285,22 @@ function AdminDashboard() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.03 }}
                                     >
+                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                            <td className="w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedAdminOrderIds.includes(order.orderId)}
+                                                    onChange={() => {
+                                                        setSelectedAdminOrderIds(prev =>
+                                                            prev.includes(order.orderId)
+                                                                ? prev.filter(id => id !== order.orderId)
+                                                                : [...prev, order.orderId]
+                                                        );
+                                                    }}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </td>
+                                        )}
                                         <td className="font-black">
                                             <span>{order.orderId}</span>
                                         </td>
