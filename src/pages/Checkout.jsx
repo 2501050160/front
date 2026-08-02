@@ -40,7 +40,8 @@ function Checkout() {
                     selectedPages: order.selectedPages,
                     printType: order.printType,
                     blockLocation: order.blockLocation,
-                    nupLayout: newNup
+                    nupLayout: newNup,
+                    doubleSided: order.doubleSided
                 }
             });
             const updated = response.data;
