@@ -1005,65 +1005,39 @@ function BlockSelection() {
                         className="lg:col-span-7 flex items-center justify-center lg:justify-end py-4"
                     >
                         {!showDirectOtpForm ? (
-                            <div className="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
-                            <motion.div
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => {
-                                    if (!userId) {
-                                        showAlert("Not Logged In", "Please log in to release your prints.", "warning");
-                                        return;
-                                    }
-                                    setOtpError("");
-                                    setFetchingOrders(true);
-                                    setShowDirectOtpForm(true);
-                                    api.get("/pdf/userOrders", { params: { userId } })
-                                        .then(res => {
-                                            const pending = (res.data || []).filter(o => o.status === "PENDING_SCAN" || o.status === "CANCEL_WINDOW");
-                                            setPendingOrders(pending);
-                                            if (pending.length > 0) {
-                                                setSelectedOrderId(pending[0].orderId);
-                                            } else {
-                                                setSelectedOrderId("");
-                                            }
-                                        })
-                                        .catch(() => setOtpError("Failed to fetch pending orders."))
-                                        .finally(() => setFetchingOrders(false));
-                                }}
-                                className="glass-panel min-h-[190px] p-6 rounded-[24px] text-center cursor-pointer w-full border border-white/10 hover:border-amber-400/40 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
-                                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
-                            >
-                                <div className="absolute top-[-10%] right-[-10%] w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
-                                <span className="text-4xl animate-pulse">🔑</span>
-                                <div>
-                                    <h3 className="text-lg font-black text-white tracking-tight">Have OTP?</h3>
-                                    <p className="text-[11px] text-cyan-200/60 mt-0.5 font-bold">Release your print job here</p>
-                                </div>
-                            </motion.div>
-
-                            <motion.div
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={() => {
-                                    if (!userId) {
-                                        showAlert("Not Logged In", "Please log in to release your prints.", "warning");
-                                        return;
-                                    }
-                                    setOtpError("");
-                                    setShowBarcodeScanner(true);
-                                }}
-                                className="glass-panel min-h-[190px] p-6 rounded-[24px] text-center cursor-pointer w-full border border-white/10 hover:border-cyan-300/50 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col items-center justify-center gap-3 relative overflow-hidden"
-                                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
-                            >
-                                <div className="absolute bottom-[-10%] left-[-10%] w-24 h-24 bg-cyan-400/10 rounded-full blur-xl pointer-events-none" />
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
-                                    <ScanLine className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-white tracking-tight">Scan QR / Barcode</h3>
-                                    <p className="text-[11px] text-cyan-200/60 mt-0.5 font-bold">Point camera at kiosk display</p>
-                                </div>
-                            </motion.div>
+                            <div className="w-full max-w-xl">
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        if (!userId) {
+                                            showAlert("Not Logged In", "Please log in to release your prints.", "warning");
+                                            return;
+                                        }
+                                        setOtpError("");
+                                        setShowBarcodeScanner(true);
+                                    }}
+                                    className="glass-panel min-h-[160px] p-6 rounded-[24px] text-center cursor-pointer w-full border border-cyan-400/30 hover:border-cyan-300/60 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-purple-950/40"
+                                >
+                                    <div className="absolute top-[-20%] right-[-10%] w-36 h-36 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
+                                    <div className="flex items-center gap-4 text-left">
+                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-400/15 text-cyan-300 shadow-lg">
+                                            <ScanLine className="h-7 w-7" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-xl font-black text-white tracking-tight">Scan Barcode or Enter OTP</h3>
+                                                <span className="text-lg">🔑</span>
+                                            </div>
+                                            <p className="text-xs text-cyan-100/70 mt-1 font-semibold">
+                                                Point camera at kiosk display or enter 4-digit OTP to release print
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button className="shrink-0 px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg">
+                                        Release Print 🖨️
+                                    </button>
+                                </motion.div>
                             </div>
                         ) : (
                             <motion.div 
