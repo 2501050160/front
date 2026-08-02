@@ -303,9 +303,13 @@ function MyOrders() {
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <h3 className="text-lg font-black text-white truncate">{order.orderId}</h3>
-                                                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusTone(order.status)}`}>
-                                                        {order.status === "PENDING_SCAN" ? "Pending Scan" : order.status}
-                                                    </span>
+                                                     <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${statusTone(order.status)}`}>
+                                                         {order.status === "PENDING_SCAN" ? "Ready for Print (OTP required)" :
+                                                          order.status === "PRINTING" ? "Printing..." :
+                                                          order.status === "COMPLETED" ? "Completed - Collect Print" :
+                                                          order.status === "QUEUE" ? "Queued for Printing" :
+                                                          order.status === "CANCEL_WINDOW" ? "Queued for Printing" : order.status}
+                                                     </span>
                                                 </div>
                                                 <p className="mt-1 text-sm font-bold text-cyan-50/68 truncate">{order.fileName || order.customerName || "Print document"}</p>
                                                 <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold text-cyan-50/60">

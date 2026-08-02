@@ -5,7 +5,6 @@ import api from "../services/api";
 import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
-import BarcodeScannerModal from "../components/BarcodeScannerModal";
 import blocksVideo from "../assets/blocks.mp4";
 import collectVideo from "../assets/collect.mp4";
 import inVideo from "../assets/in.mp4";
@@ -1370,11 +1369,7 @@ function BlockSelection() {
                 onConfirm={modalConfig.onConfirm}
             />
 
-            <BarcodeScannerModal
-                isOpen={showBarcodeScanner}
-                onClose={() => setShowBarcodeScanner(false)}
-                onResult={handleScannedRelease}
-            />
+
 
             {/* Verification OTP Modal Overlay */}
             <AnimatePresence>

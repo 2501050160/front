@@ -196,6 +196,16 @@ function PrinterSettings() {
         setEditingId(null);
     };
 
+    const toggleBwForColor = async (id) => {
+        try {
+            await api.post("/printer/toggleBwForColor", null, { params: { id } });
+            fetchPrinters();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to toggle B&W setting for printer");
+        }
+    };
+
     const deletePrinter = async (id) => {
         try {
             await api.delete("/printer/delete", {
@@ -373,6 +383,7 @@ function PrinterSettings() {
                             onEdit={handleEdit}
                             onDelete={loggedInAdminUser === "admin" ? deletePrinter : null}
                             onToggleMaintenance={(loggedInAdminRole === "MANAGER" || loggedInAdminRole === "SUB_ADMIN" || loggedInAdminUser === "admin") ? toggleMaintenance : null}
+                            onToggleBwForColor={(loggedInAdminRole === "MANAGER" || loggedInAdminRole === "SUB_ADMIN" || loggedInAdminUser === "admin") ? toggleBwForColor : null}
                             onUpdatePaper={(loggedInAdminRole === "MANAGER" || loggedInAdminRole === "SUB_ADMIN" || loggedInAdminUser === "admin") ? updatePaperCount : null}
                         />
                     ))}

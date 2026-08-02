@@ -588,20 +588,28 @@ function AdminDashboard() {
         });
     };
 
+    const [resetBlockLocation, setResetBlockLocation] = useState("ALL");
+
     const resetStats = async () => {
         if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
             showAlert("Permission Denied", "Only the main admin has permission to reset database statistics.", "error");
             return;
         }
+        const msg = resetBlockLocation === "ALL"
+            ? "This will permanently delete ALL orders and printing history across ALL blocks. This action CANNOT be undone. Are you sure you want to proceed?"
+            : `This will permanently delete ALL orders and printing history for block '${resetBlockLocation}'. This action CANNOT be undone. Are you sure you want to proceed?`;
         showConfirm(
             "CRITICAL WARNING",
-            "This will permanently delete ALL orders and printing history. This action CANNOT be undone. Are you sure you want to proceed?",
+            msg,
             async () => {
                 try {
                     await api.post("/admin/reset-stats", null, {
-                        params: { adminUsername: loggedInAdminUser }
+                        params: { 
+                            adminUsername: loggedInAdminUser,
+                            blockLocation: resetBlockLocation
+                        }
                     });
-                    showAlert("Reset Success", "Statistics and order logs have been reset successfully.", "success");
+                    showAlert("Reset Success", `Statistics for ${resetBlockLocation === "ALL" ? "all blocks" : resetBlockLocation} have been reset successfully.`, "success");
                     fetchStats();
                     fetchOrders();
                 } catch (error) {
@@ -2435,6 +2443,26 @@ function AdminDashboard() {
                                     >
                                         📥 Export Excel
                                     </button>
+                                    {selectedCoupons.length > 0 && (
+                                        <div className="flex items-center gap-2">
+                                         <select
+                                             value={resetBlockLocation}
+                                             onChange={(e) => setResetBlockLocation(e.target.value)}
+                                             className="field text-xs font-bold py-1.5 px-3 text-slate-800 bg-white border border-slate-300 rounded-lg"
+                                         >
+                                             <option value="ALL">All Blocks (Global Reset)</option>
+                                             {blocks.map(b => (
+                                                 <option key={b.id} value={b.name}>{b.name}</option>
+                                             ))}
+                                         </select>
+                                         <button
+                                             onClick={resetStats}
+                                             className="btn danger px-4 py-2 text-sm font-bold min-h-0 shrink-0"
+                                         >
+                                             Reset Stats
+                                         </button>
+                                     </div>
+                                    )}
                                     {selectedCoupons.length > 0 && (
                                         <button
                                             onClick={handleBulkDeleteCoupons}

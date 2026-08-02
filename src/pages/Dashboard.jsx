@@ -37,6 +37,8 @@ function Dashboard() {
     const referralCode = localStorage.getItem("referralCode") || "";
 
     const [printType, setPrintType] = useState("BW");
+    const [allowBw, setAllowBw] = useState(true);
+    const [allowColor, setAllowColor] = useState(true);
     const blockLocation = localStorage.getItem("selectedBlock");
     
     // Multiple files support
@@ -368,6 +370,42 @@ function Dashboard() {
                     setColorPrice(p.pricePerPage);
                 }
             });
+
+            // Fetch block printer capabilities
+            const printerRes = await api.get("/printer/allByBlock", {
+                params: { blockLocation }
+            });
+            const blockPrinters = printerRes.data || [];
+
+            let hasBw = false;
+            let hasColor = false;
+
+            blockPrinters.forEach((p) => {
+                if (p.active) {
+                    if (p.colourSupported) {
+                        hasColor = true;
+                        if (!p.bwDisabledForColor) {
+                            hasBw = true;
+                        }
+                    } else {
+                        hasBw = true;
+                    }
+                }
+            });
+
+            if (blockPrinters.length === 0 || (!hasBw && !hasColor)) {
+                hasBw = true;
+                hasColor = true;
+            }
+
+            setAllowBw(hasBw);
+            setAllowColor(hasColor);
+
+            if (!hasBw && hasColor) {
+                setPrintType("COLOR");
+            } else if (hasBw && !hasColor) {
+                setPrintType("BW");
+            }
         } catch (error) {
             console.error(error);
         }
@@ -540,6 +578,7 @@ function Dashboard() {
             const finalOrder = response.data;
 
             // Apply coupon updates and validate before wallet payment
+            let walletRes;
             if (couponApplied && couponDetails) {
                 const discount = (finalOrder.price * couponDetails.discountPercentage) / 100;
                 const discountedPrice = finalOrder.price - discount;
@@ -553,8 +592,7 @@ function Dashboard() {
                     }
                 });
 
-                // Run coupon consumption and wallet payment in parallel to speed up execution
-                await Promise.all([
+                const [couponResult, payResult] = await Promise.all([
                     api.post("/coupon/use", null, {
                         params: { couponCode }
                     }).catch(err => console.error("Failed to mark coupon as used:", err)),
@@ -564,16 +602,21 @@ function Dashboard() {
                         }
                     })
                 ]);
+                walletRes = payResult;
             } else {
                 // 2. Pay using wallet balance
-                await api.post("/pdf/payWithWallet", null, {
+                walletRes = await api.post("/pdf/payWithWallet", null, {
                     params: {
                         orderId: finalOrder.orderId
                     }
                 });
             }
 
-            await getWalletBalance(userId).then(setWalletBalance);
+            if (walletRes?.data?.newWalletBalance != null) {
+                setWalletBalance(walletRes.data.newWalletBalance);
+            } else {
+                getWalletBalance(userId).then(setWalletBalance).catch(() => {});
+            }
             localStorage.removeItem("order");
             navigate(`/payment-success?orderId=${finalOrder.orderId}`);
         } catch (error) {
@@ -1270,18 +1313,22 @@ function Dashboard() {
                                 Estimate
                             </h2>
 
-                             <div className="mt-5 grid grid-cols-2 gap-3">
+                             <div className={`mt-5 grid ${allowBw && allowColor ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
                                  {/* Sleek Black & White (Monochrome) Box */}
-                                 <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px]">
-                                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Black & White (BW)</span>
-                                     <p className="mt-2 text-2xl font-black text-white">Rs. {bwPrice}</p>
-                                 </div>
+                                 {allowBw && (
+                                     <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px]">
+                                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Black & White (BW)</span>
+                                         <p className="mt-2 text-2xl font-black text-white">Rs. {bwPrice}</p>
+                                     </div>
+                                 )}
 
                                  {/* Colorful Glowing Neon/Rainbow Gradient Box */}
-                                 <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 via-indigo-950/50 to-purple-950/60 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px] shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-                                     <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">Color Print</span>
-                                     <p className="mt-2 text-2xl font-black text-white bg-gradient-to-r from-cyan-300 via-pink-300 to-amber-200 bg-clip-text text-transparent">Rs. {colorPrice}</p>
-                                 </div>
+                                 {allowColor && (
+                                     <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 via-indigo-950/50 to-purple-950/60 p-4 flex flex-col justify-between relative overflow-hidden min-h-[90px] shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                                         <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">Color Print</span>
+                                         <p className="mt-2 text-2xl font-black text-white bg-gradient-to-r from-cyan-300 via-pink-300 to-amber-200 bg-clip-text text-transparent">Rs. {colorPrice}</p>
+                                     </div>
+                                 )}
                              </div>
 
                              <div className="mt-5 rounded-lg bg-slate-900 p-5 text-white">
@@ -1558,10 +1605,8 @@ function Dashboard() {
                                                 onChange={(e) => setPrintType(e.target.value)}
                                                 className="field !bg-white/10 !border-white/15 !text-white"
                                             >
-                                                <option value="BW" className="bg-slate-900 text-white">Black & White</option>
-                                                {colorSupported && (
-                                                    <option value="COLOR" className="bg-slate-900 text-white">Color</option>
-                                                )}
+                                                {allowBw && <option value="BW" className="bg-slate-900 text-white">Black & White</option>}
+                                                {allowColor && <option value="COLOR" className="bg-slate-900 text-white">Color</option>}
                                             </select>
                                         </label>
 
@@ -1808,7 +1853,11 @@ function Dashboard() {
                                                 <td className="font-black text-white">Rs. {order.price}</td>
                                                 <td className="flex items-center gap-2">
                                                      <span className={orderStatusClass(order.status)}>
-                                                         {order.status}
+                                                         {order.status === "PENDING_SCAN" ? "Ready for Print (OTP)" :
+                                                          order.status === "PRINTING" ? "Printing..." :
+                                                          order.status === "COMPLETED" ? "Completed - Collect Print" :
+                                                          order.status === "QUEUE" ? "Queued for Printing" :
+                                                          order.status === "CANCEL_WINDOW" ? "Queued for Printing" : order.status}
                                                      </span>
                                                      {order.status === "PRINTING" && (
                                                          <div className="flex items-center justify-center gap-1.5 text-emerald-400">

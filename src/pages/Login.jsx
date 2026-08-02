@@ -41,11 +41,8 @@ function Login() {
     }, []);
 
     const handleOAuth = (provider) => {
-        setOauthRedirecting(provider);
-        setTimeout(() => {
-            const endpoint = provider.toLowerCase() === "google" ? "google" : "azure";
-            window.location.href = `${API_BASE}/oauth2/authorization/${endpoint}`;
-        }, 1500);
+        const endpoint = provider.toLowerCase() === "google" ? "google" : "azure";
+        window.location.href = `${API_BASE}/oauth2/authorization/${endpoint}`;
     };
 
     const navigate = useNavigate();
@@ -62,6 +59,7 @@ function Login() {
                 email: params.get("email"),
                 walletBalance: parseFloat(params.get("walletBalance") || "0.0")
             };
+            window.history.replaceState({}, document.title, window.location.pathname);
             if (isNew) {
                 setOauthNewUser(user);
             } else {

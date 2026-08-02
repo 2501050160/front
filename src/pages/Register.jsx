@@ -50,11 +50,8 @@ function Register() {
   };
 
   const handleOAuth = (provider) => {
-    setOauthRedirecting(provider);
-    setTimeout(() => {
-      const endpoint = provider.toLowerCase() === "google" ? "google" : "azure"; // backend endpoint
-      window.location.href = `${API_BASE}/oauth2/authorization/${endpoint}`;
-    }, 1500);
+    const endpoint = provider.toLowerCase() === "google" ? "google" : "azure";
+    window.location.href = `${API_BASE}/oauth2/authorization/${endpoint}`;
   };
 
   return (

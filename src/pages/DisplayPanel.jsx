@@ -763,35 +763,6 @@ function DisplayPanel() {
                 </footer>
             </section>
 
-            {!hasActiveOrPendingOrders && (
-                <motion.div 
-                    drag
-                    dragMomentum={false}
-                    className="fixed bottom-16 left-6 z-40 flex items-center gap-4 p-4 rounded-xl bg-slate-950/90 backdrop-blur-md border border-white/10 shadow-2xl max-w-sm transition-all hover:scale-105 cursor-grab active:cursor-grabbing"
-                >
-                    <div className="p-1.5 bg-white rounded-lg shadow-md shrink-0">
-                        <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin)}&color=0f172a`} 
-                            alt="Kiosk QR Code"
-                            className="w-[100px] h-[100px] block"
-                        />
-                    </div>
-                    <div className="text-left">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                            No App Needed
-                        </span>
-                        <h4 className="text-base font-black text-white mt-2">
-                            Scan to Print
-                        </h4>
-                        <p className="text-[10px] font-bold text-slate-400 mt-1">
-                            Website Link:
-                        </p>
-                        <code className="text-xs font-black text-cyan-300 block mt-0.5 select-all">
-                            www.saipraveen.site
-                        </code>
-                    </div>
-                </motion.div>
-            )}
 
             <AnimatePresence>
                 {false && showFullscreenAd && !activePickup && (

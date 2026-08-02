@@ -19,6 +19,13 @@ function QueueManagement() {
   const [blocks, setBlocks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+
+  const toggleSelectOrder = (orderId) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
 
   const fetchOrders = async () => {
     try {
@@ -90,6 +97,28 @@ function QueueManagement() {
       (o.customerName && o.customerName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const handleDeleteSelected = async () => {
+    if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
+      alert("Only the main admin has permission to delete orders from the database!");
+      return;
+    }
+    if (selectedOrderIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to permanently delete ${selectedOrderIds.length} selected order(s)? They will be removed from the database and user history.`)) {
+      return;
+    }
+    try {
+      await api.post("/admin/orders/delete-bulk", selectedOrderIds, {
+        params: { adminUsername: loggedInAdminUser }
+      });
+      alert(`Deleted ${selectedOrderIds.length} order(s) successfully.`);
+      setSelectedOrderIds([]);
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting orders: " + (err.response?.data || err.message));
+    }
+  };
+
   const getColumnOrders = (columnType) => {
     if (columnType === "waiting") {
       return filteredOrders.filter((o) =>
@@ -126,6 +155,14 @@ function QueueManagement() {
           </div>
 
           <div className="flex items-center gap-3">
+            {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedOrderIds.length > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                className="btn danger py-2 px-4 text-xs font-black min-h-0 rounded-xl flex items-center gap-1.5"
+              >
+                🗑️ Delete Selected ({selectedOrderIds.length})
+              </button>
+            )}
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -160,7 +197,17 @@ function QueueManagement() {
               {getColumnOrders("waiting").map((order) => (
                 <div key={order.id} className="kanban-card">
                   <div className="flex justify-between items-start">
-                    <span className="text-xs font-black text-slate-400">#{order.orderId}</span>
+                    <div className="flex items-center gap-2">
+                      {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                        <input
+                          type="checkbox"
+                          checked={selectedOrderIds.includes(order.orderId)}
+                          onChange={() => toggleSelectOrder(order.orderId)}
+                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      )}
+                      <span className="text-xs font-black text-slate-400">#{order.orderId}</span>
+                    </div>
                     <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
                       {order.status}
                     </span>

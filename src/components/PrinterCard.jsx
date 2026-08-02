@@ -1,4 +1,4 @@
-function PrinterCard({ printer, onEdit, onDelete, onToggleMaintenance, onUpdatePaper }) {
+function PrinterCard({ printer, onEdit, onDelete, onToggleMaintenance, onToggleBwForColor, onUpdatePaper }) {
     return (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-start justify-between gap-4">
@@ -13,20 +13,13 @@ function PrinterCard({ printer, onEdit, onDelete, onToggleMaintenance, onUpdateP
                         IP: {printer.printerIp || "Local / USB"}
                     </p>
                     <div className="flex flex-col gap-1.5 mt-2">
-                        {printer.qrScanToPrint && (
-                            <div>
-                                <span className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 bg-sky-50/50 px-2 py-0.5 rounded border border-sky-100">
-                                    🔐 Requires QR Scan
-                                </span>
-                            </div>
-                        )}
                         <div>
                             <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded border ${
                                 printer.otpEnabled !== false
                                     ? "text-violet-600 bg-violet-50/50 border-violet-100"
                                     : "text-amber-600 bg-amber-50/50 border-amber-100"
                             }`}>
-                                {printer.otpEnabled !== false ? "🔑 OTP Required" : "⚡ No OTP Direct"}
+                                {printer.otpEnabled !== false ? "🔑 OTP Required" : "⚡ Direct Print (No OTP)"}
                             </span>
                         </div>
                     </div>
@@ -68,6 +61,14 @@ function PrinterCard({ printer, onEdit, onDelete, onToggleMaintenance, onUpdateP
                         className={`btn min-h-0 px-4 py-2 text-sm font-bold ${printer.maintenance ? 'success' : 'danger'}`}
                     >
                         🛠 {printer.maintenance ? 'Set Online' : 'Set Maintenance'}
+                    </button>
+                )}
+                {printer.colourSupported && onToggleBwForColor && (
+                    <button
+                        onClick={() => onToggleBwForColor(printer.id)}
+                        className={`btn min-h-0 px-4 py-2 text-sm font-bold ${printer.bwDisabledForColor ? 'success' : 'secondary'}`}
+                    >
+                        {printer.bwDisabledForColor ? '✅ Enable B&W' : '🚫 Disable B&W'}
                     </button>
                 )}
                 {onUpdatePaper && (
