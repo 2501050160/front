@@ -269,7 +269,7 @@ export default function Chatbot() {
           sender: "bot",
           time,
           type: "support_info",
-          text: "☎ *Cloud Print Customer Care*\n-----------------------------------\nNeed help with paper jams, payment refunds, or kiosk access?\n\n• 💬 *WhatsApp Support*: +91 94941 89664\n• 📧 *Email*: support@cloudprint.edu\n• ⏰ *Hours*: 8:00 AM - 10:00 PM (Mon - Sat)\n\nOur campus tech team responds within 2 minutes!"
+          text: "☎ *Cloud Print Customer Care*\n-----------------------------------\nNeed help with paper jams, payment refunds, or kiosk access?\n\n• 💬 *WhatsApp Support*: Available via Kiosk Desk\n• 📧 *Email*: support@cloudprint.edu\n• ⏰ *Hours*: 8:00 AM - 10:00 PM (Mon - Sat)\n\nOur campus tech team responds within 2 minutes!"
         };
         nextReplies = [
           { id: "main_menu", label: "🏠 Back to Main Menu", emoji: "✨" }

@@ -446,9 +446,9 @@ function WhatsAppOrders() {
                                   href={`https://wa.me/${cleanPhone}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-[11px] text-emerald-400 hover:underline block"
+                                  className="text-[11px] text-emerald-400 hover:underline block font-mono"
                                 >
-                                  +{cleanPhone}
+                                  +{cleanPhone.length >= 10 ? cleanPhone.substring(0, 3) + "•••••" + cleanPhone.substring(cleanPhone.length - 2) : cleanPhone}
                                 </a>
                               )}
                             </div>
