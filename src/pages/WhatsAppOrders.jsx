@@ -90,12 +90,16 @@ function WhatsAppOrders() {
     }
   };
 
+  const loggedInAdminRole = localStorage.getItem("adminRole") || "SUB_ADMIN";
+  const loggedInAdminCollege = localStorage.getItem("adminCollege") || "KLU";
+  const loggedInAdminUser = localStorage.getItem("adminUser") || "";
+  const [selectedCollegeFilter, setSelectedCollegeFilter] = useState("ALL");
+
   // Helper check for WhatsApp order / user
   const isWhatsAppOrder = (o) => {
     if (!o) return false;
     const name = (o.customerName || "").toLowerCase();
     const email = (o.userEmail || "").toLowerCase();
-    const orderId = (o.orderId || "").toLowerCase();
     return (
       name.includes("whatsapp") ||
       name.includes("bot") ||
@@ -113,8 +117,36 @@ function WhatsAppOrders() {
     return email.includes("whatsapp") || email.startsWith("wa_") || ref.startsWith("wa_") || name.includes("whatsapp");
   };
 
-  const waOrders = orders.filter(isWhatsAppOrder);
-  const waUsers = users.filter(isWhatsAppUser);
+  // Base WhatsApp filtered items
+  const waOrdersBase = orders.filter(isWhatsAppOrder);
+  const waUsersBase = users.filter(isWhatsAppUser);
+
+  // Sub-Admin vs Main Admin Filtering
+  const waOrders = waOrdersBase.filter((o) => {
+    if ((loggedInAdminRole === "SUB_ADMIN" || loggedInAdminRole === "MANAGER") && loggedInAdminUser !== "admin") {
+      const b = blocks.find(x => x.name === o.blockLocation);
+      const col = b ? b.college : "KLU";
+      return col.toUpperCase() === loggedInAdminCollege.toUpperCase();
+    }
+    if (selectedCollegeFilter !== "ALL") {
+      const b = blocks.find(x => x.name === o.blockLocation);
+      const col = b ? b.college : "KLU";
+      return col.toUpperCase() === selectedCollegeFilter.toUpperCase();
+    }
+    return true;
+  });
+
+  const waUsers = waUsersBase.filter((u) => {
+    if ((loggedInAdminRole === "SUB_ADMIN" || loggedInAdminRole === "MANAGER") && loggedInAdminUser !== "admin") {
+      const uCol = u.college || "KLU";
+      return uCol.toUpperCase() === loggedInAdminCollege.toUpperCase();
+    }
+    if (selectedCollegeFilter !== "ALL") {
+      const uCol = u.college || "KLU";
+      return uCol.toUpperCase() === selectedCollegeFilter.toUpperCase();
+    }
+    return true;
+  });
 
   const filteredOrders = waOrders.filter((o) => {
     const matchesSearch =
@@ -166,6 +198,17 @@ function WhatsAppOrders() {
           </div>
 
           <div className="flex items-center gap-3">
+            {loggedInAdminUser === "admin" && (
+              <select
+                value={selectedCollegeFilter}
+                onChange={(e) => setSelectedCollegeFilter(e.target.value)}
+                className="bg-slate-900 border border-slate-800 text-xs font-bold text-emerald-400 rounded-xl px-3 py-2 outline-none cursor-pointer"
+              >
+                <option value="ALL">🏫 All Colleges</option>
+                <option value="KLU">KLU Campus</option>
+                <option value="Lakshmi Narayana Xerox">Lakshmi Narayana Xerox</option>
+              </select>
+            )}
             <button onClick={refreshData} className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors" title="Refresh Live Data">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
