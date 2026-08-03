@@ -28,6 +28,8 @@ const UserManagement = lazy(() => import("./pages/UserManagement"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
 
+const Chatbot = lazy(() => import("./pages/Chatbot"));
+
 // A clean loading fallback for the lazy loaded components
 const PageLoader = () => (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
@@ -117,6 +119,7 @@ function App() {
           <Route path="/display-panel" element={<DisplayPanel />} />
           <Route path="/blocks" element={<BlockSelection />} />
           <Route path="/scan-to-print" element={<ScanToPrint />} />
+          <Route path="/chatbot" element={<Chatbot />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

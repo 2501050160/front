@@ -31,6 +31,26 @@ function Checkout() {
     const [scheduledTime, setScheduledTime] = useState("");
     const [nupLayout, setNupLayout] = useState(order?.nupLayout || "1-up");
 
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const orderIdParam = searchParams.get("orderId");
+
+        if (orderIdParam) {
+            api.get(`/pdf/order/${orderIdParam}`)
+                .then((res) => {
+                    if (res.data) {
+                        localStorage.setItem("order", JSON.stringify(res.data));
+                        setCurrentOrder(res.data);
+                        setFinalAmount(res.data.price || 0);
+                        if (res.data.nupLayout) setNupLayout(res.data.nupLayout);
+                    }
+                })
+                .catch((err) => {
+                    console.error("Failed to fetch order from URL parameter:", err.message);
+                });
+        }
+    }, []);
+
     const updatePrintSettings = async (newNup) => {
         try {
             const response = await api.post("/pdf/updateOrder", null, {
