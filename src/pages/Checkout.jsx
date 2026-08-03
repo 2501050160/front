@@ -155,7 +155,7 @@ function Checkout() {
         const queryParams = new URLSearchParams(window.location.search);
         const paramOrderId = queryParams.get("orderId");
         if (paramOrderId) {
-            api.get("/pdf/orderStatus", { params: { orderId: paramOrderId } })
+            api.get(`/pdf/order/${paramOrderId}`)
                 .then((res) => {
                     if (res.data) {
                         setCurrentOrder(res.data);
