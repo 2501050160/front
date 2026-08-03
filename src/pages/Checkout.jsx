@@ -297,6 +297,21 @@ function Checkout() {
         } catch (error) {
             console.error("Payment initiation error:", error);
             showAlert("Payment Error", "Unable to initiate payment transaction.", "error");
+    const payTestInstant = async () => {
+        setPaymentMethod("test");
+        try {
+            await api.post("/pdf/paymentSuccess", null, {
+                params: {
+                    orderId: order.orderId,
+                    paymentId: "PAY_MOCK_" + Date.now()
+                }
+            });
+
+            localStorage.removeItem("order");
+            navigate(`/payment-success?orderId=${order.orderId}`);
+        } catch (error) {
+            console.error("Failed to complete test payment:", error);
+            showAlert("Error", "Unable to complete test payment.", "error");
             setPaymentMethod("");
         }
     };
@@ -752,8 +767,16 @@ function Checkout() {
                         )}
 
                         <button
+                            onClick={payTestInstant}
+                            className="btn primary mt-4 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-3 rounded-xl shadow-lg cursor-pointer transition-all"
+                            disabled={paperShortage || maintenance || !!paymentMethod}
+                        >
+                            ⚡ Direct Instant Test Payment (Mock Complete)
+                        </button>
+
+                        <button
                             onClick={payNow}
-                            className="btn success mt-4 w-full flex items-center justify-center gap-2"
+                            className="btn success mt-3 w-full flex items-center justify-center gap-2"
                             disabled={paperShortage || maintenance || !!paymentMethod}
                             style={paperShortage || maintenance || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
                         >
