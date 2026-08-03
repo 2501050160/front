@@ -27,6 +27,7 @@ const QueueManagement = lazy(() => import("./pages/QueueManagement"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
+const WhatsAppOrders = lazy(() => import("./pages/WhatsAppOrders"));
 
 const Chatbot = lazy(() => import("./pages/Chatbot"));
 
@@ -114,6 +115,7 @@ function App() {
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/admin/analytics" element={<Analytics />} />
           <Route path="/admin/settings" element={<Settings />} />
+          <Route path="/admin/whatsapp" element={<WhatsAppOrders />} />
 
           <Route path="/printer-settings" element={<PrinterSettings />} />
           <Route path="/display-panel" element={<DisplayPanel />} />

@@ -131,6 +131,12 @@ function UserManagement() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              to="/admin/whatsapp"
+              className="py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
+            >
+              💬 WhatsApp Section
+            </Link>
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input

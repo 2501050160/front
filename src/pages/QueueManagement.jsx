@@ -155,6 +155,12 @@ function QueueManagement() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              to="/admin/whatsapp"
+              className="py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
+            >
+              💬 WhatsApp Orders
+            </Link>
             {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedOrderIds.length > 0 && (
               <button
                 onClick={handleDeleteSelected}
