@@ -13,6 +13,7 @@ function AdminDashboard() {
     const [stats, setStats] = useState({});
     const [revenuePeriod, setRevenuePeriod] = useState("all");
     const [selectedCollegeFilter, setSelectedCollegeFilter] = useState("ALL");
+    const [orderSortDir, setOrderSortDir] = useState("desc");
 
     const [bwPrice, setBwPrice] = useState(0);
     const [colorPrice, setColorPrice] = useState(0);
@@ -186,6 +187,14 @@ function AdminDashboard() {
 
                 // For Orders
                 else if (header === "Order ID") val = row.orderId != null ? row.orderId : "";
+                else if (header === "Date & Time") {
+                    val = row.uploadTime
+                        ? new Date(row.uploadTime).toLocaleString('en-IN', {
+                            day: '2-digit', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit', hour12: true
+                          })
+                        : "—";
+                }
                 else if (header === "Location") val = row.blockLocation != null ? row.blockLocation : "";
                 else if (header === "Customer") val = row.customerName != null ? row.customerName : "";
                 else if (header === "Pages") val = row.selectedPages != null ? row.selectedPages : "";
@@ -2096,7 +2105,7 @@ function AdminDashboard() {
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => exportToCSV(orders, "active_orders", ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"])}
+                                        onClick={() => exportToCSV(orders, "active_orders", ["Order ID", "Date & Time", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"])}
                                         className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
                                     >
                                         📥 Export Excel
@@ -2124,6 +2133,13 @@ function AdminDashboard() {
                                             </th>
                                         )}
                                         <th>Order ID</th>
+                                        <th
+                                            onClick={() => setOrderSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                                            className="cursor-pointer select-none whitespace-nowrap"
+                                            title="Sort by Date"
+                                        >
+                                            Date &amp; Time {orderSortDir === 'desc' ? '▼' : '▲'}
+                                        </th>
                                         <th>Location</th>
                                         <th>Customer</th>
                                         <th>Pages</th>
@@ -2135,7 +2151,11 @@ function AdminDashboard() {
                                 </thead>
 
                                 <tbody>
-                                    {orders.map((order, index) => (
+                                    {[...(orders || [])].sort((a, b) => {
+                                        const ta = new Date(a.uploadTime || 0).getTime();
+                                        const tb = new Date(b.uploadTime || 0).getTime();
+                                        return orderSortDir === 'desc' ? tb - ta : ta - tb;
+                                    }).map((order, index) => (
                                         <motion.tr
                                             key={order.id}
                                             initial={{ opacity: 0, y: 8 }}
@@ -2160,6 +2180,14 @@ function AdminDashboard() {
                                             )}
                                             <td className="font-black">
                                                 <span>{order.orderId}</span>
+                                            </td>
+                                            <td className="whitespace-nowrap text-slate-500 text-sm">
+                                                {order.uploadTime
+                                                    ? new Date(order.uploadTime).toLocaleString('en-IN', {
+                                                        day: '2-digit', month: 'short', year: 'numeric',
+                                                        hour: '2-digit', minute: '2-digit', hour12: true
+                                                      })
+                                                    : '—'}
                                             </td>
                                             <td className="font-bold">
                                                 {order.blockLocation || "C Block"}
@@ -2194,7 +2222,7 @@ function AdminDashboard() {
 
                                     {orders.length === 0 && (
                                         <tr>
-                                            <td colSpan="8" className="text-center font-bold text-slate-500 py-6">
+                                            <td colSpan="9" className="text-center font-bold text-slate-500 py-6">
                                                 No print orders in queue
                                             </td>
                                         </tr>
