@@ -34,11 +34,8 @@ function MyOrders() {
     const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        if (!userId) {
-            navigate("/");
-        }
-    }, [userId, navigate]);
+    const [waPhoneQuery, setWaPhoneQuery] = useState("");
+    const [isSearchingWa, setIsSearchingWa] = useState(false);
 
     useEffect(() => {
         if (userId) {
@@ -46,6 +43,8 @@ function MyOrders() {
             getWalletBalance(userId).then(setWalletBalance);
             const interval = setInterval(fetchOrders, 3000);
             return () => clearInterval(interval);
+        } else {
+            setIsLoading(false);
         }
     }, [userId]);
 
@@ -60,6 +59,29 @@ function MyOrders() {
             console.error(error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleSearchWaOrders = async (e) => {
+        if (e) e.preventDefault();
+        const cleanPhone = waPhoneQuery.replace(/[^0-9]/g, "");
+        if (!cleanPhone) return;
+        setIsSearchingWa(true);
+        setIsLoading(true);
+        try {
+            const res = await api.get("/pdf/orders");
+            const all = res.data || [];
+            const waMatches = all.filter(o => {
+                const name = (o.customerName || "").toLowerCase();
+                const email = (o.userEmail || "").toLowerCase();
+                return name.includes(cleanPhone) || email.includes(cleanPhone);
+            });
+            setOrders(waMatches);
+        } catch (err) {
+            console.error("Failed to search WhatsApp orders:", err);
+        } finally {
+            setIsLoading(false);
+            setIsSearchingWa(false);
         }
     };
 
@@ -248,6 +270,41 @@ function MyOrders() {
                         </div>
                     </div>
                 </motion.section>
+
+                {/* WhatsApp Order Lookup Banner */}
+                <motion.div
+                    className="orders-glass-card rounded-[24px] p-5 mb-6 border border-emerald-500/30 bg-emerald-950/20"
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                >
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h3 className="text-lg font-black text-white flex items-center gap-2">
+                                📱 WhatsApp Order Lookup <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">Bot Instant Track</span>
+                            </h3>
+                            <p className="text-xs text-slate-300 mt-1">
+                                Submitted a document via WhatsApp? Enter your registered mobile number to track live status and release OTP.
+                            </p>
+                        </div>
+                        <form onSubmit={handleSearchWaOrders} className="flex items-center gap-2 w-full md:w-auto">
+                            <input
+                                type="text"
+                                placeholder="Enter WhatsApp mobile (e.g. 9494189664)..."
+                                value={waPhoneQuery}
+                                onChange={(e) => setWaPhoneQuery(e.target.value)}
+                                className="px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 w-full md:w-72"
+                            />
+                            <button
+                                type="submit"
+                                disabled={isSearchingWa}
+                                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer"
+                            >
+                                {isSearchingWa ? "Searching..." : "Track WhatsApp Job"}
+                            </button>
+                        </form>
+                    </div>
+                </motion.div>
 
                 <section className="grid gap-4 md:grid-cols-4 mb-6">
                     <div className="orders-glass-card rounded-2xl p-5">
