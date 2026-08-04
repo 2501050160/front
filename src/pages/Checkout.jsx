@@ -297,6 +297,10 @@ function Checkout() {
         } catch (error) {
             console.error("Payment initiation error:", error);
             showAlert("Payment Error", "Unable to initiate payment transaction.", "error");
+            setPaymentMethod("");
+        }
+    };
+
     const payTestInstant = async () => {
         setPaymentMethod("test");
         try {
