@@ -380,6 +380,9 @@ function Dashboard() {
                 if (p.printType === "COLOR") {
                     setColorPrice(p.pricePerPage);
                 }
+                if (p.printType === "DUPLEX" || p.printType === "BW_DUPLEX") {
+                    setBwDuplexPrice(p.pricePerPage);
+                }
             });
 
             // Fetch block printer capabilities
@@ -853,17 +856,22 @@ function Dashboard() {
         navigate("/");
     };
 
-    const rate = printType === "COLOR" ? Number(colorPrice) : Number(bwPrice);
+    const isDuplexActive = doubleSided && printType !== "COLOR";
+    const rate = printType === "COLOR" 
+        ? Number(colorPrice) 
+        : (isDuplexActive ? Number(bwDuplexPrice) : Number(bwPrice));
     const selectedPageCount = pageOption === "ALL" ? totalPages : (startPage && endPage ? Math.max(0, Number(endPage) - Number(startPage) + 1) : 0);
     const divisor = nupLayout === "2-up" ? 2 : 
                     nupLayout === "4-up" ? 4 : 
                     nupLayout === "6-up" ? 6 : 
                     nupLayout === "8-up" ? 8 : 
                     nupLayout === "9-up" ? 9 : 1;
-    const sheetsToPrint = Math.ceil(selectedPageCount / divisor);
-    const estimatedTotalPages = sheetsToPrint * Number(copies || 1);
+    const actualSheets = Math.ceil(selectedPageCount / divisor);
+    const physicalSheets = isDuplexActive ? Math.ceil(actualSheets / 2.0) : actualSheets;
+
+    const estimatedTotalPages = physicalSheets * Number(copies || 1);
     const isLowPaper = uploaded && estimatedTotalPages > paperCount;
-    const basePrice = sheetsToPrint * Number(copies || 1) * rate;
+    const basePrice = physicalSheets * Number(copies || 1) * rate;
     const estimatedTotal = couponApplied && couponDetails ? Math.max(0, basePrice - (basePrice * couponDetails.discountPercentage) / 100) : basePrice;
     const isPrintingDisabled = !systemStatus.databaseConnected || !systemStatus.agentOnline || !systemStatus.printerConfigured || isLowPaper || systemStatus.maintenance;
 
