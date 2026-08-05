@@ -321,7 +321,15 @@ function Landing() {
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
+            <a
+              href="https://wa.me/?text=Hi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn bg-emerald-600 hover:bg-emerald-500 text-white min-h-0 py-2.5 px-4 rounded-xl font-black text-sm flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+            >
+              💬 WhatsApp Bot
+            </a>
             <Link to="/login" className="btn success min-h-0 py-2.5 px-5 rounded-xl font-black text-sm shadow-md shadow-blue-500/10">
               ⚡ Upload Document
             </Link>
@@ -401,6 +409,14 @@ function Landing() {
                 <Link to="/login" className="btn success px-6 py-3.5 rounded-xl font-black text-sm shadow-lg shadow-emerald-500/20">
                   ⚡ Upload Document
                 </Link>
+                <a
+                  href="https://wa.me/?text=Hi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                >
+                  💬 Print via WhatsApp
+                </a>
                 <button
                   onClick={() => setShowDemo(true)}
                   className="btn secondary !bg-white/10 !text-white !border-white/10 hover:!bg-white/20 px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-1.5"
