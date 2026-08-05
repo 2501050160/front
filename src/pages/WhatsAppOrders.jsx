@@ -176,15 +176,17 @@ function WhatsAppOrders() {
   const completedWaOrders = waOrders.filter((o) => o.status === "COMPLETED").length;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 md:p-8">
+    <div className={!isEmbedded ? "min-h-screen bg-slate-950 text-slate-100 font-sans p-4 md:p-8" : "text-slate-100 font-sans"}>
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Top Header */}
         <header className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <Link to="/admin" className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
+            {!isEmbedded && (
+              <Link to="/admin" className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 transition-colors">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">

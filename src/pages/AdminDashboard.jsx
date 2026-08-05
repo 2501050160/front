@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api, { getPdfDownloadUrl } from "../services/api";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
+import WhatsAppOrders from "./WhatsAppOrders";
 
 function AdminDashboard() {
     const navigate = useNavigate();
@@ -1670,6 +1671,18 @@ function AdminDashboard() {
                     >
                         Pricing & Coupons
                     </button>
+                    <button
+                        onClick={() => {
+                            setActiveTab("whatsapp");
+                        }}
+                        className={`px-4 py-2 font-bold text-sm rounded-lg transition-all ${
+                            activeTab === "whatsapp"
+                                ? "bg-slate-900 text-white shadow-md"
+                                : "text-slate-600 hover:bg-slate-100/60"
+                        }`}
+                    >
+                        💬 WhatsApp Orders
+                    </button>
                     {loggedInAdminRole !== "MANAGER" && (
                         <button
                             onClick={() => {
@@ -2862,6 +2875,17 @@ function AdminDashboard() {
                                 </>
                             )}
                     </>
+                )}
+
+                {/* WhatsApp Orders Tab */}
+                {activeTab === "whatsapp" && (
+                    <motion.div
+                        className="mt-6"
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        <WhatsAppOrders isEmbedded={true} />
+                    </motion.div>
                 )}
 
                 {/* Blocks Management Tab */}
