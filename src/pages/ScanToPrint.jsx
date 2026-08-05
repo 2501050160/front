@@ -378,39 +378,11 @@ function ScanToPrint() {
                                 </div>
 
                                 {orders.length > 0 && (
-                                    <div className="mt-6 border-t border-slate-100 pt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {/* Scan Barcode button — opens modal on Scan tab */}
-                                        <button
-                                            onClick={() => {
-                                                if (selectedOrderIds.length === 0) {
-                                                    showAlert("No Selection", "Please select at least one document to print.", "warning");
-                                                    return;
-                                                }
-                                                if (printer && printer.maintenance) {
-                                                    showAlert("Printer Offline", "This printer is currently under maintenance.", "error");
-                                                    return;
-                                                }
-                                                setSuccessCount(0);
-                                                setFailCount(0);
-                                                const [firstId, ...remaining] = selectedOrderIds;
-                                                setOtpQueue(remaining);
-                                                const firstOrder = orders.find(o => o.orderId === firstId);
-                                                setVerifyingOrder(firstOrder);
-                                                setMobileOtp("");
-                                                setMobileOtpError("");
-                                                setOtpTab("scan"); // open directly on scan tab
-                                            }}
-                                            disabled={releasing || selectedOrderIds.length === 0}
-                                            className="py-3.5 px-4 text-xs md:text-sm font-black tracking-wide shadow-lg flex items-center justify-center gap-2 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                        >
-                                            📷 Scan Barcode ({selectedOrderIds.length})
-                                        </button>
-
-                                        {/* Manual OTP button */}
+                                    <div className="mt-6 border-t border-slate-100 pt-6">
                                         <button
                                             onClick={releaseSelectedOrders}
                                             disabled={releasing || selectedOrderIds.length === 0}
-                                            className="btn py-3.5 px-4 text-xs md:text-sm font-black tracking-wide shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                                            className="btn py-3.5 px-4 w-full text-xs md:text-sm font-black tracking-wide shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
                                         >
                                             {releasing ? (
                                                 <>
@@ -419,7 +391,7 @@ function ScanToPrint() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    🔢 Enter OTP Manually ({selectedOrderIds.length})
+                                                    🔢 Enter Release OTP ({selectedOrderIds.length})
                                                 </>
                                             )}
                                         </button>
