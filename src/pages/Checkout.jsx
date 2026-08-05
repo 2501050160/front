@@ -151,6 +151,8 @@ function Checkout() {
 
     const [paperCount, setPaperCount] = useState(9999);
 
+    const [autoPayTriggered, setAutoPayTriggered] = useState(false);
+
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const paramOrderId = queryParams.get("orderId");
@@ -167,6 +169,18 @@ function Checkout() {
                 .catch((err) => console.error("Failed to load order from query param:", err));
         }
     }, []);
+
+    useEffect(() => {
+        if (currentOrder && currentOrder.orderId && !autoPayTriggered && !paymentMethod) {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (searchParams.get("orderId")) {
+                setAutoPayTriggered(true);
+                setTimeout(() => {
+                    payNow();
+                }, 600);
+            }
+        }
+    }, [currentOrder]);
 
     useEffect(() => {
         if (userId) {
@@ -770,13 +784,7 @@ function Checkout() {
                             </button>
                         )}
 
-                        <button
-                            onClick={payTestInstant}
-                            className="btn primary mt-4 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-3 rounded-xl shadow-lg cursor-pointer transition-all"
-                            disabled={paperShortage || maintenance || !!paymentMethod}
-                        >
-                            ⚡ Direct Instant Test Payment (Mock Complete)
-                        </button>
+                        {/* Pay with Razorpay Button */}
 
                         <button
                             onClick={payNow}
