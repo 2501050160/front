@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import api from "../services/api";
 
-function WhatsAppOrders() {
+function WhatsAppOrders({ isEmbedded = false }) {
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
   const [blocks, setBlocks] = useState([]);
