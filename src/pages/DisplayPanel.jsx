@@ -628,20 +628,11 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-3 py-2 shadow-lg ${palette.chip} ${palette.glow} flex flex-row items-center justify-center gap-4`}>
-                                                                            <div className="text-center shrink-0">
-                                                                                <p className="text-[9px] font-black uppercase tracking-widest text-white/60 leading-none">OTP</p>
-                                                                                <p className="font-mono text-3xl font-black tracking-wider text-white mt-1 leading-none">
-                                                                                    {order.otpCode}
-                                                                                </p>
-                                                                            </div>
-                                                                            <div className="h-16 w-56 shrink-0 rounded-lg overflow-hidden border border-white/20 bg-white p-1">
-                                                                                <img 
-                                                                                    src={`https://quickchart.io/barcode?type=code128&text=${order.orderId}-${order.userId || '0'}-${order.otpCode}&includeText=false&height=65`} 
-                                                                                    alt="Barcode"
-                                                                                    className="w-full h-full object-fill"
-                                                                                />
-                                                                            </div>
+                                                                        <div className={`rounded-2xl border px-6 py-2.5 shadow-lg ${palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
+                                                                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200/80 leading-none">RELEASE OTP</p>
+                                                                            <p className="font-mono text-3xl font-black tracking-widest text-white mt-1 leading-none">
+                                                                                {order.otpCode}
+                                                                            </p>
                                                                         </div>
                                                                     ) : (
                                                                         <div className={`rounded-2xl border px-4 py-3 shadow-lg ${palette.chip} ${palette.glow}`}>
