@@ -23,6 +23,7 @@ import {
     Menu,
     PanelLeftClose,
     Printer,
+    Trash2,
     UploadCloud,
     Wallet
 } from "lucide-react";
@@ -46,6 +47,7 @@ function Dashboard() {
     
     // Multiple files support
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [fileConfigs, setFileConfigs] = useState([]);
 
     const [totalPages, setTotalPages] = useState(0);
     const [orderId, setOrderId] = useState("");
@@ -306,16 +308,53 @@ function Dashboard() {
         checkReferralPopup();
     }, [userId, referralCode]);
 
+    const updateFileConfig = (index, key, value) => {
+        setFileConfigs(prev => {
+            const next = [...prev];
+            next[index] = { ...next[index], [key]: value };
+            return next;
+        });
+    };
+
+    const removeFileAt = (index) => {
+        const updatedFiles = selectedFiles.filter((_, i) => i !== index);
+        const updatedConfigs = fileConfigs.filter((_, i) => i !== index);
+        setSelectedFiles(updatedFiles);
+        setFileConfigs(updatedConfigs);
+        if (updatedFiles.length === 0) {
+            setUploaded(false);
+            setOrderId("");
+            setSelectedFiles([]);
+            setFileConfigs([]);
+        } else {
+            uploadPdf(updatedFiles, updatedConfigs);
+        }
+    };
+
     const handleFileSelect = (e) => {
         const files = Array.from(e.target.files);
         if (files.length > 0) {
             setSelectedFiles(files);
             setUploaded(false); 
-            uploadPdf(files);
+
+            const newConfigs = files.map((f, idx) => ({
+                id: idx + 1,
+                fileName: f.name,
+                totalPages: 1,
+                copies: 1,
+                printType: "BW",
+                pageOption: "ALL",
+                startPage: "1",
+                endPage: "1",
+                nupLayout: "1-up",
+                doubleSided: false
+            }));
+            setFileConfigs(newConfigs);
+            uploadPdf(files, newConfigs);
         }
     };
 
-    const uploadPdf = async (filesToUpload = selectedFiles) => {
+    const uploadPdf = async (filesToUpload = selectedFiles, existingConfigs = fileConfigs) => {
         if (filesToUpload.length === 0) {
             showAlert("No Files Selected", "Please select PDF or image files to upload.", "warning");
             return;
@@ -345,8 +384,18 @@ function Dashboard() {
                 }
             );
 
-            setTotalPages(response.data.totalPages);
+            const serverTotalPages = response.data.totalPages || 1;
+            setTotalPages(serverTotalPages);
             setOrderId(response.data.orderId);
+
+            if (existingConfigs && existingConfigs.length > 0) {
+                const perFileApproxPages = Math.max(1, Math.round(serverTotalPages / existingConfigs.length));
+                setFileConfigs(existingConfigs.map(cfg => ({
+                    ...cfg,
+                    totalPages: perFileApproxPages
+                })));
+            }
+
             setUploaded(true);
             setHaveCoupon(false);
             setCouponCode("");
@@ -357,7 +406,7 @@ function Dashboard() {
             setHaveReferral(false);
             setEnteredReferralCode("");
             setReferralApplied(false);
-            showAlert("Success", "Files processed and uploaded successfully!", "success");
+            showAlert("Success", `${filesToUpload.length} file(s) processed and uploaded successfully!`, "success");
         } catch (error) {
             console.error(error);
             const detailedError = error.response?.data?.message || error.response?.data || error.message || "Could not upload and process the files.";
@@ -856,22 +905,40 @@ function Dashboard() {
         navigate("/");
     };
 
-    const isDuplexActive = doubleSided && printType !== "COLOR";
-    const rate = printType === "COLOR" 
-        ? Number(colorPrice) 
-        : (isDuplexActive ? Number(bwDuplexPrice) : Number(bwPrice));
-    const selectedPageCount = pageOption === "ALL" ? totalPages : (startPage && endPage ? Math.max(0, Number(endPage) - Number(startPage) + 1) : 0);
-    const divisor = nupLayout === "2-up" ? 2 : 
-                    nupLayout === "4-up" ? 4 : 
-                    nupLayout === "6-up" ? 6 : 
-                    nupLayout === "8-up" ? 8 : 
-                    nupLayout === "9-up" ? 9 : 1;
-    const actualSheets = Math.ceil(selectedPageCount / divisor);
-    const physicalSheets = isDuplexActive ? Math.ceil(actualSheets / 2.0) : actualSheets;
+    let totalCombinedPhysicalSheets = 0;
+    let totalCombinedBasePrice = 0;
 
-    const estimatedTotalPages = physicalSheets * Number(copies || 1);
+    const activeConfigs = fileConfigs.length > 0 ? fileConfigs : [{
+        copies, printType, pageOption, startPage, endPage, nupLayout, doubleSided, totalPages: totalPages || 1, fileName: "Selected Document"
+    }];
+
+    activeConfigs.forEach((cfg) => {
+        const isDuplexActive = cfg.doubleSided && cfg.printType !== "COLOR";
+        const fileRate = cfg.printType === "COLOR" 
+            ? Number(colorPrice) 
+            : (isDuplexActive ? Number(bwDuplexPrice) : Number(bwPrice));
+
+        const pagesCount = cfg.pageOption === "ALL" 
+            ? (cfg.totalPages || totalPages || 1)
+            : (cfg.startPage && cfg.endPage ? Math.max(0, Number(cfg.endPage) - Number(cfg.startPage) + 1) : 0);
+
+        const div = cfg.nupLayout === "2-up" ? 2 : 
+                    cfg.nupLayout === "4-up" ? 4 : 
+                    cfg.nupLayout === "6-up" ? 6 : 
+                    cfg.nupLayout === "8-up" ? 8 : 
+                    cfg.nupLayout === "9-up" ? 9 : 1;
+
+        const actualSheets = Math.ceil(pagesCount / div);
+        const physicalSheets = isDuplexActive ? Math.ceil(actualSheets / 2.0) : actualSheets;
+        const fileTotalSheets = physicalSheets * Number(cfg.copies || 1);
+
+        totalCombinedPhysicalSheets += fileTotalSheets;
+        totalCombinedBasePrice += fileTotalSheets * fileRate;
+    });
+
+    const estimatedTotalPages = totalCombinedPhysicalSheets;
     const isLowPaper = uploaded && estimatedTotalPages > paperCount;
-    const basePrice = physicalSheets * Number(copies || 1) * rate;
+    const basePrice = totalCombinedBasePrice;
     const estimatedTotal = couponApplied && couponDetails ? Math.max(0, basePrice - (basePrice * couponDetails.discountPercentage) / 100) : basePrice;
     const isPrintingDisabled = !systemStatus.databaseConnected || !systemStatus.agentOnline || !systemStatus.printerConfigured || isLowPaper || systemStatus.maintenance;
 
@@ -1609,88 +1676,138 @@ function Dashboard() {
                                         </div>
                                     )}
 
-                                    <div className="grid gap-4 md:grid-cols-5">
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Copies
-                                            </span>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={copies}
-                                                onChange={(e) => setCopies(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            />
-                                        </label>
+                                    <div className="space-y-4">
+                                         {activeConfigs.map((cfg, idx) => (
+                                             <div key={idx} className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg">
+                                                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                                                     <div className="flex items-center gap-3">
+                                                         {/* Delete button on the left */}
+                                                         <button
+                                                             onClick={() => removeFileAt(idx)}
+                                                             className="btn danger py-1.5 px-3 text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                                             title="Delete this PDF"
+                                                         >
+                                                             <Trash2 className="w-3.5 h-3.5" /> Delete
+                                                         </button>
+                                                         <div>
+                                                             <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300">File #{idx + 1}</span>
+                                                             <h4 className="text-base font-black text-white truncate max-w-xs sm:max-w-md">{cfg.fileName || `Document #${idx + 1}`}</h4>
+                                                         </div>
+                                                     </div>
+                                                     <span className="px-3 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                                                         {cfg.totalPages || 1} Page{(cfg.totalPages || 1) > 1 ? "s" : ""}
+                                                     </span>
+                                                 </div>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Print Type
-                                            </span>
-                                            <select
-                                                value={printType}
-                                                onChange={(e) => setPrintType(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            >
-                                                {allowBw && <option value="BW" className="bg-slate-900 text-white">Black & White</option>}
-                                                {allowColor && <option value="COLOR" className="bg-slate-900 text-white">Color</option>}
-                                            </select>
-                                        </label>
+                                                 <div className="grid gap-4 md:grid-cols-5">
+                                                     <label className="block">
+                                                         <span className="mb-2 block text-xs font-black text-cyan-50/80">
+                                                             Copies
+                                                         </span>
+                                                         <input
+                                                             type="number"
+                                                             min="1"
+                                                             value={cfg.copies}
+                                                             onChange={(e) => updateFileConfig(idx, "copies", Math.max(1, parseInt(e.target.value) || 1))}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-sm"
+                                                         />
+                                                     </label>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Pages
-                                            </span>
-                                            <select
-                                                value={pageOption}
-                                                onChange={(e) => setPageOption(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            >
-                                                <option value="ALL" className="bg-slate-900 text-white">All Pages</option>
-                                                <option value="CUSTOM" className="bg-slate-900 text-white">Custom Range</option>
-                                            </select>
-                                        </label>
+                                                     <label className="block">
+                                                         <span className="mb-2 block text-xs font-black text-cyan-50/80">
+                                                             Print Type
+                                                         </span>
+                                                         <select
+                                                             value={cfg.printType}
+                                                             onChange={(e) => updateFileConfig(idx, "printType", e.target.value)}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-sm"
+                                                         >
+                                                             {allowBw && <option value="BW" className="bg-slate-900 text-white">Black & White</option>}
+                                                             {allowColor && <option value="COLOR" className="bg-slate-900 text-white">Color</option>}
+                                                         </select>
+                                                     </label>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Pages Per Sheet
-                                            </span>
-                                            <select
-                                                value={nupLayout}
-                                                onChange={(e) => setNupLayout(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            >
-                                                <option value="1-up" className="bg-slate-900 text-white">1-up (Normal)</option>
-                                                <option value="2-up" className="bg-slate-900 text-white">2-up (Saver)</option>
-                                                <option value="4-up" className="bg-slate-900 text-white">4-up (Compact)</option>
-                                                <option value="6-up" className="bg-slate-900 text-white">6-up (Micro)</option>
-                                                <option value="8-up" className="bg-slate-900 text-white">8-up (Mini)</option>
-                                                <option value="9-up" className="bg-slate-900 text-white">9-up (Nano)</option>
-                                            </select>
-                                        </label>
+                                                     <label className="block">
+                                                         <span className="mb-2 block text-xs font-black text-cyan-50/80">
+                                                             Pages
+                                                         </span>
+                                                         <select
+                                                             value={cfg.pageOption}
+                                                             onChange={(e) => updateFileConfig(idx, "pageOption", e.target.value)}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-sm"
+                                                         >
+                                                             <option value="ALL" className="bg-slate-900 text-white">All Pages ({cfg.totalPages || 1})</option>
+                                                             <option value="CUSTOM" className="bg-slate-900 text-white">Custom Range</option>
+                                                         </select>
+                                                     </label>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Print Sides
-                                            </span>
-                                            <select
-                                                value={doubleSided && printType !== "COLOR" ? "double" : "single"}
-                                                onChange={(e) => setDoubleSided(e.target.value === "double")}
-                                                disabled={printType === "COLOR"}
-                                                className="field !bg-white/10 !border-white/15 !text-white disabled:opacity-60 disabled:cursor-not-allowed"
-                                            >
-                                                <option value="single" className="bg-slate-900 text-white">Single Sided</option>
-                                                {printType !== "COLOR" && (
-                                                    <option value="double" className="bg-slate-900 text-white">Double Sided (Duplex)</option>
-                                                )}
-                                            </select>
-                                            {printType === "COLOR" && (
-                                                <p className="mt-1 text-[11px] font-semibold text-amber-300">
-                                                    * Color print is supported in Single Sided only.
-                                                </p>
-                                            )}
-                                        </label>
-                                    </div>
+                                                     <label className="block">
+                                                         <span className="mb-2 block text-xs font-black text-cyan-50/80">
+                                                             Pages Per Sheet
+                                                         </span>
+                                                         <select
+                                                             value={cfg.nupLayout}
+                                                             onChange={(e) => updateFileConfig(idx, "nupLayout", e.target.value)}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-sm"
+                                                         >
+                                                             <option value="1-up" className="bg-slate-900 text-white">1-up (Normal)</option>
+                                                             <option value="2-up" className="bg-slate-900 text-white">2-up (Saver)</option>
+                                                             <option value="4-up" className="bg-slate-900 text-white">4-up (Compact)</option>
+                                                             <option value="6-up" className="bg-slate-900 text-white">6-up (Micro)</option>
+                                                             <option value="8-up" className="bg-slate-900 text-white">8-up (Mini)</option>
+                                                             <option value="9-up" className="bg-slate-900 text-white">9-up (Nano)</option>
+                                                         </select>
+                                                     </label>
+
+                                                     <label className="block">
+                                                         <span className="mb-2 block text-xs font-black text-cyan-50/80">
+                                                             Print Sides
+                                                         </span>
+                                                         <select
+                                                             value={cfg.doubleSided && cfg.printType !== "COLOR" ? "double" : "single"}
+                                                             onChange={(e) => updateFileConfig(idx, "doubleSided", e.target.value === "double")}
+                                                             disabled={cfg.printType === "COLOR"}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                                                         >
+                                                             <option value="single" className="bg-slate-900 text-white">Single Sided</option>
+                                                             {cfg.printType !== "COLOR" && (
+                                                                 <option value="double" className="bg-slate-900 text-white">Double Sided (Duplex)</option>
+                                                             )}
+                                                         </select>
+                                                         {cfg.printType === "COLOR" && (
+                                                             <p className="mt-1 text-[11px] font-semibold text-amber-300">
+                                                                 * Color print is supported in Single Sided only.
+                                                             </p>
+                                                         )}
+                                                     </label>
+                                                 </div>
+
+                                                 {cfg.pageOption === "CUSTOM" && (
+                                                     <div className="mt-3 flex items-center gap-3 max-w-xs">
+                                                         <input
+                                                             type="number"
+                                                             min="1"
+                                                             max={cfg.totalPages || 1}
+                                                             placeholder="Start Page"
+                                                             value={cfg.startPage}
+                                                             onChange={(e) => updateFileConfig(idx, "startPage", e.target.value)}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-xs py-1.5"
+                                                         />
+                                                         <span className="text-white text-xs">to</span>
+                                                         <input
+                                                             type="number"
+                                                             min="1"
+                                                             max={cfg.totalPages || 1}
+                                                             placeholder="End Page"
+                                                             value={cfg.endPage}
+                                                             onChange={(e) => updateFileConfig(idx, "endPage", e.target.value)}
+                                                             className="field !bg-white/10 !border-white/15 !text-white text-xs py-1.5"
+                                                         />
+                                                     </div>
+                                                 )}
+                                             </div>
+                                         ))}
+                                     </div>
 
                                     <div className="mt-5 flex flex-col sm:flex-row justify-end gap-3">
                                         <button
