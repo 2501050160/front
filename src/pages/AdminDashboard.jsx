@@ -17,6 +17,7 @@ function AdminDashboard() {
 
     const [bwPrice, setBwPrice] = useState(0);
     const [colorPrice, setColorPrice] = useState(0);
+    const [blackRedPrice, setBlackRedPrice] = useState(15.0);
 
     const [couponCode, setCouponCode] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
@@ -456,6 +457,7 @@ function AdminDashboard() {
             });
             let bwVal = 2.0;
             let colorVal = 5.0;
+            let blackRedVal = 15.0;
             response.data.forEach((p) => {
                 if (p.printType === "BW") {
                     bwVal = p.pricePerPage;
@@ -463,9 +465,13 @@ function AdminDashboard() {
                 if (p.printType === "COLOR") {
                     colorVal = p.pricePerPage;
                 }
+                if (p.printType === "BLACK_RED") {
+                    blackRedVal = p.pricePerPage;
+                }
             });
             setBwPrice(bwVal);
             setColorPrice(colorVal);
+            setBlackRedPrice(blackRedVal);
         } catch (error) {
             console.error("Error fetching prices:", error);
         }
@@ -506,11 +512,19 @@ function AdminDashboard() {
                 }
             });
 
+            await api.post("/pricing/update", null, {
+                params: {
+                    printType: "BLACK_RED",
+                    pricePerPage: blackRedPrice,
+                    blockLocation: selectedPricingBlock
+                }
+            });
+
             await api.post("/admin/logs/create", {
                 managerName: loggedInAdminUser,
                 college: loggedInAdminCollege,
                 actionType: "PRICING_UPDATE",
-                details: `Updated prices for ${selectedPricingBlock} to BW: ${bwPrice}, Color: ${colorPrice}`
+                details: `Updated prices for ${selectedPricingBlock} to BW: ${bwPrice}, Color: ${colorPrice}, Black & Red Cover: ${blackRedPrice}`
             });
 
             showAlert("Success", `Prices Updated Successfully for ${selectedPricingBlock}`, "success");
@@ -2430,6 +2444,19 @@ function AdminDashboard() {
                                             type="number"
                                             value={colorPrice}
                                             onChange={(e) => setColorPrice(e.target.value)}
+                                            className="field"
+                                            step="0.5"
+                                        />
+                                    </label>
+
+                                    <label className="block">
+                                        <span className="mb-2 block text-sm font-black text-slate-700">
+                                            Black & Red Cover rate (Rs./cover)
+                                        </span>
+                                        <input
+                                            type="number"
+                                            value={blackRedPrice}
+                                            onChange={(e) => setBlackRedPrice(e.target.value)}
                                             className="field"
                                             step="0.5"
                                         />
