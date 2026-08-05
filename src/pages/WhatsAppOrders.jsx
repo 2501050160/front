@@ -365,20 +365,30 @@ function WhatsAppOrders({ isEmbedded = false }) {
                           </td>
 
                           <td className="p-4">
-                            <div className="font-bold text-slate-200 flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                              {o.customerName || "WhatsApp User"}
-                            </div>
-                            {waLink && (
-                              <a
-                                href={waLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:underline mt-0.5"
-                              >
-                                <MessageSquare className="w-3 h-3" /> Chat on WhatsApp
-                              </a>
-                            )}
+                            {(() => {
+                              const cleanCustomerName = (o.customerName || "WhatsApp User").replace(/\s*\(\d{14,}\)/g, "").trim();
+                              const rawDigitsOrder = (o.customerName || "").replace(/[^0-9]/g, "");
+                              const mobileNumOrder = rawDigitsOrder.length >= 10 ? rawDigitsOrder.slice(-10) : rawDigitsOrder;
+                              const orderWaLink = mobileNumOrder ? `https://wa.me/91${mobileNumOrder}` : null;
+                              return (
+                                <>
+                                  <div className="font-bold text-slate-200 flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    {cleanCustomerName}
+                                  </div>
+                                  {orderWaLink && (
+                                    <a
+                                      href={orderWaLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:underline mt-0.5"
+                                    >
+                                      <MessageSquare className="w-3 h-3" /> Chat on WhatsApp (+91 {mobileNumOrder})
+                                    </a>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </td>
 
                           <td className="p-4 max-w-[200px] truncate">
@@ -475,7 +485,12 @@ function WhatsAppOrders({ isEmbedded = false }) {
                   ) : (
                     filteredUsers.map((u) => {
                       const userOrdersCount = waOrders.filter((o) => o.userId === u.id || o.customerName === u.name).length;
-                      const cleanPhone = (u.name || "").replace(/[^0-9]/g, "") || (u.email || "").replace(/[^0-9]/g, "");
+                      const rawDigits = (u.name || "").replace(/[^0-9]/g, "") || (u.email || "").replace(/[^0-9]/g, "");
+                      const cleanUserName = (u.name || "WhatsApp User").replace(/\s*\(\d{14,}\)/g, "").trim();
+                      const mobileNum = rawDigits.length >= 10 ? rawDigits.slice(-10) : rawDigits;
+                      const userPhone = mobileNum ? `+91 ${mobileNum}` : "";
+                      const userWaLink = mobileNum ? `https://wa.me/91${mobileNum}` : null;
+                      const cleanEmail = mobileNum ? `wa_${mobileNum}@whatsapp` : u.email;
 
                       return (
                         <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
@@ -485,20 +500,20 @@ function WhatsAppOrders({ isEmbedded = false }) {
                               <Phone className="w-3.5 h-3.5" />
                             </div>
                             <div>
-                              <div>{u.name || "WhatsApp User"}</div>
-                              {cleanPhone && (
+                              <div className="text-sm font-black text-white">{cleanUserName}</div>
+                              {userWaLink && (
                                 <a
-                                  href={`https://wa.me/${cleanPhone}`}
+                                  href={userWaLink}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-[11px] text-emerald-400 hover:underline block font-mono"
+                                  className="text-xs text-emerald-400 hover:underline block font-mono font-bold mt-0.5"
                                 >
-                                  +{cleanPhone.length >= 10 ? cleanPhone.substring(0, 3) + "•••••" + cleanPhone.substring(cleanPhone.length - 2) : cleanPhone}
+                                  {userPhone}
                                 </a>
                               )}
                             </div>
                           </td>
-                          <td className="p-4 font-mono text-xs text-slate-400">{u.email}</td>
+                          <td className="p-4 font-mono text-xs text-slate-400">{cleanEmail}</td>
                           <td className="p-4">
                             <span className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700">
                               {u.referralCode || "WA_DEFAULT"}
