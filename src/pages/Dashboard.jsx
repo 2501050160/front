@@ -1626,7 +1626,6 @@ function Dashboard() {
                                             >
                                                 {allowBw && <option value="BW" className="bg-slate-900 text-white">Black & White</option>}
                                                 {allowColor && <option value="COLOR" className="bg-slate-900 text-white">Color</option>}
-                                                <option value="BLACK_RED" className="bg-slate-900 text-white">Black & Red Cover Page</option>
                                             </select>
                                         </label>
 
