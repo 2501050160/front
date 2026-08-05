@@ -324,7 +324,54 @@ function Login() {
                             </motion.p>
                         )}
 
-                        <div className="mt-8">
+                        {/* Testing / Direct Login Form */}
+                        <form onSubmit={handleLogin} className="mt-8 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Username or Email
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter username or email"
+                                    className="field"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    placeholder="Enter password"
+                                    className="field"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="btn w-full py-3.5 font-bold"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? "Logging in..." : "Login"}
+                            </button>
+                        </form>
+
+                        {/* Divider */}
+                        <div className="relative flex items-center justify-center my-6">
+                            <span className="h-px bg-slate-200 w-full absolute" />
+                            <span className="bg-white px-3.5 text-[10px] font-black text-slate-400 uppercase tracking-widest relative z-10">
+                                or continue with
+                            </span>
+                        </div>
+
+                        <div>
                             <button
                                 type="button"
                                 onClick={() => handleOAuth("Google")}
