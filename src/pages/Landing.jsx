@@ -42,6 +42,7 @@ function Landing() {
   const [isMobile, setIsMobile] = useState(false);
   const [typedTitle1, setTypedTitle1] = useState("");
   const [typedTitle2, setTypedTitle2] = useState("");
+  const [whatsappBotNumber, setWhatsappBotNumber] = useState("919494189664");
 
   useEffect(() => {
     const title1 = "Print Anywhere.";
@@ -323,7 +324,7 @@ function Landing() {
 
           <div className="flex items-center gap-3">
             <a
-              href="https://wa.me/?text=Hi"
+              href={`https://wa.me/${whatsappBotNumber}?text=Hi`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn bg-emerald-600 hover:bg-emerald-500 text-white min-h-0 py-2.5 px-4 rounded-xl font-black text-sm flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
@@ -410,7 +411,7 @@ function Landing() {
                   ⚡ Upload Document
                 </Link>
                 <a
-                  href="https://wa.me/?text=Hi"
+                  href={`https://wa.me/${whatsappBotNumber}?text=Hi`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
