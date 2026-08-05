@@ -478,21 +478,26 @@ function AdminDashboard() {
     };
 
     const savePrices = async () => {
-        const secret = window.prompt("Enter Admin/Manager Security Key to update prices:");
-        if (!secret) return;
+        const role = (localStorage.getItem("adminRole") || "").toUpperCase();
 
-        try {
-            const adminId = localStorage.getItem("adminId");
-            const verifyResponse = await api.post("/admin/verify-secret", null, {
-                params: { adminId, secret }
-            });
-            if (!verifyResponse.data.success) {
-                showAlert("Error", "Invalid Security Key", "error");
+        // Only ask for secret key if the logged in user is a MANAGER
+        if (role === "MANAGER") {
+            const secret = window.prompt("Enter Manager Security Key to update prices:");
+            if (!secret) return;
+
+            try {
+                const adminId = localStorage.getItem("adminId");
+                const verifyResponse = await api.post("/admin/verify-secret", null, {
+                    params: { adminId, secret }
+                });
+                if (!verifyResponse.data.success) {
+                    showAlert("Error", "Invalid Security Key", "error");
+                    return;
+                }
+            } catch (err) {
+                showAlert("Error", "Error verifying security key", "error");
                 return;
             }
-        } catch (err) {
-            showAlert("Error", "Error verifying security key", "error");
-            return;
         }
 
         try {
@@ -521,8 +526,8 @@ function AdminDashboard() {
             });
 
             await api.post("/admin/logs/create", {
-                managerName: loggedInAdminUser,
-                college: loggedInAdminCollege,
+                managerName: localStorage.getItem("adminUser") || "Admin",
+                college: localStorage.getItem("adminCollege") || "KLU",
                 actionType: "PRICING_UPDATE",
                 details: `Updated prices for ${selectedPricingBlock} to BW: ${bwPrice}, Color: ${colorPrice}, Black & Red Cover: ${blackRedPrice}`
             });
