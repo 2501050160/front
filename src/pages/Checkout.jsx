@@ -439,8 +439,10 @@ function Checkout() {
             });
 
             const coupon = response.data;
-            const discountAmount = (order.price * coupon.discountPercentage) / 100;
-            const finalPrice = order.price - discountAmount;
+            const discountAmount = (coupon.discountPercentage && coupon.discountPercentage > 0)
+                ? (order.price * coupon.discountPercentage) / 100
+                : (coupon.discountAmount ? Math.min(order.price, coupon.discountAmount) : order.price);
+            const finalPrice = Math.max(0, order.price - discountAmount);
 
             setDiscount(discountAmount);
             setFinalAmount(finalPrice);
