@@ -26,81 +26,94 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
 
     return (
         <motion.div
-            className="top-bar panel top-bar-glass px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-30"
+            className="top-bar panel top-bar-glass px-6 py-5 flex flex-col gap-4 relative z-30 mb-6"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
         >
-            <div className="flex items-center gap-4 pr-14 md:pr-0">
-                {title && <div className="brand-mark brand-mark-sm">CP</div>}
-                <div>
-                    {subtitle && (
-                        <p className="eyebrow !mb-0">{subtitle}</p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-3">
-                        {title && <h1 className="title !mt-0 !mb-0">{title}</h1>}
-                        {badge && (
-                            <span className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-2xl text-sm font-black uppercase tracking-wider bg-gradient-to-r from-cyan-500 via-sky-500 to-emerald-500 text-white shadow-[0_0_25px_rgba(6,182,212,0.4)] border border-white/20 animate-pulse" style={{ animationDuration: '3.5s' }}>
-                                📍 {badge}
-                            </span>
+            {/* Top Row: Title, Subtitle, Badge, Profile */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+                <div className="flex items-center gap-4 pr-14 md:pr-0">
+                    {title && <div className="brand-mark brand-mark-sm">CP</div>}
+                    <div>
+                        {subtitle && (
+                            <p className="eyebrow !mb-0">{subtitle}</p>
                         )}
-                        {badgeAction && (
-                            <button
-                                onClick={badgeAction.onClick || (() => navigate(badgeAction.path))}
-                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all active:scale-95 shadow-lg cursor-pointer"
-                            >
-                                🔄 {badgeAction.label}
-                            </button>
-                        )}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {title && <h1 className="title !mt-0 !mb-0">{title}</h1>}
+                            {badge && (
+                                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-cyan-500 via-sky-500 to-emerald-500 text-white shadow-[0_0_20px_rgba(6,182,212,0.35)] border border-white/20 animate-pulse" style={{ animationDuration: '3.5s' }}>
+                                    📍 {badge}
+                                </span>
+                            )}
+                            {badgeAction && (
+                                <button
+                                    onClick={badgeAction.onClick || (() => navigate(badgeAction.path))}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 text-slate-800 border border-slate-200 transition-all active:scale-95 shadow-sm cursor-pointer"
+                                >
+                                    🔄 {badgeAction.label}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
+
+                {/* Navigation Tabs (if any) */}
+                {tabs && tabs.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1 bg-slate-950/5 p-1.5 rounded-xl border border-slate-200/50">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => onTabChange && onTabChange(tab.id)}
+                                className={`px-4 py-2 rounded-lg text-sm font-black transition-all flex items-center gap-1.5 ${
+                                    activeTab === tab.id
+                                        ? "bg-white text-sky-600 shadow-sm border border-slate-100"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+                                }`}
+                            >
+                                {tab.icon && <span>{tab.icon}</span>}
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Navigation Tabs */}
-            {tabs && tabs.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1 bg-slate-950/5 p-1.5 rounded-xl border border-slate-200/50">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => onTabChange && onTabChange(tab.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-black transition-all flex items-center gap-1.5 ${
-                                activeTab === tab.id
-                                    ? "bg-white text-sky-600 shadow-sm border border-slate-100"
-                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
-                            }`}
-                        >
-                            {tab.icon && <span>{tab.icon}</span>}
-                            {tab.label}
-                        </button>
-                    ))}
+            {/* Separate Dedicated Section for Quick Links */}
+            {actions && actions.length > 0 && (
+                <div className="w-full pt-3.5 border-t border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 -mx-6 -mb-5 px-6 py-3 rounded-b-2xl">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            ⚡ Quick Action Links & Sub-Panels:
+                        </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 items-center">
+                        {actions.map((action) => {
+                            if (action.to) {
+                                return (
+                                    <Link
+                                        key={action.label}
+                                        to={action.to}
+                                        className={action.className || "btn secondary text-xs py-1.5 px-3 min-h-0 font-bold"}
+                                    >
+                                        {action.label}
+                                    </Link>
+                                );
+                            }
+
+                            return (
+                                <button
+                                    key={action.label}
+                                    onClick={action.onClick || (() => navigate(action.path))}
+                                    className={action.className || "btn secondary text-xs py-1.5 px-3 min-h-0 font-bold"}
+                                >
+                                    {action.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
-
-            <div className="flex flex-wrap gap-2.5 items-center w-full md:w-auto pr-14 md:pr-0 mt-2 md:mt-0">
-                {actions.map((action) => {
-                    if (action.to) {
-                        return (
-                            <Link
-                                key={action.label}
-                                to={action.to}
-                                className={action.className || "btn secondary"}
-                            >
-                                {action.label}
-                            </Link>
-                        );
-                    }
-
-                    return (
-                        <button
-                            key={action.label}
-                            onClick={action.onClick || (() => navigate(action.path))}
-                            className={action.className || "btn secondary"}
-                        >
-                            {action.label}
-                        </button>
-                    );
-                })}
-            </div>
 
             {/* Floating Profile Avatar in top layer, absolute top-right */}
             {(userId || adminId) && (
@@ -129,68 +142,52 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
                                         className="fixed inset-0 z-[9998] cursor-default bg-transparent"
                                         onClick={() => setProfileOpen(false)}
                                     />
-                                    
+
+                                    {/* Dropdown Menu */}
                                     <motion.div
-                                        className="absolute right-0 top-full mt-3 w-64 rounded-2xl bg-white p-5 shadow-2xl border border-slate-200 z-[9999] text-slate-900"
+                                        className="absolute right-0 mt-3 w-64 rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-[0_20px_50px_rgba(15,23,42,0.15)] p-4 text-slate-800 z-[9999]"
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        transition={{ type: "spring", duration: 0.3 }}
+                                        transition={{ duration: 0.2 }}
                                     >
-                                        <div className="flex flex-col items-center text-center border-b border-slate-100 pb-4 mb-4">
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 text-white flex items-center justify-center font-black text-2xl border-2 border-white shadow-inner mb-3">
-                                                {userId ? getInitials(userName) : "AD"}
-                                            </div>
-                                            <h4 className="text-base font-black text-slate-900 leading-tight">
-                                                {userId ? userName : adminUser}
-                                            </h4>
-                                            <p className="text-xs font-semibold text-slate-500 truncate max-w-full">
-                                                {userId ? userEmail : "System Administrator"}
-                                            </p>
+                                        <div className="border-b border-slate-150 pb-3 mb-3">
+                                            <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Signed in as</p>
+                                            <p className="text-sm font-extrabold text-slate-900 truncate mt-0.5">{userId ? userName : adminUser}</p>
+                                            {userId && (
+                                                <p className="text-xs font-semibold text-slate-500 truncate">{userEmail}</p>
+                                            )}
                                         </div>
 
-                                        {userId && (
-                                            <div className="space-y-2 text-xs font-bold text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4">
-                                                <div className="flex justify-between">
-                                                    <span>Wallet Balance:</span>
-                                                    <span className="text-emerald-600 font-black">Rs. {walletBalance}</span>
+                                        {userId ? (
+                                            <div className="space-y-1.5 mb-3">
+                                                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-150">
+                                                    <span className="text-xs font-bold text-slate-600">Wallet</span>
+                                                    <span className="text-xs font-black text-sky-600">Rs. {Number(walletBalance).toFixed(2)}</span>
                                                 </div>
                                                 {referralCode && (
-                                                    <div className="flex justify-between">
-                                                        <span>Referral ID:</span>
-                                                        <span className="text-cyan-600 font-mono font-black">{referralCode}</span>
+                                                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-150">
+                                                        <span className="text-xs font-bold text-slate-600">Code</span>
+                                                        <span className="text-xs font-black text-slate-900 font-mono tracking-wider">{referralCode}</span>
                                                     </div>
                                                 )}
                                             </div>
-                                        )}
-
-                                        {userId && (
-                                            <button
-                                                onClick={() => {
-                                                    setProfileOpen(false);
-                                                    navigate("/referrals");
-                                                }}
-                                                className="w-full text-left py-2 px-3 hover:bg-slate-50 rounded-lg text-xs font-black text-sky-600 flex items-center gap-1.5 transition-colors cursor-pointer mb-2"
-                                            >
-                                                🏆 Referrals & Rewards
-                                            </button>
+                                        ) : (
+                                            <div className="mb-3">
+                                                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-700 border border-sky-200">
+                                                    Administrator
+                                                </span>
+                                            </div>
                                         )}
 
                                         <button
                                             onClick={() => {
-                                                setProfileOpen(false);
-                                                if (userId) {
-                                                    clearUserSession();
-                                                    navigate("/");
-                                                } else {
-                                                    localStorage.removeItem("adminId");
-                                                    localStorage.removeItem("adminUser");
-                                                    navigate("/admin-login");
-                                                }
+                                                clearUserSession();
+                                                navigate("/login");
                                             }}
-                                            className="btn danger w-full min-h-[38px] py-2 text-xs font-black cursor-pointer"
+                                            className="w-full py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer border border-rose-100"
                                         >
-                                            Logout
+                                            <span>🚪</span> Sign Out
                                         </button>
                                     </motion.div>
                                 </>
