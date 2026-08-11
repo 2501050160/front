@@ -1910,16 +1910,7 @@ function AdminDashboard() {
                     title="Admin Dashboard"
                     subtitle="Operations Control Panel"
                     badge="Stats refresh live every 3 seconds."
-                    actions={[
-                        { label: "📋 Queue Kanban", path: "/admin/queue", className: "btn secondary text-xs py-2 px-3 min-h-0 font-bold" },
-                        ...(loggedInAdminRole !== "MANAGER" ? [
-                            { label: "👥 Users", path: "/admin/users", className: "btn secondary text-xs py-2 px-3 min-h-0 font-bold" },
-                            { label: "📊 Analytics", path: "/admin/analytics", className: "btn secondary text-xs py-2 px-3 min-h-0 font-bold" },
-                            { label: "⚙️ Settings", path: "/admin/settings", className: "btn secondary text-xs py-2 px-3 min-h-0 font-bold" },
-                            { label: "Printer Settings", path: "/printer-settings", className: "btn text-xs py-2 px-3 min-h-0 font-bold" },
-                        ] : []),
-                        { label: "Display Panel", path: "/display-panel", className: "btn secondary text-xs py-2 px-3 min-h-0 font-bold" }
-                    ]}
+                    actions={[]}
                 />
 
                 {/* Queue & Analytics Tab */}
