@@ -1349,7 +1349,7 @@ function AdminDashboard() {
             ];
 
         const configObj = {
-            backendUrl: import.meta.env.VITE_API_URL || "https://printer-backend-1.onrender.com",
+            backendUrl: import.meta.env.VITE_API_URL || "https://printer-backend-kgzp.onrender.com",
             pollIntervalMs: 5000,
             blocks: blocksArray
         };

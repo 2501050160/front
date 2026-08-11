@@ -56,7 +56,7 @@ function UploadPdf() {
       );
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL || "https://printer-backend-1.onrender.com"}/api/pdf/upload`,
+        `${import.meta.env.VITE_API_URL || "https://printer-backend-kgzp.onrender.com"}/api/pdf/upload`,
         formData
       );
 
