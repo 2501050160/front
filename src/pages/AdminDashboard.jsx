@@ -1617,215 +1617,277 @@ function AdminDashboard() {
                         </div>
                     </div>
 
-                    {/* Section Navigation Items */}
-                    <div className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
-                        <button
-                            onClick={() => setActiveTab("queue")}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                activeTab === "queue"
-                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                            }`}
-                        >
-                            <span className="text-base">📋</span>
-                            <span>Queue & Analytics</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                setActiveTab("settings");
-                                fetchPrices(selectedPricingBlock);
-                                fetchCoupons();
-                                fetchBlocks();
-                                fetchRewards();
-                                fetchSystemSettings();
-                            }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                activeTab === "settings"
-                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                            }`}
-                        >
-                            <span className="text-base">🏷️</span>
-                            <span>Pricing & Coupons</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveTab("whatsapp")}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                activeTab === "whatsapp"
-                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                            }`}
-                        >
-                            <span className="text-base">💬</span>
-                            <span>WhatsApp Orders</span>
-                        </button>
-
-                        {loggedInAdminRole !== "MANAGER" && (
-                            <button
-                                onClick={() => {
-                                    setActiveTab("blocks");
-                                    fetchBlocks();
-                                    fetchSuspendedColleges();
-                                }}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                    activeTab === "blocks"
-                                        ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                }`}
-                            >
-                                <span className="text-base">🏛️</span>
-                                <span>Manage Blocks</span>
-                            </button>
-                        )}
-
-                        <button
-                            onClick={() => {
-                                setActiveTab("printers");
-                                fetchPrinters();
-                                fetchBlocks();
-                            }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                activeTab === "printers"
-                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                            }`}
-                        >
-                            <span className="text-base">🖨️</span>
-                            <span>Manage Printers</span>
-                        </button>
-
-                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                            <button
-                                onClick={() => {
-                                    setActiveTab("colleges");
-                                    fetchBlocks();
-                                    fetchSuspendedColleges();
-                                    fetchCollegeConfigs();
-                                }}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                    activeTab === "colleges"
-                                        ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                }`}
-                            >
-                                <span className="text-base">🏫</span>
-                                <span>College Management</span>
-                            </button>
-                        )}
-
-                        <button
-                            onClick={() => {
-                                setActiveTab("users");
-                                fetchUsers();
-                            }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                activeTab === "users"
-                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                            }`}
-                        >
-                            <span className="text-base">👥</span>
-                            <span>User Moderation</span>
-                        </button>
-
-                        {loggedInAdminRole !== "MANAGER" && (
-                            <>
+                    <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+                        {/* Quick Links Section */}
+                        <div>
+                            <p className="px-3 text-[10px] font-black text-sky-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                <span>⚡</span> QUICK LINKS
+                            </p>
+                            <div className="space-y-1">
                                 <button
-                                    onClick={() => {
-                                        setActiveTab("support");
-                                        fetchSupportTickets();
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                        activeTab === "support"
+                                    onClick={() => navigate("/admin/queue")}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                >
+                                    <span className="text-base">📋</span>
+                                    <span>Queue Kanban</span>
+                                </button>
+                                {loggedInAdminRole !== "MANAGER" && (
+                                    <>
+                                        <button
+                                            onClick={() => navigate("/admin/users")}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">👥</span>
+                                            <span>Users</span>
+                                        </button>
+                                        <button
+                                            onClick={() => navigate("/admin/analytics")}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">📊</span>
+                                            <span>Analytics</span>
+                                        </button>
+                                        <button
+                                            onClick={() => navigate("/admin/settings")}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">⚙️</span>
+                                            <span>Settings</span>
+                                        </button>
+                                        <button
+                                            onClick={() => navigate("/printer-settings")}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">🖨️</span>
+                                            <span>Printer Settings</span>
+                                        </button>
+                                    </>
+                                )}
+                                <button
+                                    onClick={() => navigate("/display-panel")}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                >
+                                    <span className="text-base">📺</span>
+                                    <span>Display Panel</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Management Sections */}
+                        <div>
+                            <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                <span>🗂️</span> MANAGEMENT PANELS
+                            </p>
+                            <div className="space-y-1">
+                                <button
+                                    onClick={() => setActiveTab("queue")}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        activeTab === "queue"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
                                 >
-                                    <span className="text-base">🎫</span>
-                                    <span>Support Tickets</span>
+                                    <span className="text-base">📋</span>
+                                    <span>Queue & Analytics</span>
                                 </button>
+
                                 <button
                                     onClick={() => {
-                                        setActiveTab("frontend");
-                                        fetchSystemSettings();
-                                        fetchSections();
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                        activeTab === "frontend"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                    }`}
-                                >
-                                    <span className="text-base">🎨</span>
-                                    <span>Frontend Manager</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab("system");
-                                        fetchSystemSettings();
+                                        setActiveTab("settings");
+                                        fetchPrices(selectedPricingBlock);
+                                        fetchCoupons();
                                         fetchBlocks();
-                                        fetchPrinters();
+                                        fetchRewards();
+                                        fetchSystemSettings();
                                     }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                        activeTab === "system"
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        activeTab === "settings"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
                                 >
-                                    <span className="text-base">⚙️</span>
-                                    <span>System Config</span>
+                                    <span className="text-base">🏷️</span>
+                                    <span>Pricing & Coupons</span>
                                 </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab("subadmins");
-                                        fetchSubAdmins();
-                                        fetchManagerLogs();
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                        activeTab === "subadmins"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                    }`}
-                                >
-                                    <span className="text-base">🔑</span>
-                                    <span>Manage Staff</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab("notifications");
-                                        fetchNotifications();
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                        activeTab === "notifications"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                    }`}
-                                >
-                                    <span className="text-base">🔔</span>
-                                    <span>Notifications</span>
-                                </button>
-                            </>
-                        )}
 
-                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                            <button
-                                onClick={() => {
-                                    setActiveTab("sql");
-                                    setSqlResult(null);
-                                    setSqlError("");
-                                }}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                    activeTab === "sql"
-                                        ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                }`}
-                            >
-                                <span className="text-base">💻</span>
-                                <span>SQL Terminal</span>
-                            </button>
-                        )}
+                                <button
+                                    onClick={() => setActiveTab("whatsapp")}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        activeTab === "whatsapp"
+                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                    }`}
+                                >
+                                    <span className="text-base">💬</span>
+                                    <span>WhatsApp Orders</span>
+                                </button>
+
+                                {loggedInAdminRole !== "MANAGER" && (
+                                    <button
+                                        onClick={() => {
+                                            setActiveTab("blocks");
+                                            fetchBlocks();
+                                            fetchSuspendedColleges();
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "blocks"
+                                                ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span className="text-base">🏛️</span>
+                                        <span>Manage Blocks</span>
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("printers");
+                                        fetchPrinters();
+                                        fetchBlocks();
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        activeTab === "printers"
+                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                    }`}
+                                >
+                                    <span className="text-base">🖨️</span>
+                                    <span>Manage Printers</span>
+                                </button>
+
+                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                    <button
+                                        onClick={() => {
+                                            setActiveTab("colleges");
+                                            fetchBlocks();
+                                            fetchSuspendedColleges();
+                                            fetchCollegeConfigs();
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "colleges"
+                                                ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span className="text-base">🏫</span>
+                                        <span>College Management</span>
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("users");
+                                        fetchUsers();
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        activeTab === "users"
+                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                    }`}
+                                >
+                                    <span className="text-base">👥</span>
+                                    <span>User Moderation</span>
+                                </button>
+
+                                {loggedInAdminRole !== "MANAGER" && (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab("support");
+                                                fetchSupportTickets();
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "support"
+                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            }`}
+                                        >
+                                            <span className="text-base">🎫</span>
+                                            <span>Support Tickets</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab("frontend");
+                                                fetchSystemSettings();
+                                                fetchSections();
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "frontend"
+                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            }`}
+                                        >
+                                            <span className="text-base">🎨</span>
+                                            <span>Frontend Manager</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab("system");
+                                                fetchSystemSettings();
+                                                fetchBlocks();
+                                                fetchPrinters();
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "system"
+                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            }`}
+                                        >
+                                            <span className="text-base">⚙️</span>
+                                            <span>System Config</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab("subadmins");
+                                                fetchSubAdmins();
+                                                fetchManagerLogs();
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "subadmins"
+                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            }`}
+                                        >
+                                            <span className="text-base">🔑</span>
+                                            <span>Manage Staff</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab("notifications");
+                                                fetchNotifications();
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "notifications"
+                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            }`}
+                                        >
+                                            <span className="text-base">🔔</span>
+                                            <span>Notifications</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                    <button
+                                        onClick={() => {
+                                            setActiveTab("sql");
+                                            setSqlResult(null);
+                                            setSqlError("");
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "sql"
+                                                ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span className="text-base">💻</span>
+                                        <span>SQL Terminal</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1843,10 +1905,7 @@ function AdminDashboard() {
                 </div>
             </aside>
 
-            {/* Right Main Content Pane with Top Navbar and Tab Form */}
-            <div className="flex-1 min-w-0 !w-full px-4 py-4 md:px-8 md:py-6 overflow-x-hidden">
-
-            <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6">
+            <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6 flex-1 min-w-0">
                 <Navbar
                     title="Admin Dashboard"
                     subtitle="Operations Control Panel"
@@ -1863,8 +1922,7 @@ function AdminDashboard() {
                     ]}
                 />
 
-                
-{/* Queue & Analytics Tab */}
+                {/* Queue & Analytics Tab */}
                 {activeTab === "queue" && (
                     <div className="mt-6 space-y-6">
                         {/* Live Printer Stock & Status Map */}
@@ -4881,7 +4939,6 @@ function AdminDashboard() {
                 type={modalConfig.type}
                 onConfirm={modalConfig.onConfirm}
             />
-            </div>
         </main>
     );
 }
