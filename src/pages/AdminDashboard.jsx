@@ -1292,15 +1292,19 @@ function AdminDashboard() {
         }
         
         try {
+            const finalName = newPrinterName && newPrinterName.trim() 
+                ? newPrinterName.trim() 
+                : `${newPrinterBlock} ${newPrinterColor ? "Color" : "B&W"} Printer`;
+
             await api.post("/printer/save", {
-                printerName: newPrinterName,
-                printerIp: newPrinterIp || "192.168.1.100",
+                printerName: finalName,
+                printerIp: newPrinterIp && newPrinterIp.trim() ? newPrinterIp.trim() : "192.168.1.100",
                 blockLocation: newPrinterBlock,
-                colourSupported: newPrinterColor,
-                active: newPrinterActive,
-                maintenance: newPrinterMaintenance,
-                qrScanToPrint: newPrinterQrScan,
-                otpEnabled: newPrinterOtp,
+                colourSupported: !!newPrinterColor,
+                active: !!newPrinterActive,
+                maintenance: !!newPrinterMaintenance,
+                qrScanToPrint: !!newPrinterQrScan,
+                otpEnabled: newPrinterOtp !== undefined ? newPrinterOtp : true,
                 paperCount: 500
             });
             showAlert("Success", "Printer added successfully", "success");
@@ -1313,7 +1317,8 @@ function AdminDashboard() {
             setNewPrinterOtp(true);
         } catch (error) {
             console.error("Error adding printer", error);
-            showAlert("Error", "Failed to add printer", "error");
+            const msg = error.response?.data?.message || "Failed to add printer";
+            showAlert("Error", msg, "error");
         }
     };
 
