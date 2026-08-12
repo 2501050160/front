@@ -30,6 +30,7 @@ export function AdminSidebar({
     isCollapsed,
     onToggleCollapse,
     orderCount = 0,
+    pendingTicketsCount = 0,
     userRole = "SUB_ADMIN",
     adminUser = "Admin",
     adminCollege = "KLU",
@@ -50,7 +51,7 @@ export function AdminSidebar({
         { id: "queue", label: "Live Queue", icon: ListOrdered, badge: orderCount > 0 ? orderCount : null },
         { id: "settings", label: "Pricing & Coupons", icon: Tag },
         { id: "colleges", label: "College & Campus Management", icon: School, hideForManager: true },
-        { id: "users", label: "User Moderation & Support", icon: Users },
+        { id: "users", label: "User Moderation & Support", icon: Users, badge: pendingTicketsCount > 0 ? pendingTicketsCount : null },
         { id: "frontend", label: "Frontend & Ads", icon: Palette, hideForManager: true },
         { id: "system", label: "System Config & SQL", icon: SettingsIcon, hideForManager: true },
     ];

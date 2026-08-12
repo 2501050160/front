@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api, { getPdfDownloadUrl } from "../services/api";
@@ -323,6 +323,7 @@ function AdminDashboard() {
         fetchCoupons();
         fetchOrders();
         fetchStats();
+        fetchSupportTickets();
         fetchPrices(selectedPricingBlock);
         fetchBlocks();
         fetchPrinters();
@@ -331,6 +332,7 @@ function AdminDashboard() {
             fetchOrders();
             fetchStats();
             fetchPrinters();
+            fetchSupportTickets();
         }, 3000);
 
         return () => clearInterval(interval);
@@ -445,10 +447,19 @@ function AdminDashboard() {
         }
     };
 
+    const prevOrdersRef = useRef("");
+    const prevTicketsRef = useRef("");
+
     const fetchOrders = async () => {
         try {
             const response = await api.get("/pdf/orders");
-            setOrders(response.data);
+            const newOrdersHash = JSON.stringify(
+                (response.data || []).map(o => ({ id: o.id, status: o.status, printStatus: o.printStatus, payment: o.razorpayPaymentId }))
+            );
+            if (newOrdersHash !== prevOrdersRef.current) {
+                prevOrdersRef.current = newOrdersHash;
+                setOrders(response.data);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -601,7 +612,13 @@ function AdminDashboard() {
     const fetchSupportTickets = async () => {
         try {
             const response = await api.get("/support/all");
-            setSupportTickets(response.data);
+            const newTicketsHash = JSON.stringify(
+                (response.data || []).map(t => ({ id: t.id, status: t.status }))
+            );
+            if (newTicketsHash !== prevTicketsRef.current) {
+                prevTicketsRef.current = newTicketsHash;
+                setSupportTickets(response.data);
+            }
         } catch (error) {
             console.error("Error fetching support tickets:", error);
         }
@@ -1822,33 +1839,34 @@ function AdminDashboard() {
                                     </button>
                                 )}
 
-                                <button
-                                    onClick={() => handleTabChange("users")}
-                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                        activeTab === "users"
-                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
-                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                    }`}
-                                    title={isSidebarCollapsed ? "User Moderation" : undefined}
-                                >
-                                    <span className="text-base">👥</span>
-                                    {!isSidebarCollapsed && <span>User Moderation</span>}
-                                </button>
-
-                                {loggedInAdminRole !== "MANAGER" && (
-                                    <>
+                                {(() => {
+                                    const pendingTicketsCount = allSupportTickets.filter(t => t.status === "PENDING").length;
+                                    return (
                                         <button
-                                            onClick={() => handleTabChange("support")}
-                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "support"
+                                            onClick={() => handleTabChange("users")}
+                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left relative ${
+                                                activeTab === "users"
                                                     ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
                                                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                             }`}
-                                            title={isSidebarCollapsed ? "Support Tickets" : undefined}
+                                            title={isSidebarCollapsed ? `User Moderation & Support ${pendingTicketsCount > 0 ? `(${pendingTicketsCount} Pending)` : ""}` : undefined}
                                         >
-                                            <span className="text-base">🎫</span>
-                                            {!isSidebarCollapsed && <span>Support Tickets</span>}
+                                            <span className="text-base">👥</span>
+                                            {!isSidebarCollapsed && <span>User Moderation & Support</span>}
+                                            {!isSidebarCollapsed && pendingTicketsCount > 0 && (
+                                                <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse shadow-sm">
+                                                    {pendingTicketsCount}
+                                                </span>
+                                            )}
+                                            {isSidebarCollapsed && pendingTicketsCount > 0 && (
+                                                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse border border-white"></span>
+                                            )}
                                         </button>
+                                    );
+                                })()}
+
+                                {loggedInAdminRole !== "MANAGER" && (
+                                    <>
                                         <button
                                             onClick={() => handleTabChange("frontend")}
                                             className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
