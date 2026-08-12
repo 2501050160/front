@@ -1679,42 +1679,42 @@ function AdminDashboard() {
 
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-col md:flex-row min-h-screen">
-            {/* Left Navigation Bar for Admin Panel */}
-            <aside className={`${isSidebarCollapsed ? "w-full md:w-20" : "w-full md:w-64"} shrink-0 bg-slate-900/95 border-r border-slate-800 text-white flex flex-col justify-between sticky top-0 md:h-screen z-40 backdrop-blur-xl shadow-xl transition-all duration-300`}>
+            {/* Left Navigation Bar for Admin Panel — Light Theme */}
+            <aside className={`${isSidebarCollapsed ? "w-full md:w-20" : "w-full md:w-64"} shrink-0 bg-white border-r border-slate-200 text-slate-800 flex flex-col justify-between sticky top-0 md:h-screen z-40 backdrop-blur-xl shadow-lg transition-all duration-300`}>
                 <div>
-                    <div className={`p-4 border-b border-slate-800 flex items-center ${isSidebarCollapsed ? "justify-center flex-col gap-2" : "justify-between"}`}>
+                    <div className={`p-4 border-b border-slate-200 flex items-center ${isSidebarCollapsed ? "justify-center flex-col gap-2" : "justify-between"}`}>
                         <div className="flex items-center gap-3">
-                            <div className="brand-mark brand-mark-sm bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black cursor-pointer" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} title="Toggle Navigation (☰)">CP</div>
+                            <div className="brand-mark brand-mark-sm bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black cursor-pointer shadow-md shadow-sky-500/20" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} title="Toggle Navigation (☰)">CP</div>
                             {!isSidebarCollapsed && (
                                 <div>
-                                    <h2 className="text-sm font-black text-white leading-tight">Admin Portal</h2>
-                                    <span className="text-[10px] font-bold text-sky-400 uppercase">{loggedInAdminRole}</span>
+                                    <h2 className="text-sm font-black text-slate-900 leading-tight">Admin Portal</h2>
+                                    <span className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">{loggedInAdminRole}</span>
                                 </div>
                             )}
                         </div>
                         {/* 3-lines Hamburger Toggle Button */}
                         <button
                             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm flex items-center justify-center group"
+                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 transition-all cursor-pointer shadow-sm flex items-center justify-center group"
                             title={isSidebarCollapsed ? "Expand Side Navigation (☰)" : "Collapse Side Navigation (☰)"}
                             aria-label="Toggle Side Navigation"
                         >
                             <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
-                                <span className="w-4 h-0.5 bg-slate-300 rounded-full group-hover:bg-cyan-400 transition-all"></span>
-                                <span className="w-4 h-0.5 bg-slate-300 rounded-full group-hover:bg-cyan-400 transition-all"></span>
-                                <span className="w-4 h-0.5 bg-slate-300 rounded-full group-hover:bg-cyan-400 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
                             </div>
                         </button>
                     </div>
 
                     <div className="p-2 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
                         {/* Quick Links Dropdown Section */}
-                        <div className={`bg-slate-900/60 rounded-2xl p-2 border border-slate-800/80 ${isSidebarCollapsed ? "text-center" : ""}`}>
+                        <div className={`bg-amber-50/70 rounded-2xl p-2 border border-amber-200/80 shadow-sm ${isSidebarCollapsed ? "text-center" : ""}`}>
                             {!isSidebarCollapsed ? (
                                 <>
                                     <button
                                         onClick={() => setQuickLinksOpen(!quickLinksOpen)}
-                                        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-400 hover:text-amber-300 hover:bg-slate-800/60 uppercase tracking-wider transition-all cursor-pointer"
+                                        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-800 hover:text-amber-900 hover:bg-amber-100/70 uppercase tracking-wider transition-all cursor-pointer"
                                     >
                                         <span className="flex items-center gap-2">
                                             <span className="text-sm">⚡</span>
@@ -1723,7 +1723,7 @@ function AdminDashboard() {
                                         <motion.span
                                             animate={{ rotate: quickLinksOpen ? 180 : 0 }}
                                             transition={{ duration: 0.2 }}
-                                            className="text-[10px] text-slate-400"
+                                            className="text-[10px] text-amber-700 font-black"
                                         >
                                             ▼
                                         </motion.span>
@@ -1742,8 +1742,8 @@ function AdminDashboard() {
                                                     onClick={() => handleTabChange("queue")}
                                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                         activeTab === "queue"
-                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                            : "text-slate-700 hover:text-slate-900 hover:bg-amber-100/60"
                                                     }`}
                                                 >
                                                     <span className="text-base">📋</span>
@@ -1754,8 +1754,8 @@ function AdminDashboard() {
                                                     onClick={() => handleTabChange("users")}
                                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                         activeTab === "users"
-                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                            : "text-slate-700 hover:text-slate-900 hover:bg-amber-100/60"
                                                     }`}
                                                 >
                                                     <span className="text-base">👥</span>
@@ -1766,8 +1766,8 @@ function AdminDashboard() {
                                                     onClick={() => handleTabChange("analytics")}
                                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                         activeTab === "analytics"
-                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                            : "text-slate-700 hover:text-slate-900 hover:bg-amber-100/60"
                                                     }`}
                                                 >
                                                     <span className="text-base">📊</span>
@@ -1778,8 +1778,8 @@ function AdminDashboard() {
                                                     onClick={() => handleTabChange("settings")}
                                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                         activeTab === "settings"
-                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                            : "text-slate-700 hover:text-slate-900 hover:bg-amber-100/60"
                                                     }`}
                                                 >
                                                     <span className="text-base">⚙️</span>
@@ -1790,8 +1790,8 @@ function AdminDashboard() {
                                                     onClick={() => handleTabChange("printers")}
                                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                         activeTab === "printers"
-                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                            : "text-slate-700 hover:text-slate-900 hover:bg-amber-100/60"
                                                     }`}
                                                 >
                                                     <span className="text-base">🖨️</span>
@@ -1800,7 +1800,7 @@ function AdminDashboard() {
 
                                                 <button
                                                     onClick={() => navigate("/display-panel")}
-                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-amber-100/60 transition-all cursor-pointer text-left"
                                                 >
                                                     <span className="text-base">📺</span>
                                                     <span>Display Panel</span>
@@ -1815,8 +1815,8 @@ function AdminDashboard() {
                                         onClick={() => setQuickLinksOpen(!quickLinksOpen)}
                                         className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all cursor-pointer ${
                                             quickLinksOpen
-                                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
-                                                : "text-amber-400 hover:text-amber-300 hover:bg-slate-800/80"
+                                                ? "bg-amber-200 text-amber-900 border border-amber-400 shadow-sm"
+                                                : "text-amber-700 hover:text-amber-900 hover:bg-amber-100"
                                         }`}
                                         title={quickLinksOpen ? "Hide Quick Links (⚡)" : "Show Quick Links (⚡)"}
                                     >
@@ -1828,8 +1828,8 @@ function AdminDashboard() {
                                                 onClick={() => handleTabChange("queue")}
                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
                                                     activeTab === "queue"
-                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                                                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                                                 }`}
                                                 title="Queue Kanban"
                                             >
@@ -1839,8 +1839,8 @@ function AdminDashboard() {
                                                 onClick={() => handleTabChange("users")}
                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
                                                     activeTab === "users"
-                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                                                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                                                 }`}
                                                 title="Users Management"
                                             >
@@ -1850,8 +1850,8 @@ function AdminDashboard() {
                                                 onClick={() => handleTabChange("analytics")}
                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
                                                     activeTab === "analytics"
-                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                                                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                                                 }`}
                                                 title="Analytics & Reports"
                                             >
@@ -1861,8 +1861,8 @@ function AdminDashboard() {
                                                 onClick={() => handleTabChange("settings")}
                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
                                                     activeTab === "settings"
-                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                                                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                                                 }`}
                                                 title="Settings & Pricing"
                                             >
@@ -1872,8 +1872,8 @@ function AdminDashboard() {
                                                 onClick={() => handleTabChange("printers")}
                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
                                                     activeTab === "printers"
-                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                                                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                                                 }`}
                                                 title="Printer Settings"
                                             >
@@ -1881,7 +1881,7 @@ function AdminDashboard() {
                                             </button>
                                             <button
                                                 onClick={() => navigate("/display-panel")}
-                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-base text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer"
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-base text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
                                                 title="Live Display Panel"
                                             >
                                                 📺
@@ -1904,8 +1904,8 @@ function AdminDashboard() {
                                     onClick={() => handleTabChange("queue")}
                                     className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "queue"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                     }`}
                                     title={isSidebarCollapsed ? "Queue & Analytics" : undefined}
                                 >
@@ -1917,8 +1917,8 @@ function AdminDashboard() {
                                     onClick={() => handleTabChange("settings")}
                                     className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "settings"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                     }`}
                                     title={isSidebarCollapsed ? "Pricing & Coupons" : undefined}
                                 >
@@ -1930,8 +1930,8 @@ function AdminDashboard() {
                                     onClick={() => handleTabChange("whatsapp")}
                                     className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "whatsapp"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                     }`}
                                     title={isSidebarCollapsed ? "WhatsApp Orders" : undefined}
                                 >
@@ -1944,8 +1944,8 @@ function AdminDashboard() {
                                         onClick={() => handleTabChange("blocks")}
                                         className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "blocks"
-                                                ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                         }`}
                                         title={isSidebarCollapsed ? "Manage Blocks" : undefined}
                                     >
@@ -1958,8 +1958,8 @@ function AdminDashboard() {
                                     onClick={() => handleTabChange("printers")}
                                     className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "printers"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                     }`}
                                     title={isSidebarCollapsed ? "Manage Printers" : undefined}
                                 >
@@ -1972,8 +1972,8 @@ function AdminDashboard() {
                                         onClick={() => handleTabChange("colleges")}
                                         className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "colleges"
-                                                ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                         }`}
                                         title={isSidebarCollapsed ? "College Management" : undefined}
                                     >
@@ -1986,8 +1986,8 @@ function AdminDashboard() {
                                     onClick={() => handleTabChange("users")}
                                     className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "users"
-                                            ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                     }`}
                                     title={isSidebarCollapsed ? "User Moderation" : undefined}
                                 >
@@ -2001,8 +2001,8 @@ function AdminDashboard() {
                                             onClick={() => handleTabChange("support")}
                                             className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "support"
-                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                             }`}
                                             title={isSidebarCollapsed ? "Support Tickets" : undefined}
                                         >
@@ -2013,8 +2013,8 @@ function AdminDashboard() {
                                             onClick={() => handleTabChange("frontend")}
                                             className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "frontend"
-                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                             }`}
                                             title={isSidebarCollapsed ? "Frontend Manager" : undefined}
                                         >
@@ -2025,8 +2025,8 @@ function AdminDashboard() {
                                             onClick={() => handleTabChange("system")}
                                             className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "system"
-                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                             }`}
                                             title={isSidebarCollapsed ? "System Config" : undefined}
                                         >
@@ -2037,8 +2037,8 @@ function AdminDashboard() {
                                             onClick={() => handleTabChange("subadmins")}
                                             className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "subadmins"
-                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                             }`}
                                             title={isSidebarCollapsed ? "Manage Staff" : undefined}
                                         >
@@ -2049,8 +2049,8 @@ function AdminDashboard() {
                                             onClick={() => handleTabChange("notifications")}
                                             className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "notifications"
-                                                    ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                             }`}
                                             title={isSidebarCollapsed ? "Notifications" : undefined}
                                         >
@@ -2065,8 +2065,8 @@ function AdminDashboard() {
                                         onClick={() => handleTabChange("sql")}
                                         className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "sql"
-                                                ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
+                                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                         }`}
                                         title={isSidebarCollapsed ? "SQL Terminal" : undefined}
                                     >
@@ -2079,16 +2079,16 @@ function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className={`p-3 border-t border-slate-800 flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-between"} text-xs`}>
+                <div className={`p-3 border-t border-slate-200 flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-between"} text-xs`}>
                     {!isSidebarCollapsed && (
                         <div className="truncate pr-2">
-                            <p className="font-black text-white truncate">{loggedInAdminUser}</p>
-                            <p className="text-[10px] text-slate-400 uppercase">{loggedInAdminCollege}</p>
+                            <p className="font-black text-slate-900 truncate">{loggedInAdminUser}</p>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">{loggedInAdminCollege}</p>
                         </div>
                     )}
                     <button
                         onClick={logout}
-                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white text-[11px] font-bold transition-all cursor-pointer shrink-0"
+                        className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 text-[11px] font-bold transition-all cursor-pointer shrink-0"
                         title="Sign Out"
                     >
                         {isSidebarCollapsed ? "🚪" : "Sign Out"}
@@ -2109,28 +2109,31 @@ function AdminDashboard() {
                 {/* Queue & Analytics Tab */}
                 {(activeTab === "queue" || activeTab === "order-queue") && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Queue & Analytics */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Queue & Analytics — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "live-queue", label: "Live Queue", icon: "📋" },
-                                    { id: "kanban", label: "Queue Kanban", icon: "📊" },
-                                    { id: "kiosks", label: "Printer Kiosks", icon: "🖨️" },
-                                    { id: "revenue", label: "Revenue Analytics", icon: "💵" },
-                                    { id: "charts", label: "Visual Charts", icon: "📈" },
-                                    { id: "history", label: "All Orders History", icon: "📜" },
+                                    { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
+                                    { id: "kanban", label: "Queue Kanban", icon: "📊", desc: "Visual Board" },
+                                    { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
+                                    { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
+                                    { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
+                                    { id: "history", label: "Order History", icon: "📜", desc: `${orders.length} Total Logs` },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setQueueSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             queueSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${queueSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -2913,39 +2916,32 @@ function AdminDashboard() {
                 {/* Pricing & Coupons Tab */}
                 {activeTab === "settings" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Pricing & Coupons */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Pricing & Coupons — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "pricing", label: "Price Settings", icon: "💵", desc: "Rate Configuration" },
                                     { id: "blocks", label: "Manage Blocks", icon: "🏛️", desc: "Campus Locations" },
                                     { id: "coupon-gen", label: "Coupon Generator", icon: "🎟️", desc: "Create Discounts" },
-                                    { id: "active-coupons", label: "Active Coupons", icon: "🏷️", count: coupons.length },
+                                    { id: "active-coupons", label: "Active Coupons", icon: "🏷️", desc: String(coupons.length) },
                                     { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Rewards Program" },
-                                    { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", count: rewards.length },
+                                    { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", desc: String(rewards.length) },
                                     { id: "referrals", label: "Refer & Earn", icon: "👥", desc: "Referral Rules" }
                                 ].map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setPricingSubTab(tab.id)}
-                                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             pricingSubTab === tab.id
-                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-sky-600/30 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/80"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span className="text-base">{tab.icon}</span>
-                                        <div className="text-left">
-                                            <span className="block leading-tight">{tab.label}</span>
-                                            <span className="text-[9px] opacity-70 font-semibold block leading-tight">{tab.desc}</span>
-                                        </div>
-                                        {tab.count !== undefined && (
-                                            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-                                                pricingSubTab === tab.id ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
-                                            }`}>
-                                                {tab.count}
-                                            </span>
-                                        )}
+                                        <span className="text-2xl mb-1.5">{tab.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{tab.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${pricingSubTab === tab.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {tab.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -3680,25 +3676,28 @@ function AdminDashboard() {
                 {/* Blocks Management Tab */}
                 {activeTab === "blocks" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Campus Blocks */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Campus Blocks — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "all-blocks", label: "Block Directory", icon: "🏛️" },
-                                    { id: "add-block", label: "Add New Block", icon: "➕" },
-                                    { id: "overview", label: "Block Overview & Stats", icon: "📊" },
+                                    { id: "all-blocks", label: "Block Directory", icon: "🏛️", desc: `${blocks.length} Configured` },
+                                    { id: "add-block", label: "Add New Block", icon: "➕", desc: "Create Location" },
+                                    { id: "overview", label: "Block Overview", icon: "📊", desc: "Terminal Health" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setBlocksSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             blocksSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${blocksSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -3965,24 +3964,27 @@ function AdminDashboard() {
                 {/* College Management Tab (Main Admin Only) */}
                 {activeTab === "colleges" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for College Management */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for College Management — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "colleges-list", label: "College Directory", icon: "🏫" },
-                                    { id: "add-college", label: "Add New College", icon: "➕" },
+                                    { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length} Campuses` },
+                                    { id: "add-college", label: "Add New College", icon: "➕", desc: "Register Campus" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setCollegesSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             collegesSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${collegesSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -4156,25 +4158,28 @@ function AdminDashboard() {
                 {/* User Moderation Tab */}
                 {activeTab === "users" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Users */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Users — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "users-list", label: "User Directory", icon: "👥" },
-                                    { id: "wallets", label: "Wallet Balances", icon: "💳" },
-                                    { id: "moderation", label: "Blocked Accounts", icon: "⛔" },
+                                    { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
+                                    { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
+                                    { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setUsersSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             usersSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${usersSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -4472,25 +4477,28 @@ function AdminDashboard() {
                 {/* Support Tickets Tab */}
                 {activeTab === "support" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Support Desk */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Support Desk — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "all-tickets", label: `All Tickets (${supportTickets.length})`, icon: "🎫" },
-                                    { id: "pending", label: `Pending Issues (${supportTickets.filter(t => t.status === "PENDING").length})`, icon: "⏳" },
-                                    { id: "resolved", label: `Resolved Archive (${supportTickets.filter(t => t.status !== "PENDING").length})`, icon: "✅" },
+                                    { id: "all-tickets", label: "All Tickets", icon: "🎫", desc: `${supportTickets.length} Inquiries` },
+                                    { id: "pending", label: "Pending Issues", icon: "⏳", desc: `${supportTickets.filter(t => t.status === "PENDING").length} Awaiting` },
+                                    { id: "resolved", label: "Resolved Archive", icon: "✅", desc: `${supportTickets.filter(t => t.status !== "PENDING").length} Closed` },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setSupportSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             supportSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${supportSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -4687,27 +4695,30 @@ function AdminDashboard() {
                 {/* Frontend Manager Tab */}
                 {activeTab === "frontend" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Frontend Manager */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Frontend Manager — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "marketing", label: "Marketing & Announcements", icon: "📢" },
-                                    { id: "sections-list", label: `Layout Sections (${sections.length})`, icon: "🗂️" },
-                                    { id: "add-section", label: "Add Layout Section", icon: "➕" },
-                                    { id: "popups-list", label: `Manage Popups (${popups.length})`, icon: "💬" },
-                                    { id: "add-popup", label: "Add Custom Popup", icon: "✨" },
+                                    { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
+                                    { id: "sections-list", label: "Layout Sections", icon: "🗂️", desc: `${sections.length} Configured` },
+                                    { id: "add-section", label: "Add Section", icon: "➕", desc: "New CMS Block" },
+                                    { id: "popups-list", label: "Manage Popups", icon: "💬", desc: `${popups.length} Modals` },
+                                    { id: "add-popup", label: "Add Popup", icon: "✨", desc: "Create Modal" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setFrontendSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             frontendSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${frontendSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -5081,29 +5092,32 @@ function AdminDashboard() {
                 {/* System Config Tab */}
                 {activeTab === "system" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for System Config */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for System Config — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "gateway", label: "Gateway Status", icon: "🌐" },
-                                    { id: "referrals", label: "Referral Program", icon: "🎁" },
-                                    { id: "thesis", label: "Bulk / Thesis Prints", icon: "📚" },
-                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "global", label: "Global Config", icon: "⚙️" }] : []),
-                                    { id: "offpeak", label: "Off-Peak Hours", icon: "🌙" },
-                                    { id: "paper", label: "Paper Levels", icon: "📄" },
-                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "tester", label: "Tester Mode", icon: "🧪" }] : []),
+                                    { id: "gateway", label: "Gateway Status", icon: "🌐", desc: "API Health" },
+                                    { id: "referrals", label: "Referrals", icon: "🎁", desc: "Bonus Rules" },
+                                    { id: "thesis", label: "Thesis & Bulk", icon: "📚", desc: "Volume Cuts" },
+                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "global", label: "Global Config", icon: "⚙️", desc: "Platform Fees" }] : []),
+                                    { id: "offpeak", label: "Off-Peak Hours", icon: "🌙", desc: "Time Windows" },
+                                    { id: "paper", label: "Paper Levels", icon: "📄", desc: "Hardware Stock" },
+                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "tester", label: "Tester Mode", icon: "🧪", desc: "Free Access QA" }] : []),
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setSystemSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             systemSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${systemSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -5591,25 +5605,28 @@ function AdminDashboard() {
                 {/* Printers Management Tab */}
                 {activeTab === "printers" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Printer Settings */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Printer Settings — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "printers-list", label: `Connected Printers (${getRoleFilteredPrinters().length})`, icon: "🖨️" },
-                                    { id: "add-printer", label: "Add New Printer", icon: "➕" },
-                                    { id: "paper-stock", label: "Paper Stock Manager", icon: "📄" },
+                                    { id: "printers-list", label: "Printers Fleet", icon: "🖨️", desc: `${getRoleFilteredPrinters().length} Online/Configured` },
+                                    { id: "add-printer", label: "Add Printer", icon: "➕", desc: "Connect Station" },
+                                    { id: "paper-stock", label: "Paper Stock", icon: "📄", desc: "Trays & Sheets" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setPrintersSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             printersSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${printersSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -5883,24 +5900,27 @@ function AdminDashboard() {
                 {/* Notifications Management Tab */}
                 {activeTab === "notifications" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Campus Alerts */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Campus Alerts — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "all-notifs", label: `Published Alerts (${notifications.length})`, icon: "📢" },
-                                    { id: "create-notif", label: "Create Notification", icon: "✍️" },
+                                    { id: "all-notifs", label: "Published Alerts", icon: "📢", desc: `${notifications.length} Broadcasts` },
+                                    { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setNotificationsSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             notificationsSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${notificationsSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -6031,24 +6051,27 @@ function AdminDashboard() {
                 {/* SQL Terminal Tab — Main Admin only */}
                 {activeTab === "sql" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for SQL Terminal */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for SQL Terminal — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "console", label: "SQL Query Console", icon: "💻" },
-                                    { id: "backup", label: "Database Backup Tool", icon: "💾" },
+                                    { id: "console", label: "Query Console", icon: "💻", desc: "Execute Raw SQL" },
+                                    { id: "backup", label: "DB Backup Tool", icon: "💾", desc: "Dump & Export" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setSqlSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             sqlSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${sqlSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
@@ -6172,25 +6195,28 @@ function AdminDashboard() {
                 {/* Manage Staff Tab */}
                 {activeTab === "subadmins" && loggedInAdminRole !== "MANAGER" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Staff Management */}
-                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                        {/* Top Sub-Navigation Bar for Staff Management — Light Theme Cards */}
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
-                                    { id: "staff-list", label: `Staff Directory (${subAdmins.length})`, icon: "👥" },
-                                    { id: "add-staff", label: "Add Staff Account", icon: "➕" },
-                                    ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: `Audit Trail (${managerLogs.length})`, icon: "📜" }] : []),
+                                    { id: "staff-list", label: "Staff Directory", icon: "👥", desc: `${subAdmins.length} Accounts` },
+                                    { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
+                                    ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: "Audit Trail", icon: "📜", desc: `${managerLogs.length} Actions` }] : []),
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
                                         onClick={() => setSubadminsSubTab(sub.id)}
-                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             subadminsSubTab === sub.id
-                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
-                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                         }`}
                                     >
-                                        <span>{sub.icon}</span>
-                                        <span>{sub.label}</span>
+                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
+                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${subadminsSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                            {sub.desc}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
