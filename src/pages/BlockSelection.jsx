@@ -961,11 +961,11 @@ function BlockSelection() {
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="text-xl font-black text-white tracking-tight">Scan Barcode or Enter OTP</h3>
+                                                <h3 className="text-xl font-black text-white tracking-tight">Enter Release OTP</h3>
                                                 <span className="text-lg">🔑</span>
                                             </div>
                                             <p className="text-xs text-cyan-100/70 mt-1 font-semibold">
-                                                Point camera at kiosk display or enter 4-digit OTP to release print
+                                                Enter 4-digit OTP to release print
                                             </p>
                                         </div>
                                     </div>
@@ -1021,7 +1021,7 @@ function BlockSelection() {
                                     </div>
 
                                     <div className="space-y-1 text-left">
-                                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">4-Digit OTP Code</label>
+                                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400">Enter 4-Digit Kiosk OTP</label>
                                         <input
                                             type="text"
                                             maxLength={4}
@@ -1048,21 +1048,13 @@ function BlockSelection() {
                                     </p>
                                 )}
 
-                                <div className="mt-4 flex flex-wrap gap-2.5">
+                                <div className="mt-4 flex gap-3">
                                     <button
                                         onClick={handleDirectRelease}
                                         disabled={releasing || pendingOrders.length === 0}
                                         className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-300 to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {releasing ? "Releasing..." : "Verify & Print"} <ArrowRight className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowBarcodeScanner(true)}
-                                        className="h-10 px-4 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                                    >
-                                        <ScanLine className="w-4 h-4" />
-                                        <span>Scan Camera QR</span>
                                     </button>
                                 </div>
                             </motion.div>
