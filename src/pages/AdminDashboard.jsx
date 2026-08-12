@@ -3257,17 +3257,17 @@ function AdminDashboard() {
                                                     </div>
                                                     <div className="flex flex-wrap gap-2 items-center">
                                                         {b.serverApiKey ? (
-                                                            <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
-                                                                <span className="font-mono text-slate-500 text-[11px] truncate max-w-[120px]">Key: {b.serverApiKey}</span>
-                                                                <button onClick={() => {navigator.clipboard.writeText(b.serverApiKey); showAlert("Copied", "API Key copied to clipboard", "success");}} className="font-bold text-indigo-600 hover:text-indigo-800">Copy</button>
-                                                                <button onClick={() => downloadServerConfig(b)} className="font-bold text-emerald-600 hover:text-emerald-800">config.json</button>
-                                                                <button onClick={() => regenerateBlockKey(b.id)} className="font-bold text-rose-500 hover:text-rose-700">Revoke</button>
+                                                            <div className="flex flex-wrap items-center gap-2 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs shadow-xs">
+                                                                <span className="font-mono text-slate-600 text-[11px] truncate max-w-[120px] font-bold">Key: {b.serverApiKey}</span>
+                                                                <button onClick={() => {navigator.clipboard.writeText(b.serverApiKey); showAlert("Copied", "API Key copied to clipboard", "success");}} className="font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer">📋 Copy</button>
+                                                                <button onClick={() => downloadServerConfig(b)} className="font-bold text-emerald-600 hover:text-emerald-800 cursor-pointer flex items-center gap-1">📥 config.json</button>
+                                                                <button onClick={() => regenerateBlockKey(b.id)} className="font-bold text-rose-500 hover:text-rose-700 cursor-pointer flex items-center gap-1">🔄 Reset (Revoke)</button>
                                                             </div>
                                                         ) : (
                                                             <button onClick={() => regenerateBlockKey(b.id)} className="btn small !bg-indigo-50 !text-indigo-600 border border-indigo-200 hover:!bg-indigo-100">Generate Key</button>
                                                         )}
                                                         <button onClick={() => renameBlock(b.id, b.name)} className="btn small">Rename</button>
-                                                        <button onClick={() => deleteBlock(b.id)} className="btn danger small">Delete</button>
+                                                        <button onClick={() => deleteBlock(b.id)} className="p-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center" title="Delete Block">🗑️</button>
                                                     </div>
                                                 </li>
                                             ))}
