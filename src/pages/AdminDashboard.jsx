@@ -1931,87 +1931,12 @@ function AdminDashboard() {
             </aside>
 
             <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6 flex-1 min-w-0">
-                {(() => {
-                    const getCurrentSubTabs = () => {
-                        if (activeTab === "frontend") {
-                            return [
-                                { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
-                                { id: "all-notifs", label: "Published Alerts", icon: "🔔", desc: `${notifications.length} Broadcasts` },
-                                { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
-                                { id: "sections-list", label: "Layout Sections", icon: "🗂️", desc: `${sections.length} Configured` },
-                                { id: "add-section", label: "Add Section", icon: "➕", desc: "New CMS Block" },
-                                { id: "popups-list", label: "Manage Popups", icon: "💬", desc: `${popups.length} Modals` },
-                                { id: "add-popup", label: "Add Popup", icon: "✨", desc: "Create Modal" },
-                            ];
-                        }
-                        if (activeTab === "queue" || activeTab === "order-queue") {
-                            return [
-                                { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
-                                { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
-                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
-                                { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
-                                { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
-                                { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
-                                { id: "history", label: "Order History", icon: "📜", desc: `${allOrders.length} Total Logs` },
-                            ];
-                        }
-                        if (activeTab === "users") {
-                            return [
-                                { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
-                                { id: "tickets", label: "Support Tickets", icon: "🎧", desc: `${allSupportTickets.length} Inquiries` },
-                                { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
-                                { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
-                                { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
-                                { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
-                                ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: "Audit Trail", icon: "📜", desc: `${managerLogs.length} Actions` }] : []),
-                            ];
-                        }
-                        if (activeTab === "system") {
-                            return [
-                                { id: "settings", label: "Global Settings", icon: "⚙️", desc: "System Config" },
-                                { id: "sql", label: "SQL Terminal", icon: "💻", desc: "Query & Backup" },
-                                { id: "logs", label: "System Logs", icon: "📜", desc: "Audit History" },
-                            ];
-                        }
-                        return [];
-                    };
-
-                    const getCurrentSubTabId = () => {
-                        if (activeTab === "frontend") return frontendSubTab;
-                        if (activeTab === "queue" || activeTab === "order-queue") return queueSubTab;
-                        if (activeTab === "users") return usersSubTab;
-                        if (activeTab === "system") return systemSubTab;
-                        return null;
-                    };
-
-                    const handleCurrentSubTabChange = (tabId) => {
-                        if (tabId === "display-panel") {
-                            navigate("/display-panel");
-                            return;
-                        }
-                        if (activeTab === "frontend") setFrontendSubTab(tabId);
-                        if (activeTab === "queue" || activeTab === "order-queue") setQueueSubTab(tabId);
-                        if (activeTab === "users") setUsersSubTab(tabId);
-                        if (activeTab === "system") setSystemSubTab(tabId);
-                    };
-
-                    return (
-                        <Navbar
-                            actions={[]}
-                            tabs={getCurrentSubTabs()}
-                            activeTab={getCurrentSubTabId()}
-                            onTabChange={handleCurrentSubTabChange}
-                            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            isSidebarCollapsed={isSidebarCollapsed}
-                        />
-                    );
-                })()}
 
                 {/* Queue & Analytics Tab */}
                 {(activeTab === "queue" || activeTab === "order-queue") && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for Queue & Analytics — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
@@ -2948,7 +2873,7 @@ function AdminDashboard() {
                 {activeTab === "settings" && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for Pricing & Coupons — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "pricing", label: "Price Settings", icon: "💵", desc: "Rate Configuration" },
@@ -3736,7 +3661,7 @@ function AdminDashboard() {
                 {activeTab === "blocks" && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for Campus Blocks — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "all-blocks", label: "Block Directory", icon: "🏛️", desc: `${blocks.length} Configured` },
@@ -4024,7 +3949,7 @@ function AdminDashboard() {
                 {(activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers") && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for College & Campus Management — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length} Campuses` },
@@ -4224,7 +4149,7 @@ function AdminDashboard() {
                 {activeTab === "users" && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for Users — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
@@ -4847,7 +4772,7 @@ function AdminDashboard() {
                 {activeTab === "frontend" && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for Frontend Manager — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
@@ -5364,7 +5289,7 @@ function AdminDashboard() {
                 {activeTab === "system" && (
                     <div className="mt-6 space-y-6">
                         {/* Top Sub-Navigation Bar for System Config — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
+                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "gateway", label: "Gateway Status", icon: "🌐", desc: "API Health" },
