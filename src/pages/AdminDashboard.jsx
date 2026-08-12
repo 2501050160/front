@@ -4627,19 +4627,8 @@ function AdminDashboard() {
                                                 <td className="font-mono text-xs font-bold text-slate-500">
                                                     {user.referralCode || "—"}
                                                 </td>
-                                                <td>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-black text-emerald-600 text-base">
-                                                            ₹{(Number(user.walletBalance) || 0).toFixed(2)}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => handleAddWalletMoney(user)}
-                                                            className="btn success min-h-0 px-2 py-0.5 text-[10px] font-black rounded-lg flex items-center gap-1 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                                                            title="Add money to user wallet"
-                                                        >
-                                                            <span>➕</span> Add Money
-                                                        </button>
-                                                    </div>
+                                                <td className="font-black text-emerald-600 text-base">
+                                                    ₹{(Number(user.walletBalance) || 0).toFixed(2)}
                                                 </td>
                                                 <td>
                                                     <span className={`status-pill ${user.blocked ? 'status-unpaid' : 'status-paid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
