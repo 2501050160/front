@@ -81,6 +81,16 @@ export function AdminHeader({
                     </button>
                 )}
 
+                {/* Display Panel Shortcut Button */}
+                <button
+                    onClick={() => navigate("/display-panel")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-200 hover:text-white text-xs font-black transition-all cursor-pointer shadow-sm shrink-0"
+                    title="Open Live Display Panel"
+                >
+                    <span className="text-sm">📺</span>
+                    <span className="hidden sm:inline">Display Panel</span>
+                </button>
+
                 {/* Admin Profile Dropdown */}
                 <div className="relative">
                     <button

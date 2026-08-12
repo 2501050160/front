@@ -138,6 +138,16 @@ function Navbar({
                         </div>
                     )}
 
+                    {/* Display Panel Shortcut Button */}
+                    <button
+                        onClick={() => navigate("/display-panel")}
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 hover:from-sky-500/20 hover:to-indigo-500/20 text-slate-800 hover:text-sky-700 border border-sky-200/80 hover:border-sky-300 text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+                        title="Open Live Display Panel"
+                    >
+                        <span className="text-base">📺</span>
+                        <span className="hidden sm:inline">Display Panel</span>
+                    </button>
+
                     {/* Profile Avatar & Dropdown */}
                     {(userId || adminId) && (
                         <div 

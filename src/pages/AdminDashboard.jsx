@@ -575,6 +575,26 @@ function AdminDashboard() {
         );
     };
 
+    const handleAddWalletMoney = async (user) => {
+        const inputAmount = window.prompt(`Add wallet balance for ${user.name || user.email}.\nEnter amount in ₹ to add:`, "50");
+        if (inputAmount === null) return;
+        const amount = parseFloat(inputAmount);
+        if (isNaN(amount) || amount === 0) {
+            showAlert("Invalid Amount", "Please enter a valid non-zero number for wallet amount.", "error");
+            return;
+        }
+        try {
+            await api.post("/admin/users/wallet/add", null, {
+                params: { id: user.id, amount }
+            });
+            showAlert("Success", `Successfully ${amount > 0 ? "added" : "deducted"} ₹${Math.abs(amount).toFixed(2)} for ${user.name || user.email}!`, "success");
+            fetchUsers();
+        } catch (error) {
+            console.error("Error updating wallet money:", error);
+            showAlert("Error", "Failed to update user wallet balance.", "error");
+        }
+    };
+
     const fetchSupportTickets = async () => {
         try {
             const response = await api.get("/support/all");
@@ -4194,8 +4214,8 @@ function AdminDashboard() {
                             </motion.div>
                         )}
 
-                        {/* SUBPAGE 3: Block Overview & Stats */}
-                        {blocksSubTab === "overview" && (
+                        {/* SUBPAGE 5: Block Overview & Stats */}
+                        {collegesSubTab === "overview" && (
                             <motion.div
                                 className="space-y-6"
                                 initial={{ opacity: 0, y: 12 }}
@@ -4253,15 +4273,21 @@ function AdminDashboard() {
                     </div>
                 )}
 
-                {/* College Management Tab (Main Admin Only) */}
-                {activeTab === "colleges" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                {/* College & Campus Management Tab */}
+                {(activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers") && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for College Management — Light Theme Cards */}
+                        {/* Top Sub-Navigation Bar for College & Campus Management — Light Theme Cards */}
                         <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length} Campuses` },
-                                    { id: "add-college", label: "Add New College", icon: "➕", desc: "Register Campus" },
+                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "add-college", label: "Add New College", icon: "➕", desc: "Register Campus" }] : []),
+                                    { id: "all-blocks", label: "Block Directory", icon: "🏛️", desc: `${blocks.length} Configured` },
+                                    { id: "add-block", label: "Add New Block", icon: "➕", desc: "Create Location" },
+                                    { id: "overview", label: "Block Overview", icon: "📊", desc: "Terminal Health" },
+                                    { id: "printers-list", label: "Printers Fleet", icon: "🖨️", desc: `${getRoleFilteredPrinters().length} Online/Configured` },
+                                    { id: "add-printer", label: "Add Printer", icon: "➕", desc: "Connect Station" },
+                                    { id: "paper-stock", label: "Paper Stock", icon: "📄", desc: "Trays & Sheets" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
@@ -4601,8 +4627,19 @@ function AdminDashboard() {
                                                 <td className="font-mono text-xs font-bold text-slate-500">
                                                     {user.referralCode || "—"}
                                                 </td>
-                                                <td className="font-black text-emerald-600 text-base">
-                                                    ₹{(Number(user.walletBalance) || 0).toFixed(2)}
+                                                <td>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-black text-emerald-600 text-base">
+                                                            ₹{(Number(user.walletBalance) || 0).toFixed(2)}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleAddWalletMoney(user)}
+                                                            className="btn success min-h-0 px-2 py-0.5 text-[10px] font-black rounded-lg flex items-center gap-1 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                                                            title="Add money to user wallet"
+                                                        >
+                                                            <span>➕</span> Add Money
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <span className={`status-pill ${user.blocked ? 'status-unpaid' : 'status-paid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
@@ -4612,15 +4649,22 @@ function AdminDashboard() {
                                                 <td>
                                                     <div className="flex items-center gap-2">
                                                         <button
+                                                            onClick={() => handleAddWalletMoney(user)}
+                                                            className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                                            title="Add money to user wallet"
+                                                        >
+                                                            <span>💳</span> Add Money
+                                                        </button>
+                                                        <button
                                                             onClick={() => toggleBlockUser(user.id)}
-                                                            className={`btn ${user.blocked ? 'success' : 'warning'} min-h-0 px-2.5 py-1 text-xs font-bold`}
+                                                            className={`btn ${user.blocked ? 'success' : 'warning'} min-h-0 px-2.5 py-1 text-xs font-bold cursor-pointer`}
                                                             title={user.blocked ? "Unblock account" : "Block account"}
                                                         >
                                                             {user.blocked ? "Unblock" : "Block"}
                                                         </button>
                                                         <button
                                                             onClick={() => deleteUser(user.id)}
-                                                            className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold"
+                                                            className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold cursor-pointer"
                                                             title="Delete user account"
                                                         >
                                                             Delete
@@ -6227,300 +6271,7 @@ function AdminDashboard() {
                     </div>
                 )}
 
-                {/* Printers Management Tab */}
-                {activeTab === "printers" && (
-                    <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Printer Settings — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "printers-list", label: "Printers Fleet", icon: "🖨️", desc: `${getRoleFilteredPrinters().length} Online/Configured` },
-                                    { id: "add-printer", label: "Add Printer", icon: "➕", desc: "Connect Station" },
-                                    { id: "paper-stock", label: "Paper Stock", icon: "📄", desc: "Trays & Sheets" },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setPrintersSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            printersSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${printersSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* SUBPAGE 1: Connected Printers List */}
-                        {printersSubTab === "printers-list" && (
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-                                    <div>
-                                        <p className="eyebrow">Hardware Fleet</p>
-                                        <h3 className="text-2xl font-black text-slate-900">Active Printers ({getRoleFilteredPrinters().length})</h3>
-                                    </div>
-                                    <button onClick={() => setPrintersSubTab("add-printer")} className="btn primary text-xs px-4 py-2 font-bold">
-                                        ➕ Add Printer
-                                    </button>
-                                </div>
-                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    {getRoleFilteredPrinters().map(p => (
-                                        <div key={p.id} className="p-5 border rounded-2xl flex flex-col justify-between gap-4 bg-white shadow-sm hover:shadow-md transition-shadow border-slate-200">
-                                            <div>
-                                                <div className="flex items-start justify-between gap-2 mb-2">
-                                                    <div>
-                                                        <h4 className="font-black text-slate-900 text-lg leading-tight">{p.printerName}</h4>
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase tracking-wider mt-1 inline-block">{p.blockLocation}</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${p.active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
-                                                            {p.active ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${p.maintenance ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-sky-100 text-sky-700 border border-sky-200'}`}>
-                                                            {p.maintenance ? 'Maintenance' : 'Online'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs font-bold text-slate-400 font-mono mt-1">{p.printerIp || "Local USB / Default"}</p>
-                                                <div className="flex gap-2 mt-3">
-                                                    {p.colourSupported ? (
-                                                        <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200">🎨 Color Supported</span>
-                                                    ) : (
-                                                        <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">📄 B&W Only</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                                                <button 
-                                                    onClick={() => togglePrinterMaintenance(p)}
-                                                    className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${p.maintenance ? 'success' : 'secondary'}`}
-                                                >
-                                                    🛠 {p.maintenance ? "Set Online" : "Set Maintenance"}
-                                                </button>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden h-8">
-                                                        <span className="px-2 text-xs font-bold text-slate-500">📄</span>
-                                                        <input 
-                                                            type="number" 
-                                                            className="w-14 text-center font-bold px-1 text-xs bg-transparent outline-none h-full" 
-                                                            key={p.paperCount}
-                                                            defaultValue={p.paperCount}
-                                                            id={`manage-paper-${p.blockLocation}`}
-                                                        />
-                                                    </div>
-                                                    <button 
-                                                        onClick={() => {
-                                                            const inputEl = document.getElementById(`manage-paper-${p.blockLocation}`);
-                                                            if(inputEl) {
-                                                                const count = Number(inputEl.value || 0);
-                                                                updatePrinterPaper(p.blockLocation, count);
-                                                            }
-                                                        }}
-                                                        className="btn secondary min-h-0 px-2.5 py-1 text-xs font-bold h-8"
-                                                    >
-                                                        Refill
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => {
-                                                            if (window.confirm(`Are you sure you want to delete ${p.printerName}?`)) {
-                                                                deletePrinter(p.id);
-                                                            }
-                                                        }}
-                                                        className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold h-8"
-                                                    >
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {getRoleFilteredPrinters().length === 0 && (
-                                        <div className="col-span-full text-sm font-bold text-slate-400 text-center py-12">
-                                            No printers found. Click Add Printer to connect your first hardware station.
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.section>
-                        )}
-
-                        {/* SUBPAGE 2: Add Printer Form */}
-                        {printersSubTab === "add-printer" && (
-                            <motion.div
-                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <section className="panel p-6">
-                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
-                                        <div>
-                                            <p className="eyebrow">Printers</p>
-                                            <h2 className="text-2xl font-black text-slate-900">Add New Printer</h2>
-                                            <p className="subtitle">Configure and register a printer station on campus.</p>
-                                        </div>
-                                    </div>
-                                    <form onSubmit={addPrinter} className="space-y-4">
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">Block Location</span>
-                                            <select
-                                                className="field"
-                                                value={newPrinterBlock}
-                                                onChange={(e) => setNewPrinterBlock(e.target.value)}
-                                                required
-                                            >
-                                                <option value="" disabled>Select Block</option>
-                                                {displayBlocks.map(b => (
-                                                    <option key={b.id} value={b.name}>{b.name} ({b.college || "KLU"})</option>
-                                                ))}
-                                            </select>
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">Printer Name (Windows printer driver name)</span>
-                                            <input
-                                                type="text"
-                                                placeholder="e.g. Laser Jet Pro MFP"
-                                                className="field"
-                                                value={newPrinterName}
-                                                onChange={(e) => setNewPrinterName(e.target.value)}
-                                                required
-                                            />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">Printer IP / USB Port</span>
-                                            <input
-                                                type="text"
-                                                placeholder="Printer IP or COM port (optional)"
-                                                className="field"
-                                                value={newPrinterIp}
-                                                onChange={(e) => setNewPrinterIp(e.target.value)}
-                                            />
-                                        </label>
-                                        
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <label className="block">
-                                                <span className="block text-sm font-black text-slate-700 mb-2">Operation Status</span>
-                                                <select className="field cursor-pointer" value={newPrinterActive} onChange={(e) => setNewPrinterActive(e.target.value === "true")}>
-                                                    <option value="true">Active (Online & Ready)</option>
-                                                    <option value="false">Offline</option>
-                                                </select>
-                                            </label>
-                                            <label className="block">
-                                                <span className="block text-sm font-black text-slate-700 mb-2">Maintenance Status</span>
-                                                <select className="field cursor-pointer" value={newPrinterMaintenance} onChange={(e) => setNewPrinterMaintenance(e.target.value === "true")}>
-                                                    <option value="false">Normal Operation</option>
-                                                    <option value="true">Under Maintenance</option>
-                                                </select>
-                                            </label>
-                                        </div>
-                                        
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">Supported Output Type</span>
-                                            <select className="field cursor-pointer" value={newPrinterColor} onChange={(e) => setNewPrinterColor(e.target.value === "true")}>
-                                                <option value="false">Black & White Only 📄</option>
-                                                <option value="true">Color 🎨</option>
-                                            </select>
-                                        </label>
-                                        
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <label className="block">
-                                                <span className="block text-sm font-black text-slate-700 mb-2">QR Scan Flow</span>
-                                                <select className="field cursor-pointer" value={newPrinterQrScan} onChange={(e) => setNewPrinterQrScan(e.target.value === "true")}>
-                                                    <option value="false">Direct Printing</option>
-                                                    <option value="true">QR Scan Required</option>
-                                                </select>
-                                            </label>
-                                            <label className="block">
-                                                <span className="block text-sm font-black text-slate-700 mb-2">OTP Release Flow</span>
-                                                <select className="field cursor-pointer" value={newPrinterOtp} onChange={(e) => setNewPrinterOtp(e.target.value === "true")}>
-                                                    <option value="true">OTP Required 🔑</option>
-                                                    <option value="false">No OTP Required</option>
-                                                </select>
-                                            </label>
-                                        </div>
-                                        <button type="submit" className="btn success w-full mt-2">➕ Create Printer</button>
-                                    </form>
-                                </section>
-
-                                <section className="panel p-6 flex flex-col justify-between">
-                                    <div>
-                                        <div className="section-header mb-4">
-                                            <p className="eyebrow">Hardware Setup</p>
-                                            <h3 className="text-xl font-black text-slate-900">Printer Guide</h3>
-                                        </div>
-                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
-                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                                <strong className="block text-slate-900 mb-0.5">Driver Matching</strong>
-                                                Ensure the Windows printer driver name matches the name installed on the local print agent PC.
-                                            </div>
-                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                                <strong className="block text-slate-900 mb-0.5">OTP vs Direct</strong>
-                                                Enable OTP if this station requires students to verify their 4-digit code at the kiosk screen.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-                            </motion.div>
-                        )}
-
-                        {/* SUBPAGE 3: Paper Stock Manager */}
-                        {printersSubTab === "paper-stock" && (
-                            <motion.section 
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 mb-6 border-b border-slate-100">
-                                    <div>
-                                        <p className="eyebrow">Consumables</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Paper Stock by Location</h2>
-                                        <p className="subtitle">Update live paper inventory count for each connected block.</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-4 max-w-2xl">
-                                    {getRoleFilteredPrinters().map(p => {
-                                        const currentPaper = printerPapers[p.blockLocation] != null ? printerPapers[p.blockLocation] : p.paperCount || 0;
-                                        return (
-                                            <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white">
-                                                <div>
-                                                    <p className="font-black text-slate-900 text-base">{p.blockLocation}</p>
-                                                    <p className="text-xs font-bold text-slate-400">{p.printerName}</p>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <input 
-                                                        type="number" 
-                                                        className="field w-28 text-center font-black text-base" 
-                                                        key={currentPaper}
-                                                        defaultValue={currentPaper}
-                                                        id={`stock-paper-${p.blockLocation}`}
-                                                    />
-                                                    <button 
-                                                        onClick={() => {
-                                                            const count = Number(document.getElementById(`stock-paper-${p.blockLocation}`).value || 0);
-                                                            updatePrinterPaper(p.blockLocation, count);
-                                                        }}
-                                                        className="btn success min-h-0 px-4 py-2 text-xs font-bold"
-                                                    >
-                                                        Save Stock
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </motion.section>
-                        )}
-                    </div>
-                )}
 
 
 
