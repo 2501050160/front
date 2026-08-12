@@ -35,6 +35,7 @@ function AdminDashboard() {
     const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
     const [quickLinksOpen, setQuickLinksOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+    const [pricingSubTab, setPricingSubTab] = useState(searchParams.get("subtab") || "pricing");
 
     // Dynamic settings & blocks
     const [allBlocks, setBlocks] = useState([]);
@@ -2647,462 +2648,769 @@ function AdminDashboard() {
 
                 {/* Pricing & Coupons Tab */}
                 {activeTab === "settings" && (
-                    <>
-                        <div className="grid gap-6 md:grid-cols-2">
-                                    <motion.section
-                                        className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
+                    <div className="mt-6 space-y-6">
+                        {/* Top Sub-Navigation Bar for Pricing & Coupons */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "pricing", label: "Price Settings", icon: "💵", desc: "Rate Configuration" },
+                                    { id: "blocks", label: "Manage Blocks", icon: "🏛️", desc: "Campus Locations" },
+                                    { id: "coupon-gen", label: "Coupon Generator", icon: "🎟️", desc: "Create Discounts" },
+                                    { id: "active-coupons", label: "Active Coupons", icon: "🏷️", count: coupons.length },
+                                    { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Rewards Program" },
+                                    { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", count: rewards.length },
+                                    { id: "referrals", label: "Refer & Earn", icon: "👥", desc: "Referral Rules" }
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setPricingSubTab(tab.id)}
+                                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                                            pricingSubTab === tab.id
+                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-sky-600/30 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                    >
+                                        <span className="text-base">{tab.icon}</span>
+                                        <div className="text-left">
+                                            <span className="block leading-tight">{tab.label}</span>
+                                            <span className="text-[9px] opacity-70 font-semibold block leading-tight">{tab.desc}</span>
+                                        </div>
+                                        {tab.count !== undefined && (
+                                            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                                                pricingSubTab === tab.id ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
+                                            }`}>
+                                                {tab.count}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* SUBPAGE 1: Price Settings (Rate Configuration) */}
+                        {pricingSubTab === "pricing" && (
+                            <motion.div 
+                                className="grid gap-6 lg:grid-cols-2"
+                                initial={{ opacity: 0, y: 14 }}
                                 animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
                             >
-                                <div className="section-header">
-                                    <div>
-                                        <p className="eyebrow">Price Settings</p>
-                                        <h2 className="text-2xl font-black text-slate-900">
-                                            Rate Configuration
-                                        </h2>
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Price Settings</p>
+                                            <h2 className="text-2xl font-black text-slate-900">
+                                                Rate Configuration
+                                            </h2>
+                                            <p className="subtitle">Configure page printing costs for each campus block independently.</p>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-4">
-                                    <label className="block">
-                                        <span className="mb-2 block text-sm font-black text-slate-700">
-                                            Select Block for Pricing
-                                        </span>
-                                        <select
-                                            value={selectedPricingBlock}
-                                            onChange={(e) => {
-                                                setSelectedPricingBlock(e.target.value);
-                                                fetchPrices(e.target.value);
-                                            }}
-                                            className="field"
-                                        >
-                                            {blocks.map(b => (
-                                                <option key={b.id} value={b.name}>{b.name}</option>
-                                            ))}
-                                        </select>
-                                    </label>
-
-                                    <label className="block">
-                                        <span className="mb-2 block text-sm font-black text-slate-700">
-                                            Black & White rate (Rs./page)
-                                        </span>
-                                        <input
-                                            type="number"
-                                            value={bwPrice}
-                                            onChange={(e) => setBwPrice(e.target.value)}
-                                            className="field"
-                                            step="0.5"
-                                        />
-                                    </label>
-
-                                    <label className="block">
-                                        <span className="mb-2 block text-sm font-black text-slate-700">
-                                            Color rate (Rs./page)
-                                        </span>
-                                        <input
-                                            type="number"
-                                            value={colorPrice}
-                                            onChange={(e) => setColorPrice(e.target.value)}
-                                            className="field"
-                                            step="0.5"
-                                        />
-                                    </label>
-                                </div>
-
-                                <button
-                                    onClick={savePrices}
-                                    className="btn success mt-5 w-full"
-                                >
-                                    Save Prices
-                                </button>
-                            </motion.section>
-
-                            {/* Block Management Section */}
-                            {loggedInAdminRole !== "MANAGER" && (
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.07 }}
-                            >
-                                <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
-                                    <h3 className="font-bold text-lg">Manage Blocks</h3>
-                                    {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-slate-500">Filter College:</span>
+                                    <div className="space-y-4">
+                                        <label className="block">
+                                            <span className="mb-2 block text-sm font-black text-slate-700">
+                                                Select Block for Pricing
+                                            </span>
                                             <select
-                                                value={blockCollegeFilter}
-                                                onChange={(e) => setBlockCollegeFilter(e.target.value)}
-                                                className="field !w-auto text-xs py-1 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                                value={selectedPricingBlock}
+                                                onChange={(e) => {
+                                                    setSelectedPricingBlock(e.target.value);
+                                                    fetchPrices(e.target.value);
+                                                }}
+                                                className="field text-sm font-bold"
                                             >
-                                                <option value="ALL">All Colleges</option>
-                                                {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                    <option key={col} value={col}>{col} College</option>
+                                                {blocks.map(b => (
+                                                    <option key={b.id} value={b.name}>{b.name} ({b.college || "KLU"})</option>
                                                 ))}
                                             </select>
-                                        </div>
-                                    )}
-                                </div>
-                                <ul className="space-y-2">
-                                    {blocks.map(b => (
-                                        <li key={b.id} className="flex items-center justify-between p-2 border rounded">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-slate-800">{b.name}</span>
-                                                <span className="text-xs font-black px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                                                    {b.college || "KLU"}
+                                        </label>
+
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="mb-2 block text-sm font-black text-slate-700">
+                                                    Black & White Rate (₹/page)
                                                 </span>
-                                            </div>
-                                            <div className="flex gap-2 items-center">
-                                                {b.serverApiKey ? (
-                                                    <div className="flex items-center gap-2 mr-4 bg-slate-50 px-3 py-1 rounded border border-slate-200">
-                                                        <span className="text-xs font-mono text-slate-500">Key: {b.serverApiKey}</span>
-                                                        <button onClick={() => {navigator.clipboard.writeText(b.serverApiKey); showAlert("Copied", "API Key copied to clipboard", "success");}} className="text-xs font-bold text-indigo-600 hover:text-indigo-800">Copy</button>
-                                                        <button onClick={() => downloadServerConfig(b)} className="text-xs font-bold text-emerald-600 hover:text-emerald-800 ml-2">Download config.json</button>
-                                                        <button onClick={() => regenerateBlockKey(b.id)} className="text-xs font-bold text-red-500 hover:text-red-700 ml-2">Revoke & Regenerate</button>
-                                                    </div>
-                                                ) : (
-                                                    <button onClick={() => regenerateBlockKey(b.id)} className="btn small !bg-indigo-50 !text-indigo-600 border border-indigo-200 mr-4 hover:!bg-indigo-100">Generate API Key</button>
-                                                )}
-                                                <button onClick={() => renameBlock(b.id, b.name)} className="btn small">Rename</button>
-                                                <button onClick={() => deleteBlock(b.id)} className="btn danger small">Delete</button>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </motion.section>
-                            )}
+                                                <div className="relative">
+                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                                                    <input
+                                                        type="number"
+                                                        value={bwPrice}
+                                                        onChange={(e) => setBwPrice(e.target.value)}
+                                                        className="field pl-8"
+                                                        step="0.5"
+                                                    />
+                                                </div>
+                                            </label>
 
-                            {(loggedInAdminRole !== "MANAGER" || couponUnlocked) ? (
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.05 }}
-                            >
-                                <div className="section-header">
-                                    <div>
-                                        <p className="eyebrow">Discounts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">
-                                            Coupon Generator
-                                        </h2>
+                                            <label className="block">
+                                                <span className="mb-2 block text-sm font-black text-slate-700">
+                                                    Color Rate (₹/page)
+                                                </span>
+                                                <div className="relative">
+                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                                                    <input
+                                                        type="number"
+                                                        value={colorPrice}
+                                                        onChange={(e) => setColorPrice(e.target.value)}
+                                                        className="field pl-8"
+                                                        step="0.5"
+                                                    />
+                                                </div>
+                                            </label>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <input
-                                        type="text"
-                                        placeholder="Coupon Code"
-                                        value={couponCode}
-                                        onChange={(e) => setCouponCode(e.target.value)}
-                                        className="field"
-                                    />
-
-                                    <input
-                                        type="number"
-                                        placeholder="Discount % (Max 95%)"
-                                        value={discountPercentage}
-                                        onChange={(e) => setDiscountPercentage(e.target.value)}
-                                        className="field"
-                                        max="95"
-                                    />
-
-                                    <input
-                                        type="date"
-                                        value={expiryDate}
-                                        onChange={(e) => setExpiryDate(e.target.value)}
-                                        className="field"
-                                    />
-
-                                    <input
-                                        type="number"
-                                        placeholder="Max Uses"
-                                        value={maxUses}
-                                        onChange={(e) => setMaxUses(e.target.value)}
-                                        className="field"
-                                    />
 
                                     <button
-                                        onClick={createCoupon}
-                                        className="btn w-full mt-2"
+                                        onClick={savePrices}
+                                        className="btn success mt-6 w-full"
                                     >
-                                        Create Coupon
+                                        💾 Save Prices for {selectedPricingBlock}
                                     </button>
-                                </div>
-                            </motion.section>
-                            ) : (
-                                <motion.section
-                                    className="panel p-6 flex flex-col items-center justify-center min-h-[300px]"
-                                    initial={{ opacity: 0, y: 18 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                >
-                                    <h2 className="text-2xl font-black text-slate-900 mb-2">Coupons & Rewards Locked</h2>
-                                    <p className="text-slate-500 mb-6">Please enter the secret key provided by your Sub-Admin.</p>
-                                    <div className="flex gap-2 max-w-sm w-full">
-                                        <input
-                                            type="password"
-                                            className="field flex-1"
-                                            placeholder="Secret Key"
-                                            value={managerCouponSecretInput}
-                                            onChange={(e) => setManagerCouponSecretInput(e.target.value)}
-                                        />
-                                        <button onClick={unlockManagerCoupons} className="btn primary">Unlock</button>
-                                    </div>
-                                </motion.section>
-                            )}
-                        </div>
+                                </section>
 
-                        {(loggedInAdminRole !== "MANAGER" || couponUnlocked) && (
-                            <>
-
-                        <motion.section
-                            className="panel mt-6 overflow-x-auto"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <div className="section-header p-6 pb-0 flex flex-wrap justify-between items-center gap-4">
-                                <div>
-                                    <p className="eyebrow">Coupons</p>
-                                    <h2 className="text-2xl font-black text-slate-900">
-                                        Active Coupons
-                                    </h2>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    <button
-                                        onClick={() => exportToCSV(coupons, "coupons_list", ["Code", "Discount", "Expiry", "Used"])}
-                                        className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
-                                    >
-                                        📥 Export Excel
-                                    </button>
-                                    {selectedCoupons.length > 0 && (
-                                        <div className="flex items-center gap-2">
-                                         <select
-                                             value={resetBlockLocation}
-                                             onChange={(e) => setResetBlockLocation(e.target.value)}
-                                             className="field text-xs font-bold py-1.5 px-3 text-slate-800 bg-white border border-slate-300 rounded-lg"
-                                         >
-                                             <option value="ALL">All Blocks (Global Reset)</option>
-                                             {blocks.map(b => (
-                                                 <option key={b.id} value={b.name}>{b.name}</option>
-                                             ))}
-                                         </select>
-                                         <button
-                                             onClick={resetStats}
-                                             className="btn danger px-4 py-2 text-sm font-bold min-h-0 shrink-0"
-                                         >
-                                             Reset Stats
-                                         </button>
-                                     </div>
-                                    )}
-                                    {selectedCoupons.length > 0 && (
-                                        <button
-                                            onClick={handleBulkDeleteCoupons}
-                                            className="btn danger px-4 py-2 text-sm font-bold min-h-0"
-                                        >
-                                            🗑️ Delete Selected ({selectedCoupons.length})
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            <table className="data-table mt-4">
-                                <thead>
-                                    <tr>
-                                        <th className="w-10">
-                                            <input
-                                                type="checkbox"
-                                                checked={coupons.length > 0 && selectedCoupons.length === coupons.length}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedCoupons(coupons.map(c => c.id));
-                                                    } else {
-                                                        setSelectedCoupons([]);
-                                                    }
-                                                }}
-                                                className="w-4 h-4 rounded accent-slate-900"
-                                            />
-                                        </th>
-                                        <th>Code</th>
-                                        <th>Discount</th>
-                                        <th>Expiry</th>
-                                        <th>Used</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {coupons.map((coupon, index) => (
-                                        <motion.tr
-                                            key={coupon.id}
-                                            initial={{ opacity: 0, y: 8 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.03 }}
-                                        >
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedCoupons.includes(coupon.id)}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedCoupons(prev => [...prev, coupon.id]);
-                                                        } else {
-                                                            setSelectedCoupons(prev => prev.filter(id => id !== coupon.id));
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 rounded accent-slate-900"
-                                                />
-                                            </td>
-                                            <td className="font-black">
-                                                {coupon.couponCode}
-                                            </td>
-                                            <td className="font-bold text-green-600">
-                                                {coupon.discountPercentage}%
-                                            </td>
-                                            <td>
-                                                {coupon.expiryDate}
-                                            </td>
-                                            <td>
-                                                {coupon.usedCount} / {coupon.maxUses}
-                                            </td>
-                                            <td>
-                                                <button
-                                                    onClick={() => deleteCoupon(coupon.id)}
-                                                    className="btn danger min-h-0 px-3 py-2 text-sm"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </motion.tr>
-                                    ))}
-                                    {coupons.length === 0 && (
-                                        <tr>
-                                            <td colSpan="6" className="text-center font-bold text-slate-500 py-6">
-                                                No coupons found
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </motion.section>
-
-                        {/* Rewards / Voucher Generator — moved from Rewards Panel */}
-                        <div className="grid gap-6 md:grid-cols-[1fr_1.3fr] mt-6">
-                            <motion.section className="panel p-6" initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }}>
-                                <div className="section-header mb-4">
+                                {/* Live Rate Summary Card */}
+                                <section className="panel p-6 flex flex-col justify-between">
                                     <div>
-                                        <p className="eyebrow">Rewards Program</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Voucher Generator</h2>
-                                    </div>
-                                </div>
-                                <form onSubmit={createReward} className="space-y-4">
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Voucher Title</span>
-                                        <input type="text" className="field" placeholder="e.g. Free Sign-up Bonus" value={rewardTitle} onChange={(e) => setRewardTitle(e.target.value)} required />
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Voucher Description</span>
-                                        <input type="text" className="field" placeholder="e.g. Earn Rs. 50 wallet credits instantly" value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} required />
-                                    </label>
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Reward Value (Rs.)</span>
-                                            <input type="number" className="field" placeholder="e.g. 50" value={rewardAmt} onChange={(e) => setRewardAmt(e.target.value)} required />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Voucher Code (uppercase)</span>
-                                            <input type="text" className="field uppercase tracking-wider font-mono" placeholder="e.g. BONUS50" value={rewardCode} onChange={(e) => setRewardCode(e.target.value)} required />
-                                        </label>
-                                    </div>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Max Claims allowed</span>
-                                        <input type="number" className="field" value={rewardMaxClaims} onChange={(e) => setRewardMaxClaims(e.target.value)} required />
-                                    </label>
-                                    <button type="submit" className="btn success w-full mt-2" disabled={creatingReward}>
-                                        {creatingReward ? "Creating Voucher..." : "Generate Reward Code"}
-                                    </button>
-                                </form>
-                            </motion.section>
-
-                            <motion.section className="panel p-6 overflow-x-auto" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }}>
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Active Vouchers</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Vouchers List</h2>
-                                    </div>
-                                </div>
-                                <table className="data-table w-full">
-                                    <thead><tr><th>Code</th><th>Value</th><th>Claims</th><th>Status</th><th>Action</th></tr></thead>
-                                    <tbody>
-                                        {rewards.map(rew => (
-                                            <tr key={rew.id}>
-                                                <td className="font-mono font-black text-slate-900 tracking-wide uppercase">{rew.claimCode}</td>
-                                                <td className="font-bold text-emerald-600">Rs. {rew.rewardAmount.toFixed(2)}</td>
-                                                <td className="text-xs font-bold text-slate-500">{rew.claimedCount} / {rew.maxClaims}</td>
-                                                <td>
-                                                    <button onClick={() => toggleRewardActive(rew.id, rew.active)} className={`status-pill ${rew.active ? 'status-paid' : 'status-unpaid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
-                                                        {rew.active ? "ACTIVE" : "INACTIVE"}
-                                                    </button>
-                                                </td>
-                                                <td><button onClick={() => deleteReward(rew.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Delete</button></td>
-                                            </tr>
-                                        ))}
-                                        {rewards.length === 0 && (<tr><td colSpan="5" className="text-center font-bold text-slate-500 py-6">No reward vouchers created yet.</td></tr>)}
-                                    </tbody>
-                                </table>
-                            </motion.section>
-                        </div>
-                                {/* Referral configuration */}
-                                <div className="grid gap-6 lg:grid-cols-2 mt-6">
-                                    <motion.section
-                                        className="panel p-6"
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                    >
                                         <div className="section-header mb-4">
                                             <div>
-                                                <p className="eyebrow">Referrals</p>
-                                                <h2 className="text-2xl font-black text-slate-900">Refer & Earn Program</h2>
+                                                <p className="eyebrow">Rate Overview</p>
+                                                <h3 className="text-xl font-black text-slate-900">Current Block Pricing</h3>
                                             </div>
                                         </div>
-                                        <form onSubmit={saveSystemSettings} className="space-y-4">
-                                            <div className="flex items-center gap-2 pb-2">
-                                                <input 
-                                                    type="checkbox" 
-                                                    id="refEnabled-rewards" 
-                                                    checked={systemSettings.referralEnabled}
-                                                    onChange={(e) => setSystemSettings({...systemSettings, referralEnabled: e.target.checked})}
-                                                    className="w-4 h-4 accent-slate-900"
-                                                />
-                                                <label htmlFor="refEnabled-rewards" className="text-sm font-bold text-slate-700">Referral Program Active</label>
+                                        <div className="space-y-3">
+                                            {blocks.map(b => (
+                                                <div 
+                                                    key={b.id} 
+                                                    onClick={() => {
+                                                        setSelectedPricingBlock(b.name);
+                                                        fetchPrices(b.name);
+                                                    }}
+                                                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                                                        selectedPricingBlock === b.name
+                                                            ? "bg-sky-50 border-sky-300 shadow-sm"
+                                                            : "bg-slate-50 border-slate-200 hover:bg-slate-100/80"
+                                                    }`}
+                                                >
+                                                    <div>
+                                                        <span className="font-black text-slate-800 text-sm block">{b.name}</span>
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">{b.college || "KLU"}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700">
+                                                            B&W: <strong className="text-slate-900">₹{selectedPricingBlock === b.name ? bwPrice : 2}</strong>
+                                                        </span>
+                                                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800">
+                                                            Color: <strong className="text-amber-900">₹{selectedPricingBlock === b.name ? colorPrice : 5}</strong>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 p-4 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-800 font-semibold">
+                                        💡 Select any block above to quickly load and edit its rate configuration.
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 2: Manage Blocks */}
+                        {pricingSubTab === "blocks" && (
+                            <motion.div 
+                                className="space-y-6"
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                <div className="grid gap-6 lg:grid-cols-[1.1fr_1.9fr]">
+                                    {/* Add Block Form */}
+                                    <section className="panel p-6">
+                                        <div className="section-header mb-4">
+                                            <div>
+                                                <p className="eyebrow">Campus Locations</p>
+                                                <h2 className="text-2xl font-black text-slate-900">Add New Block</h2>
+                                                <p className="subtitle">Register a new campus location for kiosk and queue routing.</p>
                                             </div>
-                                            <div className="grid gap-4 sm:grid-cols-2">
-                                                <label className="block">
-                                                    <span className="block text-xs font-bold text-slate-500 mb-1">Referrer Reward (Rs.)</span>
+                                        </div>
+                                        <form onSubmit={addBlock} className="space-y-4">
+                                            <label className="block">
+                                                <span className="block text-sm font-black text-slate-700 mb-2">Block Name</span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. C Block, L Block, Library"
+                                                    className="field"
+                                                    value={newBlockName}
+                                                    onChange={(e) => setNewBlockName(e.target.value)}
+                                                    required
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-sm font-black text-slate-700 mb-2">College Name</span>
+                                                {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                    <input
+                                                        type="text"
+                                                        className="field bg-slate-100 cursor-not-allowed"
+                                                        value={loggedInAdminCollege}
+                                                        readOnly
+                                                        disabled
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g. KLU, UoH, etc."
+                                                        className="field"
+                                                        value={newBlockCollege}
+                                                        onChange={(e) => setNewBlockCollege(e.target.value)}
+                                                        required
+                                                    />
+                                                )}
+                                            </label>
+                                            <button type="submit" className="btn success w-full">
+                                                ➕ Add Block to College
+                                            </button>
+                                        </form>
+                                    </section>
+
+                                    {/* Blocks List */}
+                                    <section className="panel p-6 overflow-x-auto">
+                                        <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
+                                            <div>
+                                                <p className="eyebrow">Configured Blocks</p>
+                                                <h3 className="text-xl font-black text-slate-900">Block Directory ({blocks.length})</h3>
+                                            </div>
+                                            {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-500">Filter:</span>
+                                                    <select
+                                                        value={blockCollegeFilter}
+                                                        onChange={(e) => setBlockCollegeFilter(e.target.value)}
+                                                        className="field !w-auto text-xs py-1 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                                    >
+                                                        <option value="ALL">All Colleges</option>
+                                                        {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                            <option key={col} value={col}>{col} College</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <ul className="space-y-3">
+                                            {blocks.map(b => (
+                                                <li key={b.id} className="p-3.5 border border-slate-200 rounded-xl bg-white hover:shadow-sm transition-all flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="text-lg">🏛️</span>
+                                                        <div>
+                                                            <span className="font-black text-slate-900 text-sm block">{b.name}</span>
+                                                            <span className="text-[10px] font-black px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                                                {b.college || "KLU"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 items-center">
+                                                        {b.serverApiKey ? (
+                                                            <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
+                                                                <span className="font-mono text-slate-500 text-[11px] truncate max-w-[120px]">Key: {b.serverApiKey}</span>
+                                                                <button onClick={() => {navigator.clipboard.writeText(b.serverApiKey); showAlert("Copied", "API Key copied to clipboard", "success");}} className="font-bold text-indigo-600 hover:text-indigo-800">Copy</button>
+                                                                <button onClick={() => downloadServerConfig(b)} className="font-bold text-emerald-600 hover:text-emerald-800">config.json</button>
+                                                                <button onClick={() => regenerateBlockKey(b.id)} className="font-bold text-rose-500 hover:text-rose-700">Revoke</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => regenerateBlockKey(b.id)} className="btn small !bg-indigo-50 !text-indigo-600 border border-indigo-200 hover:!bg-indigo-100">Generate Key</button>
+                                                        )}
+                                                        <button onClick={() => renameBlock(b.id, b.name)} className="btn small">Rename</button>
+                                                        <button onClick={() => deleteBlock(b.id)} className="btn danger small">Delete</button>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                            {blocks.length === 0 && (
+                                                <div className="text-center py-8 text-slate-400 font-bold text-sm">No campus blocks found.</div>
+                                            )}
+                                        </ul>
+                                    </section>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3: Coupon Generator (Discounts) */}
+                        {pricingSubTab === "coupon-gen" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                {(loggedInAdminRole !== "MANAGER" || couponUnlocked) ? (
+                                    <div className="grid gap-6 lg:grid-cols-2">
+                                        <section className="panel p-6">
+                                            <div className="section-header mb-6">
+                                                <div>
+                                                    <p className="eyebrow">Discounts</p>
+                                                    <h2 className="text-2xl font-black text-slate-900">
+                                                        Coupon Generator
+                                                    </h2>
+                                                    <p className="subtitle">Create promotional discount codes for users to redeem during checkout.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <span className="mb-2 block text-sm font-black text-slate-700">Coupon Code</span>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="e.g. SEMEXAM50, WELCOME100"
+                                                            value={couponCode}
+                                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                            className="field uppercase font-mono font-black tracking-wider"
+                                                        />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setCouponCode(`PRINT${Math.floor(1000 + Math.random() * 9000)}`)}
+                                                            className="btn secondary shrink-0 text-xs px-3"
+                                                        >
+                                                            🎲 Random
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <span className="text-sm font-black text-slate-700">Discount Percentage (%)</span>
+                                                        <span className="text-xs font-black text-emerald-600">{discountPercentage || 0}% OFF</span>
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Discount % (Max 95%)"
+                                                        value={discountPercentage}
+                                                        onChange={(e) => setDiscountPercentage(e.target.value)}
+                                                        className="field"
+                                                        max="95"
+                                                        min="1"
+                                                    />
+                                                    <div className="flex gap-2 mt-2">
+                                                        {[10, 20, 25, 50, 75, 90].map(pct => (
+                                                            <button
+                                                                key={pct}
+                                                                type="button"
+                                                                onClick={() => setDiscountPercentage(pct.toString())}
+                                                                className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
+                                                                    discountPercentage === pct.toString()
+                                                                        ? "bg-emerald-600 text-white border-emerald-600"
+                                                                        : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                }`}
+                                                            >
+                                                                {pct}%
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid gap-4 sm:grid-cols-2">
+                                                    <div>
+                                                        <span className="mb-2 block text-sm font-black text-slate-700">Expiry Date</span>
+                                                        <input
+                                                            type="date"
+                                                            value={expiryDate}
+                                                            onChange={(e) => setExpiryDate(e.target.value)}
+                                                            className="field"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <span className="mb-2 block text-sm font-black text-slate-700">Max Uses</span>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Max Uses"
+                                                            value={maxUses}
+                                                            onChange={(e) => setMaxUses(e.target.value)}
+                                                            className="field"
+                                                            min="1"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    onClick={createCoupon}
+                                                    className="btn primary w-full mt-4"
+                                                >
+                                                    ✨ Create Discount Coupon
+                                                </button>
+                                            </div>
+                                        </section>
+
+                                        {/* Coupon Live Preview Card */}
+                                        <section className="panel p-6 flex flex-col justify-between">
+                                            <div>
+                                                <div className="section-header mb-4">
+                                                    <div>
+                                                        <p className="eyebrow">Preview</p>
+                                                        <h3 className="text-xl font-black text-slate-900">Live Coupon Card</h3>
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-6 rounded-2xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-purple-600 text-white shadow-xl relative overflow-hidden">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">SPECIAL DISCOUNT</span>
+                                                            <h3 className="text-3xl font-black mt-3">{discountPercentage ? `${discountPercentage}% OFF` : "0% OFF"}</h3>
+                                                        </div>
+                                                        <span className="text-3xl">🎟️</span>
+                                                    </div>
+                                                    <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center">
+                                                        <div>
+                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">PROMO CODE</p>
+                                                            <p className="font-mono font-black text-lg tracking-wider">{couponCode || "ENTER-CODE"}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">EXPIRES</p>
+                                                            <p className="text-xs font-bold">{expiryDate || "No Expiry"}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 flex justify-between items-center text-xs font-bold text-slate-500">
+                                                <span>Total Active Coupons: <strong>{coupons.length}</strong></span>
+                                                <button onClick={() => setPricingSubTab("active-coupons")} className="text-sky-600 hover:text-sky-700 underline">View all active coupons →</button>
+                                            </div>
+                                        </section>
+                                    </div>
+                                ) : (
+                                    <section className="panel p-8 flex flex-col items-center justify-center min-h-[350px]">
+                                        <span className="text-4xl mb-3">🔒</span>
+                                        <h2 className="text-2xl font-black text-slate-900 mb-2">Coupons & Discounts Locked</h2>
+                                        <p className="text-slate-500 mb-6 text-sm text-center max-w-sm">Please enter the security passkey provided by your Sub-Admin to access coupon configuration.</p>
+                                        <div className="flex gap-2 max-w-sm w-full">
+                                            <input
+                                                type="password"
+                                                className="field flex-1"
+                                                placeholder="Secret Key"
+                                                value={managerCouponSecretInput}
+                                                onChange={(e) => setManagerCouponSecretInput(e.target.value)}
+                                            />
+                                            <button onClick={unlockManagerCoupons} className="btn primary">Unlock</button>
+                                        </div>
+                                    </section>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 4: Active Coupons List */}
+                        {pricingSubTab === "active-coupons" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                {(loggedInAdminRole !== "MANAGER" || couponUnlocked) ? (
+                                    <section className="panel p-6 overflow-x-auto">
+                                        <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4 border-b border-slate-100">
+                                            <div>
+                                                <p className="eyebrow">Coupons</p>
+                                                <h2 className="text-2xl font-black text-slate-900">
+                                                    Active Coupons Directory ({coupons.length})
+                                                </h2>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => exportToCSV(coupons, "coupons_list", ["Code", "Discount", "Expiry", "Used"])}
+                                                    className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
+                                                >
+                                                    📥 Export CSV
+                                                </button>
+                                                {selectedCoupons.length > 0 && (
+                                                    <div className="flex items-center gap-2">
+                                                        <select
+                                                            value={resetBlockLocation}
+                                                            onChange={(e) => setResetBlockLocation(e.target.value)}
+                                                            className="field text-xs font-bold py-1.5 px-3 text-slate-800 bg-white border border-slate-300 rounded-lg"
+                                                        >
+                                                            <option value="ALL">All Blocks (Global Reset)</option>
+                                                            {blocks.map(b => (
+                                                                <option key={b.id} value={b.name}>{b.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <button
+                                                            onClick={resetStats}
+                                                            className="btn danger px-4 py-2 text-sm font-bold min-h-0 shrink-0"
+                                                        >
+                                                            Reset Stats
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                {selectedCoupons.length > 0 && (
+                                                    <button
+                                                        onClick={handleBulkDeleteCoupons}
+                                                        className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                                    >
+                                                        🗑️ Delete Selected ({selectedCoupons.length})
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <table className="data-table mt-4 w-full">
+                                            <thead>
+                                                <tr>
+                                                    <th className="w-10">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={coupons.length > 0 && selectedCoupons.length === coupons.length}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedCoupons(coupons.map(c => c.id));
+                                                                } else {
+                                                                    setSelectedCoupons([]);
+                                                                }
+                                                            }}
+                                                            className="w-4 h-4 rounded accent-slate-900"
+                                                        />
+                                                    </th>
+                                                    <th>Code</th>
+                                                    <th>Discount</th>
+                                                    <th>Expiry</th>
+                                                    <th>Usage Count</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {coupons.map((coupon, index) => (
+                                                    <tr key={coupon.id}>
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedCoupons.includes(coupon.id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedCoupons(prev => [...prev, coupon.id]);
+                                                                    } else {
+                                                                        setSelectedCoupons(prev => prev.filter(id => id !== coupon.id));
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 rounded accent-slate-900"
+                                                            />
+                                                        </td>
+                                                        <td className="font-black font-mono tracking-wider">
+                                                            {coupon.couponCode}
+                                                        </td>
+                                                        <td className="font-bold text-emerald-600">
+                                                            {coupon.discountPercentage}% OFF
+                                                        </td>
+                                                        <td className="text-slate-600 text-xs font-semibold">
+                                                            {coupon.expiryDate || "No Expiry"}
+                                                        </td>
+                                                        <td className="text-xs font-bold text-slate-700">
+                                                            {coupon.usedCount} / {coupon.maxUses}
+                                                        </td>
+                                                        <td>
+                                                            <button
+                                                                onClick={() => deleteCoupon(coupon.id)}
+                                                                className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {coupons.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="6" className="text-center font-bold text-slate-500 py-10">
+                                                            No active coupons found. Use Coupon Generator to create one.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </section>
+                                ) : (
+                                    <section className="panel p-8 flex flex-col items-center justify-center min-h-[300px]">
+                                        <span className="text-4xl mb-3">🔒</span>
+                                        <h2 className="text-2xl font-black text-slate-900 mb-2">Coupons Directory Locked</h2>
+                                        <p className="text-slate-500 mb-6 text-sm text-center max-w-sm">Please unlock coupons in the Coupon Generator tab to view active codes.</p>
+                                    </section>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 5: Voucher Generator (Rewards Program) */}
+                        {pricingSubTab === "voucher-gen" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                <section className="panel p-6 max-w-2xl mx-auto">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Rewards Program</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Voucher Generator</h2>
+                                            <p className="subtitle">Issue fixed rupee value bonus vouchers that credit directly into user wallets.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={createReward} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1">Voucher Title</span>
+                                            <input type="text" className="field" placeholder="e.g. Welcome Bonus, Festival Treat" value={rewardTitle} onChange={(e) => setRewardTitle(e.target.value)} required />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1">Voucher Description</span>
+                                            <input type="text" className="field" placeholder="e.g. Earn Rs. 50 wallet credits instantly" value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} required />
+                                        </label>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1">Reward Amount (₹)</span>
+                                                <input type="number" className="field" placeholder="e.g. 50" value={rewardAmt} onChange={(e) => setRewardAmt(e.target.value)} required />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1">Voucher Code (uppercase)</span>
+                                                <input type="text" className="field uppercase tracking-wider font-mono font-black" placeholder="e.g. BONUS50" value={rewardCode} onChange={(e) => setRewardCode(e.target.value.toUpperCase())} required />
+                                            </label>
+                                        </div>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1">Max Claims allowed</span>
+                                            <input type="number" className="field" value={rewardMaxClaims} onChange={(e) => setRewardMaxClaims(e.target.value)} required />
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-4" disabled={creatingReward}>
+                                            {creatingReward ? "Creating Voucher..." : "🎁 Generate Reward Voucher"}
+                                        </button>
+                                    </form>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 6: Active Vouchers List */}
+                        {pricingSubTab === "active-vouchers" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                <section className="panel p-6 overflow-x-auto">
+                                    <div className="section-header mb-6 pb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                        <div>
+                                            <p className="eyebrow">Active Vouchers</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Vouchers Directory ({rewards.length})</h2>
+                                        </div>
+                                        <button onClick={() => setPricingSubTab("voucher-gen")} className="btn primary text-xs px-3 py-1.5">
+                                            ➕ New Voucher
+                                        </button>
+                                    </div>
+                                    <table className="data-table w-full">
+                                        <thead><tr><th>Code</th><th>Title</th><th>Reward Value</th><th>Claims Progress</th><th>Status</th><th>Action</th></tr></thead>
+                                        <tbody>
+                                            {rewards.map(rew => (
+                                                <tr key={rew.id}>
+                                                    <td className="font-mono font-black text-slate-900 tracking-wide uppercase">{rew.claimCode}</td>
+                                                    <td className="font-bold text-slate-700">{rew.title || rew.claimCode}</td>
+                                                    <td className="font-black text-emerald-600">₹{rew.rewardAmount ? rew.rewardAmount.toFixed(2) : "0.00"}</td>
+                                                    <td className="text-xs font-bold text-slate-600">{rew.claimedCount} / {rew.maxClaims}</td>
+                                                    <td>
+                                                        <button onClick={() => toggleRewardActive(rew.id, rew.active)} className={`status-pill ${rew.active ? 'status-paid' : 'status-unpaid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
+                                                            {rew.active ? "ACTIVE" : "INACTIVE"}
+                                                        </button>
+                                                    </td>
+                                                    <td><button onClick={() => deleteReward(rew.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Delete</button></td>
+                                                </tr>
+                                            ))}
+                                            {rewards.length === 0 && (<tr><td colSpan="6" className="text-center font-bold text-slate-500 py-10">No reward vouchers created yet.</td></tr>)}
+                                        </tbody>
+                                    </table>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 7: Refer & Earn Program (Referrals) */}
+                        {pricingSubTab === "referrals" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Referrals</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Refer & Earn Program</h2>
+                                            <p className="subtitle">Configure automatic wallet reward bonuses for both referrer and new invitees.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={saveSystemSettings} className="space-y-5">
+                                        <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                            <input 
+                                                type="checkbox" 
+                                                id="refEnabled-rewards" 
+                                                checked={systemSettings.referralEnabled}
+                                                onChange={(e) => setSystemSettings({...systemSettings, referralEnabled: e.target.checked})}
+                                                className="w-5 h-5 accent-sky-600 rounded cursor-pointer"
+                                            />
+                                            <label htmlFor="refEnabled-rewards" className="text-sm font-black text-slate-800 cursor-pointer">
+                                                Enable Refer & Earn Program
+                                                <span className="block text-xs font-semibold text-slate-500 mt-0.5">When checked, users can share referral links to earn credits.</span>
+                                            </label>
+                                        </div>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Referrer Bonus (₹)</span>
+                                                <div className="relative">
+                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                                                     <input 
                                                         type="number" 
-                                                        className="field" 
+                                                        className="field pl-8" 
                                                         value={systemSettings.referrerAmount}
                                                         onChange={(e) => setSystemSettings({...systemSettings, referrerAmount: Number(e.target.value)})}
                                                         step="0.5"
                                                     />
-                                                </label>
-                                                <label className="block">
-                                                    <span className="block text-xs font-bold text-slate-500 mb-1">Referee Reward (Rs.)</span>
+                                                </div>
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">New User Bonus (₹)</span>
+                                                <div className="relative">
+                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                                                     <input 
                                                         type="number" 
-                                                        className="field" 
+                                                        className="field pl-8" 
                                                         value={systemSettings.refereeAmount}
                                                         onChange={(e) => setSystemSettings({...systemSettings, refereeAmount: Number(e.target.value)})}
                                                         step="0.5"
                                                     />
-                                                </label>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-4">💾 Save Referral Rules</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <div>
+                                                <p className="eyebrow">Program Rules</p>
+                                                <h3 className="text-xl font-black text-slate-900">How Referrals Work</h3>
                                             </div>
-                                            <button type="submit" className="btn success w-full mt-4">Save Referral Settings</button>
-                                        </form>
-                                    </motion.section>
-                                </div>
-                                </>
-                            )}
-                    </>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="text-slate-900 block mb-0.5">1. User Shares Code</strong>
+                                                Students can find their unique referral link in their Account Profile popup or dashboard.
+                                            </div>
+                                            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="text-slate-900 block mb-0.5">2. Invitee Signs Up</strong>
+                                                When a new student enters the code during registration, they get <strong>₹{systemSettings.refereeAmount || 5}</strong> free wallet balance.
+                                            </div>
+                                            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="text-slate-900 block mb-0.5">3. Referrer Gets Rewarded</strong>
+                                                The referrer instantly receives <strong>₹{systemSettings.referrerAmount || 10}</strong> in their cloud print wallet!
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-bold flex items-center gap-2">
+                                        <span>🎉</span>
+                                        <span>Referral bonuses are automatically credited in real-time.</span>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+                    </div>
                 )}
 
                 {/* Blocks Management Tab */}
