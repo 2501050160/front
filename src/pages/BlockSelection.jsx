@@ -896,14 +896,9 @@ function BlockSelection() {
                 
                 {/* Persistent Top Navbar with Quick Links */}
                 <Navbar
-                    title="Campus Locations"
-                    subtitle="Select a Printing Station"
-                    badge={selectedCollege ? `${selectedCollege} Campus` : "All Campuses"}
-                    actions={[
-                        { label: "New Print", path: "/dashboard" },
-                        { label: "My Orders", path: "/my-orders" },
-                        { label: "Scan QR", path: "/scan-to-print" }
-                    ]}
+                    badge={selectedCollege ? `${selectedCollege} Campus` : undefined}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
                 />
 
 
