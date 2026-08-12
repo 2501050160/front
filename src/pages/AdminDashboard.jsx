@@ -1931,43 +1931,145 @@ function AdminDashboard() {
             </aside>
 
             <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6 flex-1 min-w-0">
+                {/* Main Top Header Section with Sub-Navigation Cards */}
+                <header className="bg-white/95 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-40 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 w-full">
+                    {/* Left Brand Header & Toggle */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        <button
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center active:scale-95 group"
+                            title={isSidebarCollapsed ? "Expand Navigation (☰)" : "Collapse Navigation (☰)"}
+                        >
+                            <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
+                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                            </div>
+                        </button>
+                        <img src={cloudprintLogo} alt="CloudPrint" className="h-8 object-contain shrink-0 cursor-pointer" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
+                    </div>
+
+                    {/* Header Level Subtab Cards */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar flex-1 min-w-0">
+                        {(activeTab === "queue" || activeTab === "order-queue") && (
+                            [
+                                { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
+                                { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
+                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
+                                { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
+                                { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
+                                { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
+                                { id: "history", label: "Order History", icon: "📜", desc: `${orders.length} Total Logs` },
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => {
+                                        if (sub.id === "display-panel") navigate("/display-panel");
+                                        else setQueueSubTab(sub.id);
+                                    }}
+                                    className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
+                                        queueSubTab === sub.id
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${queueSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
+                        {activeTab === "users" && (
+                            [
+                                { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
+                                { id: "tickets", label: "Support Tickets", icon: "🎧", desc: `${allSupportTickets.length} Inquiries` },
+                                { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
+                                { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
+                                { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
+                                { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => setUsersSubTab(sub.id)}
+                                    className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
+                                        usersSubTab === sub.id
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${usersSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
+                        {activeTab === "frontend" && (
+                            [
+                                { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
+                                { id: "all-notifs", label: "Published Alerts", icon: "🔔", desc: `${notifications.length} Broadcasts` },
+                                { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
+                                { id: "sections-list", label: "Layout Sections", icon: "🗂️", desc: `${sections.length} Configured` },
+                                { id: "add-section", label: "Add Section", icon: "➕", desc: "New CMS Block" },
+                                { id: "popups-list", label: "Manage Popups", icon: "💬", desc: `${popups.length} Modals` },
+                                { id: "add-popup", label: "Add Popup", icon: "✨", desc: "Create Modal" },
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => setFrontendSubTab(sub.id)}
+                                    className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
+                                        frontendSubTab === sub.id
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${frontendSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
+                        {activeTab === "system" && (
+                            [
+                                { id: "gateway", label: "Gateway Status", icon: "🌐", desc: "API Health" },
+                                { id: "referrals", label: "Referrals", icon: "🎁", desc: "Bonus Rules" },
+                                { id: "thesis", label: "Thesis & Bulk", icon: "📚", desc: "Volume Cuts" },
+                                ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "global", label: "Global Config", icon: "⚙️", desc: "Platform Fees" }] : []),
+                                { id: "offpeak", label: "Off-Peak Hours", icon: "🌙", desc: "Time Windows" },
+                                { id: "paper", label: "Paper Levels", icon: "📄", desc: "Hardware Stock" },
+                                ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [
+                                    { id: "tester", label: "Tester Mode", icon: "🧪", desc: "Free Access QA" },
+                                    { id: "sql", label: "SQL Terminal", icon: "💻", desc: "Query & Backup" }
+                                ] : []),
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => setSystemSubTab(sub.id)}
+                                    className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
+                                        systemSubTab === sub.id
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${systemSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </header>
 
                 {/* Queue & Analytics Tab */}
                 {(activeTab === "queue" || activeTab === "order-queue") && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Queue & Analytics — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
-                                    { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
-                                    { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
-                                    { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
-                                    { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
-                                    { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
-                                    { id: "history", label: "Order History", icon: "📜", desc: `${orders.length} Total Logs` },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => {
-                                            if (sub.id === "display-panel") navigate("/display-panel");
-                                            else setQueueSubTab(sub.id);
-                                        }}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            queueSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${queueSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* Subpage 1: Live Order Queue Table */}
                         {queueSubTab === "live-queue" && (
@@ -4148,36 +4250,6 @@ function AdminDashboard() {
                 {/* User Moderation Tab */}
                 {activeTab === "users" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Users — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
-                                    { id: "tickets", label: "Support Tickets", icon: "🎧", desc: `${allSupportTickets.length} Inquiries` },
-                                    { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
-                                    { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
-                                    { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
-                                    { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
-                                    ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: "Audit Trail", icon: "📜", desc: `${managerLogs.length} Actions` }] : []),
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setUsersSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            usersSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${usersSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* SUBPAGE 1: Registered Users Directory */}
                         {usersSubTab === "users-list" && (
@@ -4771,36 +4843,6 @@ function AdminDashboard() {
                 {/* Frontend Manager Tab */}
                 {activeTab === "frontend" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Frontend Manager — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
-                                    { id: "all-notifs", label: "Published Alerts", icon: "🔔", desc: `${notifications.length} Broadcasts` },
-                                    { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
-                                    { id: "sections-list", label: "Layout Sections", icon: "🗂️", desc: `${sections.length} Configured` },
-                                    { id: "add-section", label: "Add Section", icon: "➕", desc: "New CMS Block" },
-                                    { id: "popups-list", label: "Manage Popups", icon: "💬", desc: `${popups.length} Modals` },
-                                    { id: "add-popup", label: "Add Popup", icon: "✨", desc: "Create Modal" },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setFrontendSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            frontendSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${frontendSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* SUBPAGE 1: Marketing & Announcements */}
                         {frontendSubTab === "marketing" && (
@@ -5288,39 +5330,6 @@ function AdminDashboard() {
                 {/* System Config Tab */}
                 {activeTab === "system" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for System Config — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "gateway", label: "Gateway Status", icon: "🌐", desc: "API Health" },
-                                    { id: "referrals", label: "Referrals", icon: "🎁", desc: "Bonus Rules" },
-                                    { id: "thesis", label: "Thesis & Bulk", icon: "📚", desc: "Volume Cuts" },
-                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "global", label: "Global Config", icon: "⚙️", desc: "Platform Fees" }] : []),
-                                    { id: "offpeak", label: "Off-Peak Hours", icon: "🌙", desc: "Time Windows" },
-                                    { id: "paper", label: "Paper Levels", icon: "📄", desc: "Hardware Stock" },
-                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [
-                                        { id: "tester", label: "Tester Mode", icon: "🧪", desc: "Free Access QA" },
-                                        { id: "sql", label: "SQL Terminal", icon: "💻", desc: "Query & Backup" }
-                                    ] : []),
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setSystemSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            systemSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${systemSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* SUBPAGE 1: System Gateway Check */}
                         {systemSubTab === "gateway" && (
