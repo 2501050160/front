@@ -17,6 +17,7 @@ export function PrinterManagementSection({
     const [ip, setIp] = useState("");
     const [block, setBlock] = useState(blocks[0]?.name || "C Block");
     const [isColor, setIsColor] = useState(false);
+    const [isDuplex, setIsDuplex] = useState(true);
     const [isActive, setIsActive] = useState(true);
     const [isMaintenance, setIsMaintenance] = useState(false);
     const [isQrScan, setIsQrScan] = useState(false);
@@ -38,6 +39,7 @@ export function PrinterManagementSection({
                 ipAddress: ip.trim(),
                 blockLocation: block,
                 colourSupported: isColor,
+                duplexSupported: isDuplex,
                 active: isActive,
                 maintenance: isMaintenance,
                 qrScanEnabled: isQrScan,
@@ -112,25 +114,35 @@ export function PrinterManagementSection({
                         </div>
 
                         {/* Capabilities Toggles */}
-                        <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
-                            <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 cursor-pointer">
+                        <div className="grid grid-cols-3 gap-2 pt-2 text-[11px]">
+                            <label className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={isColor}
                                     onChange={(e) => setIsColor(e.target.checked)}
                                     className="rounded border-slate-700 text-cyan-500"
                                 />
-                                <span className="font-bold">Color Print</span>
+                                <span className="font-bold">Color</span>
                             </label>
 
-                            <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 cursor-pointer">
+                            <label className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isDuplex}
+                                    onChange={(e) => setIsDuplex(e.target.checked)}
+                                    className="rounded border-slate-700 text-cyan-500"
+                                />
+                                <span className="font-bold">Duplex</span>
+                            </label>
+
+                            <label className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={isOtp}
                                     onChange={(e) => setIsOtp(e.target.checked)}
                                     className="rounded border-slate-700 text-cyan-500"
                                 />
-                                <span className="font-bold">OTP Release</span>
+                                <span className="font-bold">OTP</span>
                             </label>
                         </div>
                     </div>

@@ -21,6 +21,7 @@ function AdminDashboard() {
 
     const [bwPrice, setBwPrice] = useState(0);
     const [colorPrice, setColorPrice] = useState(0);
+    const [duplexPrice, setDuplexPrice] = useState(0);
 
     const [couponCode, setCouponCode] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
@@ -62,6 +63,7 @@ function AdminDashboard() {
     const [newPrinterIp, setNewPrinterIp] = useState("");
     const [newPrinterBlock, setNewPrinterBlock] = useState("");
     const [newPrinterColor, setNewPrinterColor] = useState(false);
+    const [newPrinterDuplex, setNewPrinterDuplex] = useState(true);
     const [newPrinterActive, setNewPrinterActive] = useState(true);
     const [newPrinterMaintenance, setNewPrinterMaintenance] = useState(false);
     const [newPrinterQrScan, setNewPrinterQrScan] = useState(false);
@@ -484,16 +486,23 @@ function AdminDashboard() {
             });
             let bwVal = 2.0;
             let colorVal = 5.0;
-            response.data.forEach((p) => {
-                if (p.printType === "BW") {
-                    bwVal = p.pricePerPage;
-                }
-                if (p.printType === "COLOR") {
-                    colorVal = p.pricePerPage;
-                }
-            });
+            let duplexVal = 1.5;
+            if (response.data && Array.isArray(response.data)) {
+                response.data.forEach((p) => {
+                    if (p.printType === "BW") {
+                        bwVal = p.pricePerPage;
+                    }
+                    if (p.printType === "COLOR") {
+                        colorVal = p.pricePerPage;
+                    }
+                    if (p.printType === "DUPLEX" || p.printType === "DOUBLE") {
+                        duplexVal = p.pricePerPage;
+                    }
+                });
+            }
             setBwPrice(bwVal);
             setColorPrice(colorVal);
+            setDuplexPrice(duplexVal);
         } catch (error) {
             console.error("Error fetching prices:", error);
         }
@@ -536,11 +545,19 @@ function AdminDashboard() {
                 }
             });
 
+            await api.post("/pricing/update", null, {
+                params: {
+                    printType: "DUPLEX",
+                    pricePerPage: duplexPrice,
+                    blockLocation: selectedPricingBlock
+                }
+            });
+
             await api.post("/admin/logs/create", {
                 managerName: loggedInAdminUser,
                 college: loggedInAdminCollege,
                 actionType: "PRICING_UPDATE",
-                details: `Updated prices for ${selectedPricingBlock} to BW: ${bwPrice}, Color: ${colorPrice}`
+                details: `Updated prices for ${selectedPricingBlock} to BW: ${bwPrice}, Color: ${colorPrice}, Duplex: ${duplexPrice}`
             });
 
             showAlert("Success", `Prices Updated Successfully for ${selectedPricingBlock}`, "success");
@@ -1301,6 +1318,7 @@ function AdminDashboard() {
                 printerIp: newPrinterIp && newPrinterIp.trim() ? newPrinterIp.trim() : "192.168.1.100",
                 blockLocation: newPrinterBlock,
                 colourSupported: !!newPrinterColor,
+                duplexSupported: !!newPrinterDuplex,
                 active: !!newPrinterActive,
                 maintenance: !!newPrinterMaintenance,
                 qrScanToPrint: !!newPrinterQrScan,
@@ -3082,7 +3100,7 @@ function AdminDashboard() {
                                             </select>
                                         </label>
 
-                                        <div className="grid gap-4 sm:grid-cols-2">
+                                        <div className="grid gap-4 sm:grid-cols-3">
                                             <label className="block">
                                                 <span className="mb-2 block text-sm font-black text-slate-700">
                                                     Black & White Rate (₹/page)
@@ -3111,6 +3129,22 @@ function AdminDashboard() {
                                                         onChange={(e) => setColorPrice(e.target.value)}
                                                         className="field !pl-12"
                                                         step="0.5"
+                                                    />
+                                                </div>
+                                            </label>
+
+                                            <label className="block">
+                                                <span className="mb-2 block text-sm font-black text-slate-700">
+                                                    Double Sided / Duplex (₹/sheet)
+                                                </span>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">₹</span>
+                                                    <input
+                                                        type="number"
+                                                        value={duplexPrice}
+                                                        onChange={(e) => setDuplexPrice(e.target.value)}
+                                                        className="field !pl-12"
+                                                        step="0.25"
                                                     />
                                                 </div>
                                             </label>
@@ -4096,7 +4130,7 @@ function AdminDashboard() {
                                                 onChange={(e) => setNewPrinterIp(e.target.value)}
                                             />
                                         </label>
-                                        <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                                        <div className="grid gap-4 sm:grid-cols-3 pt-2">
                                             <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
                                                 <input
                                                     type="checkbox"
@@ -4105,6 +4139,15 @@ function AdminDashboard() {
                                                     className="w-4 h-4 accent-sky-600 rounded"
                                                 />
                                                 <span className="text-xs font-bold text-slate-800">Color Supported</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={newPrinterDuplex}
+                                                    onChange={(e) => setNewPrinterDuplex(e.target.checked)}
+                                                    className="w-4 h-4 accent-sky-600 rounded"
+                                                />
+                                                <span className="text-xs font-bold text-slate-800">Supports Duplex (Double-Sided)</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
                                                 <input
