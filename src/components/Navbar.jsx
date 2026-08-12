@@ -62,7 +62,7 @@ function Navbar({
                             </div>
                         </button>
                     )}
-                    {title && <img src={cloudprintLogo} alt="CloudPrint" className="h-9 object-contain shrink-0" />}
+                    <img src={cloudprintLogo} alt="CloudPrint" className="h-9 object-contain shrink-0" />
                     <div>
                         {subtitle && (
                             <p className="eyebrow !mb-0">{subtitle}</p>

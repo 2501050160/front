@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import cloudprintLogoWhite from "../../assets/cloudprint_logo_white.png";
 import {
     LayoutDashboard,
     ListOrdered,
@@ -76,9 +77,7 @@ export function AdminSidebar({
                 <div className={`p-4 flex items-center border-b border-slate-800/80 ${isCollapsed ? "justify-center" : "justify-between"}`}>
                     {!isCollapsed && (
                         <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-cyan-500/25 shrink-0">
-                                CP
-                            </div>
+                            <img src={cloudprintLogoWhite} alt="CloudPrint" className="h-9 object-contain shrink-0" />
                             <div className="truncate">
                                 <h2 className="text-sm font-black tracking-wide text-white">Admin Portal</h2>
                                 <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
@@ -88,9 +87,7 @@ export function AdminSidebar({
                         </div>
                     )}
                     {isCollapsed && (
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-cyan-500/25">
-                            CP
-                        </div>
+                        <img src={cloudprintLogoWhite} alt="CloudPrint" className="h-8 object-contain shrink-0" />
                     )}
 
                     {/* Collapse Button */}

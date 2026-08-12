@@ -5,6 +5,7 @@ import api, { getPdfDownloadUrl } from "../services/api";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
 import WhatsAppOrdersSection from "../components/admin/sections/WhatsAppOrdersSection";
+import cloudprintLogo from "../assets/cloudprint_logo.png";
 
 function AdminDashboard() {
     const navigate = useNavigate();
@@ -1729,7 +1730,7 @@ function AdminDashboard() {
                 <div>
                     <div className={`p-3 sm:p-4 border-b border-slate-200 flex items-center ${isSidebarCollapsed ? "justify-center flex-col gap-2" : "justify-between"}`}>
                         <div className="flex items-center gap-3">
-                            <div className="brand-mark brand-mark-sm bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black cursor-pointer shadow-md shadow-sky-500/20" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} title="Toggle Navigation (☰)">CP</div>
+                            <img src={cloudprintLogo} alt="CloudPrint Logo" className="h-8 object-contain cursor-pointer shrink-0" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} title="Toggle Navigation (☰)" />
                             {!isSidebarCollapsed && (
                                 <div>
                                     <h2 className="text-sm font-black text-slate-900 leading-tight">Admin Portal</h2>
@@ -1913,9 +1914,6 @@ function AdminDashboard() {
 
             <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6 flex-1 min-w-0">
                 <Navbar
-                    title="Admin Dashboard"
-                    subtitle="Operations Control Panel"
-                    badge="Stats refresh live every 3 seconds."
                     actions={[]}
                     onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     isSidebarCollapsed={isSidebarCollapsed}
