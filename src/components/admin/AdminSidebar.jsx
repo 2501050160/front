@@ -53,7 +53,7 @@ export function AdminSidebar({
         { id: "colleges", label: "College & Campus Management", icon: School, hideForManager: true },
         { id: "users", label: "User Moderation & Support", icon: Users, badge: pendingTicketsCount > 0 ? pendingTicketsCount : null },
         { id: "frontend", label: "Frontend & Ads", icon: Palette, hideForManager: true },
-        { id: "system", label: "System Config & SQL", icon: SettingsIcon, hideForManager: true },
+        { id: "system", label: "System Config", icon: SettingsIcon, hideForManager: true },
     ];
 
     const filteredItems = navItems.filter(item => {
