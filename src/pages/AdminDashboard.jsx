@@ -1871,6 +1871,17 @@ function AdminDashboard() {
                                     {quickLinksOpen && (
                                         <div className="space-y-1.5 flex flex-col items-center">
                                             <button
+                                                onClick={() => handleTabChange("colleges")}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                                    activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers"
+                                                        ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                                                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                                                }`}
+                                                title="College & Campus Management"
+                                            >
+                                                🏫
+                                            </button>
+                                            <button
                                                 onClick={() => handleTabChange("queue")}
                                                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
                                                     activeTab === "queue"
@@ -1987,41 +1998,13 @@ function AdminDashboard() {
 
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <button
-                                        onClick={() => handleTabChange("blocks")}
-                                        className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                            activeTab === "blocks"
-                                                ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
-                                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                        }`}
-                                        title={isSidebarCollapsed ? "Manage Blocks" : undefined}
-                                    >
-                                        <span className="text-base">🏛️</span>
-                                        {!isSidebarCollapsed && <span>Manage Blocks</span>}
-                                    </button>
-                                )}
-
-                                <button
-                                    onClick={() => handleTabChange("printers")}
-                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                        activeTab === "printers"
-                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
-                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                    }`}
-                                    title={isSidebarCollapsed ? "Manage Printers" : undefined}
-                                >
-                                    <span className="text-base">🖨️</span>
-                                    {!isSidebarCollapsed && <span>Manage Printers</span>}
-                                </button>
-
-                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                    <button
                                         onClick={() => handleTabChange("colleges")}
                                         className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                            activeTab === "colleges"
+                                            activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers"
                                                 ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
                                                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                         }`}
-                                        title={isSidebarCollapsed ? "College Management" : undefined}
+                                        title={isSidebarCollapsed ? "College & Campus Management" : undefined}
                                     >
                                         <span className="text-base">🏫</span>
                                         {!isSidebarCollapsed && <span>College Management</span>}
