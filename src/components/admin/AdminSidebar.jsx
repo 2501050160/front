@@ -66,7 +66,7 @@ export function AdminSidebar({
         return true;
     });
 
-    const [quickLinksOpen, setQuickLinksOpen] = React.useState(true);
+    const [quickLinksOpen, setQuickLinksOpen] = React.useState(false);
 
     return (
         <aside

@@ -33,7 +33,7 @@ function AdminDashboard() {
     const [allSupportTickets, setSupportTickets] = useState([]);
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
     const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
-    const [quickLinksOpen, setQuickLinksOpen] = useState(true);
+    const [quickLinksOpen, setQuickLinksOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
     // Dynamic settings & blocks
@@ -1788,69 +1788,83 @@ function AdminDashboard() {
                                 </>
                             ) : (
                                 <div className="space-y-1.5 flex flex-col items-center">
-                                    <span className="text-[10px] font-black text-amber-400 block mb-0.5">⚡</span>
                                     <button
-                                        onClick={() => handleTabChange("queue")}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
-                                            activeTab === "queue"
-                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        onClick={() => setQuickLinksOpen(!quickLinksOpen)}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all cursor-pointer ${
+                                            quickLinksOpen
+                                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
+                                                : "text-amber-400 hover:text-amber-300 hover:bg-slate-800/80"
                                         }`}
-                                        title="Queue Kanban"
+                                        title={quickLinksOpen ? "Hide Quick Links (⚡)" : "Show Quick Links (⚡)"}
                                     >
-                                        📋
+                                        ⚡
                                     </button>
-                                    <button
-                                        onClick={() => handleTabChange("users")}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
-                                            activeTab === "users"
-                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                        }`}
-                                        title="Users Management"
-                                    >
-                                        👥
-                                    </button>
-                                    <button
-                                        onClick={() => handleTabChange("analytics")}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
-                                            activeTab === "analytics"
-                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                        }`}
-                                        title="Analytics & Reports"
-                                    >
-                                        📊
-                                    </button>
-                                    <button
-                                        onClick={() => handleTabChange("settings")}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
-                                            activeTab === "settings"
-                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                        }`}
-                                        title="Settings & Pricing"
-                                    >
-                                        ⚙️
-                                    </button>
-                                    <button
-                                        onClick={() => handleTabChange("printers")}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
-                                            activeTab === "printers"
-                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
-                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                        }`}
-                                        title="Printer Settings"
-                                    >
-                                        🖨️
-                                    </button>
-                                    <button
-                                        onClick={() => navigate("/display-panel")}
-                                        className="w-10 h-10 rounded-xl flex items-center justify-center text-base text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer"
-                                        title="Live Display Panel"
-                                    >
-                                        📺
-                                    </button>
+                                    {quickLinksOpen && (
+                                        <div className="space-y-1.5 flex flex-col items-center">
+                                            <button
+                                                onClick={() => handleTabChange("queue")}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                                    activeTab === "queue"
+                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                }`}
+                                                title="Queue Kanban"
+                                            >
+                                                📋
+                                            </button>
+                                            <button
+                                                onClick={() => handleTabChange("users")}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                                    activeTab === "users"
+                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                }`}
+                                                title="Users Management"
+                                            >
+                                                👥
+                                            </button>
+                                            <button
+                                                onClick={() => handleTabChange("analytics")}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                                    activeTab === "analytics"
+                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                }`}
+                                                title="Analytics & Reports"
+                                            >
+                                                📊
+                                            </button>
+                                            <button
+                                                onClick={() => handleTabChange("settings")}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                                    activeTab === "settings"
+                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                }`}
+                                                title="Settings & Pricing"
+                                            >
+                                                ⚙️
+                                            </button>
+                                            <button
+                                                onClick={() => handleTabChange("printers")}
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                                    activeTab === "printers"
+                                                        ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                        : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                }`}
+                                                title="Printer Settings"
+                                            >
+                                                🖨️
+                                            </button>
+                                            <button
+                                                onClick={() => navigate("/display-panel")}
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-base text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer"
+                                                title="Live Display Panel"
+                                            >
+                                                📺
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
