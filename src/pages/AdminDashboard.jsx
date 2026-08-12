@@ -722,7 +722,7 @@ function AdminDashboard() {
     };
 
     const createCoupon = async () => {
-        const pct = discountPercentage ? Number(discountPercentage) : 100;
+        const pct = discountPercentage ? Number(discountPercentage) : 10;
         if (pct > 95) {
             showAlert("Discount Constraint", "Maximum allowed coupon discount limit is 95%.", "error");
             return;
@@ -733,7 +733,7 @@ function AdminDashboard() {
         }
         try {
             const payload = {
-                couponCode: couponCode ? couponCode.trim().toUpperCase() : undefined,
+                couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
                 discountPercentage: pct,
                 expiryDate: expiryDate && expiryDate.trim() ? expiryDate.trim() : null,
                 maxUses: maxUses ? parseInt(maxUses, 10) : 1,
@@ -749,8 +749,9 @@ function AdminDashboard() {
             setExpiryDate("");
             setMaxUses("");
         } catch (error) {
-            console.error(error);
-            showAlert("Error", error.response?.data?.message || error.response?.data?.error || "Unable To Create Coupon", "error");
+            console.error("Failed to create coupon:", error);
+            const errDetail = error.response?.data?.message || error.response?.data?.error || error.message || "Unable To Create Coupon";
+            showAlert("Error", errDetail, "error");
         }
     };
 
