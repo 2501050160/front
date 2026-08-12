@@ -751,12 +751,13 @@ function AdminDashboard() {
             showAlert("Invalid Discount", "Please specify a discount percentage greater than 0%.", "warning");
             return;
         }
+        const parsedMaxUses = maxUses && !isNaN(parseInt(maxUses, 10)) ? Math.max(1, parseInt(maxUses, 10)) : 100;
         try {
             const payload = {
                 couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
                 discountPercentage: pct,
                 expiryDate: expiryDate && expiryDate.trim() ? expiryDate.trim() : null,
-                maxUses: maxUses ? parseInt(maxUses, 10) : 1,
+                maxUses: parsedMaxUses,
                 active: true
             };
 
