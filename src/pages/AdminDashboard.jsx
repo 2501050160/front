@@ -5759,7 +5759,10 @@ function AdminDashboard() {
                                     ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "global", label: "Global Config", icon: "⚙️", desc: "Platform Fees" }] : []),
                                     { id: "offpeak", label: "Off-Peak Hours", icon: "🌙", desc: "Time Windows" },
                                     { id: "paper", label: "Paper Levels", icon: "📄", desc: "Hardware Stock" },
-                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "tester", label: "Tester Mode", icon: "🧪", desc: "Free Access QA" }] : []),
+                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [
+                                        { id: "tester", label: "Tester Mode", icon: "🧪", desc: "Free Access QA" },
+                                        { id: "sql", label: "SQL Terminal", icon: "💻", desc: "Query & Backup" }
+                                    ] : []),
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
@@ -6256,155 +6259,93 @@ function AdminDashboard() {
                                 </form>
                             </motion.section>
                         )}
-                    </div>
-                )}
-
-
-
-
-
-
-
-                {/* SQL Terminal Tab — Main Admin only */}
-                {activeTab === "sql" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                    <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for SQL Terminal — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "console", label: "Query Console", icon: "💻", desc: "Execute Raw SQL" },
-                                    { id: "backup", label: "DB Backup Tool", icon: "💾", desc: "Dump & Export" },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setSqlSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            sqlSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${sqlSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* SUBPAGE 1: SQL Execution Console */}
-                        {sqlSubTab === "console" && (
-                            <motion.section 
-                                className="panel p-6"
+                        {/* SUBPAGE 8: SQL Terminal & DB Backup */}
+                        {systemSubTab === "sql" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                            <motion.div
+                                className="space-y-6"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header pb-4 border-b border-slate-100 mb-6">
-                                    <div>
-                                        <p className="eyebrow">Database Console</p>
-                                        <h2 className="text-2xl font-black text-slate-900">SQL Execution Console</h2>
-                                        <p className="subtitle">Execute raw database queries directly. SELECT queries will display output tables, while update statements report rows affected.</p>
-                                    </div>
-                                </div>
-
-                                <form onSubmit={runSqlQuery} className="space-y-4">
-                                    <textarea
-                                        value={sqlQuery}
-                                        onChange={(e) => setSqlQuery(e.target.value)}
-                                        className="field font-mono text-sm leading-relaxed min-h-[160px] bg-slate-950 text-cyan-400 border-slate-800 p-4 focus:ring-4 focus:ring-cyan-950 rounded-xl"
-                                        placeholder="SELECT * FROM users LIMIT 20;"
-                                    />
-                                    <div className="flex justify-end gap-3">
-                                        <button type="submit" className="btn warning min-h-0 font-bold px-6 py-2.5" disabled={sqlExecuting}>
-                                            {sqlExecuting ? "Executing query..." : "⚡ Execute Statement"}
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6 flex justify-between items-center flex-wrap gap-4">
+                                        <div>
+                                            <p className="eyebrow">Database Console</p>
+                                            <h2 className="text-2xl font-black text-slate-900">SQL Execution Console</h2>
+                                            <p className="subtitle">Execute raw database queries directly or download timestamped SQL dump backups.</p>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={handleDownloadBackup} 
+                                            className="btn primary font-black text-xs px-4 py-2 flex items-center gap-2 cursor-pointer"
+                                        >
+                                            📥 Download SQL Dump
                                         </button>
                                     </div>
-                                </form>
 
-                                {/* Error output */}
-                                {sqlError && (
-                                    <div className="mt-6 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-mono whitespace-pre-wrap">
-                                        ⚠️ {sqlError}
-                                    </div>
-                                )}
+                                    <form onSubmit={runSqlQuery} className="space-y-4">
+                                        <textarea
+                                            value={sqlQuery}
+                                            onChange={(e) => setSqlQuery(e.target.value)}
+                                            className="field font-mono text-sm leading-relaxed min-h-[160px] bg-slate-950 text-cyan-400 border-slate-800 p-4 focus:ring-4 focus:ring-cyan-950 rounded-xl"
+                                            placeholder="SELECT * FROM users LIMIT 20;"
+                                        />
+                                        <div className="flex justify-end gap-3">
+                                            <button type="submit" className="btn warning min-h-0 font-bold px-6 py-2.5 cursor-pointer" disabled={sqlExecuting}>
+                                                {sqlExecuting ? "Executing query..." : "⚡ Execute Statement"}
+                                            </button>
+                                        </div>
+                                    </form>
 
-                                {/* Results output */}
-                                {sqlResult && (
-                                    <div className="mt-6 border-t border-slate-100 pt-6">
-                                        <h3 className="text-lg font-black text-slate-900 mb-4">Query Execution Result</h3>
-                                        
-                                        {Array.isArray(sqlResult) ? (
-                                            sqlResult.length > 0 ? (
-                                                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50">
-                                                    <table className="data-table w-full text-xs font-mono">
-                                                        <thead>
-                                                            <tr>
-                                                                {Object.keys(sqlResult[0]).map(col => (
-                                                                    <th key={col} className="bg-slate-100 text-slate-700 p-3 border-b border-slate-200 text-left font-black tracking-wider">{col}</th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {sqlResult.map((row, idx) => (
-                                                                <tr key={idx} className="hover:bg-slate-100/80 transition-colors">
-                                                                    {Object.values(row).map((val, cIdx) => (
-                                                                        <td key={cIdx} className="p-3 border-b border-slate-200 text-slate-800 font-medium">
-                                                                            {val === null ? <span className="text-slate-400 italic">null</span> : String(val)}
-                                                                        </td>
+                                    {/* Error output */}
+                                    {sqlError && (
+                                        <div className="mt-6 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-mono whitespace-pre-wrap">
+                                            ⚠️ {sqlError}
+                                        </div>
+                                    )}
+
+                                    {/* Results output */}
+                                    {sqlResult && (
+                                        <div className="mt-6 border-t border-slate-100 pt-6">
+                                            <h3 className="text-lg font-black text-slate-900 mb-4">Query Execution Result</h3>
+                                            
+                                            {Array.isArray(sqlResult) ? (
+                                                sqlResult.length > 0 ? (
+                                                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50">
+                                                        <table className="data-table w-full text-xs font-mono">
+                                                            <thead>
+                                                                <tr>
+                                                                    {Object.keys(sqlResult[0]).map(col => (
+                                                                        <th key={col} className="bg-slate-100 text-slate-700 p-3 border-b border-slate-200 text-left font-black tracking-wider">{col}</th>
                                                                     ))}
                                                                 </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                                                            </thead>
+                                                            <tbody>
+                                                                {sqlResult.map((row, idx) => (
+                                                                    <tr key={idx} className="hover:bg-slate-100/80 transition-colors">
+                                                                        {Object.values(row).map((val, cIdx) => (
+                                                                            <td key={cIdx} className="p-3 border-b border-slate-200 text-slate-800 font-medium">
+                                                                                {val === null ? <span className="text-slate-400 italic">null</span> : String(val)}
+                                                                            </td>
+                                                                        ))}
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-slate-500 font-bold text-center py-6 border border-slate-100 rounded-xl bg-slate-50">
+                                                        Query completed successfully. Empty result set (0 rows returned).
+                                                    </div>
+                                                )
                                             ) : (
-                                                <div className="text-slate-500 font-bold text-center py-6 border border-slate-100 rounded-xl bg-slate-50">
-                                                    Query completed successfully. Empty result set (0 rows returned).
+                                                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-semibold">
+                                                    ✓ {sqlResult.message || `Query succeeded. Rows affected: ${sqlResult.rowsAffected}`}
                                                 </div>
-                                            )
-                                        ) : (
-                                            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-semibold">
-                                                ✓ {sqlResult.message || `Query succeeded. Rows affected: ${sqlResult.rowsAffected}`}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </motion.section>
-                        )}
-
-                        {/* SUBPAGE 2: Database Backup Tool */}
-                        {sqlSubTab === "backup" && (
-                            <motion.section 
-                                className="panel p-8 max-w-xl"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 border-b border-slate-100 mb-6">
-                                    <div>
-                                        <p className="eyebrow">Data Persistence</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Database Snapshot Backup</h2>
-                                        <p className="subtitle">Export complete schema and data tables into a timestamped SQL dump file.</p>
-                                    </div>
-                                </div>
-                                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-3xl">💾</span>
-                                        <div>
-                                            <h4 className="font-black text-slate-900">Full SQL Database Dump</h4>
-                                            <p className="text-xs text-slate-500 font-semibold mt-0.5">Includes users, wallets, print orders, pricing rules, and configs.</p>
+                                            )}
                                         </div>
-                                    </div>
-                                    <button 
-                                        type="button" 
-                                        onClick={handleDownloadBackup} 
-                                        className="btn primary w-full font-black py-3 text-sm flex items-center justify-center gap-2"
-                                    >
-                                        📥 Download SQL Backup File
-                                    </button>
-                                </div>
-                            </motion.section>
+                                    )}
+                                </section>
+                            </motion.div>
                         )}
                     </div>
                 )}
