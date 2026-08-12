@@ -342,6 +342,9 @@ function AdminDashboard() {
     useEffect(() => {
         if (activeTab === "users") {
             fetchUsers();
+            fetchSubAdmins();
+            fetchBlocks();
+            fetchManagerLogs();
         } else if (activeTab === "support") {
             fetchSupportTickets();
         } else if (activeTab === "settings") {
@@ -360,6 +363,7 @@ function AdminDashboard() {
             fetchSystemSettings();
             fetchSections();
             fetchPopups();
+            fetchNotifications();
         } else if (activeTab === "system") {
             fetchSystemSettings();
             
@@ -375,11 +379,6 @@ function AdminDashboard() {
             fetchPrinters();
         } else if (activeTab === "rewards") {
             // rewards moved to settings tab
-        } else if (activeTab === "subadmins") {
-            fetchSubAdmins();
-            fetchBlocks();
-        } else if (activeTab === "notifications") {
-            fetchNotifications();
         }
     }, [activeTab]);
 
@@ -1650,20 +1649,20 @@ function AdminDashboard() {
             fetchCollegeConfigs();
         } else if (tabId === "users") {
             fetchUsers();
+            fetchSubAdmins();
+            fetchBlocks();
+            fetchManagerLogs();
         } else if (tabId === "support") {
             fetchSupportTickets();
         } else if (tabId === "frontend") {
             fetchSystemSettings();
             fetchSections();
+            fetchPopups();
+            fetchNotifications();
         } else if (tabId === "system") {
             fetchSystemSettings();
             fetchBlocks();
             fetchPrinters();
-        } else if (tabId === "subadmins") {
-            fetchSubAdmins();
-            fetchManagerLogs();
-        } else if (tabId === "notifications") {
-            fetchNotifications();
         } else if (tabId === "sql") {
             setSqlResult(null);
             setSqlError("");
@@ -2032,30 +2031,6 @@ function AdminDashboard() {
                                         >
                                             <span className="text-base">⚙️</span>
                                             {!isSidebarCollapsed && <span>System Config</span>}
-                                        </button>
-                                        <button
-                                            onClick={() => handleTabChange("subadmins")}
-                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "subadmins"
-                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
-                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                            }`}
-                                            title={isSidebarCollapsed ? "Manage Staff" : undefined}
-                                        >
-                                            <span className="text-base">🔑</span>
-                                            {!isSidebarCollapsed && <span>Manage Staff</span>}
-                                        </button>
-                                        <button
-                                            onClick={() => handleTabChange("notifications")}
-                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "notifications"
-                                                    ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
-                                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                            }`}
-                                            title={isSidebarCollapsed ? "Notifications" : undefined}
-                                        >
-                                            <span className="text-base">🔔</span>
-                                            {!isSidebarCollapsed && <span>Notifications</span>}
                                         </button>
                                     </>
                                 )}
@@ -4427,6 +4402,9 @@ function AdminDashboard() {
                                     { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
                                     { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
                                     { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
+                                    { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
+                                    { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
+                                    ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: "Audit Trail", icon: "📜", desc: `${managerLogs.length} Actions` }] : []),
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
@@ -4493,26 +4471,26 @@ function AdminDashboard() {
                                             📥 Export Excel
                                         </button>
                                         {selectedUsers.length > 0 && (
-                                            <>
+                                            <div className="flex gap-2">
                                                 <button
                                                     onClick={() => handleBulkBlockUsers(true)}
-                                                    className="btn warning px-4 py-2 text-sm font-bold min-h-0"
+                                                    className="btn warning px-3 py-1.5 text-xs font-bold min-h-0"
                                                 >
-                                                    ⛔ Block ({selectedUsers.length})
+                                                    Block Selected ({selectedUsers.length})
                                                 </button>
                                                 <button
                                                     onClick={() => handleBulkBlockUsers(false)}
-                                                    className="btn success px-4 py-2 text-sm font-bold min-h-0"
+                                                    className="btn success px-3 py-1.5 text-xs font-bold min-h-0"
                                                 >
-                                                    ✅ Unblock ({selectedUsers.length})
+                                                    Unblock Selected
                                                 </button>
                                                 <button
                                                     onClick={handleBulkDeleteUsers}
-                                                    className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                                    className="btn danger px-3 py-1.5 text-xs font-bold min-h-0"
                                                 >
-                                                    🗑️ Delete ({selectedUsers.length})
+                                                    Delete Selected
                                                 </button>
-                                            </>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -4520,88 +4498,85 @@ function AdminDashboard() {
                                 <table className="data-table mt-4 w-full">
                                     <thead>
                                         <tr>
-                                            <th className="w-10">
+                                            <th>
                                                 <input
                                                     type="checkbox"
-                                                    checked={users.length > 0 && selectedUsers.length === users.length}
                                                     onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedUsers(users.map(u => u.id));
-                                                        } else {
-                                                            setSelectedUsers([]);
-                                                        }
+                                                        if (e.target.checked) setSelectedUsers(users.map(u => u.id));
+                                                        else setSelectedUsers([]);
                                                     }}
-                                                    className="w-4 h-4 rounded accent-slate-900 cursor-pointer"
+                                                    checked={selectedUsers.length === users.length && users.length > 0}
                                                 />
                                             </th>
                                             <th>User ID</th>
                                             <th>Name</th>
                                             <th>Email</th>
-                                            <th>College</th>
-                                            <th>Orders</th>
+                                            <th>Campus</th>
+                                            <th>Orders Placed</th>
                                             <th>Referral Code</th>
                                             <th>Wallet Balance</th>
-                                            <th>Status</th>
+                                            <th>Account Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {users.map((user, index) => (
-                                            <motion.tr
-                                                key={user.id}
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.02 }}
-                                            >
+                                        {users.map(user => (
+                                            <tr key={user.id} className={user.blocked ? "bg-rose-50/50" : ""}>
                                                 <td>
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedUsers.includes(user.id)}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setSelectedUsers(prev => [...prev, user.id]);
-                                                            } else {
-                                                                setSelectedUsers(prev => prev.filter(id => id !== user.id));
-                                                            }
+                                                        onChange={() => {
+                                                            if (selectedUsers.includes(user.id)) setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                                                            else setSelectedUsers([...selectedUsers, user.id]);
                                                         }}
-                                                        className="w-4 h-4 rounded accent-slate-900 cursor-pointer"
                                                     />
                                                 </td>
-                                                <td className="font-black">#{user.id}</td>
-                                                <td className="font-bold text-slate-900">{user.name}</td>
-                                                <td className="font-semibold text-slate-600">{user.email}</td>
-                                                <td className="font-bold text-slate-700">{user.college || "KLU"}</td>
-                                                <td className="font-bold text-slate-700">{allOrders.filter(o => o.email === user.email).length}</td>
-                                                <td className="font-mono text-cyan-600 font-bold">{user.referralCode || "N/A"}</td>
-                                                <td className="font-bold text-green-600">Rs. {user.walletBalance != null ? user.walletBalance.toFixed(2) : "0.00"}</td>
+                                                <td className="font-bold text-slate-400">#{user.id}</td>
+                                                <td className="font-black text-slate-900">{user.name || "Anonymous User"}</td>
+                                                <td className="text-slate-600 text-xs font-semibold">{user.email}</td>
                                                 <td>
-                                                    <span className={`status-pill ${user.blocked ? "status-unpaid" : "status-paid"}`}>
+                                                    <span className="text-xs font-black uppercase text-[#4F9DFF] bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">
+                                                        {user.college || "KLU"}
+                                                    </span>
+                                                </td>
+                                                <td className="font-black text-slate-700">
+                                                    {allOrders.filter(o => o.email === user.email).length}
+                                                </td>
+                                                <td className="font-mono text-xs font-bold text-slate-500">
+                                                    {user.referralCode || "—"}
+                                                </td>
+                                                <td className="font-black text-emerald-600 text-base">
+                                                    ₹{(Number(user.walletBalance) || 0).toFixed(2)}
+                                                </td>
+                                                <td>
+                                                    <span className={`status-pill ${user.blocked ? 'status-unpaid' : 'status-paid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
                                                         {user.blocked ? "BLOCKED" : "ACTIVE"}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <div className="flex gap-2">
+                                                    <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => toggleBlockUser(user.id)}
-                                                            className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${user.blocked ? "success" : "warning"}`}
+                                                            className={`btn ${user.blocked ? 'success' : 'warning'} min-h-0 px-2.5 py-1 text-xs font-bold`}
+                                                            title={user.blocked ? "Unblock account" : "Block account"}
                                                         >
                                                             {user.blocked ? "Unblock" : "Block"}
                                                         </button>
                                                         <button
                                                             onClick={() => deleteUser(user.id)}
-                                                            className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                            className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold"
+                                                            title="Delete user account"
                                                         >
                                                             Delete
                                                         </button>
                                                     </div>
                                                 </td>
-                                            </motion.tr>
+                                            </tr>
                                         ))}
                                         {users.length === 0 && (
                                             <tr>
-                                                <td colSpan="10" className="text-center font-bold text-slate-500 py-8">
-                                                    No users found
-                                                </td>
+                                                <td colSpan="10" className="text-center font-bold text-slate-400 py-8">No registered users found matching filter.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -4609,7 +4584,7 @@ function AdminDashboard() {
                             </motion.section>
                         )}
 
-                        {/* SUBPAGE 2: User Wallet Balances */}
+                        {/* SUBPAGE 2: Wallet Balances Breakdown */}
                         {usersSubTab === "wallets" && (
                             <motion.div
                                 className="space-y-6"
@@ -4617,49 +4592,49 @@ function AdminDashboard() {
                                 animate={{ opacity: 1, y: 0 }}
                             >
                                 <div className="grid gap-4 sm:grid-cols-3">
-                                    <div className="panel p-6 bg-gradient-to-br from-emerald-900 to-emerald-700 text-white rounded-2xl">
-                                        <p className="text-xs font-bold text-emerald-200 uppercase tracking-wider">Total Wallet Liquidity</p>
-                                        <p className="text-3xl font-black mt-2">
-                                            ₹{users.reduce((sum, u) => sum + (Number(u.walletBalance) || 0), 0).toFixed(2)}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                                        <p className="text-xs font-bold text-slate-500">Total Wallet Liquidity</p>
+                                        <p className="text-2xl font-black text-emerald-600 mt-1">
+                                            ₹{users.reduce((acc, u) => acc + (Number(u.walletBalance) || 0), 0).toFixed(2)}
                                         </p>
-                                        <p className="text-[11px] text-emerald-200/80 mt-1 font-semibold">Across all registered user accounts</p>
+                                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Across all user credit accounts</span>
                                     </div>
-                                    <div className="panel p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Users With Balance &gt; ₹0</p>
-                                        <p className="text-3xl font-black mt-2">
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                                        <p className="text-xs font-bold text-slate-500">Funded Accounts</p>
+                                        <p className="text-2xl font-black text-blue-600 mt-1">
                                             {users.filter(u => Number(u.walletBalance) > 0).length}
                                         </p>
-                                        <p className="text-[11px] text-slate-400 mt-1 font-semibold">{((users.filter(u => Number(u.walletBalance) > 0).length / Math.max(1, users.length)) * 100).toFixed(1)}% of userbase</p>
+                                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Users with positive balance</span>
                                     </div>
-                                    <div className="panel p-6 bg-gradient-to-br from-sky-700 to-sky-600 text-white rounded-2xl">
-                                        <p className="text-xs font-bold text-sky-200 uppercase tracking-wider">Average Balance</p>
-                                        <p className="text-3xl font-black mt-2">
-                                            ₹{(users.reduce((sum, u) => sum + (Number(u.walletBalance) || 0), 0) / Math.max(1, users.length)).toFixed(2)}
+                                    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                                        <p className="text-xs font-bold text-slate-500">Average Credit Balance</p>
+                                        <p className="text-2xl font-black text-indigo-600 mt-1">
+                                            ₹{users.length > 0 ? (users.reduce((acc, u) => acc + (Number(u.walletBalance) || 0), 0) / users.length).toFixed(2) : "0.00"}
                                         </p>
-                                        <p className="text-[11px] text-sky-200/80 mt-1 font-semibold">Per user account</p>
+                                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Mean student wallet hold</span>
                                     </div>
                                 </div>
 
                                 <section className="panel p-6 overflow-x-auto">
-                                    <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                    <div className="section-header pb-4 mb-4 border-b border-slate-100 flex justify-between items-center">
                                         <div>
-                                            <p className="eyebrow">Wallet Rankings</p>
-                                            <h3 className="text-xl font-black text-slate-900">Highest Balance Accounts</h3>
+                                            <p className="eyebrow">Wallet Ledger</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Credit Balance Leaderboard</h2>
                                         </div>
                                     </div>
                                     <table className="data-table w-full">
                                         <thead>
                                             <tr>
                                                 <th>Rank</th>
-                                                <th>User</th>
+                                                <th>Name</th>
                                                 <th>Email</th>
-                                                <th>College</th>
-                                                <th>Wallet Balance</th>
-                                                <th>Orders Placed</th>
+                                                <th>Campus</th>
+                                                <th>Balance</th>
+                                                <th>Total Orders</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {[...users].sort((a, b) => (Number(b.walletBalance) || 0) - (Number(a.walletBalance) || 0)).slice(0, 20).map((user, idx) => (
+                                            {[...users].sort((a, b) => (Number(b.walletBalance) || 0) - (Number(a.walletBalance) || 0)).slice(0, 50).map((user, idx) => (
                                                 <tr key={user.id}>
                                                     <td className="font-black text-slate-400">#{idx + 1}</td>
                                                     <td className="font-bold text-slate-900">{user.name}</td>
@@ -4726,6 +4701,219 @@ function AdminDashboard() {
                                                         <span className="text-3xl">🛡️</span>
                                                         <span>No users are currently blocked. All accounts are in good standing.</span>
                                                     </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 4: Staff Directory Table */}
+                        {usersSubTab === "staff-list" && (
+                            <motion.section
+                                className="panel p-6 overflow-x-auto"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Active Accounts</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Staff Directory ({subAdmins.length})</h2>
+                                    </div>
+                                    <button onClick={() => setUsersSubTab("add-staff")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ➕ Add Staff Account
+                                    </button>
+                                </div>
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Assigned Campus</th>
+                                            <th>Role / Scope</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {subAdmins.map(adminAcc => (
+                                            <tr key={adminAcc.id}>
+                                                <td className="font-bold text-slate-400">#{adminAcc.id}</td>
+                                                <td className="font-bold text-slate-900">{adminAcc.username}</td>
+                                                <td className="text-xs font-black text-[#4F9DFF] uppercase">{adminAcc.college}</td>
+                                                <td>
+                                                    <span className="status-pill status-paid" style={{ fontSize: '10px', minHeight: '22px' }}>
+                                                        {adminAcc.role}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button onClick={() => deleteSubAdmin(adminAcc.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Revoke Access</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {subAdmins.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="text-center font-bold text-slate-500 py-8">No staff provisioned yet. Create an account above.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 5: Add Staff Account Form */}
+                        {usersSubTab === "add-staff" && (
+                            <motion.div
+                                className="grid gap-6 md:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <div>
+                                            <p className="eyebrow">Access Management</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Add Staff Account</h2>
+                                            <p className="subtitle">Provision a sub-admin or manager with dedicated credentials.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={createSubAdmin} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Username / Email</span>
+                                            <input 
+                                                type="text" 
+                                                className="field" 
+                                                placeholder="e.g. kluadmin" 
+                                                value={newSubAdminUsername} 
+                                                onChange={(e) => setNewSubAdminUsername(e.target.value)} 
+                                                required 
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Choose Password</span>
+                                            <input 
+                                                type="password" 
+                                                className="field" 
+                                                placeholder="Min 6 characters" 
+                                                value={newSubAdminPassword} 
+                                                onChange={(e) => setNewSubAdminPassword(e.target.value)} 
+                                                required 
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Role</span>
+                                            <select
+                                                value={newAdminRole}
+                                                onChange={(e) => setNewAdminRole(e.target.value)}
+                                                className="field cursor-pointer"
+                                                disabled={loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin"}
+                                            >
+                                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                    <option value="SUB_ADMIN">Sub-Admin</option>
+                                                )}
+                                                <option value="MANAGER">Manager</option>
+                                            </select>
+                                        </label>
+                                        {newAdminRole === "MANAGER" && (
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Coupons Secret Key</span>
+                                                <input 
+                                                    type="text" 
+                                                    className="field" 
+                                                    placeholder="e.g. SECRET123" 
+                                                    value={newManagerSecret} 
+                                                    onChange={(e) => setNewManagerSecret(e.target.value)} 
+                                                    required 
+                                                />
+                                            </label>
+                                        )}
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Assign College / Campus</span>
+                                            {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                <input 
+                                                    type="text" 
+                                                    className="field bg-slate-100 cursor-not-allowed" 
+                                                    value={loggedInAdminCollege} 
+                                                    readOnly 
+                                                    disabled 
+                                                />
+                                            ) : (
+                                                <select
+                                                    value={newSubAdminCollege}
+                                                    onChange={(e) => setNewSubAdminCollege(e.target.value)}
+                                                    className="field cursor-pointer"
+                                                    required
+                                                >
+                                                    <option value="" disabled>Select assigned college...</option>
+                                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                        <option key={col} value={col}>{col} College</option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-2" disabled={isCreatingSubAdmin}>
+                                            {isCreatingSubAdmin ? "Creating..." : "Save Account"}
+                                        </button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Permissions</p>
+                                            <h3 className="text-xl font-black text-slate-900">Role Capabilities</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">Sub-Admin</strong>
+                                                Full control over their assigned college campus, printers, queues, users, and coupons.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">Manager</strong>
+                                                Operates kiosk terminals, refills paper, and processes coupon voucher redemptions.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 6: Manager Activity Logs Section */}
+                        {usersSubTab === "audit-logs" && loggedInAdminRole === "SUB_ADMIN" && (
+                            <motion.section className="panel p-6 overflow-x-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Audit Trail</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Manager Activity Logs ({managerLogs.length})</h2>
+                                    </div>
+                                </div>
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Date / Time</th>
+                                            <th>Manager</th>
+                                            <th>Action Type</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {managerLogs.map((log) => (
+                                            <tr key={log.id}>
+                                                <td className="text-xs font-bold text-slate-500 whitespace-nowrap">
+                                                    {new Date(log.timestamp).toLocaleString()}
+                                                </td>
+                                                <td className="font-bold text-slate-800">{log.managerName}</td>
+                                                <td>
+                                                    <span className="status-pill status-paid" style={{ fontSize: '10px' }}>
+                                                        {log.actionType}
+                                                    </span>
+                                                </td>
+                                                <td className="text-sm font-semibold text-slate-600">{log.details}</td>
+                                            </tr>
+                                        ))}
+                                        {managerLogs.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-8 text-slate-400 font-bold">
+                                                    No activity logs found.
                                                 </td>
                                             </tr>
                                         )}
@@ -4962,6 +5150,8 @@ function AdminDashboard() {
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
+                                    { id: "all-notifs", label: "Published Alerts", icon: "🔔", desc: `${notifications.length} Broadcasts` },
+                                    { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
                                     { id: "sections-list", label: "Layout Sections", icon: "🗂️", desc: `${sections.length} Configured` },
                                     { id: "add-section", label: "Add Section", icon: "➕", desc: "New CMS Block" },
                                     { id: "popups-list", label: "Manage Popups", icon: "💬", desc: `${popups.length} Modals` },
@@ -5079,6 +5269,124 @@ function AdminDashboard() {
                                             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                                                 <strong className="block text-slate-900 mb-1">🎁 Welcome Referral Modal</strong>
                                                 Displays when users first enter their dashboard to prompt them to invite friends.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 2: Published Notifications List */}
+                        {frontendSubTab === "all-notifs" && (
+                            <motion.section
+                                className="panel p-6 overflow-x-auto"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Active Alerts</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Published Notifications ({notifications.length})</h2>
+                                    </div>
+                                    <button onClick={() => setFrontendSubTab("create-notif")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ✍️ Compose Notification
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {notifications
+                                        .filter(n => {
+                                            if (loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") {
+                                                return n.college === loggedInAdminCollege || n.college === "ALL";
+                                            }
+                                            return true;
+                                        })
+                                        .map((notif) => (
+                                        <div key={notif.id} className="flex items-start justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                                    <p className="font-black text-slate-900 text-base">{notif.title}</p>
+                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">{notif.type || 'INFO'}</span>
+                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">{notif.college || 'ALL'}</span>
+                                                </div>
+                                                <p className="text-sm text-slate-600 font-medium leading-relaxed">{notif.message}</p>
+                                            </div>
+                                            <button onClick={() => deleteNotification(notif.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold shrink-0">Delete</button>
+                                        </div>
+                                    ))}
+                                    {notifications.length === 0 && (
+                                        <div className="text-center py-12 text-slate-400 font-bold text-sm">
+                                            No notifications published yet. Click Compose Notification to broadcast an alert.
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 3: Create Notification Form */}
+                        {frontendSubTab === "create-notif" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <div>
+                                            <p className="eyebrow">Campus Alerts</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Broadcast Notification</h2>
+                                            <p className="subtitle">Send an instant notification to users in a specific college or platform-wide.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={createNotification} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Notification Title</span>
+                                            <input type="text" className="field" placeholder="e.g. Server Maintenance Notice" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)} required />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Message Body</span>
+                                            <textarea className="field min-h-[110px]" placeholder="Write notification message details..." value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)} required />
+                                        </label>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Alert Type</span>
+                                                <select className="field" value={notifType} onChange={(e) => setNotifType(e.target.value)}>
+                                                    <option value="INFO">ℹ️ Info</option>
+                                                    <option value="ALERT">🚨 Alert</option>
+                                                    <option value="ANNOUNCEMENT">📢 Announcement</option>
+                                                </select>
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Target College</span>
+                                                {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                    <input type="text" className="field bg-slate-100 cursor-not-allowed" value={loggedInAdminCollege} readOnly disabled />
+                                                ) : (
+                                                    <select className="field" value={notifCollege} onChange={(e) => setNotifCollege(e.target.value)}>
+                                                        <option value="ALL">All Colleges</option>
+                                                        {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                            <option key={col} value={col}>{col} College</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-2">📢 Publish Notification</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Audience Scope</p>
+                                            <h3 className="text-xl font-black text-slate-900">Broadcast Guidelines</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">ℹ️ Info</strong>
+                                                General non-critical updates like print rate changes or new paper stocks.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">🚨 Alert</strong>
+                                                Urgent hardware outages, power maintenance, or immediate network repairs.
                                             </div>
                                         </div>
                                     </div>
@@ -6159,154 +6467,7 @@ function AdminDashboard() {
                     </div>
                 )}
 
-                {/* Notifications Management Tab */}
-                {activeTab === "notifications" && (
-                    <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Campus Alerts — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "all-notifs", label: "Published Alerts", icon: "📢", desc: `${notifications.length} Broadcasts` },
-                                    { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setNotificationsSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            notificationsSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${notificationsSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* SUBPAGE 1: Published Notifications List */}
-                        {notificationsSubTab === "all-notifs" && (
-                            <motion.section
-                                className="panel p-6 overflow-x-auto"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-                                    <div>
-                                        <p className="eyebrow">Active Alerts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Published Notifications ({notifications.length})</h2>
-                                    </div>
-                                    <button onClick={() => setNotificationsSubTab("create-notif")} className="btn primary text-xs px-4 py-2 font-bold">
-                                        ✍️ Compose Notification
-                                    </button>
-                                </div>
-                                <div className="space-y-3">
-                                    {notifications
-                                        .filter(n => {
-                                            if (loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") {
-                                                return n.college === loggedInAdminCollege || n.college === "ALL";
-                                            }
-                                            return true;
-                                        })
-                                        .map((notif) => (
-                                        <div key={notif.id} className="flex items-start justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                                                    <p className="font-black text-slate-900 text-base">{notif.title}</p>
-                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">{notif.type || 'INFO'}</span>
-                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">{notif.college || 'ALL'}</span>
-                                                </div>
-                                                <p className="text-sm text-slate-600 font-medium leading-relaxed">{notif.message}</p>
-                                            </div>
-                                            <button onClick={() => deleteNotification(notif.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold shrink-0">Delete</button>
-                                        </div>
-                                    ))}
-                                    {notifications.length === 0 && (
-                                        <div className="text-center py-12 text-slate-400 font-bold text-sm">
-                                            No notifications published yet. Click Compose Notification to broadcast an alert.
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.section>
-                        )}
-
-                        {/* SUBPAGE 2: Create Notification Form */}
-                        {notificationsSubTab === "create-notif" && (
-                            <motion.div
-                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <section className="panel p-6">
-                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
-                                        <div>
-                                            <p className="eyebrow">Campus Alerts</p>
-                                            <h2 className="text-2xl font-black text-slate-900">Broadcast Notification</h2>
-                                            <p className="subtitle">Send an instant notification to users in a specific college or platform-wide.</p>
-                                        </div>
-                                    </div>
-                                    <form onSubmit={createNotification} className="space-y-4">
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Notification Title</span>
-                                            <input type="text" className="field" placeholder="e.g. Server Maintenance Notice" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)} required />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Message Body</span>
-                                            <textarea className="field min-h-[110px]" placeholder="Write notification message details..." value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)} required />
-                                        </label>
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <label className="block">
-                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Alert Type</span>
-                                                <select className="field" value={notifType} onChange={(e) => setNotifType(e.target.value)}>
-                                                    <option value="INFO">ℹ️ Info</option>
-                                                    <option value="ALERT">🚨 Alert</option>
-                                                    <option value="ANNOUNCEMENT">📢 Announcement</option>
-                                                </select>
-                                            </label>
-                                            <label className="block">
-                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Target College</span>
-                                                {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
-                                                    <input type="text" className="field bg-slate-100 cursor-not-allowed" value={loggedInAdminCollege} readOnly disabled />
-                                                ) : (
-                                                    <select className="field" value={notifCollege} onChange={(e) => setNotifCollege(e.target.value)}>
-                                                        <option value="ALL">All Colleges</option>
-                                                        {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                            <option key={col} value={col}>{col} College</option>
-                                                        ))}
-                                                    </select>
-                                                )}
-                                            </label>
-                                        </div>
-                                        <button type="submit" className="btn success w-full mt-2">📢 Publish Notification</button>
-                                    </form>
-                                </section>
-
-                                <section className="panel p-6 flex flex-col justify-between">
-                                    <div>
-                                        <div className="section-header mb-4">
-                                            <p className="eyebrow">Audience Scope</p>
-                                            <h3 className="text-xl font-black text-slate-900">Broadcast Guidelines</h3>
-                                        </div>
-                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
-                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                                <strong className="block text-slate-900 mb-0.5">ℹ️ Info</strong>
-                                                General non-critical updates like print rate changes or new paper stocks.
-                                            </div>
-                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                                <strong className="block text-slate-900 mb-0.5">🚨 Alert</strong>
-                                                Urgent hardware outages, power maintenance, or immediate network repairs.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-                            </motion.div>
-                        )}
-                    </div>
-                )}
 
 
 
@@ -6454,250 +6615,7 @@ function AdminDashboard() {
                     </div>
                 )}
 
-                {/* Manage Staff Tab */}
-                {activeTab === "subadmins" && loggedInAdminRole !== "MANAGER" && (
-                    <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Staff Management — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "staff-list", label: "Staff Directory", icon: "👥", desc: `${subAdmins.length} Accounts` },
-                                    { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
-                                    ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: "Audit Trail", icon: "📜", desc: `${managerLogs.length} Actions` }] : []),
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setSubadminsSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            subadminsSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${subadminsSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* SUBPAGE 1: Staff Directory Table */}
-                        {subadminsSubTab === "staff-list" && (
-                            <motion.section
-                                className="panel p-6 overflow-x-auto"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-                                    <div>
-                                        <p className="eyebrow">Active Accounts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Staff Directory ({subAdmins.length})</h2>
-                                    </div>
-                                    <button onClick={() => setSubadminsSubTab("add-staff")} className="btn primary text-xs px-4 py-2 font-bold">
-                                        ➕ Add Staff Account
-                                    </button>
-                                </div>
-                                <table className="data-table w-full">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Username</th>
-                                            <th>Assigned Campus</th>
-                                            <th>Role / Scope</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {subAdmins.map(adminAcc => (
-                                            <tr key={adminAcc.id}>
-                                                <td className="font-bold text-slate-400">#{adminAcc.id}</td>
-                                                <td className="font-bold text-slate-900">{adminAcc.username}</td>
-                                                <td className="text-xs font-black text-[#4F9DFF] uppercase">{adminAcc.college}</td>
-                                                <td>
-                                                    <span className="status-pill status-paid" style={{ fontSize: '10px', minHeight: '22px' }}>
-                                                        {adminAcc.role}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button onClick={() => deleteSubAdmin(adminAcc.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Revoke Access</button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {subAdmins.length === 0 && (
-                                            <tr>
-                                                <td colSpan="5" className="text-center font-bold text-slate-500 py-8">No staff provisioned yet. Create an account above.</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </motion.section>
-                        )}
-
-                        {/* SUBPAGE 2: Add Staff Account Form */}
-                        {subadminsSubTab === "add-staff" && (
-                            <motion.div
-                                className="grid gap-6 md:grid-cols-[1.2fr_1fr]"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <section className="panel p-6">
-                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
-                                        <div>
-                                            <p className="eyebrow">Access Management</p>
-                                            <h2 className="text-2xl font-black text-slate-900">Add Staff Account</h2>
-                                            <p className="subtitle">Provision a sub-admin or manager with dedicated credentials.</p>
-                                        </div>
-                                    </div>
-                                    <form onSubmit={createSubAdmin} className="space-y-4">
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Username / Email</span>
-                                            <input 
-                                                type="text" 
-                                                className="field" 
-                                                placeholder="e.g. kluadmin" 
-                                                value={newSubAdminUsername} 
-                                                onChange={(e) => setNewSubAdminUsername(e.target.value)} 
-                                                required 
-                                            />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Choose Password</span>
-                                            <input 
-                                                type="password" 
-                                                className="field" 
-                                                placeholder="Min 6 characters" 
-                                                value={newSubAdminPassword} 
-                                                onChange={(e) => setNewSubAdminPassword(e.target.value)} 
-                                                required 
-                                            />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Role</span>
-                                            <select
-                                                value={newAdminRole}
-                                                onChange={(e) => setNewAdminRole(e.target.value)}
-                                                className="field cursor-pointer"
-                                                disabled={loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin"}
-                                            >
-                                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                                    <option value="SUB_ADMIN">Sub-Admin</option>
-                                                )}
-                                                <option value="MANAGER">Manager</option>
-                                            </select>
-                                        </label>
-                                        {newAdminRole === "MANAGER" && (
-                                            <label className="block">
-                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Coupons Secret Key</span>
-                                                <input 
-                                                    type="text" 
-                                                    className="field" 
-                                                    placeholder="e.g. SECRET123" 
-                                                    value={newManagerSecret} 
-                                                    onChange={(e) => setNewManagerSecret(e.target.value)} 
-                                                    required 
-                                                />
-                                            </label>
-                                        )}
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Assign College / Campus</span>
-                                            {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
-                                                <input 
-                                                    type="text" 
-                                                    className="field bg-slate-100 cursor-not-allowed" 
-                                                    value={loggedInAdminCollege} 
-                                                    readOnly 
-                                                    disabled 
-                                                />
-                                            ) : (
-                                                <select
-                                                    value={newSubAdminCollege}
-                                                    onChange={(e) => setNewSubAdminCollege(e.target.value)}
-                                                    className="field cursor-pointer"
-                                                    required
-                                                >
-                                                    <option value="" disabled>Select assigned college...</option>
-                                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                        <option key={col} value={col}>{col} College</option>
-                                                    ))}
-                                                </select>
-                                            )}
-                                        </label>
-                                        <button type="submit" className="btn success w-full mt-2" disabled={isCreatingSubAdmin}>
-                                            {isCreatingSubAdmin ? "Creating..." : "Save Account"}
-                                        </button>
-                                    </form>
-                                </section>
-
-                                <section className="panel p-6 flex flex-col justify-between">
-                                    <div>
-                                        <div className="section-header mb-4">
-                                            <p className="eyebrow">Permissions</p>
-                                            <h3 className="text-xl font-black text-slate-900">Role Capabilities</h3>
-                                        </div>
-                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
-                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                                <strong className="block text-slate-900 mb-0.5">Sub-Admin</strong>
-                                                Full control over their assigned college campus, printers, queues, users, and coupons.
-                                            </div>
-                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                                                <strong className="block text-slate-900 mb-0.5">Manager</strong>
-                                                Operates kiosk terminals, refills paper, and processes coupon voucher redemptions.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-                            </motion.div>
-                        )}
-
-                        {/* SUBPAGE 3: Manager Activity Logs Section */}
-                        {subadminsSubTab === "audit-logs" && loggedInAdminRole === "SUB_ADMIN" && (
-                            <motion.section className="panel p-6 overflow-x-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
-                                    <div>
-                                        <p className="eyebrow">Audit Trail</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Manager Activity Logs ({managerLogs.length})</h2>
-                                    </div>
-                                </div>
-                                <table className="data-table w-full">
-                                    <thead>
-                                        <tr>
-                                            <th>Date / Time</th>
-                                            <th>Manager</th>
-                                            <th>Action Type</th>
-                                            <th>Details</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {managerLogs.map((log) => (
-                                            <tr key={log.id}>
-                                                <td className="text-xs font-bold text-slate-500 whitespace-nowrap">
-                                                    {new Date(log.timestamp).toLocaleString()}
-                                                </td>
-                                                <td className="font-bold text-slate-800">{log.managerName}</td>
-                                                <td>
-                                                    <span className="status-pill status-paid" style={{ fontSize: '10px' }}>
-                                                        {log.actionType}
-                                                    </span>
-                                                </td>
-                                                <td className="text-sm font-semibold text-slate-600">{log.details}</td>
-                                            </tr>
-                                        ))}
-                                        {managerLogs.length === 0 && (
-                                            <tr>
-                                                <td colSpan="4" className="text-center py-8 text-slate-400 font-bold">
-                                                    No activity logs found.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </motion.section>
-                        )}
-                    </div>
-                )}
             </div>
 
             {/* Payment Config Modal */}

@@ -56,8 +56,6 @@ export function AdminSidebar({
         { id: "support", label: "Support Tickets", icon: Headphones, hideForManager: true },
         { id: "frontend", label: "Frontend & Ads", icon: Palette, hideForManager: true },
         { id: "system", label: "System Config & SQL", icon: SettingsIcon, hideForManager: true },
-        { id: "subadmins", label: "Staff & Logs", icon: Shield, hideForManager: true },
-        { id: "notifications", label: "Broadcast Alerts", icon: BellRing, hideForManager: true },
     ];
 
     const filteredItems = navItems.filter(item => {
