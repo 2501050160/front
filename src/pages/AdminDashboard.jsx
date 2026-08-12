@@ -33,7 +33,7 @@ function AdminDashboard() {
     const [selectedCoupons, setSelectedCoupons] = useState([]);
     const [allSupportTickets, setSupportTickets] = useState([]);
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
-    const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
+    const [activeTab, setActiveTab] = useState(tabFromUrl || "analytics");
     const [quickLinksOpen, setQuickLinksOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [pricingSubTab, setPricingSubTab] = useState(searchParams.get("subtab") || "pricing");
