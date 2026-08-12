@@ -44,7 +44,7 @@ function Dashboard() {
     const [bwDuplexPrice, setBwDuplexPrice] = useState(1.5);
     const [colorDuplexPrice, setColorDuplexPrice] = useState(4.0);
     const [isCollegeSuspended, setIsCollegeSuspended] = useState(false);
-    const blockLocation = localStorage.getItem("selectedBlock");
+    const blockLocation = localStorage.getItem("selectedBlock") || "C Block";
     
     // Multiple files support
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -375,14 +375,16 @@ function Dashboard() {
                 params: { blockLocation }
             });
 
-            response.data.forEach((p) => {
-                if (p.printType === "BW") {
-                    setBwPrice(p.pricePerPage);
-                }
-                if (p.printType === "COLOR") {
-                    setColorPrice(p.pricePerPage);
-                }
-            });
+            if (response.data && Array.isArray(response.data)) {
+                response.data.forEach((p) => {
+                    if (p.printType === "BW") {
+                        setBwPrice(p.pricePerPage);
+                    }
+                    if (p.printType === "COLOR") {
+                        setColorPrice(p.pricePerPage);
+                    }
+                });
+            }
 
             // Fetch block printer capabilities
             const printerRes = await api.get("/printer/allByBlock", {
