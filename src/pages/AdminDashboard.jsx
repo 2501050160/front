@@ -22,6 +22,7 @@ function AdminDashboard() {
     const [bwPrice, setBwPrice] = useState(0);
     const [colorPrice, setColorPrice] = useState(0);
     const [duplexPrice, setDuplexPrice] = useState(0);
+    const [blockPricesMap, setBlockPricesMap] = useState({});
 
     const [couponCode, setCouponCode] = useState("");
     const [discountPercentage, setDiscountPercentage] = useState("");
@@ -479,6 +480,27 @@ function AdminDashboard() {
         }
     };
 
+    const fetchAllBlockPrices = async () => {
+        try {
+            const response = await api.get("/pricing/all");
+            if (response.data && Array.isArray(response.data)) {
+                const map = {};
+                response.data.forEach((p) => {
+                    const b = p.blockLocation || "Default";
+                    if (!map[b]) {
+                        map[b] = { bw: 2.0, color: 5.0, duplex: 1.5 };
+                    }
+                    if (p.printType === "BW") map[b].bw = p.pricePerPage;
+                    if (p.printType === "COLOR") map[b].color = p.pricePerPage;
+                    if (p.printType === "DUPLEX" || p.printType === "DOUBLE") map[b].duplex = p.pricePerPage;
+                });
+                setBlockPricesMap(map);
+            }
+        } catch (err) {
+            console.error("Error fetching all block prices:", err);
+        }
+    };
+
     const fetchPrices = async (block = selectedPricingBlock) => {
         try {
             const response = await api.get("/pricing/all", {
@@ -503,6 +525,7 @@ function AdminDashboard() {
             setBwPrice(bwVal);
             setColorPrice(colorVal);
             setDuplexPrice(duplexVal);
+            fetchAllBlockPrices();
         } catch (error) {
             console.error("Error fetching prices:", error);
         }
@@ -561,6 +584,7 @@ function AdminDashboard() {
             });
 
             showAlert("Success", `Prices Updated Successfully for ${selectedPricingBlock}`, "success");
+            fetchAllBlockPrices();
         } catch (error) {
             console.error(error);
             showAlert("Error", "Unable to Update Prices", "error");
@@ -3169,33 +3193,43 @@ function AdminDashboard() {
                                             </div>
                                         </div>
                                         <div className="space-y-3">
-                                            {blocks.map(b => (
-                                                <div 
-                                                    key={b.id} 
-                                                    onClick={() => {
-                                                        setSelectedPricingBlock(b.name);
-                                                        fetchPrices(b.name);
-                                                    }}
-                                                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                                                        selectedPricingBlock === b.name
-                                                            ? "bg-sky-50 border-sky-300 shadow-sm"
-                                                            : "bg-slate-50 border-slate-200 hover:bg-slate-100/80"
-                                                    }`}
-                                                >
-                                                    <div>
-                                                        <span className="font-black text-slate-800 text-sm block">{b.name}</span>
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">{b.college || "KLU"}</span>
+                                            {blocks.map(b => {
+                                                const blockRates = blockPricesMap[b.name] || {};
+                                                const bwVal = selectedPricingBlock === b.name ? bwPrice : (blockRates.bw ?? 2);
+                                                const colorVal = selectedPricingBlock === b.name ? colorPrice : (blockRates.color ?? 5);
+                                                const duplexVal = selectedPricingBlock === b.name ? duplexPrice : (blockRates.duplex ?? 1.5);
+
+                                                return (
+                                                    <div 
+                                                        key={b.id} 
+                                                        onClick={() => {
+                                                            setSelectedPricingBlock(b.name);
+                                                            fetchPrices(b.name);
+                                                        }}
+                                                        className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                                                            selectedPricingBlock === b.name
+                                                                ? "bg-sky-50 border-sky-300 shadow-sm"
+                                                                : "bg-slate-50 border-slate-200 hover:bg-slate-100/80"
+                                                        }`}
+                                                    >
+                                                        <div>
+                                                            <span className="font-black text-slate-800 text-sm block">{b.name}</span>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase">{b.college || "KLU"}</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700">
+                                                                B&W: <strong className="text-slate-900">₹{bwVal}</strong>
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800">
+                                                                Color: <strong className="text-amber-900">₹{colorVal}</strong>
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-cyan-100 text-cyan-800">
+                                                                Both Sides: <strong className="text-cyan-900">₹{duplexVal}</strong>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-200/80 text-slate-700">
-                                                            B&W: <strong className="text-slate-900">₹{selectedPricingBlock === b.name ? bwPrice : 2}</strong>
-                                                        </span>
-                                                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800">
-                                                            Color: <strong className="text-amber-900">₹{selectedPricingBlock === b.name ? colorPrice : 5}</strong>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                     <div className="mt-6 p-4 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-800 font-semibold">
