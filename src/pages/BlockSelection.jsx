@@ -6,6 +6,7 @@ import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
+import BarcodeScannerModal from "../components/BarcodeScannerModal";
 import blocksVideo from "../assets/blocks.mp4";
 import collectVideo from "../assets/collect.mp4";
 import inVideo from "../assets/in.mp4";
@@ -942,13 +943,14 @@ function BlockSelection() {
                                 <motion.div
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (!userId) {
                                             showAlert("Not Logged In", "Please log in to release your prints.", "warning");
                                             return;
                                         }
                                         setOtpError("");
-                                        setShowBarcodeScanner(true);
+                                        await fetchPendingOrders();
+                                        setShowDirectOtpForm(true);
                                     }}
                                     className="glass-panel min-h-[160px] p-6 rounded-[24px] text-center cursor-pointer w-full border border-cyan-400/30 hover:border-cyan-300/60 transition-all duration-300 shadow-2xl shadow-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-5 relative overflow-hidden bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-purple-950/40"
                                 >
@@ -1046,13 +1048,21 @@ function BlockSelection() {
                                     </p>
                                 )}
 
-                                <div className="mt-4 flex gap-3">
+                                <div className="mt-4 flex flex-wrap gap-2.5">
                                     <button
                                         onClick={handleDirectRelease}
                                         disabled={releasing || pendingOrders.length === 0}
                                         className="h-10 px-5 rounded-xl bg-gradient-to-r from-amber-300 to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {releasing ? "Releasing..." : "Verify & Print"} <ArrowRight className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBarcodeScanner(true)}
+                                        className="h-10 px-4 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                                    >
+                                        <ScanLine className="w-4 h-4" />
+                                        <span>Scan Camera QR</span>
                                     </button>
                                 </div>
                             </motion.div>
@@ -1502,6 +1512,13 @@ function BlockSelection() {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Camera Barcode Scanner Modal */}
+            <BarcodeScannerModal
+                isOpen={showBarcodeScanner}
+                onClose={() => setShowBarcodeScanner(false)}
+                onResult={handleScannedRelease}
+            />
         </main>
     );
 }
