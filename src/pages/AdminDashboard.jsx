@@ -488,21 +488,23 @@ function AdminDashboard() {
     };
 
     const savePrices = async () => {
-        const secret = window.prompt("Enter Admin/Manager Security Key to update prices:");
-        if (!secret) return;
+        if (loggedInAdminRole === "MANAGER") {
+            const secret = window.prompt("Enter Manager Security Key to update prices:");
+            if (!secret) return;
 
-        try {
-            const adminId = localStorage.getItem("adminId");
-            const verifyResponse = await api.post("/admin/verify-secret", null, {
-                params: { adminId, secret }
-            });
-            if (!verifyResponse.data.success) {
-                showAlert("Error", "Invalid Security Key", "error");
+            try {
+                const adminId = localStorage.getItem("adminId");
+                const verifyResponse = await api.post("/admin/verify-secret", null, {
+                    params: { adminId, secret }
+                });
+                if (!verifyResponse.data.success) {
+                    showAlert("Error", "Invalid Security Key", "error");
+                    return;
+                }
+            } catch (err) {
+                showAlert("Error", "Error verifying security key", "error");
                 return;
             }
-        } catch (err) {
-            showAlert("Error", "Error verifying security key", "error");
-            return;
         }
 
         try {
