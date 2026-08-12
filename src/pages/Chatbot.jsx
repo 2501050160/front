@@ -27,6 +27,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 const INITIAL_QUICK_REPLIES = [
   { id: "upload", label: "Upload Document", icon: Upload, emoji: "📤" },
@@ -328,10 +329,21 @@ export default function Chatbot() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${theme === "dark" ? "bg-[#0b141a] text-slate-100" : "bg-slate-100 text-slate-900"} font-sans flex flex-col items-center justify-center p-0 sm:p-4 md:p-6`}>
-      
+    <div className={`min-h-screen transition-colors duration-300 ${theme === "dark" ? "bg-[#0b141a] text-slate-100" : "bg-slate-100 text-slate-900"} font-sans flex flex-col items-center justify-start p-3 sm:p-6 w-full`}>
+      <div className="w-full max-w-4xl mb-4">
+        <Navbar
+          title="AI Assistant"
+          subtitle="Smart Print Support"
+          actions={[
+            { label: "New Print", path: "/dashboard" },
+            { label: "My Orders", path: "/my-orders" },
+            { label: "Locations", path: "/blocks" }
+          ]}
+        />
+      </div>
+
       {/* Outer Shell Card */}
-      <div className={`w-full max-w-4xl h-[100vh] sm:h-[90vh] flex flex-col rounded-none sm:rounded-3xl shadow-2xl overflow-hidden border ${theme === "dark" ? "bg-[#111b21] border-white/10" : "bg-white border-slate-200"}`}>
+      <div className={`w-full max-w-4xl h-[85vh] sm:h-[80vh] flex flex-col rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border ${theme === "dark" ? "bg-[#111b21] border-white/10" : "bg-white border-slate-200"}`}>
         
         {/* Chatbot Top Navigation Bar */}
         <header className={`px-4 py-3.5 flex items-center justify-between border-b ${theme === "dark" ? "bg-[#202c33] border-white/10" : "bg-emerald-700 text-white border-emerald-800"}`}>

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api, { getPdfDownloadUrl } from "../services/api";
 import CustomModal from "../components/CustomModal";
@@ -7,6 +7,8 @@ import Navbar from "../components/Navbar";
 
 function AdminDashboard() {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabFromUrl = searchParams.get("tab");
 
     const [coupons, setCoupons] = useState([]);
     const [allOrders, setOrders] = useState([]);
@@ -30,7 +32,7 @@ function AdminDashboard() {
     const [selectedCoupons, setSelectedCoupons] = useState([]);
     const [allSupportTickets, setSupportTickets] = useState([]);
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
-    const [activeTab, setActiveTab] = useState("queue");
+    const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
 
     // Dynamic settings & blocks
     const [allBlocks, setBlocks] = useState([]);
@@ -1602,6 +1604,54 @@ function AdminDashboard() {
         }
     };
 
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        setSearchParams({ tab: tabId });
+        if (tabId === "settings") {
+            fetchPrices(selectedPricingBlock);
+            fetchCoupons();
+            fetchBlocks();
+            fetchRewards();
+            fetchSystemSettings();
+        } else if (tabId === "blocks") {
+            fetchBlocks();
+            fetchSuspendedColleges();
+        } else if (tabId === "printers") {
+            fetchPrinters();
+            fetchBlocks();
+        } else if (tabId === "colleges") {
+            fetchBlocks();
+            fetchSuspendedColleges();
+            fetchCollegeConfigs();
+        } else if (tabId === "users") {
+            fetchUsers();
+        } else if (tabId === "support") {
+            fetchSupportTickets();
+        } else if (tabId === "frontend") {
+            fetchSystemSettings();
+            fetchSections();
+        } else if (tabId === "system") {
+            fetchSystemSettings();
+            fetchBlocks();
+            fetchPrinters();
+        } else if (tabId === "subadmins") {
+            fetchSubAdmins();
+            fetchManagerLogs();
+        } else if (tabId === "notifications") {
+            fetchNotifications();
+        } else if (tabId === "sql") {
+            setSqlResult(null);
+            setSqlError("");
+        }
+    };
+
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab && tab !== activeTab) {
+            handleTabChange(tab);
+        }
+    }, [searchParams]);
+
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-col md:flex-row min-h-screen">
             {/* Left Navigation Bar for Admin Panel */}
@@ -1625,7 +1675,7 @@ function AdminDashboard() {
                             </p>
                             <div className="space-y-1">
                                 <button
-                                    onClick={() => navigate("/admin/queue")}
+                                    onClick={() => handleTabChange("queue")}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
                                 >
                                     <span className="text-base">📋</span>
@@ -1634,28 +1684,28 @@ function AdminDashboard() {
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <>
                                         <button
-                                            onClick={() => navigate("/admin/users")}
+                                            onClick={() => handleTabChange("users")}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
                                         >
                                             <span className="text-base">👥</span>
                                             <span>Users</span>
                                         </button>
                                         <button
-                                            onClick={() => navigate("/admin/analytics")}
+                                            onClick={() => handleTabChange("analytics")}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
                                         >
                                             <span className="text-base">📊</span>
                                             <span>Analytics</span>
                                         </button>
                                         <button
-                                            onClick={() => navigate("/admin/settings")}
+                                            onClick={() => handleTabChange("settings")}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
                                         >
                                             <span className="text-base">⚙️</span>
                                             <span>Settings</span>
                                         </button>
                                         <button
-                                            onClick={() => navigate("/printer-settings")}
+                                            onClick={() => handleTabChange("printers")}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
                                         >
                                             <span className="text-base">🖨️</span>
@@ -1680,7 +1730,7 @@ function AdminDashboard() {
                             </p>
                             <div className="space-y-1">
                                 <button
-                                    onClick={() => setActiveTab("queue")}
+                                    onClick={() => handleTabChange("queue")}
                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "queue"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1692,14 +1742,7 @@ function AdminDashboard() {
                                 </button>
 
                                 <button
-                                    onClick={() => {
-                                        setActiveTab("settings");
-                                        fetchPrices(selectedPricingBlock);
-                                        fetchCoupons();
-                                        fetchBlocks();
-                                        fetchRewards();
-                                        fetchSystemSettings();
-                                    }}
+                                    onClick={() => handleTabChange("settings")}
                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "settings"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1711,7 +1754,7 @@ function AdminDashboard() {
                                 </button>
 
                                 <button
-                                    onClick={() => setActiveTab("whatsapp")}
+                                    onClick={() => handleTabChange("whatsapp")}
                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "whatsapp"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1724,11 +1767,7 @@ function AdminDashboard() {
 
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <button
-                                        onClick={() => {
-                                            setActiveTab("blocks");
-                                            fetchBlocks();
-                                            fetchSuspendedColleges();
-                                        }}
+                                        onClick={() => handleTabChange("blocks")}
                                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "blocks"
                                                 ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1741,11 +1780,7 @@ function AdminDashboard() {
                                 )}
 
                                 <button
-                                    onClick={() => {
-                                        setActiveTab("printers");
-                                        fetchPrinters();
-                                        fetchBlocks();
-                                    }}
+                                    onClick={() => handleTabChange("printers")}
                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "printers"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1758,12 +1793,7 @@ function AdminDashboard() {
 
                                 {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                                     <button
-                                        onClick={() => {
-                                            setActiveTab("colleges");
-                                            fetchBlocks();
-                                            fetchSuspendedColleges();
-                                            fetchCollegeConfigs();
-                                        }}
+                                        onClick={() => handleTabChange("colleges")}
                                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "colleges"
                                                 ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1776,10 +1806,7 @@ function AdminDashboard() {
                                 )}
 
                                 <button
-                                    onClick={() => {
-                                        setActiveTab("users");
-                                        fetchUsers();
-                                    }}
+                                    onClick={() => handleTabChange("users")}
                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "users"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1793,10 +1820,7 @@ function AdminDashboard() {
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <>
                                         <button
-                                            onClick={() => {
-                                                setActiveTab("support");
-                                                fetchSupportTickets();
-                                            }}
+                                            onClick={() => handleTabChange("support")}
                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "support"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1807,11 +1831,7 @@ function AdminDashboard() {
                                             <span>Support Tickets</span>
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setActiveTab("frontend");
-                                                fetchSystemSettings();
-                                                fetchSections();
-                                            }}
+                                            onClick={() => handleTabChange("frontend")}
                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "frontend"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1822,12 +1842,7 @@ function AdminDashboard() {
                                             <span>Frontend Manager</span>
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setActiveTab("system");
-                                                fetchSystemSettings();
-                                                fetchBlocks();
-                                                fetchPrinters();
-                                            }}
+                                            onClick={() => handleTabChange("system")}
                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "system"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1838,11 +1853,7 @@ function AdminDashboard() {
                                             <span>System Config</span>
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setActiveTab("subadmins");
-                                                fetchSubAdmins();
-                                                fetchManagerLogs();
-                                            }}
+                                            onClick={() => handleTabChange("subadmins")}
                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "subadmins"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1853,10 +1864,7 @@ function AdminDashboard() {
                                             <span>Manage Staff</span>
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setActiveTab("notifications");
-                                                fetchNotifications();
-                                            }}
+                                            onClick={() => handleTabChange("notifications")}
                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "notifications"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
@@ -1871,11 +1879,7 @@ function AdminDashboard() {
 
                                 {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                                     <button
-                                        onClick={() => {
-                                            setActiveTab("sql");
-                                            setSqlResult(null);
-                                            setSqlError("");
-                                        }}
+                                        onClick={() => handleTabChange("sql")}
                                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "sql"
                                                 ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"

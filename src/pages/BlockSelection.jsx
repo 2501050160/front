@@ -5,6 +5,7 @@ import api from "../services/api";
 import { clearUserSession } from "../services/auth";
 import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
+import Navbar from "../components/Navbar";
 import blocksVideo from "../assets/blocks.mp4";
 import collectVideo from "../assets/collect.mp4";
 import inVideo from "../assets/in.mp4";
@@ -892,20 +893,28 @@ function BlockSelection() {
 
             <div className="w-full max-w-[1600px] mx-auto space-y-8 relative z-10 flex-1 flex flex-col">
                 
-                {/* HEADER (Full Width, Stripe/Vercel navbar) */}
-                <motion.header 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="w-full py-4 px-6 rounded-2xl flex items-center justify-between gap-6 relative z-50 border border-white/10 bg-white/10 backdrop-blur-2xl shadow-2xl shadow-slate-950/20"
-                >
+                {/* Persistent Top Navbar with Quick Links */}
+                <Navbar
+                    title="Campus Locations"
+                    subtitle="Select a Printing Station"
+                    badge={selectedCollege ? `${selectedCollege} Campus` : "All Campuses"}
+                    actions={[
+                        { label: "New Print", path: "/dashboard" },
+                        { label: "My Orders", path: "/my-orders" },
+                        { label: "Scan QR", path: "/scan-to-print" }
+                    ]}
+                />
+
+                {/* Search & Filter Bar */}
+                <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl glass-panel border border-white/10">
                     <div className="flex items-center gap-3">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#37E67D] animate-pulse" />
-                            <span className="text-[12px] font-extrabold uppercase tracking-widest text-cyan-100">
-                            {selectedCollege ? `Block Selection • ${selectedCollege}` : "College Selection • Pick a Campus"}
+                        <span className="text-[12px] font-extrabold uppercase tracking-widest text-cyan-100">
+                            {selectedCollege ? `Active Campus • ${selectedCollege}` : "All Campuses"}
                         </span>
                     </div>
 
-                    <div className="hidden md:flex items-center flex-1 max-w-md relative">
+                    <div className="flex items-center flex-1 max-w-md relative">
                         <Search className="w-4 h-4 text-slate-400 absolute left-3.5" />
                         <input 
                             type="text" 
@@ -916,62 +925,17 @@ function BlockSelection() {
                         />
                     </div>
 
-                    {/* Profile & Dropdown Sign Out */}
-                    <div className="flex items-center gap-3 relative">
-                        <button
-                            onClick={() => navigate("/my-orders")}
-                            className="px-4 py-2 h-10 rounded-xl bg-white/12 border border-white/15 text-white hover:border-cyan-200/50 hover:bg-white/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                        >
-                            View Orders
-                        </button>
-
-                        <button
-                            onClick={() => setShowNotifPanel(true)}
-                            className="relative w-10 h-10 rounded-xl bg-white/12 border border-white/15 flex items-center justify-center text-cyan-50 hover:text-white hover:border-cyan-200/50 transition-colors cursor-pointer"
-                        >
-                            <Bell className="w-4 h-4" />
-                            {notifications.length > 0 && (
-                                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF5C7A] animate-pulse" />
-                            )}
-                        </button>
-
-                        <div className="flex items-center gap-3 pl-3 border-l border-white/15 relative z-50">
-                            <button 
-                                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                                className="flex items-center gap-2 text-left hover:opacity-90 transition-all bg-white/12 p-1.5 rounded-xl border border-white/15"
-                            >
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#6C63FF] to-[#9F6BFF] flex items-center justify-center font-bold text-xs text-white shadow-md">
-                                    {userName.substring(0, 2).toUpperCase()}
-                                </div>
-                                <span className="hidden sm:block text-xs font-bold text-white">{userName}</span>
-                                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            <AnimatePresence>
-                                {showProfileDropdown && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                        className="absolute right-0 top-12 z-[9999] w-48 rounded-xl bg-slate-950 border border-white/10 p-2 shadow-2xl"
-                                    >
-                                        <div className="p-2 border-b border-white/5 text-left mb-1">
-                                            <p className="text-xs font-black text-white">{userName}</p>
-                                            <p className="text-[10px] text-slate-500 font-semibold truncate">{userEmail}</p>
-                                        </div>
-                                        <button 
-                                            onClick={logout}
-                                            className="w-full flex items-center gap-2 p-2 rounded-lg text-xs font-bold text-[#FF5C7A] hover:bg-[#FF5C7A]/10 text-left transition-all"
-                                        >
-                                            <LogOut className="w-4 h-4" /> Sign Out
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-                </motion.header>
+                    <button
+                        onClick={() => setShowNotifPanel(true)}
+                        className="relative px-3.5 py-2 rounded-xl bg-white/12 border border-white/15 flex items-center gap-2 text-cyan-50 hover:text-white hover:border-cyan-200/50 text-xs font-bold transition-all cursor-pointer"
+                    >
+                        <Bell className="w-4 h-4" />
+                        <span className="hidden sm:inline">Alerts</span>
+                        {notifications.length > 0 && (
+                            <span className="w-2 h-2 rounded-full bg-[#FF5C7A] animate-pulse" />
+                        )}
+                    </button>
+                </div>
 
                 {/* HERO SECTION & INTERACTIVE CAMPUS MAP */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">

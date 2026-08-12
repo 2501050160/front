@@ -110,12 +110,12 @@ function App() {
           <Route path="/referrals" element={<Referrals />} />
           <Route path="/admin" element={<AdminDashboard />} />
 
-          {/* New Admin Operations Subroutes */}
-          <Route path="/admin/queue" element={<QueueManagement />} />
-          <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/analytics" element={<Analytics />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          <Route path="/admin/whatsapp" element={<WhatsAppOrders />} />
+          {/* Admin Operations Subroutes mapped to AdminDashboard with persistent Navbar & Sidebar */}
+          <Route path="/admin/queue" element={<Navigate to="/admin?tab=queue" replace />} />
+          <Route path="/admin/users" element={<Navigate to="/admin?tab=users" replace />} />
+          <Route path="/admin/analytics" element={<Navigate to="/admin?tab=analytics" replace />} />
+          <Route path="/admin/settings" element={<Navigate to="/admin?tab=settings" replace />} />
+          <Route path="/admin/whatsapp" element={<Navigate to="/admin?tab=whatsapp" replace />} />
 
           <Route path="/printer-settings" element={<PrinterSettings />} />
           <Route path="/display-panel" element={<DisplayPanel />} />
