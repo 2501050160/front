@@ -34,6 +34,7 @@ function AdminDashboard() {
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
     const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
     const [quickLinksOpen, setQuickLinksOpen] = useState(true);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
     // Dynamic settings & blocks
     const [allBlocks, setBlocks] = useState([]);
@@ -1656,269 +1657,368 @@ function AdminDashboard() {
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-col md:flex-row min-h-screen">
             {/* Left Navigation Bar for Admin Panel */}
-            <aside className="w-full md:w-64 shrink-0 bg-slate-900/95 border-r border-slate-800 text-white flex flex-col justify-between sticky top-0 md:h-screen z-40 backdrop-blur-xl shadow-xl">
+            <aside className={`${isSidebarCollapsed ? "w-full md:w-20" : "w-full md:w-64"} shrink-0 bg-slate-900/95 border-r border-slate-800 text-white flex flex-col justify-between sticky top-0 md:h-screen z-40 backdrop-blur-xl shadow-xl transition-all duration-300`}>
                 <div>
-                    <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                    <div className={`p-4 border-b border-slate-800 flex items-center ${isSidebarCollapsed ? "justify-center flex-col gap-2" : "justify-between"}`}>
                         <div className="flex items-center gap-3">
-                            <div className="brand-mark brand-mark-sm bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black">CP</div>
-                            <div>
-                                <h2 className="text-sm font-black text-white leading-tight">Admin Portal</h2>
-                                <span className="text-[10px] font-bold text-sky-400 uppercase">{loggedInAdminRole}</span>
-                            </div>
+                            <div className="brand-mark brand-mark-sm bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black cursor-pointer" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} title="Toggle Navigation (☰)">CP</div>
+                            {!isSidebarCollapsed && (
+                                <div>
+                                    <h2 className="text-sm font-black text-white leading-tight">Admin Portal</h2>
+                                    <span className="text-[10px] font-bold text-sky-400 uppercase">{loggedInAdminRole}</span>
+                                </div>
+                            )}
                         </div>
+                        {/* 3-lines Hamburger Toggle Button */}
+                        <button
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm flex items-center justify-center group"
+                            title={isSidebarCollapsed ? "Expand Side Navigation (☰)" : "Collapse Side Navigation (☰)"}
+                            aria-label="Toggle Side Navigation"
+                        >
+                            <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
+                                <span className="w-4 h-0.5 bg-slate-300 rounded-full group-hover:bg-cyan-400 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-300 rounded-full group-hover:bg-cyan-400 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-300 rounded-full group-hover:bg-cyan-400 transition-all"></span>
+                            </div>
+                        </button>
                     </div>
 
-                    <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+                    <div className="p-2 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
                         {/* Quick Links Dropdown Section */}
-                        <div className="bg-slate-900/60 rounded-2xl p-2 border border-slate-800/80">
-                            <button
-                                onClick={() => setQuickLinksOpen(!quickLinksOpen)}
-                                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-400 hover:text-amber-300 hover:bg-slate-800/60 uppercase tracking-wider transition-all cursor-pointer"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <span className="text-sm">⚡</span>
-                                    <span>QUICK LINKS</span>
-                                </span>
-                                <motion.span
-                                    animate={{ rotate: quickLinksOpen ? 180 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="text-[10px] text-slate-400"
-                                >
-                                    ▼
-                                </motion.span>
-                            </button>
-
-                            <AnimatePresence initial={false}>
-                                {quickLinksOpen && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="overflow-hidden space-y-1 mt-1.5"
+                        <div className={`bg-slate-900/60 rounded-2xl p-2 border border-slate-800/80 ${isSidebarCollapsed ? "text-center" : ""}`}>
+                            {!isSidebarCollapsed ? (
+                                <>
+                                    <button
+                                        onClick={() => setQuickLinksOpen(!quickLinksOpen)}
+                                        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-400 hover:text-amber-300 hover:bg-slate-800/60 uppercase tracking-wider transition-all cursor-pointer"
                                     >
-                                        <button
-                                            onClick={() => handleTabChange("queue")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "queue"
-                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                            }`}
+                                        <span className="flex items-center gap-2">
+                                            <span className="text-sm">⚡</span>
+                                            <span>QUICK LINKS</span>
+                                        </span>
+                                        <motion.span
+                                            animate={{ rotate: quickLinksOpen ? 180 : 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="text-[10px] text-slate-400"
                                         >
-                                            <span className="text-base">📋</span>
-                                            <span>Queue Kanban</span>
-                                        </button>
+                                            ▼
+                                        </motion.span>
+                                    </button>
 
-                                        <button
-                                            onClick={() => handleTabChange("users")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "users"
-                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                            }`}
-                                        >
-                                            <span className="text-base">👥</span>
-                                            <span>Users</span>
-                                        </button>
+                                    <AnimatePresence initial={false}>
+                                        {quickLinksOpen && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="overflow-hidden space-y-1 mt-1.5"
+                                            >
+                                                <button
+                                                    onClick={() => handleTabChange("queue")}
+                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                        activeTab === "queue"
+                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                    }`}
+                                                >
+                                                    <span className="text-base">📋</span>
+                                                    <span>Queue Kanban</span>
+                                                </button>
 
-                                        <button
-                                            onClick={() => handleTabChange("analytics")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "analytics"
-                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                            }`}
-                                        >
-                                            <span className="text-base">📊</span>
-                                            <span>Analytics</span>
-                                        </button>
+                                                <button
+                                                    onClick={() => handleTabChange("users")}
+                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                        activeTab === "users"
+                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                    }`}
+                                                >
+                                                    <span className="text-base">👥</span>
+                                                    <span>Users</span>
+                                                </button>
 
-                                        <button
-                                            onClick={() => handleTabChange("settings")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "settings"
-                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                            }`}
-                                        >
-                                            <span className="text-base">⚙️</span>
-                                            <span>Settings</span>
-                                        </button>
+                                                <button
+                                                    onClick={() => handleTabChange("analytics")}
+                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                        activeTab === "analytics"
+                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                    }`}
+                                                >
+                                                    <span className="text-base">📊</span>
+                                                    <span>Analytics</span>
+                                                </button>
 
-                                        <button
-                                            onClick={() => handleTabChange("printers")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                                activeTab === "printers"
-                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
-                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
-                                            }`}
-                                        >
-                                            <span className="text-base">🖨️</span>
-                                            <span>Printer Settings</span>
-                                        </button>
+                                                <button
+                                                    onClick={() => handleTabChange("settings")}
+                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                        activeTab === "settings"
+                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                    }`}
+                                                >
+                                                    <span className="text-base">⚙️</span>
+                                                    <span>Settings</span>
+                                                </button>
 
-                                        <button
-                                            onClick={() => navigate("/display-panel")}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
-                                        >
-                                            <span className="text-base">📺</span>
-                                            <span>Display Panel</span>
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                                <button
+                                                    onClick={() => handleTabChange("printers")}
+                                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                        activeTab === "printers"
+                                                            ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                            : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                                    }`}
+                                                >
+                                                    <span className="text-base">🖨️</span>
+                                                    <span>Printer Settings</span>
+                                                </button>
+
+                                                <button
+                                                    onClick={() => navigate("/display-panel")}
+                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                                >
+                                                    <span className="text-base">📺</span>
+                                                    <span>Display Panel</span>
+                                                </button>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </>
+                            ) : (
+                                <div className="space-y-1.5 flex flex-col items-center">
+                                    <span className="text-[10px] font-black text-amber-400 block mb-0.5">⚡</span>
+                                    <button
+                                        onClick={() => handleTabChange("queue")}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                            activeTab === "queue"
+                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                        title="Queue Kanban"
+                                    >
+                                        📋
+                                    </button>
+                                    <button
+                                        onClick={() => handleTabChange("users")}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                            activeTab === "users"
+                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                        title="Users Management"
+                                    >
+                                        👥
+                                    </button>
+                                    <button
+                                        onClick={() => handleTabChange("analytics")}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                            activeTab === "analytics"
+                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                        title="Analytics & Reports"
+                                    >
+                                        📊
+                                    </button>
+                                    <button
+                                        onClick={() => handleTabChange("settings")}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                            activeTab === "settings"
+                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                        title="Settings & Pricing"
+                                    >
+                                        ⚙️
+                                    </button>
+                                    <button
+                                        onClick={() => handleTabChange("printers")}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-base transition-all cursor-pointer ${
+                                            activeTab === "printers"
+                                                ? "bg-sky-600 text-white shadow-md shadow-sky-600/30"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                        title="Printer Settings"
+                                    >
+                                        🖨️
+                                    </button>
+                                    <button
+                                        onClick={() => navigate("/display-panel")}
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center text-base text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer"
+                                        title="Live Display Panel"
+                                    >
+                                        📺
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Management Sections */}
                         <div>
-                            <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                <span>🗂️</span> MANAGEMENT PANELS
-                            </p>
-                            <div className="space-y-1">
+                            {!isSidebarCollapsed && (
+                                <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                    <span>🗂️</span> MANAGEMENT PANELS
+                                </p>
+                            )}
+                            <div className={`space-y-1 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
                                 <button
                                     onClick={() => handleTabChange("queue")}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "queue"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
+                                    title={isSidebarCollapsed ? "Queue & Analytics" : undefined}
                                 >
                                     <span className="text-base">📋</span>
-                                    <span>Queue & Analytics</span>
+                                    {!isSidebarCollapsed && <span>Queue & Analytics</span>}
                                 </button>
 
                                 <button
                                     onClick={() => handleTabChange("settings")}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "settings"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
+                                    title={isSidebarCollapsed ? "Pricing & Coupons" : undefined}
                                 >
                                     <span className="text-base">🏷️</span>
-                                    <span>Pricing & Coupons</span>
+                                    {!isSidebarCollapsed && <span>Pricing & Coupons</span>}
                                 </button>
 
                                 <button
                                     onClick={() => handleTabChange("whatsapp")}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "whatsapp"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
+                                    title={isSidebarCollapsed ? "WhatsApp Orders" : undefined}
                                 >
                                     <span className="text-base">💬</span>
-                                    <span>WhatsApp Orders</span>
+                                    {!isSidebarCollapsed && <span>WhatsApp Orders</span>}
                                 </button>
 
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <button
                                         onClick={() => handleTabChange("blocks")}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "blocks"
                                                 ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                         }`}
+                                        title={isSidebarCollapsed ? "Manage Blocks" : undefined}
                                     >
                                         <span className="text-base">🏛️</span>
-                                        <span>Manage Blocks</span>
+                                        {!isSidebarCollapsed && <span>Manage Blocks</span>}
                                     </button>
                                 )}
 
                                 <button
                                     onClick={() => handleTabChange("printers")}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "printers"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
+                                    title={isSidebarCollapsed ? "Manage Printers" : undefined}
                                 >
                                     <span className="text-base">🖨️</span>
-                                    <span>Manage Printers</span>
+                                    {!isSidebarCollapsed && <span>Manage Printers</span>}
                                 </button>
 
                                 {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                                     <button
                                         onClick={() => handleTabChange("colleges")}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "colleges"
                                                 ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                         }`}
+                                        title={isSidebarCollapsed ? "College Management" : undefined}
                                     >
                                         <span className="text-base">🏫</span>
-                                        <span>College Management</span>
+                                        {!isSidebarCollapsed && <span>College Management</span>}
                                     </button>
                                 )}
 
                                 <button
                                     onClick={() => handleTabChange("users")}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                         activeTab === "users"
                                             ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                             : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                     }`}
+                                    title={isSidebarCollapsed ? "User Moderation" : undefined}
                                 >
                                     <span className="text-base">👥</span>
-                                    <span>User Moderation</span>
+                                    {!isSidebarCollapsed && <span>User Moderation</span>}
                                 </button>
 
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <>
                                         <button
                                             onClick={() => handleTabChange("support")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "support"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                     : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                             }`}
+                                            title={isSidebarCollapsed ? "Support Tickets" : undefined}
                                         >
                                             <span className="text-base">🎫</span>
-                                            <span>Support Tickets</span>
+                                            {!isSidebarCollapsed && <span>Support Tickets</span>}
                                         </button>
                                         <button
                                             onClick={() => handleTabChange("frontend")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "frontend"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                     : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                             }`}
+                                            title={isSidebarCollapsed ? "Frontend Manager" : undefined}
                                         >
                                             <span className="text-base">🎨</span>
-                                            <span>Frontend Manager</span>
+                                            {!isSidebarCollapsed && <span>Frontend Manager</span>}
                                         </button>
                                         <button
                                             onClick={() => handleTabChange("system")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "system"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                     : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                             }`}
+                                            title={isSidebarCollapsed ? "System Config" : undefined}
                                         >
                                             <span className="text-base">⚙️</span>
-                                            <span>System Config</span>
+                                            {!isSidebarCollapsed && <span>System Config</span>}
                                         </button>
                                         <button
                                             onClick={() => handleTabChange("subadmins")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "subadmins"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                     : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                             }`}
+                                            title={isSidebarCollapsed ? "Manage Staff" : undefined}
                                         >
                                             <span className="text-base">🔑</span>
-                                            <span>Manage Staff</span>
+                                            {!isSidebarCollapsed && <span>Manage Staff</span>}
                                         </button>
                                         <button
                                             onClick={() => handleTabChange("notifications")}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                                 activeTab === "notifications"
                                                     ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                     : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                             }`}
+                                            title={isSidebarCollapsed ? "Notifications" : undefined}
                                         >
                                             <span className="text-base">🔔</span>
-                                            <span>Notifications</span>
+                                            {!isSidebarCollapsed && <span>Notifications</span>}
                                         </button>
                                     </>
                                 )}
@@ -1926,14 +2026,15 @@ function AdminDashboard() {
                                 {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                                     <button
                                         onClick={() => handleTabChange("sql")}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                        className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
                                             activeTab === "sql"
                                                 ? "bg-sky-600 text-white font-black shadow-md shadow-sky-600/20"
                                                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                         }`}
+                                        title={isSidebarCollapsed ? "SQL Terminal" : undefined}
                                     >
                                         <span className="text-base">💻</span>
-                                        <span>SQL Terminal</span>
+                                        {!isSidebarCollapsed && <span>SQL Terminal</span>}
                                     </button>
                                 )}
                             </div>
@@ -1941,16 +2042,19 @@ function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="p-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                    <div className="truncate pr-2">
-                        <p className="font-black text-white truncate">{loggedInAdminUser}</p>
-                        <p className="text-[10px] text-slate-400 uppercase">{loggedInAdminCollege}</p>
-                    </div>
+                <div className={`p-3 border-t border-slate-800 flex items-center ${isSidebarCollapsed ? "justify-center" : "justify-between"} text-xs`}>
+                    {!isSidebarCollapsed && (
+                        <div className="truncate pr-2">
+                            <p className="font-black text-white truncate">{loggedInAdminUser}</p>
+                            <p className="text-[10px] text-slate-400 uppercase">{loggedInAdminCollege}</p>
+                        </div>
+                    )}
                     <button
                         onClick={logout}
-                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white text-[11px] font-bold transition-all cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white text-[11px] font-bold transition-all cursor-pointer shrink-0"
+                        title="Sign Out"
                     >
-                        Sign Out
+                        {isSidebarCollapsed ? "🚪" : "Sign Out"}
                     </button>
                 </div>
             </aside>
@@ -1961,6 +2065,8 @@ function AdminDashboard() {
                     subtitle="Operations Control Panel"
                     badge="Stats refresh live every 3 seconds."
                     actions={[]}
+                    onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    isSidebarCollapsed={isSidebarCollapsed}
                 />
 
                 {/* Queue & Analytics Tab */}

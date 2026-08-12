@@ -3,7 +3,18 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { clearUserSession } from "../services/auth";
 
-function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], activeTab, onTabChange }) {
+function Navbar({ 
+    title, 
+    subtitle, 
+    actions = [], 
+    badge, 
+    badgeAction, 
+    tabs = [], 
+    activeTab, 
+    onTabChange,
+    onToggleSidebar,
+    isSidebarCollapsed = false
+}) {
     const navigate = useNavigate();
     const location = useLocation();
     const [profileOpen, setProfileOpen] = useState(false);
@@ -34,8 +45,22 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
         >
             {/* Top Row: Title, Subtitle, Badge, Tabs, Actions & Profile */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 w-full">
-                {/* Left Side: Brand mark & Titles */}
+                {/* Left Side: 3-line Hamburger Menu Toggle + Brand mark & Titles */}
                 <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                    {onToggleSidebar && (
+                        <button
+                            onClick={onToggleSidebar}
+                            className="p-2.5 rounded-xl bg-white/90 hover:bg-white text-slate-800 hover:text-sky-600 border border-slate-200/90 hover:border-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center active:scale-95 group"
+                            title={isSidebarCollapsed ? "Expand Side Navigation (☰)" : "Collapse Side Navigation (☰)"}
+                            aria-label="Toggle Side Navigation"
+                        >
+                            <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
+                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                            </div>
+                        </button>
+                    )}
                     {title && <div className="brand-mark brand-mark-sm">CP</div>}
                     <div>
                         {subtitle && (
