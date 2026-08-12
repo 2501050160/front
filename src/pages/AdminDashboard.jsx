@@ -2011,6 +2011,61 @@ function AdminDashboard() {
                                 </button>
                             ))
                         )}
+                        {activeTab === "settings" && (
+                            [
+                                { id: "pricing", label: "Price Settings", icon: "💵", desc: "Rate Configuration" },
+                                { id: "blocks", label: "Manage Blocks", icon: "🏛️", desc: "Campus Locations" },
+                                { id: "coupon-gen", label: "Coupon Generator", icon: "🎟️", desc: "Create Discounts" },
+                                { id: "active-coupons", label: "Active Coupons", icon: "🏷️", desc: `${coupons.length} Active` },
+                                { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Rewards Program" },
+                                { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", desc: `${rewards.length} Active` },
+                                { id: "referrals", label: "Refer & Earn", icon: "👥", desc: "Referral Rules" }
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => setPricingSubTab(sub.id)}
+                                    className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
+                                        pricingSubTab === sub.id
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${pricingSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
+                        {(activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers") && (
+                            [
+                                { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length} Campuses` },
+                                ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "add-college", label: "Add New College", icon: "➕", desc: "Register Campus" }] : []),
+                                { id: "all-blocks", label: "Block Directory", icon: "🏛️", desc: `${blocks.length} Configured` },
+                                { id: "add-block", label: "Add New Block", icon: "➕", desc: "Create Location" },
+                                { id: "overview", label: "Block Overview", icon: "📊", desc: "Terminal Health" },
+                                { id: "printers-list", label: "Printers Fleet", icon: "🖨️", desc: `${getRoleFilteredPrinters().length} Online/Configured` },
+                                { id: "add-printer", label: "Add Printer", icon: "➕", desc: "Connect Station" },
+                                { id: "paper-stock", label: "Paper Stock", icon: "📄", desc: "Trays & Sheets" },
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    onClick={() => setCollegesSubTab(sub.id)}
+                                    className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
+                                        collegesSubTab === sub.id
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${collegesSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
                         {activeTab === "frontend" && (
                             [
                                 { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
@@ -2999,36 +3054,6 @@ function AdminDashboard() {
                 {/* Pricing & Coupons Tab */}
                 {activeTab === "settings" && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Pricing & Coupons — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "pricing", label: "Price Settings", icon: "💵", desc: "Rate Configuration" },
-                                    { id: "blocks", label: "Manage Blocks", icon: "🏛️", desc: "Campus Locations" },
-                                    { id: "coupon-gen", label: "Coupon Generator", icon: "🎟️", desc: "Create Discounts" },
-                                    { id: "active-coupons", label: "Active Coupons", icon: "🏷️", desc: String(coupons.length) },
-                                    { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Rewards Program" },
-                                    { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", desc: String(rewards.length) },
-                                    { id: "referrals", label: "Refer & Earn", icon: "👥", desc: "Referral Rules" }
-                                ].map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setPricingSubTab(tab.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            pricingSubTab === tab.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{tab.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{tab.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${pricingSubTab === tab.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {tab.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* SUBPAGE 1: Price Settings (Rate Configuration) */}
                         {pricingSubTab === "pricing" && (
@@ -4073,37 +4098,6 @@ function AdminDashboard() {
                 {/* College & Campus Management Tab */}
                 {(activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers") && (
                     <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for College & Campus Management — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-2 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length} Campuses` },
-                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "add-college", label: "Add New College", icon: "➕", desc: "Register Campus" }] : []),
-                                    { id: "all-blocks", label: "Block Directory", icon: "🏛️", desc: `${blocks.length} Configured` },
-                                    { id: "add-block", label: "Add New Block", icon: "➕", desc: "Create Location" },
-                                    { id: "overview", label: "Block Overview", icon: "📊", desc: "Terminal Health" },
-                                    { id: "printers-list", label: "Printers Fleet", icon: "🖨️", desc: `${getRoleFilteredPrinters().length} Online/Configured` },
-                                    { id: "add-printer", label: "Add Printer", icon: "➕", desc: "Connect Station" },
-                                    { id: "paper-stock", label: "Paper Stock", icon: "📄", desc: "Trays & Sheets" },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setCollegesSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            collegesSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${collegesSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* SUBPAGE 1: Colleges Directory & Gateway */}
                         {collegesSubTab === "colleges-list" && (
