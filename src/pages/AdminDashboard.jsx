@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api, { getPdfDownloadUrl } from "../services/api";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
+import WhatsAppOrdersSection from "../components/admin/sections/WhatsAppOrdersSection";
 
 function AdminDashboard() {
     const navigate = useNavigate();
@@ -2119,6 +2120,7 @@ function AdminDashboard() {
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
+                                    { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
                                     { id: "kanban", label: "Queue Kanban", icon: "📊", desc: "Visual Board" },
                                     { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
                                     { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
@@ -2312,6 +2314,19 @@ function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </motion.section>
+                        )}
+
+                        {/* Subpage 2: WhatsApp Orders Directory */}
+                        {queueSubTab === "whatsapp" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <WhatsAppOrdersSection
+                                    showAlert={(msg, type) => setModalState({ isOpen: true, title: type === "error" ? "Error" : "Success", message: msg, type: type === "error" ? "danger" : "info", showConfirmButton: false })}
+                                    showConfirm={(msg, onConfirm) => setModalState({ isOpen: true, title: "Confirm Action", message: msg, type: "confirm", showConfirmButton: true, onConfirm })}
+                                />
+                            </motion.div>
                         )}
 
                         {/* Subpage 2: Queue Kanban Board */}
