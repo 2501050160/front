@@ -5,6 +5,8 @@ import api from "../services/api";
 import Navbar from "../components/Navbar";
 import { getStoredWalletBalance, getWalletBalance } from "../services/auth";
 import myOrdersVideo from "../assets/my_orders_video.mp4";
+import cloudprintLogo from "../assets/cloudprint_logo.png";
+import cloudprintWatermark from "../assets/cloudprint_watermark.png";
 import {
     ArrowRight,
     FileText,
@@ -609,10 +611,13 @@ function MyOrders() {
                 <div id="printable-invoice">
                     <div className="invoice-box">
                         <div className="invoice-watermark">{selectedInvoiceOrder.orderId}</div>
+                        <img src={cloudprintWatermark} className="invoice-logo-watermark" alt="Watermark" />
                         <div className="invoice-stamp">VERIFIED</div>
                         
                         <div className="invoice-header">
-                            <div className="invoice-logo">🖨️ CLOUD PRINT</div>
+                            <div className="invoice-logo flex items-center gap-2">
+                                <img src={cloudprintLogo} alt="CloudPrint" className="h-9 object-contain" />
+                            </div>
                             <div className="invoice-title">PAYMENT RECEIPT</div>
                         </div>
 
@@ -746,6 +751,17 @@ function MyOrders() {
                         color: rgba(0, 0, 0, 0.04);
                         pointer-events: none;
                         white-space: nowrap;
+                        z-index: 0;
+                    }
+                    .invoice-logo-watermark {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%) rotate(-12deg);
+                        width: 70%;
+                        max-width: 360px;
+                        opacity: 0.09;
+                        pointer-events: none;
                         z-index: 0;
                     }
                     .invoice-stamp {

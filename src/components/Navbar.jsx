@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { clearUserSession } from "../services/auth";
+import cloudprintLogo from "../assets/cloudprint_logo.png";
 
 function Navbar({ 
     title, 
@@ -61,7 +62,7 @@ function Navbar({
                             </div>
                         </button>
                     )}
-                    {title && <div className="brand-mark brand-mark-sm">CP</div>}
+                    {title && <img src={cloudprintLogo} alt="CloudPrint" className="h-9 object-contain shrink-0" />}
                     <div>
                         {subtitle && (
                             <p className="eyebrow !mb-0">{subtitle}</p>
