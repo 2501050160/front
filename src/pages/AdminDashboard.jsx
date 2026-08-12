@@ -48,6 +48,7 @@ function AdminDashboard() {
     const [subadminsSubTab, setSubadminsSubTab] = useState("staff-list");
     const [notificationsSubTab, setNotificationsSubTab] = useState("all-notifs");
     const [sqlSubTab, setSqlSubTab] = useState("console");
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
     // Dynamic settings & blocks
     const [allBlocks, setBlocks] = useState([]);
@@ -2064,6 +2065,46 @@ function AdminDashboard() {
                                 </button>
                             ))
                         )}
+                    </div>
+
+                    {/* Right Header Actions: Display Panel + Profile Sign Out Dropdown */}
+                    <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
+                        <button
+                            onClick={() => navigate("/display-panel")}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 hover:from-sky-500/20 hover:to-indigo-500/20 text-slate-800 hover:text-sky-700 border border-sky-200/80 hover:border-sky-300 text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+                            title="Open Live Display Panel"
+                        >
+                            <span className="text-base">📺</span>
+                            <span className="hidden sm:inline">Display Panel</span>
+                        </button>
+
+                        <div className="relative shrink-0">
+                            <button
+                                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-extrabold text-xs sm:text-sm border-2 border-white shadow-[0_4px_12px_rgba(99,102,241,0.25)] hover:shadow-[0_4px_16px_rgba(99,102,241,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer relative shrink-0"
+                                title="Admin Profile & Sign Out"
+                                style={{ minHeight: "36px" }}
+                            >
+                                {(loggedInAdminUser || "SA").slice(0, 2).toUpperCase()}
+                                <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white"></span>
+                            </button>
+
+                            {isProfileMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                                    <div className="px-3 py-2.5 border-b border-slate-100 mb-1">
+                                        <p className="text-xs font-black text-slate-900 truncate">{loggedInAdminUser || "Admin User"}</p>
+                                        <p className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">{loggedInAdminRole || "MAIN_ADMIN"} • {loggedInAdminCollege || "KLU"}</p>
+                                    </div>
+                                    <button
+                                        onClick={logout}
+                                        className="w-full px-3 py-2 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                                    >
+                                        <span>🚪</span>
+                                        <span>Sign Out / Logout</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 
