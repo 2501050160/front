@@ -47,7 +47,7 @@ export function AdminSidebar({
     };
 
     const navItems = [
-        { id: "analytics", label: "Financial Reconciliation", icon: BarChart3, hideForManager: true },
+        { id: "analytics", label: "Financial Reconciliation", icon: BarChart3 },
         { id: "queue", label: "Live Queue", icon: ListOrdered, badge: orderCount > 0 ? orderCount : null },
         { id: "settings", label: "Pricing & Coupons", icon: Tag },
         { id: "colleges", label: "College & Campus Management", icon: School, hideForManager: true },

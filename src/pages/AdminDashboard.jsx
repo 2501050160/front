@@ -34,10 +34,10 @@ function AdminDashboard() {
     const [selectedCoupons, setSelectedCoupons] = useState([]);
     const [allSupportTickets, setSupportTickets] = useState([]);
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
-    const [activeTab, setActiveTab] = useState(tabFromUrl || "analytics");
+    const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [pricingSubTab, setPricingSubTab] = useState(searchParams.get("subtab") || "pricing");
-    const [queueSubTab, setQueueSubTab] = useState("live-queue");
+    const [queueSubTab, setQueueSubTab] = useState(searchParams.get("subtab") || "revenue");
     const [blocksSubTab, setBlocksSubTab] = useState("all-blocks");
     const [printersSubTab, setPrintersSubTab] = useState("printers-list");
     const [collegesSubTab, setCollegesSubTab] = useState("colleges-list");
@@ -1679,6 +1679,15 @@ function AdminDashboard() {
     };
 
     const handleTabChange = (tabId) => {
+        if (tabId === "analytics") {
+            setActiveTab("queue");
+            setQueueSubTab("revenue");
+            setSearchParams({ tab: "queue", subtab: "revenue" });
+            fetchOrders();
+            fetchStats();
+            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+            return;
+        }
         setActiveTab(tabId);
         setSearchParams({ tab: tabId });
         if (window.innerWidth < 768) {
