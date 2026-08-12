@@ -1822,18 +1822,7 @@ function AdminDashboard() {
                                     {!isSidebarCollapsed && <span>Pricing & Coupons</span>}
                                 </button>
 
-                                <button
-                                    onClick={() => handleTabChange("whatsapp")}
-                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
-                                        activeTab === "whatsapp"
-                                            ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
-                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                                    }`}
-                                    title={isSidebarCollapsed ? "WhatsApp Orders" : undefined}
-                                >
-                                    <span className="text-base">💬</span>
-                                    {!isSidebarCollapsed && <span>WhatsApp Orders</span>}
-                                </button>
+
 
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <button
@@ -1966,7 +1955,6 @@ function AdminDashboard() {
                             [
                                 { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
                                 { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
-                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
                                 { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
                                 { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
                                 { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
