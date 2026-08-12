@@ -135,13 +135,13 @@ export function PricingCouponsSection({
                             Black & White (₹/page)
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">₹</span>
                             <input
                                 type="number"
                                 step="0.25"
                                 value={bwPrice}
                                 onChange={(e) => setBwPrice(Number(e.target.value))}
-                                className="w-full pl-8 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-cyan-500"
+                                className="w-full pl-12 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-cyan-500"
                             />
                         </div>
                     </div>
@@ -152,13 +152,13 @@ export function PricingCouponsSection({
                             Full Color (₹/page)
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">₹</span>
                             <input
                                 type="number"
                                 step="0.5"
                                 value={colorPrice}
                                 onChange={(e) => setColorPrice(Number(e.target.value))}
-                                className="w-full pl-8 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-cyan-500"
+                                className="w-full pl-12 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-cyan-500"
                             />
                         </div>
                     </div>
@@ -169,13 +169,13 @@ export function PricingCouponsSection({
                             Double Sided (₹/sheet)
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">₹</span>
                             <input
                                 type="number"
                                 step="0.25"
                                 value={duplexPrice}
                                 onChange={(e) => setDuplexPrice(Number(e.target.value))}
-                                className="w-full pl-8 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-cyan-500"
+                                className="w-full pl-12 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-cyan-500"
                             />
                         </div>
                     </div>

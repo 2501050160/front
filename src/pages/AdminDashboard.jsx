@@ -3088,12 +3088,12 @@ function AdminDashboard() {
                                                     Black & White Rate (₹/page)
                                                 </span>
                                                 <div className="relative">
-                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">₹</span>
                                                     <input
                                                         type="number"
                                                         value={bwPrice}
                                                         onChange={(e) => setBwPrice(e.target.value)}
-                                                        className="field pl-8"
+                                                        className="field !pl-12"
                                                         step="0.5"
                                                     />
                                                 </div>
@@ -3104,12 +3104,12 @@ function AdminDashboard() {
                                                     Color Rate (₹/page)
                                                 </span>
                                                 <div className="relative">
-                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-base">₹</span>
                                                     <input
                                                         type="number"
                                                         value={colorPrice}
                                                         onChange={(e) => setColorPrice(e.target.value)}
-                                                        className="field pl-8"
+                                                        className="field !pl-12"
                                                         step="0.5"
                                                     />
                                                 </div>
