@@ -1913,11 +1913,74 @@ function AdminDashboard() {
             </aside>
 
             <div className="!max-w-none !w-full px-4 py-4 md:px-8 md:py-6 flex-1 min-w-0">
-                <Navbar
-                    actions={[]}
-                    onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    isSidebarCollapsed={isSidebarCollapsed}
-                />
+                {(() => {
+                    const getCurrentSubTabs = () => {
+                        if (activeTab === "frontend") {
+                            return [
+                                { id: "marketing", label: "Marketing", icon: "📢", desc: "Banners & Ticker" },
+                                { id: "all-notifs", label: "Published Alerts", icon: "🔔", desc: `${notifications.length} Broadcasts` },
+                                { id: "create-notif", label: "Create Alert", icon: "✍️", desc: "Compose Broadcast" },
+                                { id: "sections-list", label: "Layout Sections", icon: "🗂️", desc: `${sections.length} Configured` },
+                                { id: "add-section", label: "Add Section", icon: "➕", desc: "New CMS Block" },
+                                { id: "popups-list", label: "Manage Popups", icon: "💬", desc: `${popups.length} Modals` },
+                                { id: "add-popup", label: "Add Popup", icon: "✨", desc: "Create Modal" },
+                            ];
+                        }
+                        if (activeTab === "queue" || activeTab === "order-queue") {
+                            return [
+                                { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
+                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
+                                { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
+                                { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
+                            ];
+                        }
+                        if (activeTab === "users") {
+                            return [
+                                { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
+                                { id: "tickets", label: "Support Tickets", icon: "🎧", desc: `${allSupportTickets.length} Inquiries` },
+                                { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
+                                { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
+                                { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
+                                { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
+                                ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: "Audit Trail", icon: "📜", desc: `${managerLogs.length} Actions` }] : []),
+                            ];
+                        }
+                        if (activeTab === "system") {
+                            return [
+                                { id: "settings", label: "Global Settings", icon: "⚙️", desc: "System Config" },
+                                { id: "sql", label: "SQL Terminal", icon: "💻", desc: "Query & Backup" },
+                                { id: "logs", label: "System Logs", icon: "📜", desc: "Audit History" },
+                            ];
+                        }
+                        return [];
+                    };
+
+                    const getCurrentSubTabId = () => {
+                        if (activeTab === "frontend") return frontendSubTab;
+                        if (activeTab === "queue" || activeTab === "order-queue") return queueSubTab;
+                        if (activeTab === "users") return usersSubTab;
+                        if (activeTab === "system") return systemSubTab;
+                        return null;
+                    };
+
+                    const handleCurrentSubTabChange = (tabId) => {
+                        if (activeTab === "frontend") setFrontendSubTab(tabId);
+                        if (activeTab === "queue" || activeTab === "order-queue") setQueueSubTab(tabId);
+                        if (activeTab === "users") setUsersSubTab(tabId);
+                        if (activeTab === "system") setSystemSubTab(tabId);
+                    };
+
+                    return (
+                        <Navbar
+                            actions={[]}
+                            tabs={getCurrentSubTabs()}
+                            activeTab={getCurrentSubTabId()}
+                            onTabChange={handleCurrentSubTabChange}
+                            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            isSidebarCollapsed={isSidebarCollapsed}
+                        />
+                    );
+                })()}
 
                 {/* Queue & Analytics Tab */}
                 {(activeTab === "queue" || activeTab === "order-queue") && (

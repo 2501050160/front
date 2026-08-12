@@ -90,19 +90,26 @@ function Navbar({
                 <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap self-end md:self-auto">
                     {/* Navigation Tabs (if any) */}
                     {tabs && tabs.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1 bg-slate-950/5 p-1 rounded-xl border border-slate-200/50">
+                        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full py-1 custom-scrollbar">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => onTabChange && onTabChange(tab.id)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 ${
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
                                         activeTab === tab.id
-                                            ? "bg-white text-sky-600 shadow-sm border border-slate-100"
-                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+                                            ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : "bg-slate-100/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                     }`}
                                 >
-                                    {tab.icon && <span>{tab.icon}</span>}
-                                    {tab.label}
+                                    {tab.icon && <span className="text-sm">{tab.icon}</span>}
+                                    <div className="flex flex-col text-left">
+                                        <span className="leading-tight">{tab.label}</span>
+                                        {tab.desc && (
+                                            <span className={`text-[9px] font-semibold leading-tight ${activeTab === tab.id ? "text-sky-100" : "text-slate-500"}`}>
+                                                {tab.desc}
+                                            </span>
+                                        )}
+                                    </div>
                                 </button>
                             ))}
                         </div>
