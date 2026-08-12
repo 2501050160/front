@@ -66,6 +66,8 @@ export function AdminSidebar({
         return true;
     });
 
+    const [quickLinksOpen, setQuickLinksOpen] = React.useState(true);
+
     return (
         <aside
             className={`admin-sidebar relative flex flex-col justify-between border-r border-slate-800 bg-slate-950/95 backdrop-blur-2xl transition-all duration-300 z-40 ${
@@ -116,34 +118,135 @@ export function AdminSidebar({
                 )}
 
                 {/* Navigation Menu */}
-                <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-280px)] custom-scrollbar">
-                    {filteredItems.map(item => {
-                        const Icon = item.icon;
-                        const isActive = activeTab === item.id;
-                        return (
+                <nav className="p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-280px)] custom-scrollbar">
+                    {/* Quick Links Section */}
+                    {!isCollapsed && (
+                        <div className="bg-slate-900/60 rounded-2xl p-2 border border-slate-800/80">
                             <button
-                                key={item.id}
-                                onClick={() => onSelectTab(item.id)}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-                                    isActive
-                                        ? "bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-lg shadow-cyan-600/20 font-black"
-                                        : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                                } ${isCollapsed ? "justify-center px-0" : "justify-start"}`}
-                                title={isCollapsed ? item.label : undefined}
+                                onClick={() => setQuickLinksOpen(!quickLinksOpen)}
+                                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-400 hover:text-amber-300 hover:bg-slate-800/60 uppercase tracking-wider transition-all cursor-pointer"
                             >
-                                <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
-                                {!isCollapsed && <span className="truncate">{item.label}</span>}
-                                {!isCollapsed && item.badge != null && (
-                                    <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-400 text-slate-950 animate-pulse">
-                                        {item.badge}
-                                    </span>
-                                )}
-                                {isCollapsed && item.badge != null && (
-                                    <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                                )}
+                                <span className="flex items-center gap-2">
+                                    <span className="text-sm">⚡</span>
+                                    <span>QUICK LINKS</span>
+                                </span>
+                                <motion.span
+                                    animate={{ rotate: quickLinksOpen ? 180 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-[10px] text-slate-400"
+                                >
+                                    ▼
+                                </motion.span>
                             </button>
-                        );
-                    })}
+
+                            {quickLinksOpen && (
+                                <div className="space-y-1 mt-1.5">
+                                    <button
+                                        onClick={() => onSelectTab("queue")}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "queue"
+                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                    >
+                                        <span className="text-base">📋</span>
+                                        <span>Queue Kanban</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => onSelectTab("users")}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "users"
+                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                    >
+                                        <span className="text-base">👥</span>
+                                        <span>Users</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => onSelectTab("analytics")}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "analytics"
+                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                    >
+                                        <span className="text-base">📊</span>
+                                        <span>Analytics</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => onSelectTab("settings")}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "settings"
+                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                    >
+                                        <span className="text-base">⚙️</span>
+                                        <span>Settings</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => onSelectTab("printers")}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                            activeTab === "printers"
+                                                ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                        }`}
+                                    >
+                                        <span className="text-base">🖨️</span>
+                                        <span>Printer Settings</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => navigate("/display-panel")}
+                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                    >
+                                        <span className="text-base">📺</span>
+                                        <span>Display Panel</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="space-y-1">
+                        {!isCollapsed && (
+                            <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                MANAGEMENT PANELS
+                            </p>
+                        )}
+                        {filteredItems.map(item => {
+                            const Icon = item.icon;
+                            const isActive = activeTab === item.id;
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => onSelectTab(item.id)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+                                        isActive
+                                            ? "bg-gradient-to-r from-cyan-600 to-indigo-600 text-white shadow-lg shadow-cyan-600/20 font-black"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                    } ${isCollapsed ? "justify-center px-0" : "justify-start"}`}
+                                    title={isCollapsed ? item.label : undefined}
+                                >
+                                    <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
+                                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                                    {!isCollapsed && item.badge != null && (
+                                        <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-400 text-slate-950 animate-pulse">
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                    {isCollapsed && item.badge != null && (
+                                        <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </nav>
             </div>
 

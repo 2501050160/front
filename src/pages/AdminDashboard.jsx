@@ -33,6 +33,7 @@ function AdminDashboard() {
     const [allSupportTickets, setSupportTickets] = useState([]);
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
     const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
+    const [quickLinksOpen, setQuickLinksOpen] = useState(true);
 
     // Dynamic settings & blocks
     const [allBlocks, setBlocks] = useState([]);
@@ -1668,59 +1669,104 @@ function AdminDashboard() {
                     </div>
 
                     <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
-                        {/* Quick Links Section */}
-                        <div>
-                            <p className="px-3 text-[10px] font-black text-sky-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                <span>⚡</span> QUICK LINKS
-                            </p>
-                            <div className="space-y-1">
-                                <button
-                                    onClick={() => handleTabChange("queue")}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                        {/* Quick Links Dropdown Section */}
+                        <div className="bg-slate-900/60 rounded-2xl p-2 border border-slate-800/80">
+                            <button
+                                onClick={() => setQuickLinksOpen(!quickLinksOpen)}
+                                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-400 hover:text-amber-300 hover:bg-slate-800/60 uppercase tracking-wider transition-all cursor-pointer"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="text-sm">⚡</span>
+                                    <span>QUICK LINKS</span>
+                                </span>
+                                <motion.span
+                                    animate={{ rotate: quickLinksOpen ? 180 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-[10px] text-slate-400"
                                 >
-                                    <span className="text-base">📋</span>
-                                    <span>Queue Kanban</span>
-                                </button>
-                                {loggedInAdminRole !== "MANAGER" && (
-                                    <>
+                                    ▼
+                                </motion.span>
+                            </button>
+
+                            <AnimatePresence initial={false}>
+                                {quickLinksOpen && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden space-y-1 mt-1.5"
+                                    >
+                                        <button
+                                            onClick={() => handleTabChange("queue")}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "queue"
+                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                            }`}
+                                        >
+                                            <span className="text-base">📋</span>
+                                            <span>Queue Kanban</span>
+                                        </button>
+
                                         <button
                                             onClick={() => handleTabChange("users")}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "users"
+                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                            }`}
                                         >
                                             <span className="text-base">👥</span>
                                             <span>Users</span>
                                         </button>
+
                                         <button
                                             onClick={() => handleTabChange("analytics")}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "analytics"
+                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                            }`}
                                         >
                                             <span className="text-base">📊</span>
                                             <span>Analytics</span>
                                         </button>
+
                                         <button
                                             onClick={() => handleTabChange("settings")}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "settings"
+                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                            }`}
                                         >
                                             <span className="text-base">⚙️</span>
                                             <span>Settings</span>
                                         </button>
+
                                         <button
                                             onClick={() => handleTabChange("printers")}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                                activeTab === "printers"
+                                                    ? "bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black shadow-md shadow-sky-600/20"
+                                                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                                            }`}
                                         >
                                             <span className="text-base">🖨️</span>
                                             <span>Printer Settings</span>
                                         </button>
-                                    </>
+
+                                        <button
+                                            onClick={() => navigate("/display-panel")}
+                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">📺</span>
+                                            <span>Display Panel</span>
+                                        </button>
+                                    </motion.div>
                                 )}
-                                <button
-                                    onClick={() => navigate("/display-panel")}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer text-left"
-                                >
-                                    <span className="text-base">📺</span>
-                                    <span>Display Panel</span>
-                                </button>
-                            </div>
+                            </AnimatePresence>
                         </div>
 
                         {/* Management Sections */}

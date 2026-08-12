@@ -7,7 +7,6 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
     const navigate = useNavigate();
     const location = useLocation();
     const [profileOpen, setProfileOpen] = useState(false);
-    const [quickLinksOpen, setQuickLinksOpen] = useState(false);
 
     const userId = localStorage.getItem("userId");
     const userName = localStorage.getItem("userName") || "User";
@@ -26,32 +25,6 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
         return name.slice(0, 2).toUpperCase();
     };
 
-    // User quick navigation items
-    const userQuickLinks = [
-        { label: "New Print Job", desc: "Upload docs & configure print", path: "/dashboard", icon: "🖨️", color: "from-sky-500 to-blue-600" },
-        { label: "My Orders & OTP", desc: "Track status & pickup codes", path: "/my-orders", icon: "📦", color: "from-emerald-500 to-teal-600" },
-        { label: "Scan to Print", desc: "Instant kiosk QR scanner", path: "/scan-to-print", icon: "📱", color: "from-purple-500 to-indigo-600" },
-        { label: "Referrals & Rewards", desc: "Earn ₹10 per referral", path: "/referrals", icon: "🎁", color: "from-amber-500 to-orange-600" },
-        { label: "Campus Locations", desc: "Switch kiosk block", path: "/blocks", icon: "🏢", color: "from-cyan-500 to-sky-600" },
-        { label: "AI Print Assistant", desc: "Instant chatbot help", path: "/chatbot", icon: "💬", color: "from-pink-500 to-rose-600" },
-    ];
-
-    // Admin quick navigation items
-    const adminQuickLinks = [
-        { label: "Admin Operations", desc: "Live operations & queue", path: "/admin?tab=queue", icon: "📊", color: "from-sky-500 to-blue-600" },
-        { label: "Queue Kanban", desc: "Live print dispatch board", path: "/admin?tab=queue", icon: "📋", color: "from-emerald-500 to-teal-600" },
-        { label: "Users Management", desc: "Student accounts & wallets", path: "/admin?tab=users", icon: "👥", color: "from-indigo-500 to-purple-600" },
-        { label: "Analytics & Reports", desc: "Revenue & print volume", path: "/admin?tab=analytics", icon: "📈", color: "from-amber-500 to-orange-600" },
-        { label: "Pricing & Coupons", desc: "Per-page rates & discounts", path: "/admin?tab=settings", icon: "🏷️", color: "from-purple-500 to-pink-600" },
-        { label: "WhatsApp Orders", desc: "Bot submitted print jobs", path: "/admin?tab=whatsapp", icon: "🤖", color: "from-green-500 to-emerald-600" },
-        { label: "Manage Printers", desc: "Paper levels & kiosk status", path: "/admin?tab=printers", icon: "🖨️", color: "from-cyan-500 to-blue-600" },
-        { label: "Manage Blocks", desc: "Campus kiosk locations", path: "/admin?tab=blocks", icon: "🏛️", color: "from-teal-500 to-emerald-600" },
-        { label: "TV Display Panel", desc: "Public departure board", path: "/display-panel", icon: "📺", color: "from-rose-500 to-red-600" },
-        { label: "Kiosk Hardware", desc: "Physical printer config", path: "/printer-settings", icon: "⚙️", color: "from-slate-600 to-slate-800" },
-    ];
-
-    const currentQuickLinks = adminId ? adminQuickLinks : userQuickLinks;
-
     return (
         <motion.header
             className="top-bar panel top-bar-glass sticky top-0 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col gap-3 z-40 mb-6 backdrop-blur-2xl shadow-lg border border-slate-200/80 w-full"
@@ -59,7 +32,7 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
         >
-            {/* Top Row: Title, Subtitle, Badge, Tabs, Quick Links Dropdown & Profile */}
+            {/* Top Row: Title, Subtitle, Badge, Tabs, Actions & Profile */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 w-full">
                 {/* Left Side: Brand mark & Titles */}
                 <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
@@ -87,7 +60,7 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
                     </div>
                 </div>
 
-                {/* Right Controls: Tabs + Quick Links Dropdown + Profile Avatar */}
+                {/* Right Controls: Tabs + Page Actions + Profile Avatar */}
                 <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap self-end md:self-auto">
                     {/* Navigation Tabs (if any) */}
                     {tabs && tabs.length > 0 && (
@@ -109,146 +82,36 @@ function Navbar({ title, subtitle, actions = [], badge, badgeAction, tabs = [], 
                         </div>
                     )}
 
-                    {/* Quick Links Dropdown Button */}
-                    <div className="relative">
-                        <button
-                            onClick={() => {
-                                setQuickLinksOpen(!quickLinksOpen);
-                                setProfileOpen(false);
-                            }}
-                            className={`px-3.5 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all active:scale-95 shadow-sm cursor-pointer ${
-                                quickLinksOpen
-                                    ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white border border-sky-400 shadow-[0_0_15px_rgba(14,165,233,0.35)]"
-                                    : "bg-white/90 hover:bg-white text-slate-800 hover:text-slate-900 border border-slate-200/90 hover:border-slate-300 shadow-sm"
-                            }`}
-                            title="Quick Navigation & Action Links"
-                        >
-                            <span className={quickLinksOpen ? "text-white" : "text-amber-500"}>⚡</span>
-                            <span>Quick Links</span>
-                            <motion.span
-                                animate={{ rotate: quickLinksOpen ? 180 : 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="text-[10px] opacity-80"
-                            >
-                                ▼
-                            </motion.span>
-                        </button>
-
-                        <AnimatePresence>
-                            {quickLinksOpen && (
-                                <>
-                                    {/* Backdrop overlay */}
-                                    <div 
-                                        className="fixed inset-0 z-[9998] cursor-default bg-black/10 backdrop-blur-[1px]"
-                                        onClick={() => setQuickLinksOpen(false)}
-                                    />
-
-                                    {/* Quick Links Dropdown Menu */}
-                                    <motion.div
-                                        className="absolute right-0 mt-2.5 w-80 max-h-[82vh] overflow-y-auto custom-scrollbar rounded-2xl bg-white/98 backdrop-blur-2xl border border-slate-200/90 shadow-[0_20px_50px_rgba(15,23,42,0.22)] p-3.5 text-slate-800 z-[9999]"
-                                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                        transition={{ duration: 0.16 }}
+                    {/* Page Actions (if any) */}
+                    {actions && actions.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            {actions.map((action) => {
+                                if (action.to) {
+                                    return (
+                                        <Link
+                                            key={action.label}
+                                            to={action.to}
+                                            className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white text-slate-800 hover:text-sky-600 border border-slate-200/90 text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                                        >
+                                            <span>{action.label}</span>
+                                        </Link>
+                                    );
+                                }
+                                return (
+                                    <button
+                                        key={action.label}
+                                        onClick={() => {
+                                            if (action.onClick) action.onClick();
+                                            else if (action.path) navigate(action.path);
+                                        }}
+                                        className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white text-slate-800 hover:text-sky-600 border border-slate-200/90 text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                                     >
-                                        <div className="flex items-center justify-between px-2.5 py-2 border-b border-slate-150 mb-2.5">
-                                            <div className="flex items-center gap-2">
-                                                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 text-xs font-black">⚡</span>
-                                                <span className="text-xs font-black uppercase tracking-wider text-slate-700">Quick Links</span>
-                                            </div>
-                                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-wider border border-slate-200">
-                                                {adminId ? "Admin Portal" : "Student Portal"}
-                                            </span>
-                                        </div>
-
-                                        {/* Page Specific Actions (if any passed to Navbar) */}
-                                        {actions && actions.length > 0 && (
-                                            <div className="mb-3 pb-2.5 border-b border-slate-150">
-                                                <p className="px-2.5 text-[10px] font-black uppercase tracking-wider text-sky-600 mb-1.5 flex items-center gap-1">
-                                                    <span>🎯</span> Current Page Actions
-                                                </p>
-                                                <div className="space-y-1">
-                                                    {actions.map((action) => {
-                                                        const isActActive = action.path && location.pathname === action.path;
-                                                        if (action.to) {
-                                                            return (
-                                                                <Link
-                                                                    key={action.label}
-                                                                    to={action.to}
-                                                                    onClick={() => setQuickLinksOpen(false)}
-                                                                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-left hover:bg-sky-50 hover:text-sky-700 text-slate-700"
-                                                                >
-                                                                    <span>{action.label}</span>
-                                                                    <span className="text-slate-400 text-xs">➔</span>
-                                                                </Link>
-                                                            );
-                                                        }
-                                                        return (
-                                                            <button
-                                                                key={action.label}
-                                                                onClick={() => {
-                                                                    setQuickLinksOpen(false);
-                                                                    if (action.onClick) action.onClick();
-                                                                    else if (action.path) navigate(action.path);
-                                                                }}
-                                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                                                                    isActActive
-                                                                        ? "bg-sky-50 text-sky-700 border border-sky-200"
-                                                                        : "hover:bg-sky-50 hover:text-sky-700 text-slate-700"
-                                                                }`}
-                                                            >
-                                                                <span>{action.label}</span>
-                                                                <span className="text-slate-400 text-xs">➔</span>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Core Quick Links Grid / List */}
-                                        <div className="space-y-1">
-                                            <p className="px-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
-                                                <span>🧭</span> Navigation Shortcuts
-                                            </p>
-                                            {currentQuickLinks.map((item) => {
-                                                const isActive = (location.pathname + location.search) === item.path || location.pathname === item.path;
-                                                return (
-                                                    <button
-                                                        key={item.label}
-                                                        onClick={() => {
-                                                            setQuickLinksOpen(false);
-                                                            navigate(item.path);
-                                                        }}
-                                                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer group ${
-                                                            isActive
-                                                                ? "bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border border-sky-300 text-sky-700 shadow-sm"
-                                                                : "hover:bg-slate-100/80 text-slate-700 hover:text-slate-900 border border-transparent"
-                                                        }`}
-                                                    >
-                                                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${item.color} text-white flex items-center justify-center text-sm font-black shadow-sm shrink-0 group-hover:scale-105 transition-transform`}>
-                                                            {item.icon}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-black text-slate-800 group-hover:text-sky-600 truncate flex items-center gap-1.5">
-                                                                {item.label}
-                                                                {isActive && (
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500 ring-2 ring-sky-200"></span>
-                                                                )}
-                                                            </p>
-                                                            <p className="text-[11px] font-semibold text-slate-400 truncate">
-                                                                {item.desc}
-                                                            </p>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </motion.div>
-                                </>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                        <span>{action.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Profile Avatar & Dropdown */}
                     {(userId || adminId) && (
