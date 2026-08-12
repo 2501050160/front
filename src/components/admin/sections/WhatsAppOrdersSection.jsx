@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MessageSquare, Phone, User, Search, Download, Printer, CheckCircle, Clock, ExternalLink } from "lucide-react";
 import StatusBadge from "../../common/StatusBadge";
 import MetricCard from "../../common/MetricCard";
@@ -12,11 +12,17 @@ export function WhatsAppOrdersSection({
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [loading, setLoading] = useState(true);
+    const prevOrdersRef = useRef("");
 
     const fetchOrders = async () => {
         try {
             const res = await api.get("/pdf/orders");
-            setOrders(res.data || []);
+            const data = res.data || [];
+            const hash = JSON.stringify(data.map(o => ({ id: o.id, status: o.status, printStatus: o.printStatus })));
+            if (hash !== prevOrdersRef.current) {
+                prevOrdersRef.current = hash;
+                setOrders(data);
+            }
         } catch (err) {
             console.error("Failed to fetch orders:", err);
         } finally {
