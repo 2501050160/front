@@ -249,6 +249,34 @@ export function PricingCouponsSection({
                                 onChange={(e) => setExpiryDate(e.target.value)}
                                 className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 outline-none focus:border-emerald-500"
                             />
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {[
+                                    { label: "Today", days: 0 },
+                                    { label: "Tomorrow", days: 1 },
+                                    { label: "1 Week", days: 7 },
+                                    { label: "1 Month", days: 30 },
+                                    { label: "1 Year", days: 365 },
+                                ].map(preset => {
+                                    const d = new Date();
+                                    d.setDate(d.getDate() + preset.days);
+                                    const dateStr = d.toISOString().split('T')[0];
+                                    const isSelected = expiryDate === dateStr;
+                                    return (
+                                        <button
+                                            key={preset.label}
+                                            type="button"
+                                            onClick={() => setExpiryDate(dateStr)}
+                                            className={`px-2 py-0.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
+                                                isSelected
+                                                    ? "bg-emerald-600 text-white border-emerald-500"
+                                                    : "bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800"
+                                            }`}
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 

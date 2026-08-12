@@ -701,17 +701,25 @@ function AdminDashboard() {
     };
 
     const createCoupon = async () => {
-        if (Number(discountPercentage) > 95) {
+        const pct = discountPercentage ? Number(discountPercentage) : 100;
+        if (pct > 95) {
             showAlert("Discount Constraint", "Maximum allowed coupon discount limit is 95%.", "error");
             return;
         }
+        if (pct <= 0) {
+            showAlert("Invalid Discount", "Please specify a discount percentage greater than 0%.", "warning");
+            return;
+        }
         try {
-            await api.post("/coupon/create", {
-                couponCode,
-                discountPercentage,
-                expiryDate,
-                maxUses
-            });
+            const payload = {
+                couponCode: couponCode ? couponCode.trim().toUpperCase() : undefined,
+                discountPercentage: pct,
+                expiryDate: expiryDate && expiryDate.trim() ? expiryDate.trim() : null,
+                maxUses: maxUses ? parseInt(maxUses, 10) : 1,
+                active: true
+            };
+
+            await api.post("/coupon/create", payload);
 
             showAlert("Success", "Coupon Created Successfully", "success");
             fetchCoupons();
@@ -721,7 +729,7 @@ function AdminDashboard() {
             setMaxUses("");
         } catch (error) {
             console.error(error);
-            showAlert("Error", error.response?.data?.message || "Unable To Create Coupon", "error");
+            showAlert("Error", error.response?.data?.message || error.response?.data?.error || "Unable To Create Coupon", "error");
         }
     };
 
@@ -3510,6 +3518,34 @@ function AdminDashboard() {
                                                             onChange={(e) => setExpiryDate(e.target.value)}
                                                             className="field"
                                                         />
+                                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                                            {[
+                                                                { label: "Today", days: 0 },
+                                                                { label: "Tomorrow", days: 1 },
+                                                                { label: "1 Week", days: 7 },
+                                                                { label: "1 Month", days: 30 },
+                                                                { label: "1 Year", days: 365 },
+                                                            ].map(preset => {
+                                                                const d = new Date();
+                                                                d.setDate(d.getDate() + preset.days);
+                                                                const dateStr = d.toISOString().split('T')[0];
+                                                                const isSelected = expiryDate === dateStr;
+                                                                return (
+                                                                    <button
+                                                                        key={preset.label}
+                                                                        type="button"
+                                                                        onClick={() => setExpiryDate(dateStr)}
+                                                                        className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                            isSelected
+                                                                                ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                                                                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                        }`}
+                                                                    >
+                                                                        {preset.label}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
 
                                                     <div>
