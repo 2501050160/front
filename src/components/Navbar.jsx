@@ -1,87 +1,50 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { clearUserSession } from "../services/auth";
-import cloudprintLogo from "../assets/cloudprint_logo.png";
+import { Search, Bell } from "lucide-react";
 
 function Navbar({ 
-    title, 
-    subtitle, 
-    actions = [], 
-    badge, 
-    badgeAction, 
-    tabs = [], 
-    activeTab, 
-    onTabChange,
-    onToggleSidebar,
-    isSidebarCollapsed = false
+    searchQuery = "", 
+    onSearchChange,
+    selectedCollege = "KLU",
+    onAlertsClick 
 }) {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [profileOpen, setProfileOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState(searchQuery);
 
-    const userId = localStorage.getItem("userId");
-    const userName = localStorage.getItem("userName") || "User";
-    const userEmail = localStorage.getItem("userEmail") || "user@example.com";
-    const referralCode = localStorage.getItem("referralCode") || "";
-    const walletBalance = localStorage.getItem("walletBalance") || "0.0";
-    const adminId = localStorage.getItem("adminId");
-    const adminUser = localStorage.getItem("adminUser") || "Admin";
-
-    const getInitials = (name) => {
-        if (!name) return "U";
-        const parts = name.trim().split(" ");
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
+    const handleSearch = (e) => {
+        const val = e.target.value;
+        setSearchValue(val);
+        if (onSearchChange) onSearchChange(val);
     };
 
     return (
-        <motion.header
-            className="top-bar panel top-bar-glass sticky top-0 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col gap-3 z-40 mb-6 backdrop-blur-2xl shadow-lg border border-slate-200/80 w-full"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-        >
-            {/* Top Row: Brand Mark & Direct Exit Button */}
-            <div className="flex flex-row items-center justify-between gap-3 sm:gap-4 w-full">
-                {/* Left Side: Hamburger (if sidebar exists) + Logo */}
-                <div className="flex items-center gap-3 sm:gap-4">
-                    {onToggleSidebar && (
-                        <button
-                            onClick={onToggleSidebar}
-                            className="p-2.5 rounded-xl bg-white/90 hover:bg-white text-slate-800 hover:text-sky-600 border border-slate-200/90 hover:border-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center active:scale-95 group"
-                            title={isSidebarCollapsed ? "Expand Side Navigation (☰)" : "Collapse Side Navigation (☰)"}
-                            aria-label="Toggle Side Navigation"
-                        >
-                            <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
-                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
-                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
-                                <span className="w-4 h-0.5 bg-slate-700 rounded-full group-hover:bg-sky-600 transition-all"></span>
-                            </div>
-                        </button>
-                    )}
-                    <img src={cloudprintLogo} alt="CloudPrint" className="h-8 sm:h-9 object-contain shrink-0" />
+        <header className="w-full mb-6 sticky top-2 z-30">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3.5 rounded-2xl glass-panel border border-white/10 shadow-lg backdrop-blur-2xl bg-slate-900/60">
+                <div className="flex items-center gap-3 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#37E67D] animate-pulse"></span>
+                    <span className="text-[12px] font-extrabold uppercase tracking-widest text-cyan-100">
+                        Active Campus • {selectedCollege || "KLU"}
+                    </span>
                 </div>
 
-                {/* Right Controls: Direct Red Exit/Logout Button */}
-                <div className="flex items-center gap-2.5 shrink-0">
-                    <button
-                        onClick={() => {
-                            clearUserSession();
-                            localStorage.clear();
-                            navigate("/login");
-                        }}
-                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-black text-xs transition-all shadow-md shadow-rose-500/25 hover:shadow-lg hover:shadow-rose-500/35 border border-rose-400 flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
-                        title="Sign Out / Exit Session"
-                    >
-                        <span className="text-sm">🚪</span>
-                        <span>Exit</span>
-                    </button>
+                <div className="flex items-center flex-1 max-w-md w-full relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                    <input 
+                        placeholder="Search campus buildings, blocks, or services..." 
+                        className="w-full h-10 pl-10 pr-4 rounded-xl bg-white/12 border border-white/15 text-sm text-white placeholder-cyan-100/60 focus:outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10 transition-all" 
+                        type="text" 
+                        value={searchValue}
+                        onChange={handleSearch}
+                    />
                 </div>
+
+                <button 
+                    onClick={onAlertsClick}
+                    className="relative px-3.5 py-2 rounded-xl bg-white/12 border border-white/15 flex items-center gap-2 text-cyan-50 hover:text-white hover:border-cyan-200/50 text-xs font-bold transition-all cursor-pointer shrink-0 active:scale-95"
+                >
+                    <Bell className="w-4 h-4" />
+                    <span className="hidden sm:inline">Alerts</span>
+                </button>
             </div>
-        </motion.header>
+        </header>
     );
 }
 
