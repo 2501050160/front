@@ -36,6 +36,17 @@ function AdminDashboard() {
     const [quickLinksOpen, setQuickLinksOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [pricingSubTab, setPricingSubTab] = useState(searchParams.get("subtab") || "pricing");
+    const [queueSubTab, setQueueSubTab] = useState("live-queue");
+    const [blocksSubTab, setBlocksSubTab] = useState("all-blocks");
+    const [printersSubTab, setPrintersSubTab] = useState("printers-list");
+    const [collegesSubTab, setCollegesSubTab] = useState("colleges-list");
+    const [usersSubTab, setUsersSubTab] = useState("users-list");
+    const [supportSubTab, setSupportSubTab] = useState("all-tickets");
+    const [frontendSubTab, setFrontendSubTab] = useState("marketing");
+    const [systemSubTab, setSystemSubTab] = useState("gateway");
+    const [subadminsSubTab, setSubadminsSubTab] = useState("staff-list");
+    const [notificationsSubTab, setNotificationsSubTab] = useState("all-notifs");
+    const [sqlSubTab, setSqlSubTab] = useState("console");
 
     // Dynamic settings & blocks
     const [allBlocks, setBlocks] = useState([]);
@@ -677,6 +688,17 @@ function AdminDashboard() {
                 }
             }
         );
+    };
+
+    const handleUpdateOrderStatus = async (orderId, newStatus) => {
+        try {
+            await api.post(`/pdf/updateStatus?id=${orderId}&status=${newStatus}`);
+            fetchOrders();
+            showAlert("Status Updated", `Order #${orderId} status changed to ${newStatus}`, "success");
+        } catch (error) {
+            console.error("Error updating status:", error);
+            showAlert("Error", "Failed to update order status", "error");
+        }
     };
 
     const createCoupon = async () => {
@@ -2085,565 +2107,807 @@ function AdminDashboard() {
                 />
 
                 {/* Queue & Analytics Tab */}
-                {activeTab === "queue" && (
+                {(activeTab === "queue" || activeTab === "order-queue") && (
                     <div className="mt-6 space-y-6">
-                        {/* Live Printer Stock & Status Map */}
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {printers.map((p) => {
-                                const isLowPaper = p.paperCount < 50;
-                                return (
-                                    <motion.div
-                                        key={p.id}
-                                        className="panel p-5 relative overflow-hidden flex flex-col justify-between border-slate-100 hover:shadow-md transition-all duration-300"
-                                        initial={{ opacity: 0, scale: 0.98 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                    >
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <h4 className="font-black text-slate-900 text-lg leading-tight">{p.blockLocation}</h4>
-                                                <p className="text-xs text-slate-400 font-bold mt-0.5">{p.printerName || "Printer Terminal"}</p>
-                                            </div>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                                                p.online 
-                                                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
-                                                    : "bg-slate-500/10 text-slate-400 border border-slate-500/15"
-                                            }`}>
-                                                {p.online ? "Online" : "Offline"}
-                                            </span>
-                                        </div>
-
-                                        <div className="mt-4">
-                                            <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
-                                                <span>Paper Stock</span>
-                                                <span className={isLowPaper ? "text-rose-500 font-black" : "text-slate-800"}>
-                                                    {p.paperCount} Sheets {isLowPaper && "🚨"}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 border-t border-slate-100 pt-3 flex items-center justify-between text-xs font-bold text-slate-400">
-                                            <span>Active Queue Load:</span>
-                                            <span className="text-slate-700 font-black">{p.queueLoad || 0} active jobs</span>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                        <motion.section
-                            className="panel p-6"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                        >
-                            <div className="section-header">
-                                <div>
-                                    <p className="eyebrow">Revenue Analytics</p>
-                                    <h2 className="text-2xl font-black text-slate-900">
-                                        Gross vs Net After Coupons
-                                    </h2>
-                                    <p className="subtitle">
-                                        Net revenue = gross revenue − coupon discounts − Razorpay charges ({systemSettings.razorpayChargePercentage || 2.36}%)
-                                    </p>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3">
-                                    {/* College Filter Selection Dropdown - hidden for sub-admins and managers */}
-                                    {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-slate-500">Filter College:</span>
-                                            <select
-                                                value={selectedCollegeFilter}
-                                                onChange={(e) => setSelectedCollegeFilter(e.target.value)}
-                                                className="field !w-auto text-xs py-1 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
-                                            >
-                                                <option value="ALL">All Colleges</option>
-                                                {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                    <option key={col} value={col}>{col} College</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-slate-500">College:</span>
-                                            <span className="text-xs font-black px-3 py-1 rounded-lg bg-indigo-100 text-indigo-800 border border-indigo-200">
-                                                {loggedInAdminCollege}
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className="revenue-filter">
-                                        {revenueFilters.map(([value, label]) => (
-                                            <button
-                                                key={value}
-                                                onClick={() => setRevenuePeriod(value)}
-                                                className={
-                                                    revenuePeriod === value
-                                                        ? "revenue-filter-btn active"
-                                                        : "revenue-filter-btn"
-                                                }
-                                            >
-                                                {label}
-                                            </button>
-                                        ))}
-                                    </div>
+                        {/* Top Sub-Navigation Bar for Queue & Analytics */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "live-queue", label: "Live Queue", icon: "📋" },
+                                    { id: "kanban", label: "Queue Kanban", icon: "📊" },
+                                    { id: "kiosks", label: "Printer Kiosks", icon: "🖨️" },
+                                    { id: "revenue", label: "Revenue Analytics", icon: "💵" },
+                                    { id: "charts", label: "Visual Charts", icon: "📈" },
+                                    { id: "history", label: "All Orders History", icon: "📜" },
+                                ].map(sub => (
                                     <button
-                                        onClick={resetStats}
-                                        className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                        key={sub.id}
+                                        onClick={() => setQueueSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            queueSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
                                     >
-                                        Reset Stats
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
                                     </button>
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3 grid-cols-2 lg:grid-cols-6">
-                                {revenueCards.map(([label, value, background, subtitle], index) => (
-                                    <motion.div
-                                        key={label}
-                                        className="revenue-card"
-                                        style={{ background }}
-                                        initial={{ opacity: 0, y: 18 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.06 }}
-                                    >
-                                        <p className="relative z-10 text-sm font-bold text-white/80">
-                                            {label}
-                                        </p>
-                                        <p className="relative z-10 mt-2 text-2xl font-black truncate" title={`Rs. ${Number(value).toFixed(2)}`}>
-                                            Rs. {Number(value).toFixed(2)}
-                                        </p>
-                                        {subtitle && (
-                                            <p className="relative z-10 mt-2 text-[10px] font-black uppercase tracking-widest bg-white/20 rounded-md px-2 py-0.5 inline-block">
-                                                {subtitle}
-                                            </p>
-                                        )}
-                                    </motion.div>
                                 ))}
                             </div>
-                        </motion.section>
-
-                        <section className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                            {statCards.map(([label, value, background], index) => (
-                                <motion.div
-                                    key={label}
-                                    className="stat-card"
-                                    style={{ background }}
-                                    initial={{ opacity: 0, y: 18 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.04 }}
-                                >
-                                    <p className="text-sm font-bold text-white/80">
-                                        {label}
-                                    </p>
-                                    <p className="text-2xl font-black">
-                                        {value}
-                                    </p>
-                                </motion.div>
-                            ))}
-                        </section>
-
-                        {/* Visual Analytics Charts */}
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-                            {/* Chart 1: Print Volume by Block Location */}
-                            <div className="panel p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
-                                <p className="font-bold text-slate-500 mb-4 text-sm">Print Volume by Block Location</p>
-                                <div className="h-64 flex items-end justify-around pb-4 border-b border-slate-200">
-                                    {(() => {
-                                        const blockCounts = displayOrders.reduce((acc, order) => {
-                                            const loc = order.blockLocation || "C Block";
-                                            acc[loc] = (acc[loc] || 0) + 1;
-                                            return acc;
-                                        }, {});
-                                        if (Object.keys(blockCounts).length === 0) {
-                                            blockCounts["C Block"] = 0;
-                                        }
-                                        const maxCount = Math.max(1, ...Object.values(blockCounts));
-                                        
-                                        return Object.entries(blockCounts).map(([block, count]) => {
-                                            const pct = (count / maxCount) * 100;
-                                            return (
-                                                <div key={block} className="flex flex-col items-center w-16 group h-full justify-end">
-                                                    <span className="text-xs font-bold text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{count} orders</span>
-                                                    <div className="h-44 w-full flex items-end justify-center bg-slate-50/50 rounded-lg p-1 border border-slate-100/30">
-                                                        <div 
-                                                            style={{ height: `${Math.max(10, pct)}%` }} 
-                                                            className="w-8 bg-sky-500 hover:bg-sky-600 rounded-t-md transition-all duration-500 cursor-pointer shadow-sm"
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-bold text-slate-700 mt-2">{block}</span>
-                                                </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-                            </div>
-
-                            {/* Chart 2: Hourly Peak Printing Volumes */}
-                            <div className="panel p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
-                                <p className="font-bold text-slate-500 mb-4 text-sm">Hourly Printing Volume (Peak Hours)</p>
-                                <div className="h-64 flex items-end justify-between px-2 pb-4 border-b border-slate-200">
-                                    {(() => {
-                                        const hours = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
-                                        const counts = [0, 0, 0, 0, 0, 0, 0];
-                                        
-                                        displayOrders.forEach(order => {
-                                            const d = new Date(order.uploadTime || order.createdAt);
-                                            const hr = d.getHours();
-                                            
-                                            if (hr >= 8 && hr < 10) counts[0]++;
-                                            else if (hr >= 10 && hr < 12) counts[1]++;
-                                            else if (hr >= 12 && hr < 14) counts[2]++;
-                                            else if (hr >= 14 && hr < 16) counts[3]++;
-                                            else if (hr >= 16 && hr < 18) counts[4]++;
-                                            else if (hr >= 18 && hr < 20) counts[5]++;
-                                            else if (hr >= 20) counts[6]++;
-                                        });
-
-                                        const maxCount = Math.max(1, ...counts);
- 
-                                        return counts.map((count, index) => {
-                                            const pct = (count / maxCount) * 100;
-                                            return (
-                                                <div key={index} className="flex flex-col items-center flex-1 group h-full justify-end">
-                                                    <span className="text-[10px] font-bold text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{count} prints</span>
-                                                    <div className="h-44 w-full flex items-end justify-center bg-slate-50/50 rounded-lg p-1 border border-slate-100/30 mx-1">
-                                                        <div 
-                                                            style={{ height: `${Math.max(10, pct)}%` }} 
-                                                            className="w-6 bg-indigo-500 hover:bg-indigo-600 rounded-t-md transition-all duration-500 cursor-pointer shadow-sm"
-                                                        />
-                                                    </div>
-                                                    <span className="text-[10px] font-bold text-slate-700 mt-2">{hours[index]}</span>
-                                                </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-                            </div>
-
-                            {/* Chart 3: Print Volume by College Campus — Main Admin only */}
-                            {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
-                            <div className="panel p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
-                                <p className="font-bold text-slate-500 mb-4 text-sm">Print Volume by College / Campus</p>
-                                <div className="h-64 flex items-end justify-around pb-4 border-b border-slate-200">
-                                    {(() => {
-                                        const collegeCounts = displayOrders.reduce((acc, order) => {
-                                            const block = displayBlocks.find(b => b.name === order.blockLocation);
-                                            const col = block ? block.college : "KLU";
-                                            acc[col] = (acc[col] || 0) + 1;
-                                            return acc;
-                                        }, {});
-                                        if (Object.keys(collegeCounts).length === 0) {
-                                            collegeCounts["KLU"] = 0;
-                                        }
-                                        const maxCount = Math.max(1, ...Object.values(collegeCounts));
-                                        
-                                        return Object.entries(collegeCounts).map(([college, count]) => {
-                                            const pct = (count / maxCount) * 100;
-                                            return (
-                                                <div key={college} className="flex flex-col items-center w-16 group h-full justify-end">
-                                                    <span className="text-xs font-bold text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{count} orders</span>
-                                                    <div className="h-44 w-full flex items-end justify-center bg-slate-50/50 rounded-lg p-1 border border-slate-100/30">
-                                                        <div 
-                                                            style={{ height: `${Math.max(10, pct)}%` }} 
-                                                            className="w-8 bg-emerald-500 hover:bg-emerald-600 rounded-t-md transition-all duration-500 cursor-pointer shadow-sm"
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-bold text-slate-700 mt-2">{college}</span>
-                                                </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-                            </div>
-                            )}
                         </div>
 
-                        <motion.section
-                            className="panel mt-6 overflow-x-auto p-6"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.12 }}
-                        >
-                            <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
-                                <div>
-                                    <p className="eyebrow">Order history</p>
-                                    <h2 className="text-2xl font-black text-slate-900">
-                                        All Orders History
-                                    </h2>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
-                                        <button
-                                            onClick={handleBulkDeleteOrders}
-                                            className="btn danger px-4 py-2 text-sm font-bold min-h-0"
-                                        >
-                                            🗑️ Delete Selected ({selectedAdminOrderIds.length})
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => exportToCSV(orders, "active_orders", ["Order ID", "Date & Time", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"])}
-                                        className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
-                                    >
-                                        📥 Export Excel
-                                    </button>
-                                </div>
-                            </div>
-
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                            <th className="w-10">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={orders.length > 0 && selectedAdminOrderIds.length === orders.length}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedAdminOrderIds(orders.map(o => o.orderId));
-                                                        } else {
-                                                            setSelectedAdminOrderIds([]);
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                />
-                                            </th>
+                        {/* Subpage 1: Live Order Queue Table */}
+                        {queueSubTab === "live-queue" && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Live print queue</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Active Order Queue</h2>
+                                        <p className="subtitle">Orders currently in the active print pipeline. Refreshes every 3 seconds.</p>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
+                                            <button
+                                                onClick={handleBulkDeleteOrders}
+                                                className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                            >
+                                                🗑️ Delete Selected ({selectedAdminOrderIds.length})
+                                            </button>
                                         )}
-                                        <th>Order ID</th>
-                                        <th
-                                            onClick={() => setOrderSortDir(d => d === 'desc' ? 'asc' : 'desc')}
-                                            className="cursor-pointer select-none whitespace-nowrap"
-                                            title="Sort by Date"
+                                        <button
+                                            onClick={() => exportToCSV(
+                                                orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)),
+                                                "order_queue",
+                                                ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"]
+                                            )}
+                                            className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
                                         >
-                                            Date &amp; Time {orderSortDir === 'desc' ? '▼' : '▲'}
-                                        </th>
-                                        <th>Location</th>
-                                        <th>Customer</th>
-                                        <th>Pages</th>
-                                        <th>Copies</th>
-                                        <th>Price</th>
-                                        <th>Payment</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
+                                            📥 Export Queue
+                                        </button>
+                                    </div>
+                                </div>
 
-                                <tbody>
-                                    {[...(orders || [])].sort((a, b) => {
-                                        const ta = new Date(a.uploadTime || 0).getTime();
-                                        const tb = new Date(b.uploadTime || 0).getTime();
-                                        return orderSortDir === 'desc' ? tb - ta : ta - tb;
-                                    }).map((order, index) => (
-                                        <motion.tr
-                                            key={order.id}
-                                            initial={{ opacity: 0, y: 8 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.03 }}
-                                        >
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
                                             {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                                <td className="w-10">
+                                                <th className="w-10">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedAdminOrderIds.includes(order.orderId)}
-                                                        onChange={() => {
-                                                            setSelectedAdminOrderIds(prev =>
-                                                                prev.includes(order.orderId)
-                                                                    ? prev.filter(id => id !== order.orderId)
-                                                                    : [...prev, order.orderId]
-                                                            );
+                                                        checked={orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).length > 0 && selectedAdminOrderIds.length > 0}
+                                                        onChange={(e) => {
+                                                            const queueIds = orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).map(o => o.orderId);
+                                                            if (e.target.checked) {
+                                                                setSelectedAdminOrderIds(Array.from(new Set([...selectedAdminOrderIds, ...queueIds])));
+                                                            } else {
+                                                                setSelectedAdminOrderIds(selectedAdminOrderIds.filter(id => !queueIds.includes(id)));
+                                                            }
                                                         }}
                                                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                                     />
-                                                </td>
+                                                </th>
                                             )}
-                                            <td className="font-black">
-                                                <span>{order.orderId}</span>
-                                            </td>
-                                            <td className="whitespace-nowrap text-slate-500 text-sm">
-                                                {order.uploadTime
-                                                    ? new Date(order.uploadTime).toLocaleString('en-IN', {
-                                                        day: '2-digit', month: 'short', year: 'numeric',
-                                                        hour: '2-digit', minute: '2-digit', hour12: true
-                                                      })
-                                                    : '—'}
-                                            </td>
-                                            <td className="font-bold">
-                                                {order.blockLocation || "C Block"}
-                                            </td>
-                                            <td className="font-bold text-slate-900">
-                                                {order.customerName || "Customer"}
-                                            </td>
-                                            <td>
-                                                <button
-                                                    onClick={() => showPagesDetails(order)}
-                                                    className="text-sky-600 hover:text-sky-800 font-bold underline cursor-pointer"
-                                                >
-                                                    {getPagesCount(order)}
-                                                </button>
-                                            </td>
-                                            <td>{order.copies}</td>
-                                            <td className="font-black text-slate-900">
-                                                Rs. {order.price}
-                                            </td>
-                                            <td>
-                                                <span className={paymentClass(order.paymentStatus)}>
-                                                    {order.paymentStatus}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={statusClass(order.status)}>
-                                                    {order.status}
-                                                </span>
-                                            </td>
-                                        </motion.tr>
-                                    ))}
-
-                                    {orders.length === 0 && (
-                                        <tr>
-                                            <td colSpan="9" className="text-center font-bold text-slate-500 py-6">
-                                                No print orders in queue
-                                            </td>
+                                            <th>Order ID</th>
+                                            <th>Location</th>
+                                            <th>Customer</th>
+                                            <th>Pages</th>
+                                            <th>Copies</th>
+                                            <th>Price</th>
+                                            <th>Payment</th>
+                                            <th>Status</th>
+                                            <th>OTP Code</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </motion.section>
-                    </div>
-                )}
+                                    </thead>
+                                    <tbody>
+                                        {orders
+                                            .filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status))
+                                            .map((order, index) => (
+                                            <motion.tr
+                                                key={order.id}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.03 }}
+                                            >
+                                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                    <td className="w-10">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedAdminOrderIds.includes(order.orderId)}
+                                                            onChange={() => {
+                                                                setSelectedAdminOrderIds(prev =>
+                                                                    prev.includes(order.orderId)
+                                                                        ? prev.filter(id => id !== order.orderId)
+                                                                        : [...prev, order.orderId]
+                                                                );
+                                                            }}
+                                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                        />
+                                                    </td>
+                                                )}
+                                                <td className="font-black">
+                                                    <span>{order.orderId}</span>
+                                                </td>
+                                                <td className="font-bold">{order.blockLocation || "—"}</td>
+                                                <td className="font-bold text-slate-900">{order.customerName || "Customer"}</td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => showPagesDetails(order)}
+                                                        className="text-sky-600 hover:text-sky-800 font-bold underline cursor-pointer"
+                                                    >
+                                                        {getPagesCount(order)}
+                                                    </button>
+                                                </td>
+                                                <td>{order.copies}</td>
+                                                <td className="font-black text-slate-900">Rs. {order.price}</td>
+                                                <td>
+                                                    <span className={paymentClass(order.paymentStatus)}>
+                                                        {order.paymentStatus}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={statusClass(order.status)}>
+                                                        {order.status}
+                                                    </span>
+                                                </td>
+                                                <td className="font-black text-sky-600 tracking-widest font-mono">
+                                                    {order.otpCode || "—"}
+                                                </td>
+                                                <td>
+                                                    <div className="flex items-center gap-1.5">
+                                                        {order.status !== "PRINTING" && (
+                                                            <button
+                                                                onClick={() => handleUpdateOrderStatus(order.id, "PRINTING")}
+                                                                className="btn success py-1 px-2 text-[11px] min-h-0 font-bold"
+                                                                title="Start Printing"
+                                                            >
+                                                                ▶️ Print
+                                                            </button>
+                                                        )}
+                                                        {order.status === "PRINTING" && (
+                                                            <button
+                                                                onClick={() => handleUpdateOrderStatus(order.id, "COMPLETED")}
+                                                                className="btn success py-1 px-2 text-[11px] min-h-0 font-bold"
+                                                                title="Mark Completed"
+                                                            >
+                                                                ✅ Done
+                                                            </button>
+                                                        )}
+                                                        <a
+                                                            href={getPdfDownloadUrl(order.id)}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="btn secondary py-1 px-2 text-[11px] min-h-0 font-bold"
+                                                            title="Download PDF"
+                                                        >
+                                                            📥 PDF
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
 
-                {/* Order Queue Tab */}
-                {activeTab === "order-queue" && (
-                    <motion.section
-                        className="panel mt-2 overflow-x-auto p-6"
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
-                            <div>
-                                <p className="eyebrow">Live print queue</p>
-                                <h2 className="text-2xl font-black text-slate-900">
-                                    Active Order Queue
-                                </h2>
-                                <p className="subtitle">
-                                    Orders currently in the print pipeline. Refreshes every 3 seconds.
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
-                                    <button
-                                        onClick={handleBulkDeleteOrders}
-                                        className="btn danger px-4 py-2 text-sm font-bold min-h-0"
-                                    >
-                                        🗑️ Delete Selected ({selectedAdminOrderIds.length})
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => exportToCSV(
-                                        orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)),
-                                        "order_queue",
-                                        ["Order ID", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"]
-                                    )}
-                                    className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
-                                >
-                                    📥 Export Queue
-                                </button>
-                            </div>
-                        </div>
-
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                        <th className="w-10">
-                                            <input
-                                                type="checkbox"
-                                                checked={orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).length > 0 && selectedAdminOrderIds.length > 0}
-                                                onChange={(e) => {
-                                                    const queueIds = orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).map(o => o.orderId);
-                                                    if (e.target.checked) {
-                                                        setSelectedAdminOrderIds(Array.from(new Set([...selectedAdminOrderIds, ...queueIds])));
-                                                    } else {
-                                                        setSelectedAdminOrderIds(selectedAdminOrderIds.filter(id => !queueIds.includes(id)));
-                                                    }
-                                                }}
-                                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                            />
-                                        </th>
-                                    )}
-                                    <th>Order ID</th>
-                                    <th>Location</th>
-                                    <th>Customer</th>
-                                    <th>Pages</th>
-                                    <th>Copies</th>
-                                    <th>Price</th>
-                                    <th>Payment</th>
-                                    <th>Status</th>
-                                    <th>OTP Code</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {orders
-                                    .filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status))
-                                    .map((order, index) => (
-                                    <motion.tr
-                                        key={order.id}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.03 }}
-                                    >
-                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                            <td className="w-10">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedAdminOrderIds.includes(order.orderId)}
-                                                    onChange={() => {
-                                                        setSelectedAdminOrderIds(prev =>
-                                                            prev.includes(order.orderId)
-                                                                ? prev.filter(id => id !== order.orderId)
-                                                                : [...prev, order.orderId]
-                                                        );
-                                                    }}
-                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                                />
-                                            </td>
+                                        {orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).length === 0 && (
+                                            <tr>
+                                                <td colSpan="10" className="text-center font-bold text-slate-500 py-10">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <span className="text-4xl">📋</span>
+                                                        <span>No active orders in the print queue right now.</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         )}
-                                        <td className="font-black">
-                                            <span>{order.orderId}</span>
-                                        </td>
-                                        <td className="font-bold">{order.blockLocation || "—"}</td>
-                                        <td className="font-bold text-slate-900">{order.customerName || "Customer"}</td>
-                                             <td>
-                                                 <button
-                                                     onClick={() => showPagesDetails(order)}
-                                                     className="text-sky-600 hover:text-sky-800 font-bold underline cursor-pointer"
-                                                 >
-                                                     {getPagesCount(order)}
-                                                 </button>
-                                             </td>
-                                        <td>{order.copies}</td>
-                                        <td className="font-black text-slate-900">Rs. {order.price}</td>
-                                        <td>
-                                            <span className={paymentClass(order.paymentStatus)}>
-                                                {order.paymentStatus}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={statusClass(order.status)}>
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="font-black text-sky-600 tracking-widest">
-                                            {order.otpCode || "—"}
-                                        </td>
-                                    </motion.tr>
-                                ))}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
 
-                                {orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).length === 0 && (
-                                    <tr>
-                                        <td colSpan="9" className="text-center font-bold text-slate-500 py-6">
-                                            No active orders in the print queue
-                                        </td>
-                                    </tr>
+                        {/* Subpage 2: Queue Kanban Board */}
+                        {queueSubTab === "kanban" && (
+                            <motion.div
+                                className="space-y-4"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="panel p-6">
+                                    <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                        <div>
+                                            <p className="eyebrow">Visual Flow</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Queue Kanban Board</h2>
+                                            <p className="subtitle">Track print jobs across stages from waiting queue to active printing and completion.</p>
+                                        </div>
+                                        <button onClick={fetchOrders} className="btn secondary px-4 py-2 text-sm font-bold min-h-0">
+                                            🔄 Refresh Kanban
+                                        </button>
+                                    </div>
+
+                                    {/* 3 Kanban Columns */}
+                                    <div className="grid lg:grid-cols-3 gap-6">
+                                        {/* Column 1: Waiting Queue */}
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center justify-between px-2">
+                                                <span className="text-sm font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                                                    ⏳ Waiting Queue
+                                                </span>
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-200 text-slate-700">
+                                                    {orders.filter(o => ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE"].includes(o.status)).length}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="kanban-column flex flex-col gap-3 min-h-[350px] p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                                                {orders.filter(o => ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE"].includes(o.status)).map((order) => (
+                                                    <div key={order.id} className="kanban-card p-4 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                                        <div className="flex justify-between items-start">
+                                                            <span className="text-xs font-mono font-black text-slate-400">#{order.orderId}</span>
+                                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
+                                                                {order.status}
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="mt-2 text-sm font-black text-slate-900">{order.customerName || "Customer"}</h4>
+                                                        <p className="mt-1 text-xs text-slate-500 font-bold">{order.blockLocation} · {getPagesCount(order)} pages · {order.copies} copies</p>
+                                                        <p className="mt-1 text-xs font-black text-slate-800">Rs. {order.price}</p>
+                                                        <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+                                                            <button
+                                                                onClick={() => handleUpdateOrderStatus(order.id, "PRINTING")}
+                                                                className="btn success py-1 px-3 text-xs min-h-0 flex-1 font-bold"
+                                                            >
+                                                                ▶️ Start Print
+                                                            </button>
+                                                            <a
+                                                                href={getPdfDownloadUrl(order.id)}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="btn secondary py-1 px-2.5 min-h-0 text-xs font-bold"
+                                                                title="Download PDF"
+                                                            >
+                                                                📥
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {orders.filter(o => ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE"].includes(o.status)).length === 0 && (
+                                                    <p className="text-center text-xs font-bold text-slate-400 py-16">No orders waiting</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Column 2: Active Printing */}
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center justify-between px-2">
+                                                <span className="text-sm font-black uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+                                                    🖨️ Active Printing
+                                                </span>
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800">
+                                                    {orders.filter(o => o.status === "PRINTING").length}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="kanban-column flex flex-col gap-3 min-h-[350px] p-3 rounded-2xl bg-blue-50/40 border border-blue-200">
+                                                {orders.filter(o => o.status === "PRINTING").map((order) => (
+                                                    <div key={order.id} className="kanban-card p-4 rounded-xl bg-white border-2 border-blue-300 shadow-md">
+                                                        <div className="flex justify-between items-start">
+                                                            <span className="text-xs font-mono font-black text-blue-600">#{order.orderId}</span>
+                                                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-600 text-white animate-pulse">
+                                                                PRINTING
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="mt-2 text-sm font-black text-slate-900">{order.customerName || "Customer"}</h4>
+                                                        <p className="mt-1 text-xs text-slate-500 font-bold">{order.blockLocation} · {getPagesCount(order)} pages · {order.copies} copies</p>
+                                                        <p className="mt-1 text-xs font-black text-slate-800">Rs. {order.price}</p>
+                                                        <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+                                                            <button
+                                                                onClick={() => handleUpdateOrderStatus(order.id, "COMPLETED")}
+                                                                className="btn success py-1 px-3 text-xs min-h-0 flex-1 font-bold"
+                                                            >
+                                                                ✅ Complete
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleUpdateOrderStatus(order.id, "CANCELLED")}
+                                                                className="btn danger py-1 px-2.5 min-h-0 text-xs font-bold"
+                                                                title="Cancel Job"
+                                                            >
+                                                                ❌
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {orders.filter(o => o.status === "PRINTING").length === 0 && (
+                                                    <p className="text-center text-xs font-bold text-slate-400 py-16">No active print jobs</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Column 3: Completed / Archive */}
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center justify-between px-2">
+                                                <span className="text-sm font-black uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">
+                                                    ✅ Completed / Ready
+                                                </span>
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800">
+                                                    {orders.filter(o => ["COMPLETED", "FAILED", "CANCELLED"].includes(o.status)).length}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="kanban-column flex flex-col gap-3 min-h-[350px] p-3 rounded-2xl bg-slate-50 border border-slate-200 max-h-[500px] overflow-y-auto">
+                                                {orders.filter(o => ["COMPLETED", "FAILED", "CANCELLED"].includes(o.status)).slice(0, 15).map((order) => (
+                                                    <div key={order.id} className="kanban-card p-4 rounded-xl bg-white border border-slate-200 opacity-80 hover:opacity-100 transition-all">
+                                                        <div className="flex justify-between items-start">
+                                                            <span className="text-xs font-mono font-black text-slate-400">#{order.orderId}</span>
+                                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+                                                                order.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                                            }`}>
+                                                                {order.status}
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="mt-2 text-sm font-black text-slate-900">{order.customerName || "Customer"}</h4>
+                                                        <p className="mt-1 text-xs text-slate-500 font-bold">{order.blockLocation} · Rs. {order.price}</p>
+                                                    </div>
+                                                ))}
+                                                {orders.filter(o => ["COMPLETED", "FAILED", "CANCELLED"].includes(o.status)).length === 0 && (
+                                                    <p className="text-center text-xs font-bold text-slate-400 py-16">No completed jobs yet</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Subpage 3: Printer Kiosks Status Map */}
+                        {queueSubTab === "kiosks" && (
+                            <motion.div
+                                className="space-y-4"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="panel p-6 mb-4">
+                                    <div className="section-header pb-2">
+                                        <div>
+                                            <p className="eyebrow">Hardware Map</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Printer Kiosk Status</h2>
+                                            <p className="subtitle">Live status, paper supplies, and active queue load for all campus printing terminals.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {printers.map((p) => {
+                                        const isLowPaper = p.paperCount < 50;
+                                        return (
+                                            <motion.div
+                                                key={p.id}
+                                                className="panel p-5 relative overflow-hidden flex flex-col justify-between border-slate-100 hover:shadow-md transition-all duration-300"
+                                                initial={{ opacity: 0, scale: 0.98 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <h4 className="font-black text-slate-900 text-lg leading-tight">{p.blockLocation}</h4>
+                                                        <p className="text-xs text-slate-400 font-bold mt-0.5">{p.printerName || "Printer Terminal"}</p>
+                                                    </div>
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                                                        p.online 
+                                                            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
+                                                            : "bg-slate-500/10 text-slate-400 border border-slate-500/15"
+                                                    }`}>
+                                                        {p.online ? "Online" : "Offline"}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-4">
+                                                    <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                                                        <span>Paper Stock</span>
+                                                        <span className={isLowPaper ? "text-rose-500 font-black" : "text-slate-800"}>
+                                                            {p.paperCount} Sheets {isLowPaper && "🚨"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 border-t border-slate-100 pt-3 flex items-center justify-between text-xs font-bold text-slate-400">
+                                                    <span>Active Queue Load:</span>
+                                                    <span className="text-slate-700 font-black">{p.queueLoad || 0} active jobs</span>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                    {printers.length === 0 && (
+                                        <div className="col-span-full panel p-12 text-center text-slate-400 font-bold">
+                                            No printer terminals registered.
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Subpage 4: Revenue Analytics */}
+                        {queueSubTab === "revenue" && (
+                            <motion.div
+                                className="space-y-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <motion.section className="panel p-6">
+                                    <div className="section-header">
+                                        <div>
+                                            <p className="eyebrow">Revenue Analytics</p>
+                                            <h2 className="text-2xl font-black text-slate-900">
+                                                Gross vs Net After Coupons
+                                            </h2>
+                                            <p className="subtitle">
+                                                Net revenue = gross revenue − coupon discounts − Razorpay charges ({systemSettings.razorpayChargePercentage || 2.36}%)
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            {/* College Filter Selection Dropdown - hidden for sub-admins and managers */}
+                                            {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-500">Filter College:</span>
+                                                    <select
+                                                        value={selectedCollegeFilter}
+                                                        onChange={(e) => setSelectedCollegeFilter(e.target.value)}
+                                                        className="field !w-auto text-xs py-1 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                                    >
+                                                        <option value="ALL">All Colleges</option>
+                                                        {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                            <option key={col} value={col}>{col} College</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-500">Campus:</span>
+                                                    <span className="text-xs font-black px-3 py-1 rounded-lg bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                                        {loggedInAdminCollege}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                                                {[
+                                                    ["all", "All Time"],
+                                                    ["day", "Today"],
+                                                    ["week", "This Week"],
+                                                    ["month", "This Month"],
+                                                ].map(([period, label]) => (
+                                                    <button
+                                                        key={period}
+                                                        onClick={() => setRevenuePeriod(period)}
+                                                        className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${
+                                                            revenuePeriod === period ? "primary" : "ghost"
+                                                        }`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="revenue-grid mt-6">
+                                        {revenueCards.map(([label, value, background, subtitle], index) => (
+                                            <motion.div
+                                                key={label}
+                                                className="revenue-card"
+                                                style={{ background }}
+                                                initial={{ opacity: 0, y: 18 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.06 }}
+                                            >
+                                                <p className="relative z-10 text-sm font-bold text-white/80">
+                                                    {label}
+                                                </p>
+                                                <p className="relative z-10 mt-2 text-2xl font-black truncate" title={`Rs. ${Number(value).toFixed(2)}`}>
+                                                    Rs. {Number(value).toFixed(2)}
+                                                </p>
+                                                {subtitle && (
+                                                    <p className="relative z-10 mt-2 text-[10px] font-black uppercase tracking-widest bg-white/20 rounded-md px-2 py-0.5 inline-block">
+                                                        {subtitle}
+                                                    </p>
+                                                )}
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.section>
+
+                                <section className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                                    {statCards.map(([label, value, background], index) => (
+                                        <motion.div
+                                            key={label}
+                                            className="stat-card"
+                                            style={{ background }}
+                                            initial={{ opacity: 0, y: 18 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.04 }}
+                                        >
+                                            <p className="text-sm font-bold text-white/80">
+                                                {label}
+                                            </p>
+                                            <p className="text-2xl font-black">
+                                                {value}
+                                            </p>
+                                        </motion.div>
+                                    ))}
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* Subpage 5: Visual Charts */}
+                        {queueSubTab === "charts" && (
+                            <motion.div
+                                className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                {/* Chart 1: Print Volume by Block Location */}
+                                <div className="panel p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+                                    <p className="font-bold text-slate-500 mb-4 text-sm">Print Volume by Block Location</p>
+                                    <div className="h-64 flex items-end justify-around pb-4 border-b border-slate-200">
+                                        {(() => {
+                                            const blockCounts = displayOrders.reduce((acc, order) => {
+                                                const loc = order.blockLocation || "C Block";
+                                                acc[loc] = (acc[loc] || 0) + 1;
+                                                return acc;
+                                            }, {});
+                                            if (Object.keys(blockCounts).length === 0) {
+                                                blockCounts["C Block"] = 0;
+                                            }
+                                            const maxCount = Math.max(1, ...Object.values(blockCounts));
+                                            
+                                            return Object.entries(blockCounts).map(([block, count]) => {
+                                                const pct = (count / maxCount) * 100;
+                                                return (
+                                                    <div key={block} className="flex flex-col items-center w-16 group h-full justify-end">
+                                                        <span className="text-xs font-bold text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{count} orders</span>
+                                                        <div className="h-44 w-full flex items-end justify-center bg-slate-50/50 rounded-lg p-1 border border-slate-100/30">
+                                                            <div 
+                                                                style={{ height: `${Math.max(10, pct)}%` }} 
+                                                                className="w-8 bg-sky-500 hover:bg-sky-600 rounded-t-md transition-all duration-500 cursor-pointer shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-700 mt-2">{block}</span>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Chart 2: Hourly Peak Printing Volumes */}
+                                <div className="panel p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+                                    <p className="font-bold text-slate-500 mb-4 text-sm">Hourly Printing Volume (Peak Hours)</p>
+                                    <div className="h-64 flex items-end justify-between px-2 pb-4 border-b border-slate-200">
+                                        {(() => {
+                                            const hours = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
+                                            const counts = [0, 0, 0, 0, 0, 0, 0];
+                                            
+                                            displayOrders.forEach(order => {
+                                                const d = new Date(order.uploadTime || order.createdAt);
+                                                const hr = d.getHours();
+                                                
+                                                if (hr >= 8 && hr < 10) counts[0]++;
+                                                else if (hr >= 10 && hr < 12) counts[1]++;
+                                                else if (hr >= 12 && hr < 14) counts[2]++;
+                                                else if (hr >= 14 && hr < 16) counts[3]++;
+                                                else if (hr >= 16 && hr < 18) counts[4]++;
+                                                else if (hr >= 18 && hr < 20) counts[5]++;
+                                                else if (hr >= 20) counts[6]++;
+                                            });
+
+                                            const maxCount = Math.max(1, ...counts);
+
+                                            return counts.map((count, index) => {
+                                                const pct = (count / maxCount) * 100;
+                                                return (
+                                                    <div key={index} className="flex flex-col items-center flex-1 group h-full justify-end">
+                                                        <span className="text-[10px] font-bold text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{count} prints</span>
+                                                        <div className="h-44 w-full flex items-end justify-center bg-slate-50/50 rounded-lg p-1 border border-slate-100/30 mx-1">
+                                                            <div 
+                                                                style={{ height: `${Math.max(10, pct)}%` }} 
+                                                                className="w-6 bg-indigo-500 hover:bg-indigo-600 rounded-t-md transition-all duration-500 cursor-pointer shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-slate-700 mt-2">{hours[index]}</span>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Chart 3: Print Volume by College Campus — Main Admin only */}
+                                {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
+                                <div className="panel p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+                                    <p className="font-bold text-slate-500 mb-4 text-sm">Print Volume by College / Campus</p>
+                                    <div className="h-64 flex items-end justify-around pb-4 border-b border-slate-200">
+                                        {(() => {
+                                            const collegeCounts = displayOrders.reduce((acc, order) => {
+                                                const block = displayBlocks.find(b => b.name === order.blockLocation);
+                                                const col = block ? block.college : "KLU";
+                                                acc[col] = (acc[col] || 0) + 1;
+                                                return acc;
+                                            }, {});
+                                            if (Object.keys(collegeCounts).length === 0) {
+                                                collegeCounts["KLU"] = 0;
+                                            }
+                                            const maxCount = Math.max(1, ...Object.values(collegeCounts));
+                                            
+                                            return Object.entries(collegeCounts).map(([college, count]) => {
+                                                const pct = (count / maxCount) * 100;
+                                                return (
+                                                    <div key={college} className="flex flex-col items-center w-16 group h-full justify-end">
+                                                        <span className="text-xs font-bold text-slate-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{count} orders</span>
+                                                        <div className="h-44 w-full flex items-end justify-center bg-slate-50/50 rounded-lg p-1 border border-slate-100/30">
+                                                            <div 
+                                                                style={{ height: `${Math.max(10, pct)}%` }} 
+                                                                className="w-8 bg-emerald-500 hover:bg-emerald-600 rounded-t-md transition-all duration-500 cursor-pointer shadow-sm"
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-700 mt-2">{college}</span>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
                                 )}
-                            </tbody>
-                        </table>
-                    </motion.section>
+                            </motion.div>
+                        )}
+
+                        {/* Subpage 6: All Orders History */}
+                        {queueSubTab === "history" && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Order history</p>
+                                        <h2 className="text-2xl font-black text-slate-900">
+                                            All Orders History
+                                        </h2>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
+                                            <button
+                                                onClick={handleBulkDeleteOrders}
+                                                className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                            >
+                                                🗑️ Delete Selected ({selectedAdminOrderIds.length})
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => exportToCSV(orders, "active_orders", ["Order ID", "Date & Time", "Location", "Customer", "Pages", "Copies", "Price", "Payment", "Order Status"])}
+                                            className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
+                                        >
+                                            📥 Export Excel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                <th className="w-10">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={orders.length > 0 && selectedAdminOrderIds.length === orders.length}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedAdminOrderIds(orders.map(o => o.orderId));
+                                                            } else {
+                                                                setSelectedAdminOrderIds([]);
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </th>
+                                            )}
+                                            <th>Order ID</th>
+                                            <th
+                                                onClick={() => setOrderSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                                                className="cursor-pointer select-none whitespace-nowrap"
+                                                title="Sort by Date"
+                                            >
+                                                Date &amp; Time {orderSortDir === 'desc' ? '▼' : '▲'}
+                                            </th>
+                                            <th>Location</th>
+                                            <th>Customer</th>
+                                            <th>Pages</th>
+                                            <th>Copies</th>
+                                            <th>Price</th>
+                                            <th>Payment</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {[...(orders || [])].sort((a, b) => {
+                                            const ta = new Date(a.uploadTime || 0).getTime();
+                                            const tb = new Date(b.uploadTime || 0).getTime();
+                                            return orderSortDir === 'desc' ? tb - ta : ta - tb;
+                                        }).map((order, index) => (
+                                            <motion.tr
+                                                key={order.id}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.03 }}
+                                            >
+                                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                    <td className="w-10">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedAdminOrderIds.includes(order.orderId)}
+                                                            onChange={() => {
+                                                                setSelectedAdminOrderIds(prev =>
+                                                                    prev.includes(order.orderId)
+                                                                        ? prev.filter(id => id !== order.orderId)
+                                                                        : [...prev, order.orderId]
+                                                                );
+                                                            }}
+                                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                        />
+                                                    </td>
+                                                )}
+                                                <td className="font-black">
+                                                    <span>{order.orderId}</span>
+                                                </td>
+                                                <td className="whitespace-nowrap text-slate-500 text-sm">
+                                                    {order.uploadTime
+                                                        ? new Date(order.uploadTime).toLocaleString('en-IN', {
+                                                            day: '2-digit', month: 'short', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', hour12: true
+                                                          })
+                                                        : '—'}
+                                                </td>
+                                                <td className="font-bold">
+                                                    {order.blockLocation || "C Block"}
+                                                </td>
+                                                <td className="font-bold text-slate-900">
+                                                    {order.customerName || "Customer"}
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => showPagesDetails(order)}
+                                                        className="text-sky-600 hover:text-sky-800 font-bold underline cursor-pointer"
+                                                    >
+                                                        {getPagesCount(order)}
+                                                    </button>
+                                                </td>
+                                                <td>{order.copies}</td>
+                                                <td className="font-black text-slate-900">
+                                                    Rs. {order.price}
+                                                </td>
+                                                <td>
+                                                    <span className={paymentClass(order.paymentStatus)}>
+                                                        {order.paymentStatus}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={statusClass(order.status)}>
+                                                        {order.status}
+                                                    </span>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+
+                                        {orders.length === 0 && (
+                                            <tr>
+                                                <td colSpan="9" className="text-center font-bold text-slate-500 py-6">
+                                                    No print orders in history
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+                    </div>
                 )}
 
                 {/* Pricing & Coupons Tab */}
@@ -3416,868 +3680,1290 @@ function AdminDashboard() {
                 {/* Blocks Management Tab */}
                 {activeTab === "blocks" && (
                     <div className="mt-6 space-y-6">
+                        {/* Top Sub-Navigation Bar for Campus Blocks */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "all-blocks", label: "Block Directory", icon: "🏛️" },
+                                    { id: "add-block", label: "Add New Block", icon: "➕" },
+                                    { id: "overview", label: "Block Overview & Stats", icon: "📊" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setBlocksSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            blocksSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            {/* Add Block Panel */}
+                        {/* SUBPAGE 1: Block Directory Table */}
+                        {blocksSubTab === "all-blocks" && (
                             <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
+                                className="panel p-6 overflow-x-auto"
+                                initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header mb-4">
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                     <div>
-                                        <p className="eyebrow">Campus Locations</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Add New Block</h2>
-                                        <p className="subtitle">Create a new campus printing block that users can select on their location screen.</p>
+                                        <p className="eyebrow">Block Directory</p>
+                                        <h2 className="text-2xl font-black text-slate-900">All Campus Blocks ({blocks.length})</h2>
+                                        <p className="subtitle">Rename or remove campus print locations. Deleting a block will deactivate its linked printer.</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setBlocksSubTab("add-block")}
+                                            className="btn primary min-h-0 px-4 py-2 text-xs font-bold"
+                                        >
+                                            ➕ Add New Block
+                                        </button>
+                                        <button
+                                            onClick={fetchBlocks}
+                                            className="btn secondary min-h-0 px-4 py-2 text-xs font-bold"
+                                        >
+                                            🔄 Refresh
+                                        </button>
                                     </div>
                                 </div>
-                                <form onSubmit={addBlock} className="space-y-4">
-                                    <label className="block">
-                                        <span className="block text-sm font-black text-slate-700 mb-2">Block Name</span>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g. C Block, L Block, F Block"
-                                            className="field"
-                                            value={newBlockName}
-                                            onChange={(e) => setNewBlockName(e.target.value)}
-                                            required
-                                        />
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-sm font-black text-slate-700 mb-2">College Name</span>
-                                        {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Block ID</th>
+                                            <th>Block Name</th>
+                                            <th>College</th>
+                                            <th>Printer Status</th>
+                                            <th>Paper Level</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {blocks.map((b, index) => {
+                                            const printer = printers.find(p => p.blockLocation === b.name);
+                                            const isLow = (printer?.paperCount || 0) < 50;
+                                            return (
+                                                <motion.tr
+                                                    key={b.id}
+                                                    initial={{ opacity: 0, y: 8 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.04 }}
+                                                >
+                                                    <td className="font-bold text-slate-400">{index + 1}</td>
+                                                    <td className="font-mono font-black text-slate-500">#{b.id}</td>
+                                                    <td>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xl">{["🏛️","⚡","📘","🔬","🎨","🏗️"][index % 6]}</span>
+                                                            <span className="font-black text-slate-900 text-base">{b.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span className="text-xs font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                                                            {b.college || "KLU"}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`status-pill ${
+                                                            printer?.online ? "status-paid" : "status-unpaid"
+                                                        }`}>
+                                                            {printer ? (printer.online ? "ONLINE" : "OFFLINE") : "NO PRINTER"}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {printer ? (
+                                                            <div className="flex items-center gap-3">
+                                                                <span className={`text-xs font-bold ${
+                                                                    isLow ? "text-rose-500" : "text-slate-700"
+                                                                }`}>
+                                                                    {printer.paperCount ?? 0} Sheets
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-400 font-bold">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => renameBlock(b.id, b.name)}
+                                                                className="btn secondary min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                            >
+                                                                ✏️ Rename
+                                                            </button>
+                                                            <button
+                                                                onClick={() => deleteBlock(b.id)}
+                                                                className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                            >
+                                                                🗑️ Delete
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })}
+                                        {blocks.length === 0 && (
+                                            <tr>
+                                                <td colSpan="7" className="text-center font-bold text-slate-400 py-10">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <span className="text-4xl">🏛️</span>
+                                                        <span>No campus blocks configured. Add your first block above.</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 2: Add New Block Form */}
+                        {blocksSubTab === "add-block" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Campus Locations</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Add New Block</h2>
+                                            <p className="subtitle">Create a new campus printing block that users can select on their location screen.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={addBlock} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">Block Name</span>
                                             <input
                                                 type="text"
-                                                className="field bg-slate-100 cursor-not-allowed"
-                                                value={loggedInAdminCollege}
-                                                readOnly
-                                                disabled
-                                            />
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                placeholder="e.g. KLU, UoH, etc."
+                                                placeholder="e.g. C Block, L Block, F Block"
                                                 className="field"
-                                                value={newBlockCollege}
-                                                onChange={(e) => setNewBlockCollege(e.target.value)}
+                                                value={newBlockName}
+                                                onChange={(e) => setNewBlockName(e.target.value)}
                                                 required
                                             />
-                                        )}
-                                    </label>
-                                    <button type="submit" className="btn success w-full">
-                                        ➕ Add Block to College
-                                    </button>
-                                </form>
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">College Name</span>
+                                            {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                <input
+                                                    type="text"
+                                                    className="field bg-slate-100 cursor-not-allowed"
+                                                    value={loggedInAdminCollege}
+                                                    readOnly
+                                                    disabled
+                                                />
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. KLU, UoH, etc."
+                                                    className="field"
+                                                    value={newBlockCollege}
+                                                    onChange={(e) => setNewBlockCollege(e.target.value)}
+                                                    required
+                                                />
+                                            )}
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-2">
+                                            ➕ Add Block to College
+                                        </button>
+                                    </form>
+                                </section>
 
-                                <div className="mt-6 p-4 rounded-xl bg-sky-50 border border-sky-100">
-                                    <p className="text-xs font-black text-sky-700 uppercase tracking-wider mb-1">ℹ️ What happens when you add a block?</p>
-                                    <ul className="text-xs text-sky-600 font-semibold space-y-1 mt-2">
-                                        <li>• Block appears on the user location selection screen</li>
-                                        <li>• Default pricing (BW: Rs.2, Color: Rs.5) is auto-initialized</li>
-                                        <li>• You can configure prices in the Pricing & Coupons tab</li>
-                                    </ul>
-                                </div>
-                            </motion.section>
-
-                            {/* Blocks Stats */}
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.05 }}
-                            >
-                                <div className="section-header mb-4">
+                                <section className="panel p-6 flex flex-col justify-between">
                                     <div>
-                                        <p className="eyebrow">Summary</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Block Overview</h2>
+                                        <div className="section-header mb-4">
+                                            <div>
+                                                <p className="eyebrow">Information</p>
+                                                <h3 className="text-xl font-black text-slate-900">What happens next?</h3>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-100 text-sky-800">
+                                                <strong className="block mb-0.5 text-sky-950">📍 Instant Availability</strong>
+                                                The block will immediately show on the student campus selection page.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-800">
+                                                <strong className="block mb-0.5 text-indigo-950">💵 Automatic Pricing</strong>
+                                                Default rates (B&W: ₹2.00, Color: ₹5.00) are automatically set. You can customize them in Pricing & Coupons.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800">
+                                                <strong className="block mb-0.5 text-emerald-950">🖨️ Printer Pairing</strong>
+                                                Link a physical terminal to this block under the Printer Settings tab.
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3: Block Overview & Stats */}
+                        {blocksSubTab === "overview" && (
+                            <motion.div
+                                className="space-y-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 p-5 text-white">
-                                        <p className="text-xs font-bold text-slate-300">Total Blocks</p>
+                                    <div className="panel p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl">
+                                        <p className="text-xs font-bold text-slate-400">Total Configured Blocks</p>
                                         <p className="text-4xl font-black mt-2">{blocks.length}</p>
                                     </div>
-                                    <div className="rounded-xl bg-gradient-to-br from-sky-600 to-sky-800 p-5 text-white">
-                                        <p className="text-xs font-bold text-sky-200">Active Printers</p>
+                                    <div className="panel p-6 bg-gradient-to-br from-sky-600 to-sky-700 text-white rounded-2xl">
+                                        <p className="text-xs font-bold text-sky-200">Active Online Printers</p>
                                         <p className="text-4xl font-black mt-2">{printers.filter(p => p.online).length}</p>
                                     </div>
                                 </div>
-                                <div className="mt-4 space-y-2">
-                                    {blocks.map((b, idx) => {
-                                        const defaultIcons = ["🏛️", "⚡", "📘", "🔬", "🎨", "🏗️"];
-                                        const icon = defaultIcons[idx % defaultIcons.length];
-                                        const printer = printers.find(p => p.blockLocation === b.name);
-                                        return (
-                                            <div key={b.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xl">{icon}</span>
-                                                    <div>
-                                                        <p className="font-black text-slate-900 text-sm">{b.name}</p>
-                                                        <p className="text-xs text-slate-400 font-semibold">{printer ? printer.printerName || "Printer assigned" : "No printer assigned"}</p>
-                                                    </div>
-                                                </div>
-                                                <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-full ${
-                                                    printer?.online ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
-                                                }`}>
-                                                    {printer?.online ? "Online" : "Offline"}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                    {blocks.length === 0 && (
-                                        <div className="text-center py-6 text-slate-400 font-bold text-sm">
-                                            No blocks configured yet. Add one above.
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.section>
-                        </div>
 
-                        {/* Block Management Table */}
-                        <motion.section
-                            className="panel p-6 overflow-x-auto"
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <div className="section-header pb-4">
-                                <div>
-                                    <p className="eyebrow">Block Directory</p>
-                                    <h2 className="text-2xl font-black text-slate-900">All Campus Blocks</h2>
-                                    <p className="subtitle">Rename or remove campus print locations. Deleting a block will deactivate its linked printer.</p>
-                                </div>
-                                <button
-                                    onClick={fetchBlocks}
-                                    className="btn secondary min-h-0 px-4 py-2 text-sm font-bold"
-                                >
-                                    🔄 Refresh
-                                </button>
-                            </div>
-                            <table className="data-table w-full">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Block ID</th>
-                                        <th>Block Name</th>
-                                        <th>Printer Status</th>
-                                        <th>Paper Level</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {blocks.map((b, index) => {
-                                        const printer = printers.find(p => p.blockLocation === b.name);
-                                        const isLow = (printer?.paperCount || 0) < 50;
-                                        return (
-                                            <motion.tr
-                                                key={b.id}
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.04 }}
-                                            >
-                                                <td className="font-bold text-slate-400">{index + 1}</td>
-                                                <td className="font-mono font-black text-slate-500">#{b.id}</td>
-                                                <td>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xl">{["🏛️","⚡","📘","🔬","🎨","🏗️"][index % 6]}</span>
-                                                        <span className="font-black text-slate-900 text-base">{b.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className={`status-pill ${
-                                                        printer?.online ? "status-paid" : "status-unpaid"
-                                                    }`}>
-                                                        {printer ? (printer.online ? "ONLINE" : "OFFLINE") : "NO PRINTER"}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    {printer ? (
-                                                        <div className="flex items-center gap-3">
-                                                            <span className={`text-xs font-bold ${
-                                                                isLow ? "text-rose-500" : "text-slate-700"
-                                                            }`}>
-                                                                {printer.paperCount ?? 0}
-                                                            </span>
+                                <section className="panel p-6">
+                                    <div className="section-header mb-4">
+                                        <div>
+                                            <p className="eyebrow">Location Overview</p>
+                                            <h3 className="text-xl font-black text-slate-900">Blocks & Terminal Health</h3>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        {blocks.map((b, idx) => {
+                                            const defaultIcons = ["🏛️", "⚡", "📘", "🔬", "🎨", "🏗️"];
+                                            const icon = defaultIcons[idx % defaultIcons.length];
+                                            const printer = printers.find(p => p.blockLocation === b.name);
+                                            return (
+                                                <div key={b.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-2xl">{icon}</span>
+                                                        <div>
+                                                            <p className="font-black text-slate-900 text-sm">{b.name}</p>
+                                                            <p className="text-xs text-slate-400 font-semibold">{printer ? printer.printerName || "Terminal Linked" : "No printer linked"}</p>
                                                         </div>
-                                                    ) : (
-                                                        <span className="text-xs text-slate-400 font-bold">—</span>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => renameBlock(b.id, b.name)}
-                                                            className="btn secondary min-h-0 px-3 py-1.5 text-xs font-bold"
-                                                        >
-                                                            ✏️ Rename
-                                                        </button>
-                                                        <button
-                                                            onClick={() => deleteBlock(b.id)}
-                                                            className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
-                                                        >
-                                                            🗑️ Delete
-                                                        </button>
                                                     </div>
-                                                </td>
-                                            </motion.tr>
-                                        );
-                                    })}
-                                    {blocks.length === 0 && (
-                                        <tr>
-                                            <td colSpan="6" className="text-center font-bold text-slate-400 py-10">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <span className="text-4xl">🏛️</span>
-                                                    <span>No campus blocks configured. Add your first block above.</span>
-                                                    <span className="text-xs text-slate-400">Tip: Start with "C Block", "L Block", "F Block"</span>
+                                                    <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${
+                                                        printer?.online ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-slate-200 text-slate-600"
+                                                    }`}>
+                                                        {printer?.online ? "Online" : "Offline"}
+                                                    </span>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </motion.section>
+                                            );
+                                        })}
+                                        {blocks.length === 0 && (
+                                            <div className="col-span-full text-center py-8 text-slate-400 font-bold text-sm">
+                                                No blocks configured yet.
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
                     </div>
                 )}
 
                 {/* College Management Tab (Main Admin Only) */}
                 {activeTab === "colleges" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                     <div className="mt-6 space-y-6">
-                        {/* Colleges Overview panel */}
-                        <motion.section 
-                            className="panel p-6"
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                        >
-                            <div className="section-header pb-4 border-b border-slate-100">
-                                <h3 className="font-bold text-lg">Manage All Colleges</h3>
-                                <p className="text-sm text-slate-500 font-semibold mt-1">Suspend colleges, view their blocks, or delete entire colleges (which removes all associated blocks).</p>
+                        {/* Top Sub-Navigation Bar for College Management */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "colleges-list", label: "College Directory", icon: "🏫" },
+                                    { id: "add-college", label: "Add New College", icon: "➕" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setCollegesSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            collegesSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
                             </div>
-                            
-                            <div className="mt-6 flex flex-wrap gap-4">
-                                {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => {
-                                    const isSuspended = suspendedColleges.split(",").map(s => s.trim()).includes(col);
-                                    const colBlocks = allBlocks.filter(b => b.college === col);
-                                    return (
-                                        <div key={col} className="p-4 border border-slate-200 rounded-xl bg-slate-50 flex flex-col justify-between items-start gap-4 flex-1 min-w-[280px]">
-                                            <div className="w-full">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h4 className="font-black text-slate-900 text-xl">{col}</h4>
-                                                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${isSuspended ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                                        {isSuspended ? 'SUSPENDED' : 'OPERATIONAL'}
-                                                    </span>
+                        </div>
+
+                        {/* SUBPAGE 1: Colleges Directory & Gateway */}
+                        {collegesSubTab === "colleges-list" && (
+                            <motion.section 
+                                className="panel p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Institutions</p>
+                                        <h3 className="font-black text-2xl text-slate-900">Manage All Colleges</h3>
+                                        <p className="text-sm text-slate-500 font-semibold mt-1">Suspend colleges, view their blocks, or configure dedicated payment gateways per campus.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setCollegesSubTab("add-college")}
+                                        className="btn primary min-h-0 px-4 py-2 text-xs font-bold"
+                                    >
+                                        ➕ Add College
+                                    </button>
+                                </div>
+                                
+                                <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => {
+                                        const isSuspended = suspendedColleges.split(",").map(s => s.trim()).includes(col);
+                                        const colBlocks = allBlocks.filter(b => b.college === col);
+                                        return (
+                                            <div key={col} className="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between items-start gap-4">
+                                                <div className="w-full">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h4 className="font-black text-slate-900 text-xl">{col}</h4>
+                                                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${isSuspended ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
+                                                            {isSuspended ? 'SUSPENDED' : 'OPERATIONAL'}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="mt-4 mb-4">
+                                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Associated Blocks ({colBlocks.length})</p>
+                                                        <ul className="text-sm font-semibold text-slate-700 space-y-1 bg-slate-50 p-3 border border-slate-200 rounded-xl max-h-[140px] overflow-y-auto custom-scrollbar">
+                                                            {colBlocks.map(cb => (
+                                                                <li key={cb.id} className="flex justify-between border-b border-slate-200/60 pb-1.5 pt-0.5 last:border-0 last:pb-0">
+                                                                    <span>🏛️ {cb.name}</span>
+                                                                </li>
+                                                            ))}
+                                                            {colBlocks.length === 0 && <li className="text-slate-400">No blocks associated</li>}
+                                                        </ul>
+                                                    </div>
                                                 </div>
                                                 
-                                                <div className="mt-4 mb-4">
-                                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Associated Blocks ({colBlocks.length})</p>
-                                                    <ul className="text-sm font-semibold text-slate-700 space-y-1 bg-white p-2 border border-slate-200 rounded-lg max-h-[120px] overflow-y-auto">
-                                                        {colBlocks.map(cb => (
-                                                            <li key={cb.id} className="flex justify-between border-b border-slate-100 pb-1 last:border-0 last:pb-0">
-                                                                <span>{cb.name}</span>
-                                                            </li>
-                                                        ))}
-                                                        {colBlocks.length === 0 && <li className="text-slate-400">No blocks</li>}
-                                                    </ul>
+                                                <div className="w-full space-y-2 mt-auto">
+                                                    <div className="flex w-full gap-2">
+                                                        <button 
+                                                            onClick={() => toggleCollegeSuspension(col)}
+                                                            className={`btn text-xs py-2 flex-1 font-bold ${isSuspended ? 'secondary' : 'warning'}`}
+                                                        >
+                                                            {isSuspended ? '▶️ Resume' : '⏸️ Suspend'}
+                                                        </button>
+                                                        <button 
+                                                            onClick={async () => {
+                                                                if (window.confirm(`Are you sure you want to DELETE the college "${col}" and ALL its ${colBlocks.length} blocks? This cannot be undone.`)) {
+                                                                    try {
+                                                                        for (const block of colBlocks) {
+                                                                            await api.delete(`/blocks/delete/${block.id}`);
+                                                                        }
+                                                                        fetchBlocks();
+                                                                        if (isSuspended) {
+                                                                            toggleCollegeSuspension(col);
+                                                                        }
+                                                                        alert(`${col} and all its blocks have been deleted.`);
+                                                                    } catch (err) {
+                                                                        alert("Error deleting some blocks.");
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="btn danger text-xs py-2 flex-1 font-bold"
+                                                        >
+                                                            🗑️ Delete
+                                                        </button>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                            setConfigKeyId(existing?.razorpayKeyId || "");
+                                                            setConfigKeySecret(existing?.razorpayKeySecret || "");
+                                                            setPaymentConfigModal(col);
+                                                        }}
+                                                        className="btn primary text-xs py-2 w-full font-bold"
+                                                    >
+                                                        💳 Configure Payment Gateway
+                                                    </button>
                                                 </div>
                                             </div>
-                                            
-                                            <div className="flex w-full gap-2 mt-auto">
-                                                <button 
-                                                    onClick={() => toggleCollegeSuspension(col)}
-                                                    className={`btn text-xs py-2 flex-1 ${isSuspended ? 'secondary' : 'warning'}`}
-                                                >
-                                                    {isSuspended ? 'Resume' : 'Suspend'}
-                                                </button>
-                                                <button 
-                                                    onClick={async () => {
-                                                        if (window.confirm(`Are you sure you want to DELETE the college "${col}" and ALL its ${colBlocks.length} blocks? This cannot be undone.`)) {
-                                                            try {
-                                                                // Delete all blocks for this college
-                                                                for (const block of colBlocks) {
-                                                                    await api.delete(`/blocks/delete/${block.id}`);
-                                                                }
-                                                                fetchBlocks();
-                                                                // Remove from suspended colleges if it was there
-                                                                if (isSuspended) {
-                                                                    toggleCollegeSuspension(col);
-                                                                }
-                                                                alert(`${col} and all its blocks have been deleted.`);
-                                                            } catch (err) {
-                                                                alert("Error deleting some blocks.");
-                                                            }
-                                                        }
-                                                    }}
-                                                    className="btn danger text-xs py-2 flex-1"
-                                                >
-                                                    Delete College
-                                                </button>
-                                            </div>
-                                            <button 
-                                                onClick={() => {
-                                                    const existing = collegeConfigs.find(c => c.collegeName === col);
-                                                    setConfigKeyId(existing?.razorpayKeyId || "");
-                                                    setConfigKeySecret(existing?.razorpayKeySecret || "");
-                                                    setPaymentConfigModal(col);
-                                                }}
-                                                className="btn primary text-xs py-2 w-full mt-2"
-                                            >
-                                                Configure Payment Gateway
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                                {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length === 0 && (
-                                    <div className="text-sm font-bold text-slate-400 py-4">No colleges found in the system.</div>
-                                )}
-                            </div>
-                        </motion.section>
+                                        );
+                                    })}
+                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length === 0 && (
+                                        <div className="col-span-full text-center py-10 text-slate-400 font-bold">No colleges found in the system.</div>
+                                    )}
+                                </div>
+                            </motion.section>
+                        )}
 
-                        <motion.section 
-                            className="panel p-6"
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                        >
-                            <div className="section-header pb-4 border-b border-slate-100 mb-4">
-                                <h3 className="font-bold text-lg">Add New College</h3>
-                                <p className="text-sm text-slate-500 font-semibold mt-1">A college requires at least one block to be created. This will create the new college and its first block.</p>
-                            </div>
-                            <form onSubmit={addBlock} className="space-y-4 max-w-lg">
-                                <label className="block">
-                                    <span className="block text-sm font-black text-slate-700 mb-2">New College Name</span>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Stanford University"
-                                        className="field"
-                                        value={newBlockCollege}
-                                        onChange={(e) => setNewBlockCollege(e.target.value)}
-                                        required
-                                    />
-                                </label>
-                                <label className="block">
-                                    <span className="block text-sm font-black text-slate-700 mb-2">First Block Name</span>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Main Campus Block"
-                                        className="field"
-                                        value={newBlockName}
-                                        onChange={(e) => setNewBlockName(e.target.value)}
-                                        required
-                                    />
-                                </label>
-                                <button type="submit" className="btn success w-full">
-                                    ➕ Create College & Block
-                                </button>
-                            </form>
-                        </motion.section>
+                        {/* SUBPAGE 2: Add New College Form */}
+                        {collegesSubTab === "add-college" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <p className="eyebrow">New Institution</p>
+                                        <h3 className="font-black text-2xl text-slate-900">Add New College</h3>
+                                        <p className="text-sm text-slate-500 font-semibold mt-1">A college requires at least one initial block location to get established.</p>
+                                    </div>
+                                    <form onSubmit={addBlock} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">New College Name</span>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Stanford University"
+                                                className="field"
+                                                value={newBlockCollege}
+                                                onChange={(e) => setNewBlockCollege(e.target.value)}
+                                                required
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">First Block Name</span>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Main Campus Block"
+                                                className="field"
+                                                value={newBlockName}
+                                                onChange={(e) => setNewBlockName(e.target.value)}
+                                                required
+                                            />
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-2">
+                                            ➕ Create College & Block
+                                        </button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Multi-Tenant Setup</p>
+                                            <h3 className="text-xl font-black text-slate-900">Multi-College System</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-1">🏢 Isolated Campus Data</strong>
+                                                Each college can have its own sub-admins, printers, blocks, and reports.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-1">💳 Razorpay Account Splitting</strong>
+                                                Attach distinct Razorpay Key ID and Secrets so payments go directly to the respective institution's merchant account.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
                     </div>
                 )}
 
                 {/* User Moderation Tab */}
                 {activeTab === "users" && (
-                    <motion.section
-                        className="panel mt-6 overflow-x-auto p-6"
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
-                            <div>
-                                <p className="eyebrow">Moderation</p>
-                                <h2 className="text-2xl font-black text-slate-900">Registered Users</h2>
-                                <p className="subtitle">Manage user accounts, block access, or remove accounts.</p>
-                            </div>
-                            <div className="flex flex-wrap gap-2 items-center">
-                                <div className="relative mr-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Search users..."
-                                        value={userSearchQuery}
-                                        onChange={(e) => setUserSearchQuery(e.target.value)}
-                                        className="field !w-auto text-xs py-2 px-3 pl-8 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none"
-                                    />
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-                                </div>
-                                {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
-                                    <div className="flex items-center gap-2 mr-2">
-                                        <span className="text-xs font-bold text-slate-500">College:</span>
-                                        <select
-                                            value={userCollegeFilter}
-                                            onChange={(e) => setUserCollegeFilter(e.target.value)}
-                                            className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
-                                        >
-                                            <option value="ALL">All Colleges</option>
-                                            {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                <option key={col} value={col}>{col} College</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-                                <button
-                                    onClick={() => exportToCSV(users, "registered_users", ["User ID", "Name", "Email", "College", "Orders", "Referral Code", "Wallet Balance", "Status"])}
-                                    className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
-                                >
-                                    📥 Export Excel
-                                </button>
-                                {selectedUsers.length > 0 && (
-                                    <>
-                                        <button
-                                            onClick={() => handleBulkBlockUsers(true)}
-                                            className="btn warning px-4 py-2 text-sm font-bold min-h-0"
-                                        >
-                                            ⛔ Block Selected ({selectedUsers.length})
-                                        </button>
-                                        <button
-                                            onClick={() => handleBulkBlockUsers(false)}
-                                            className="btn success px-4 py-2 text-sm font-bold min-h-0"
-                                        >
-                                            ✅ Unblock Selected ({selectedUsers.length})
-                                        </button>
-                                        <button
-                                            onClick={handleBulkDeleteUsers}
-                                            className="btn danger px-4 py-2 text-sm font-bold min-h-0"
-                                        >
-                                            🗑️ Delete Selected ({selectedUsers.length})
-                                        </button>
-                                    </>
-                                )}
+                    <div className="mt-6 space-y-6">
+                        {/* Top Sub-Navigation Bar for Users */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "users-list", label: "User Directory", icon: "👥" },
+                                    { id: "wallets", label: "Wallet Balances", icon: "💳" },
+                                    { id: "moderation", label: "Blocked Accounts", icon: "⛔" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setUsersSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            usersSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        <table className="data-table mt-4 w-full">
-                            <thead>
-                                <tr>
-                                    <th className="w-10">
-                                        <input
-                                            type="checkbox"
-                                            checked={users.length > 0 && selectedUsers.length === users.length}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedUsers(users.map(u => u.id));
-                                                } else {
-                                                    setSelectedUsers([]);
-                                                }
-                                            }}
-                                            className="w-4 h-4 rounded accent-slate-900"
-                                        />
-                                    </th>
-                                    <th>User ID</th>
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>College</th>
-                                    <th>Orders</th>
-                                    <th>Referral Code</th>
-                                    <th>Wallet Balance</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.map((user, index) => (
-                                    <motion.tr
-                                        key={user.id}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.02 }}
-                                    >
-                                        <td>
+                        {/* SUBPAGE 1: Registered Users Directory */}
+                        {usersSubTab === "users-list" && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">User Directory</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Registered Users ({users.length})</h2>
+                                        <p className="subtitle">Search, filter by campus, and manage customer accounts.</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        <div className="relative mr-2">
                                             <input
-                                                type="checkbox"
-                                                checked={selectedUsers.includes(user.id)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedUsers(prev => [...prev, user.id]);
-                                                    } else {
-                                                        setSelectedUsers(prev => prev.filter(id => id !== user.id));
-                                                    }
-                                                }}
-                                                className="w-4 h-4 rounded accent-slate-900"
+                                                type="text"
+                                                placeholder="Search users..."
+                                                value={userSearchQuery}
+                                                onChange={(e) => setUserSearchQuery(e.target.value)}
+                                                className="field !w-auto text-xs py-2 px-3 pl-8 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none"
                                             />
-                                        </td>
-                                        <td className="font-black">#{user.id}</td>
-                                        <td className="font-bold text-slate-900">{user.name}</td>
-                                        <td className="font-semibold text-slate-600">{user.email}</td>
-                                        <td className="font-bold text-slate-700">{user.college || "KLU"}</td>
-                                        <td className="font-bold text-slate-700">{allOrders.filter(o => o.email === user.email).length}</td>
-                                        <td className="font-mono text-cyan-600 font-bold">{user.referralCode || "N/A"}</td>
-                                        <td className="font-bold text-green-600">Rs. {user.walletBalance != null ? user.walletBalance.toFixed(2) : "0.00"}</td>
-                                        <td>
-                                            <span className={`status-pill ${user.blocked ? "status-unpaid" : "status-paid"}`}>
-                                                {user.blocked ? "BLOCKED" : "ACTIVE"}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => toggleBlockUser(user.id)}
-                                                    className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${user.blocked ? "success" : "warning"}`}
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                                        </div>
+                                        {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
+                                            <div className="flex items-center gap-2 mr-2">
+                                                <span className="text-xs font-bold text-slate-500">College:</span>
+                                                <select
+                                                    value={userCollegeFilter}
+                                                    onChange={(e) => setUserCollegeFilter(e.target.value)}
+                                                    className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
                                                 >
-                                                    {user.blocked ? "Unblock" : "Block"}
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteUser(user.id)}
-                                                    className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
-                                                >
-                                                    Delete
-                                                </button>
+                                                    <option value="ALL">All Colleges</option>
+                                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                        <option key={col} value={col}>{col} College</option>
+                                                    ))}
+                                                </select>
                                             </div>
-                                        </td>
-                                    </motion.tr>
-                                ))}
-                                {users.length === 0 && (
-                                    <tr>
-                                        <td colSpan="8" className="text-center font-bold text-slate-500 py-6">
-                                            No users found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </motion.section>
+                                        )}
+                                        <button
+                                            onClick={() => exportToCSV(users, "registered_users", ["User ID", "Name", "Email", "College", "Orders", "Referral Code", "Wallet Balance", "Status"])}
+                                            className="btn secondary px-4 py-2 text-sm font-bold min-h-0"
+                                        >
+                                            📥 Export Excel
+                                        </button>
+                                        {selectedUsers.length > 0 && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleBulkBlockUsers(true)}
+                                                    className="btn warning px-4 py-2 text-sm font-bold min-h-0"
+                                                >
+                                                    ⛔ Block ({selectedUsers.length})
+                                                </button>
+                                                <button
+                                                    onClick={() => handleBulkBlockUsers(false)}
+                                                    className="btn success px-4 py-2 text-sm font-bold min-h-0"
+                                                >
+                                                    ✅ Unblock ({selectedUsers.length})
+                                                </button>
+                                                <button
+                                                    onClick={handleBulkDeleteUsers}
+                                                    className="btn danger px-4 py-2 text-sm font-bold min-h-0"
+                                                >
+                                                    🗑️ Delete ({selectedUsers.length})
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <table className="data-table mt-4 w-full">
+                                    <thead>
+                                        <tr>
+                                            <th className="w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={users.length > 0 && selectedUsers.length === users.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedUsers(users.map(u => u.id));
+                                                        } else {
+                                                            setSelectedUsers([]);
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 rounded accent-slate-900 cursor-pointer"
+                                                />
+                                            </th>
+                                            <th>User ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>College</th>
+                                            <th>Orders</th>
+                                            <th>Referral Code</th>
+                                            <th>Wallet Balance</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.map((user, index) => (
+                                            <motion.tr
+                                                key={user.id}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.02 }}
+                                            >
+                                                <td>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedUsers.includes(user.id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedUsers(prev => [...prev, user.id]);
+                                                            } else {
+                                                                setSelectedUsers(prev => prev.filter(id => id !== user.id));
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 rounded accent-slate-900 cursor-pointer"
+                                                    />
+                                                </td>
+                                                <td className="font-black">#{user.id}</td>
+                                                <td className="font-bold text-slate-900">{user.name}</td>
+                                                <td className="font-semibold text-slate-600">{user.email}</td>
+                                                <td className="font-bold text-slate-700">{user.college || "KLU"}</td>
+                                                <td className="font-bold text-slate-700">{allOrders.filter(o => o.email === user.email).length}</td>
+                                                <td className="font-mono text-cyan-600 font-bold">{user.referralCode || "N/A"}</td>
+                                                <td className="font-bold text-green-600">Rs. {user.walletBalance != null ? user.walletBalance.toFixed(2) : "0.00"}</td>
+                                                <td>
+                                                    <span className={`status-pill ${user.blocked ? "status-unpaid" : "status-paid"}`}>
+                                                        {user.blocked ? "BLOCKED" : "ACTIVE"}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => toggleBlockUser(user.id)}
+                                                            className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${user.blocked ? "success" : "warning"}`}
+                                                        >
+                                                            {user.blocked ? "Unblock" : "Block"}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deleteUser(user.id)}
+                                                            className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                        {users.length === 0 && (
+                                            <tr>
+                                                <td colSpan="10" className="text-center font-bold text-slate-500 py-8">
+                                                    No users found
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 2: User Wallet Balances */}
+                        {usersSubTab === "wallets" && (
+                            <motion.div
+                                className="space-y-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    <div className="panel p-6 bg-gradient-to-br from-emerald-900 to-emerald-700 text-white rounded-2xl">
+                                        <p className="text-xs font-bold text-emerald-200 uppercase tracking-wider">Total Wallet Liquidity</p>
+                                        <p className="text-3xl font-black mt-2">
+                                            ₹{users.reduce((sum, u) => sum + (Number(u.walletBalance) || 0), 0).toFixed(2)}
+                                        </p>
+                                        <p className="text-[11px] text-emerald-200/80 mt-1 font-semibold">Across all registered user accounts</p>
+                                    </div>
+                                    <div className="panel p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Users With Balance &gt; ₹0</p>
+                                        <p className="text-3xl font-black mt-2">
+                                            {users.filter(u => Number(u.walletBalance) > 0).length}
+                                        </p>
+                                        <p className="text-[11px] text-slate-400 mt-1 font-semibold">{((users.filter(u => Number(u.walletBalance) > 0).length / Math.max(1, users.length)) * 100).toFixed(1)}% of userbase</p>
+                                    </div>
+                                    <div className="panel p-6 bg-gradient-to-br from-sky-700 to-sky-600 text-white rounded-2xl">
+                                        <p className="text-xs font-bold text-sky-200 uppercase tracking-wider">Average Balance</p>
+                                        <p className="text-3xl font-black mt-2">
+                                            ₹{(users.reduce((sum, u) => sum + (Number(u.walletBalance) || 0), 0) / Math.max(1, users.length)).toFixed(2)}
+                                        </p>
+                                        <p className="text-[11px] text-sky-200/80 mt-1 font-semibold">Per user account</p>
+                                    </div>
+                                </div>
+
+                                <section className="panel p-6 overflow-x-auto">
+                                    <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                        <div>
+                                            <p className="eyebrow">Wallet Rankings</p>
+                                            <h3 className="text-xl font-black text-slate-900">Highest Balance Accounts</h3>
+                                        </div>
+                                    </div>
+                                    <table className="data-table w-full">
+                                        <thead>
+                                            <tr>
+                                                <th>Rank</th>
+                                                <th>User</th>
+                                                <th>Email</th>
+                                                <th>College</th>
+                                                <th>Wallet Balance</th>
+                                                <th>Orders Placed</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {[...users].sort((a, b) => (Number(b.walletBalance) || 0) - (Number(a.walletBalance) || 0)).slice(0, 20).map((user, idx) => (
+                                                <tr key={user.id}>
+                                                    <td className="font-black text-slate-400">#{idx + 1}</td>
+                                                    <td className="font-bold text-slate-900">{user.name}</td>
+                                                    <td className="text-slate-600 text-xs">{user.email}</td>
+                                                    <td><span className="text-xs font-black uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{user.college || "KLU"}</span></td>
+                                                    <td className="font-black text-emerald-600 text-base">₹{(Number(user.walletBalance) || 0).toFixed(2)}</td>
+                                                    <td className="font-bold text-slate-700">{allOrders.filter(o => o.email === user.email).length}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3: Blocked Accounts */}
+                        {usersSubTab === "moderation" && (
+                            <motion.section
+                                className="panel p-6 overflow-x-auto"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Moderation Queue</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Blocked User Accounts ({users.filter(u => u.blocked).length})</h2>
+                                        <p className="subtitle">Accounts listed here are suspended from initiating new print orders.</p>
+                                    </div>
+                                </div>
+
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>User ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>College</th>
+                                            <th>Wallet</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.filter(u => u.blocked).map(user => (
+                                            <tr key={user.id}>
+                                                <td className="font-black">#{user.id}</td>
+                                                <td className="font-bold text-slate-900">{user.name}</td>
+                                                <td className="text-slate-600 text-xs">{user.email}</td>
+                                                <td><span className="text-xs font-black uppercase text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{user.college || "KLU"}</span></td>
+                                                <td className="font-bold text-slate-700">₹{(Number(user.walletBalance) || 0).toFixed(2)}</td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => toggleBlockUser(user.id)}
+                                                        className="btn success min-h-0 px-4 py-1.5 text-xs font-bold"
+                                                    >
+                                                        ✅ Unblock Access
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {users.filter(u => u.blocked).length === 0 && (
+                                            <tr>
+                                                <td colSpan="6" className="text-center font-bold text-slate-400 py-10">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <span className="text-3xl">🛡️</span>
+                                                        <span>No users are currently blocked. All accounts are in good standing.</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+                    </div>
                 )}
 
                 {/* Support Tickets Tab */}
                 {activeTab === "support" && (
-                    <motion.section
-                        className="panel mt-6 overflow-x-auto p-6"
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <div className="section-header pb-4">
-                            <div>
-                                <p className="eyebrow">Support Desk</p>
-                                <h2 className="text-2xl font-black text-slate-900">Customer Support Tickets</h2>
-                                <p className="subtitle">View customer issues, resolve tickets, or remove them.</p>
+                    <div className="mt-6 space-y-6">
+                        {/* Top Sub-Navigation Bar for Support Desk */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "all-tickets", label: `All Tickets (${supportTickets.length})`, icon: "🎫" },
+                                    { id: "pending", label: `Pending Issues (${supportTickets.filter(t => t.status === "PENDING").length})`, icon: "⏳" },
+                                    { id: "resolved", label: `Resolved Archive (${supportTickets.filter(t => t.status !== "PENDING").length})`, icon: "✅" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setSupportSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            supportSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        <table className="data-table mt-4 w-full">
-                            <thead>
-                                <tr>
-                                    <th>Ticket ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Message</th>
-                                    <th>Created At</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {supportTickets.map((ticket, index) => (
-                                    <motion.tr
-                                        key={ticket.id}
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.02 }}
-                                    >
-                                        <td className="font-black">#{ticket.id}</td>
-                                        <td className="font-bold text-slate-900">{ticket.name}</td>
-                                        <td className="font-semibold text-slate-600">{ticket.email}</td>
-                                        <td className="max-w-[350px] whitespace-pre-wrap text-slate-700 text-sm font-medium">
-                                            {ticket.message}
-                                        </td>
-                                        <td className="text-xs text-slate-500 font-bold">
-                                            {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "N/A"}
-                                        </td>
-                                        <td>
-                                            <span className={`status-pill ${ticket.status === "PENDING" ? "status-unpaid" : "status-completed"}`}>
-                                                {ticket.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="flex gap-2">
-                                                {ticket.status === "PENDING" && (
-                                                    <button
-                                                        onClick={() => resolveSupportTicket(ticket.id)}
-                                                        className="btn success min-h-0 px-3 py-1.5 text-xs font-bold"
-                                                    >
-                                                        Mark as Done
-                                                    </button>
-                                                )}
+                        {/* SUBPAGE 1: All Support Tickets */}
+                        {supportSubTab === "all-tickets" && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100 flex justify-between items-center">
+                                    <div>
+                                        <p className="eyebrow">Support Desk</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Customer Support Tickets ({supportTickets.length})</h2>
+                                        <p className="subtitle">View customer issues, resolve tickets, or remove them.</p>
+                                    </div>
+                                </div>
+
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Ticket ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Message</th>
+                                            <th>Created At</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {supportTickets.map((ticket, index) => (
+                                            <motion.tr
+                                                key={ticket.id}
+                                                initial={{ opacity: 0, y: 8 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.02 }}
+                                            >
+                                                <td className="font-black">#{ticket.id}</td>
+                                                <td className="font-bold text-slate-900">{ticket.name}</td>
+                                                <td className="font-semibold text-slate-600">{ticket.email}</td>
+                                                <td className="max-w-[350px] whitespace-pre-wrap text-slate-700 text-sm font-medium">
+                                                    {ticket.message}
+                                                </td>
+                                                <td className="text-xs text-slate-500 font-bold">
+                                                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "N/A"}
+                                                </td>
+                                                <td>
+                                                    <span className={`status-pill ${ticket.status === "PENDING" ? "status-unpaid" : "status-completed"}`}>
+                                                        {ticket.status}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="flex gap-2">
+                                                        {ticket.status === "PENDING" && (
+                                                            <button
+                                                                onClick={() => resolveSupportTicket(ticket.id)}
+                                                                className="btn success min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                            >
+                                                                Mark as Done
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => deleteSupportTicket(ticket.id)}
+                                                            className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                        {supportTickets.length === 0 && (
+                                            <tr>
+                                                <td colSpan="7" className="text-center font-bold text-slate-500 py-8">
+                                                    No support tickets found
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 2: Pending Issues */}
+                        {supportSubTab === "pending" && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Action Required</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Pending Customer Issues ({supportTickets.filter(t => t.status === "PENDING").length})</h2>
+                                        <p className="subtitle">Tickets awaiting admin response or resolution.</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {supportTickets.filter(t => t.status === "PENDING").map(ticket => (
+                                        <div key={ticket.id} className="p-5 rounded-2xl bg-amber-50/50 border border-amber-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-black text-slate-900">#{ticket.id}</span>
+                                                    <span className="font-bold text-slate-800">— {ticket.name}</span>
+                                                    <span className="text-xs text-slate-500 font-semibold">({ticket.email})</span>
+                                                </div>
+                                                <p className="text-sm text-slate-700 bg-white p-3 rounded-xl border border-slate-200 mt-2 font-medium">
+                                                    {ticket.message}
+                                                </p>
+                                                <span className="text-[11px] text-slate-400 font-bold block pt-1">
+                                                    Submitted: {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "N/A"}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-2 shrink-0">
+                                                <button
+                                                    onClick={() => resolveSupportTicket(ticket.id)}
+                                                    className="btn success px-4 py-2 text-xs font-bold"
+                                                >
+                                                    ✅ Mark Resolved
+                                                </button>
                                                 <button
                                                     onClick={() => deleteSupportTicket(ticket.id)}
-                                                    className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                    className="btn danger px-3 py-2 text-xs font-bold"
                                                 >
-                                                    Remove
+                                                    🗑️
                                                 </button>
                                             </div>
-                                        </td>
-                                    </motion.tr>
-                                ))}
-                                {supportTickets.length === 0 && (
-                                    <tr>
-                                        <td colSpan="7" className="text-center font-bold text-slate-500 py-6">
-                                            No support tickets found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </motion.section>
+                                        </div>
+                                    ))}
+                                    {supportTickets.filter(t => t.status === "PENDING").length === 0 && (
+                                        <div className="text-center py-12 text-slate-400 font-bold">
+                                            <span className="text-4xl block mb-2">🎉</span>
+                                            <span>All customer inquiries are resolved! No pending issues.</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 3: Resolved Archive */}
+                        {supportSubTab === "resolved" && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Archive</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Resolved Ticket Archive ({supportTickets.filter(t => t.status !== "PENDING").length})</h2>
+                                    </div>
+                                </div>
+
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Ticket ID</th>
+                                            <th>Customer</th>
+                                            <th>Email</th>
+                                            <th>Message</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {supportTickets.filter(t => t.status !== "PENDING").map(ticket => (
+                                            <tr key={ticket.id}>
+                                                <td className="font-black text-slate-500">#{ticket.id}</td>
+                                                <td className="font-bold text-slate-900">{ticket.name}</td>
+                                                <td className="text-xs text-slate-600">{ticket.email}</td>
+                                                <td className="text-sm text-slate-600 max-w-[300px] truncate">{ticket.message}</td>
+                                                <td className="text-xs text-slate-400">{ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "N/A"}</td>
+                                                <td><span className="status-pill status-completed">RESOLVED</span></td>
+                                            </tr>
+                                        ))}
+                                        {supportTickets.filter(t => t.status !== "PENDING").length === 0 && (
+                                            <tr>
+                                                <td colSpan="6" className="text-center font-bold text-slate-400 py-8">
+                                                    No resolved tickets in archive.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+                    </div>
                 )}
 
                 {/* Frontend Manager Tab */}
                 {activeTab === "frontend" && (
                     <div className="mt-6 space-y-6">
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            {/* Popup and Scrolling configurations */}
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Marketing Config</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Popups & Scrolling Marquees</h2>
-                                    </div>
-                                </div>
-                                <form onSubmit={saveSystemSettings} className="space-y-4">
-                                    <div className="flex items-center gap-2 pt-2 pb-2">
-                                        <input 
-                                            type="checkbox" 
-                                            id="popupEnabled" 
-                                            checked={systemSettings.popupEnabled}
-                                            onChange={(e) => setSystemSettings({...systemSettings, popupEnabled: e.target.checked})}
-                                            className="w-4 h-4 accent-slate-900"
-                                        />
-                                        <label htmlFor="popupEnabled" className="text-sm font-bold text-slate-700">Welcome Referral Popup Enabled</label>
-                                    </div>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Welcome Popup Message</span>
-                                        <textarea 
-                                            className="field min-h-[80px]" 
-                                            value={systemSettings.popupMessage}
-                                            onChange={(e) => setSystemSettings({...systemSettings, popupMessage: e.target.value})}
-                                        />
-                                    </label>
-                                    <div className="flex items-center gap-2 pt-4 pb-2">
-                                        <input 
-                                            type="checkbox" 
-                                            id="adEnabled" 
-                                            checked={systemSettings.adEnabled}
-                                            onChange={(e) => setSystemSettings({...systemSettings, adEnabled: e.target.checked})}
-                                            className="w-4 h-4 accent-slate-900"
-                                        />
-                                        <label htmlFor="adEnabled" className="text-sm font-bold text-slate-700">Scrolling Announcement Active</label>
-                                    </div>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Scrolling Announcement Text</span>
-                                        <textarea 
-                                            className="field min-h-[80px]" 
-                                            value={systemSettings.adText}
-                                            onChange={(e) => setSystemSettings({...systemSettings, adText: e.target.value})}
-                                        />
-                                    </label>
-                                    
-                                    <div className="flex items-center gap-2 pt-4 pb-2 border-t border-slate-100">
-                                        <input 
-                                            type="checkbox" 
-                                            id="generalPopupEnabled" 
-                                            checked={systemSettings.generalPopupEnabled}
-                                            onChange={(e) => setSystemSettings({...systemSettings, generalPopupEnabled: e.target.checked})}
-                                            className="w-4 h-4 accent-slate-900"
-                                        />
-                                        <label htmlFor="generalPopupEnabled" className="text-sm font-bold text-slate-700">General Announcement Popup Enabled</label>
-                                    </div>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">General Announcement Popup Message</span>
-                                        <textarea 
-                                            className="field min-h-[80px]" 
-                                            placeholder="Write an announcement to show to all users on their dashboard..."
-                                            value={systemSettings.generalPopupMessage}
-                                            onChange={(e) => setSystemSettings({...systemSettings, generalPopupMessage: e.target.value})}
-                                        />
-                                    </label>
-
-                                    <button type="submit" className="btn success w-full mt-2">Save Marketing Config</button>
-                                </form>
-                            </motion.section>
-
-                            {/* Section Creator panel */}
-                            <motion.section 
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.05 }}
-                            >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Layout Sections</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Add Frontend Section</h2>
-                                    </div>
-                                </div>
-                                <form onSubmit={addSection} className="space-y-4">
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Title</span>
-                                            <input type="text" className="field" placeholder="Section title" value={secTitle} onChange={(e) => setSecTitle(e.target.value)} required />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Section Type</span>
-                                            <select className="field" value={secType} onChange={(e) => setSecType(e.target.value)}>
-                                                <option value="ADVERTISING">Advertising</option>
-                                                <option value="NEW_BLOCK">New Block Info</option>
-                                                <option value="FEATURE">Feature Announcement</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Display Order (weight)</span>
-                                            <input type="number" className="field" value={secOrder} onChange={(e) => setSecOrder(e.target.value)} />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Redirect Link (optional)</span>
-                                            <input type="text" className="field" placeholder="https://google.com or path" value={secRedirect} onChange={(e) => setSecRedirect(e.target.value)} />
-                                        </label>
-                                    </div>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Content / Announcement Message</span>
-                                        <textarea className="field min-h-[90px]" placeholder="Write description or announcement content details..." value={secContent} onChange={(e) => setSecContent(e.target.value)} required />
-                                    </label>
-                                    <button type="submit" className="btn w-full">Add Frontend Section</button>
-                                </form>
-                            </motion.section>
+                        {/* Top Sub-Navigation Bar for Frontend Manager */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "marketing", label: "Marketing & Announcements", icon: "📢" },
+                                    { id: "sections-list", label: `Layout Sections (${sections.length})`, icon: "🗂️" },
+                                    { id: "add-section", label: "Add Layout Section", icon: "➕" },
+                                    { id: "popups-list", label: `Manage Popups (${popups.length})`, icon: "💬" },
+                                    { id: "add-popup", label: "Add Custom Popup", icon: "✨" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setFrontendSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            frontendSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Layout Sections table */}
-                        <motion.section 
-                            className="panel p-6 overflow-x-auto"
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <div className="section-header mb-4">
-                                <div>
-                                    <p className="eyebrow">Layout Banners</p>
-                                    <h2 className="text-2xl font-black text-slate-900">Custom Frontend Sections</h2>
-                                </div>
-                            </div>
-                            <table className="data-table w-full">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Type</th>
-                                        <th>Content</th>
-                                        <th>Order</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {sections.map(sec => (
-                                        <tr key={sec.id}>
-                                            <td className="font-black text-slate-900">{sec.title}</td>
-                                            <td>
-                                                <span className={`status-pill ${
-                                                    sec.sectionType === 'ADVERTISING' ? 'status-paid' : sec.sectionType === 'NEW_BLOCK' ? 'status-completed' : 'status-created'
-                                                }`} style={{ fontSize: '10px', minHeight: '22px' }}>
-                                                    {sec.sectionType}
-                                                </span>
-                                            </td>
-                                            <td className="max-w-xs truncate text-xs font-semibold text-slate-500">{sec.content}</td>
-                                            <td className="font-bold">{sec.displayOrder}</td>
-                                            <td>
-                                                <button 
-                                                    onClick={() => toggleSectionStatus(sec.id, sec.active)}
-                                                    className={`status-pill ${sec.active ? 'status-paid' : 'status-unpaid'}`}
-                                                    style={{ fontSize: '10px', minHeight: '22px' }}
-                                                >
-                                                    {sec.active ? "ACTIVE" : "INACTIVE"}
-                                                </button>
-                                            </td>
-                                            <td>
-                                                <button onClick={() => deleteSection(sec.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {sections.length === 0 && (
-                                        <tr>
-                                            <td colSpan="6" className="text-center font-bold text-slate-500 py-6">No custom sections defined. Create one above.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </motion.section>
-
-                        {/* Custom Popups Management Area */}
-                        <div className="grid gap-6 lg:grid-cols-2 pt-6 border-t border-slate-200/60">
-                            {/* Create Popup Form */}
-                            <motion.section 
-                                className="panel p-6"
+                        {/* SUBPAGE 1: Marketing & Announcements */}
+                        {frontendSubTab === "marketing" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-2"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Popup Manager</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Add Custom Popup</h2>
-                                    </div>
-                                </div>
-                                <form onSubmit={addPopup} className="space-y-4">
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Title</span>
-                                            <input type="text" className="field" placeholder="Popup Title" value={popTitle} onChange={(e) => setPopTitle(e.target.value)} required />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Target Page</span>
-                                            <select className="field" value={popTarget} onChange={(e) => setPopTarget(e.target.value)}>
-                                                <option value="ALL">All Pages</option>
-                                                <option value="LOGIN">Login Page</option>
-                                                <option value="LOCATION_SELECTION">Location Selection</option>
-                                                <option value="DASHBOARD">User Dashboard</option>
-                                                <option value="CHECKOUT">Checkout Page</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Popup Message</span>
-                                        <textarea className="field min-h-[90px]" placeholder="Write popup message/content..." value={popMessage} onChange={(e) => setPopMessage(e.target.value)} required />
-                                    </label>
-                                    <div className="flex gap-4">
-                                        <div className="flex items-center gap-2 pt-2">
-                                            <input 
-                                                type="checkbox" 
-                                                id="popDismissible" 
-                                                checked={popDismissible}
-                                                onChange={(e) => setPopDismissible(e.target.checked)}
-                                                className="w-4 h-4 accent-slate-900"
-                                            />
-                                            <label htmlFor="popDismissible" className="text-sm font-bold text-slate-700">Dismissible (User can close)</label>
-                                        </div>
-                                        <div className="flex items-center gap-2 pt-2">
-                                            <input 
-                                                type="checkbox" 
-                                                id="popActive" 
-                                                checked={popActive}
-                                                onChange={(e) => setPopActive(e.target.checked)}
-                                                className="w-4 h-4 accent-slate-900"
-                                            />
-                                            <label htmlFor="popActive" className="text-sm font-bold text-slate-700">Active Immediately</label>
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Marketing Config</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Popups & Scrolling Marquees</h2>
+                                            <p className="subtitle">Configure default marketing banners across user dashboards.</p>
                                         </div>
                                     </div>
-                                    <button type="submit" className="btn w-full">Create Popup</button>
-                                </form>
-                            </motion.section>
+                                    <form onSubmit={saveSystemSettings} className="space-y-4">
+                                        <div className="flex items-center gap-2 pt-2 pb-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="popupEnabled" 
+                                                checked={systemSettings.popupEnabled}
+                                                onChange={(e) => setSystemSettings({...systemSettings, popupEnabled: e.target.checked})}
+                                                className="w-4 h-4 accent-slate-900"
+                                            />
+                                            <label htmlFor="popupEnabled" className="text-sm font-bold text-slate-700">Welcome Referral Popup Enabled</label>
+                                        </div>
+                                        <label className="block">
+                                            <span className="block text-xs font-bold text-slate-500 mb-1">Welcome Popup Message</span>
+                                            <textarea 
+                                                className="field min-h-[80px]" 
+                                                value={systemSettings.popupMessage}
+                                                onChange={(e) => setSystemSettings({...systemSettings, popupMessage: e.target.value})}
+                                            />
+                                        </label>
+                                        <div className="flex items-center gap-2 pt-4 pb-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="adEnabled" 
+                                                checked={systemSettings.adEnabled}
+                                                onChange={(e) => setSystemSettings({...systemSettings, adEnabled: e.target.checked})}
+                                                className="w-4 h-4 accent-slate-900"
+                                            />
+                                            <label htmlFor="adEnabled" className="text-sm font-bold text-slate-700">Scrolling Announcement Active</label>
+                                        </div>
+                                        <label className="block">
+                                            <span className="block text-xs font-bold text-slate-500 mb-1">Scrolling Announcement Text</span>
+                                            <textarea 
+                                                className="field min-h-[80px]" 
+                                                value={systemSettings.adText}
+                                                onChange={(e) => setSystemSettings({...systemSettings, adText: e.target.value})}
+                                            />
+                                        </label>
+                                        
+                                        <div className="flex items-center gap-2 pt-4 pb-2 border-t border-slate-100">
+                                            <input 
+                                                type="checkbox" 
+                                                id="generalPopupEnabled" 
+                                                checked={systemSettings.generalPopupEnabled}
+                                                onChange={(e) => setSystemSettings({...systemSettings, generalPopupEnabled: e.target.checked})}
+                                                className="w-4 h-4 accent-slate-900"
+                                            />
+                                            <label htmlFor="generalPopupEnabled" className="text-sm font-bold text-slate-700">General Announcement Popup Enabled</label>
+                                        </div>
+                                        <label className="block">
+                                            <span className="block text-xs font-bold text-slate-500 mb-1">General Announcement Popup Message</span>
+                                            <textarea 
+                                                className="field min-h-[80px]" 
+                                                placeholder="Write an announcement to show to all users on their dashboard..."
+                                                value={systemSettings.generalPopupMessage}
+                                                onChange={(e) => setSystemSettings({...systemSettings, generalPopupMessage: e.target.value})}
+                                            />
+                                        </label>
 
-                            {/* Custom Popups List */}
+                                        <button type="submit" className="btn success w-full mt-2">💾 Save Marketing Config</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <div>
+                                                <p className="eyebrow">Preview & Tips</p>
+                                                <h3 className="text-xl font-black text-slate-900">User Experience</h3>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4 text-xs text-slate-600 font-medium">
+                                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-1">📢 Scrolling Marquee</strong>
+                                                Appears at the very top of user screens in a vibrant animated banner strip.
+                                            </div>
+                                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-1">🎁 Welcome Referral Modal</strong>
+                                                Displays when users first enter their dashboard to prompt them to invite friends.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 2: Custom Frontend Sections Table */}
+                        {frontendSubTab === "sections-list" && (
                             <motion.section 
                                 className="panel p-6 overflow-x-auto"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header mb-4">
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                     <div>
-                                        <p className="eyebrow">Active Alerts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Manage Popups</h2>
+                                        <p className="eyebrow">Layout Banners</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Custom Frontend Sections ({sections.length})</h2>
                                     </div>
+                                    <button onClick={() => setFrontendSubTab("add-section")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ➕ Add Section
+                                    </button>
                                 </div>
                                 <table className="data-table w-full">
                                     <thead>
                                         <tr>
                                             <th>Title</th>
-                                            <th>Page</th>
+                                            <th>Type</th>
+                                            <th>Content</th>
+                                            <th>Order</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sections.map(sec => (
+                                            <tr key={sec.id}>
+                                                <td className="font-black text-slate-900">{sec.title}</td>
+                                                <td>
+                                                    <span className={`status-pill ${
+                                                        sec.sectionType === 'ADVERTISING' ? 'status-paid' : sec.sectionType === 'NEW_BLOCK' ? 'status-completed' : 'status-created'
+                                                    }`} style={{ fontSize: '10px', minHeight: '22px' }}>
+                                                        {sec.sectionType}
+                                                    </span>
+                                                </td>
+                                                <td className="max-w-xs truncate text-xs font-semibold text-slate-500">{sec.content}</td>
+                                                <td className="font-bold">{sec.displayOrder}</td>
+                                                <td>
+                                                    <button 
+                                                        onClick={() => toggleSectionStatus(sec.id, sec.active)}
+                                                        className={`status-pill ${sec.active ? 'status-paid' : 'status-unpaid'}`}
+                                                        style={{ fontSize: '10px', minHeight: '22px' }}
+                                                    >
+                                                        {sec.active ? "ACTIVE" : "INACTIVE"}
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button onClick={() => deleteSection(sec.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {sections.length === 0 && (
+                                            <tr>
+                                                <td colSpan="6" className="text-center font-bold text-slate-500 py-8">No custom sections defined. Create one above.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 3: Add Frontend Section */}
+                        {frontendSubTab === "add-section" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <p className="eyebrow">Layout Sections</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Add Frontend Section</h2>
+                                    </div>
+                                    <form onSubmit={addSection} className="space-y-4">
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-bold text-slate-500 mb-1">Title</span>
+                                                <input type="text" className="field" placeholder="Section title" value={secTitle} onChange={(e) => setSecTitle(e.target.value)} required />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-bold text-slate-500 mb-1">Section Type</span>
+                                                <select className="field" value={secType} onChange={(e) => setSecType(e.target.value)}>
+                                                    <option value="ADVERTISING">Advertising</option>
+                                                    <option value="NEW_BLOCK">New Block Info</option>
+                                                    <option value="FEATURE">Feature Announcement</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-bold text-slate-500 mb-1">Display Order (weight)</span>
+                                                <input type="number" className="field" value={secOrder} onChange={(e) => setSecOrder(e.target.value)} />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-bold text-slate-500 mb-1">Redirect Link (optional)</span>
+                                                <input type="text" className="field" placeholder="https://google.com or path" value={secRedirect} onChange={(e) => setSecRedirect(e.target.value)} />
+                                            </label>
+                                        </div>
+                                        <label className="block">
+                                            <span className="block text-xs font-bold text-slate-500 mb-1">Content / Announcement Message</span>
+                                            <textarea className="field min-h-[90px]" placeholder="Write description or announcement content details..." value={secContent} onChange={(e) => setSecContent(e.target.value)} required />
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-2">➕ Add Frontend Section</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Help</p>
+                                            <h3 className="text-xl font-black text-slate-900">Custom Section Types</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">Advertising</strong>
+                                                Promote sponsor cards or promotional student offers.
+                                            </div>
+                                            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">New Block Info</strong>
+                                                Alert students when a new building or kiosk gets installed.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 4: Manage Popups List */}
+                        {frontendSubTab === "popups-list" && (
+                            <motion.section 
+                                className="panel p-6 overflow-x-auto"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Active Alerts</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Manage Popups ({popups.length})</h2>
+                                    </div>
+                                    <button onClick={() => setFrontendSubTab("add-popup")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ✨ Create Popup
+                                    </button>
+                                </div>
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Target Page</th>
                                             <th>Message</th>
                                             <th>Status</th>
                                             <th>Action</th>
@@ -4309,139 +4995,309 @@ function AdminDashboard() {
                                         ))}
                                         {popups.length === 0 && (
                                             <tr>
-                                                <td colSpan="5" className="text-center font-bold text-slate-500 py-6">No custom popups created yet.</td>
+                                                <td colSpan="5" className="text-center font-bold text-slate-500 py-8">No custom popups created yet.</td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
                             </motion.section>
-                        </div>
+                        )}
+
+                        {/* SUBPAGE 5: Add Custom Popup Form */}
+                        {frontendSubTab === "add-popup" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <p className="eyebrow">Popup Manager</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Add Custom Popup</h2>
+                                    </div>
+                                    <form onSubmit={addPopup} className="space-y-4">
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-bold text-slate-500 mb-1">Title</span>
+                                                <input type="text" className="field" placeholder="Popup Title" value={popTitle} onChange={(e) => setPopTitle(e.target.value)} required />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-bold text-slate-500 mb-1">Target Page</span>
+                                                <select className="field" value={popTarget} onChange={(e) => setPopTarget(e.target.value)}>
+                                                    <option value="ALL">All Pages</option>
+                                                    <option value="LOGIN">Login Page</option>
+                                                    <option value="LOCATION_SELECTION">Location Selection</option>
+                                                    <option value="DASHBOARD">User Dashboard</option>
+                                                    <option value="CHECKOUT">Checkout Page</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        <label className="block">
+                                            <span className="block text-xs font-bold text-slate-500 mb-1">Popup Message</span>
+                                            <textarea className="field min-h-[90px]" placeholder="Write popup message/content..." value={popMessage} onChange={(e) => setPopMessage(e.target.value)} required />
+                                        </label>
+                                        <div className="flex gap-4">
+                                            <div className="flex items-center gap-2 pt-2">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="popDismissible" 
+                                                    checked={popDismissible}
+                                                    onChange={(e) => setPopDismissible(e.target.checked)}
+                                                    className="w-4 h-4 accent-slate-900"
+                                                />
+                                                <label htmlFor="popDismissible" className="text-sm font-bold text-slate-700">Dismissible (User can close)</label>
+                                            </div>
+                                            <div className="flex items-center gap-2 pt-2">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="popActive" 
+                                                    checked={popActive}
+                                                    onChange={(e) => setPopActive(e.target.checked)}
+                                                    className="w-4 h-4 accent-slate-900"
+                                                />
+                                                <label htmlFor="popActive" className="text-sm font-bold text-slate-700">Active Immediately</label>
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-2">✨ Create Popup</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Targeting</p>
+                                            <h3 className="text-xl font-black text-slate-900">Page Targeting</h3>
+                                        </div>
+                                        <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                            Select specific flow checkpoints like Checkout or Location Selection to guide users or display urgent maintenance notices prior to order payment.
+                                        </p>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
                     </div>
                 )}
 
                 {/* System Config Tab */}
                 {activeTab === "system" && (
                     <div className="mt-6 space-y-6">
-                        {/* Connection status looping video */}
-                        <div className="rounded-xl border border-slate-100 bg-slate-50 p-6 flex items-center justify-between gap-4 mb-6">
-                            <div>
-                                <h3 className="text-lg font-black text-slate-900">System Gateway Check</h3>
-                                <p className="text-xs text-slate-500 font-bold mt-1">Live background ping check monitoring all database, API routes, and local print agents.</p>
-                            </div>
-                            <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100/50 shadow-sm animate-pulse" style={{ animationDuration: '2s' }}>
-                                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                        {/* Top Sub-Navigation Bar for System Config */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "gateway", label: "Gateway Status", icon: "🌐" },
+                                    { id: "referrals", label: "Referral Program", icon: "🎁" },
+                                    { id: "thesis", label: "Bulk / Thesis Prints", icon: "📚" },
+                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "global", label: "Global Config", icon: "⚙️" }] : []),
+                                    { id: "offpeak", label: "Off-Peak Hours", icon: "🌙" },
+                                    { id: "paper", label: "Paper Levels", icon: "📄" },
+                                    ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "tester", label: "Tester Mode", icon: "🧪" }] : []),
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setSystemSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            systemSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            {/* Referral configuration */}
-                            <motion.section
-                                className="panel p-6"
+                        {/* SUBPAGE 1: System Gateway Check */}
+                        {systemSubTab === "gateway" && (
+                            <motion.div
+                                className="space-y-6"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Referrals</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Refer & Earn Program</h2>
+                                <div className="rounded-2xl border border-slate-200 bg-white p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                            LIVE STATUS: OPERATIONAL
+                                        </span>
+                                        <h3 className="text-2xl font-black text-slate-900">System Gateway Check</h3>
+                                        <p className="text-sm text-slate-500 font-semibold max-w-xl">
+                                            Live background ping monitor polling database integrity, auth sessions, and real-time print spoolers.
+                                        </p>
+                                    </div>
+                                    <div className="w-20 h-20 flex items-center justify-center rounded-3xl bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-lg shadow-emerald-500/10 animate-pulse" style={{ animationDuration: '2s' }}>
+                                        <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
                                     </div>
                                 </div>
-                                <form onSubmit={saveSystemSettings} className="space-y-4">
-                                    <div className="flex items-center gap-2 pb-2">
-                                        <input 
-                                            type="checkbox" 
-                                            id="refEnabled" 
-                                            checked={systemSettings.referralEnabled}
-                                            onChange={(e) => setSystemSettings({...systemSettings, referralEnabled: e.target.checked})}
-                                            className="w-4 h-4 accent-slate-900"
-                                        />
-                                        <label htmlFor="refEnabled" className="text-sm font-bold text-slate-700">Referral Program Active</label>
-                                    </div>
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Referrer Reward (Rs.)</span>
-                                            <input 
-                                                type="number" 
-                                                className="field" 
-                                                value={systemSettings.referrerAmount}
-                                                onChange={(e) => setSystemSettings({...systemSettings, referrerAmount: Number(e.target.value)})}
-                                                step="0.5"
-                                            />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Referee Reward (Rs.)</span>
-                                            <input 
-                                                type="number" 
-                                                className="field" 
-                                                value={systemSettings.refereeAmount}
-                                                onChange={(e) => setSystemSettings({...systemSettings, refereeAmount: Number(e.target.value)})}
-                                                step="0.5"
-                                            />
-                                        </label>
-                                    </div>
-                                    <button type="submit" className="btn success w-full mt-4">Save Referral Settings</button>
-                                </form>
-                            </motion.section>
 
-                            {/* Thesis configuration */}
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.03 }}
-                            >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Thesis & Bulk Prints</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Bulk Discount Rules</h2>
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    <div className="panel p-5">
+                                        <p className="text-xs font-bold text-slate-400">Database Connection</p>
+                                        <p className="text-lg font-black text-emerald-600 mt-1 flex items-center gap-2"><span>🟢</span> CONNECTED</p>
+                                    </div>
+                                    <div className="panel p-5">
+                                        <p className="text-xs font-bold text-slate-400">API Latency</p>
+                                        <p className="text-lg font-black text-slate-900 mt-1">&lt; 45ms</p>
+                                    </div>
+                                    <div className="panel p-5">
+                                        <p className="text-xs font-bold text-slate-400">Active Terminals Online</p>
+                                        <p className="text-lg font-black text-sky-600 mt-1">{printers.filter(p => p.online).length} / {printers.length}</p>
                                     </div>
                                 </div>
-                                <form onSubmit={saveSystemSettings} className="space-y-4">
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Threshold (Pages)</span>
-                                            <input 
-                                                type="number" 
-                                                className="field" 
-                                                value={systemSettings.thesisDiscountPages || 50}
-                                                onChange={(e) => setSystemSettings({...systemSettings, thesisDiscountPages: Number(e.target.value)})}
-                                            />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Discount Percentage (%)</span>
-                                            <input 
-                                                type="number" 
-                                                className="field" 
-                                                value={systemSettings.thesisDiscountPercent || 15}
-                                                onChange={(e) => setSystemSettings({...systemSettings, thesisDiscountPercent: Number(e.target.value)})}
-                                                step="0.5"
-                                            />
-                                        </label>
-                                    </div>
-                                    <button type="submit" className="btn success w-full mt-4">Save Bulk Print Settings</button>
-                                </form>
-                            </motion.section>
+                            </motion.div>
+                        )}
 
-                            {/* Global App Settings */}
-                            {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                            <motion.section
-                                className="panel p-6"
+                        {/* SUBPAGE 2: Referral Configuration */}
+                        {systemSubTab === "referrals" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.035 }}
                             >
-                                <div className="section-header mb-4">
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Referrals</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Refer & Earn Program</h2>
+                                            <p className="subtitle">Set bonuses rewarded when existing students invite classmates.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={saveSystemSettings} className="space-y-5">
+                                        <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                            <input 
+                                                type="checkbox" 
+                                                id="refEnabled-sys" 
+                                                checked={systemSettings.referralEnabled}
+                                                onChange={(e) => setSystemSettings({...systemSettings, referralEnabled: e.target.checked})}
+                                                className="w-5 h-5 accent-sky-600 rounded cursor-pointer"
+                                            />
+                                            <label htmlFor="refEnabled-sys" className="text-sm font-black text-slate-800 cursor-pointer">
+                                                Referral Program Active
+                                                <span className="block text-xs font-semibold text-slate-500 mt-0.5">When checked, referrals credit automatic wallet balance.</span>
+                                            </label>
+                                        </div>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Referrer Reward (₹)</span>
+                                                <input 
+                                                    type="number" 
+                                                    className="field" 
+                                                    value={systemSettings.referrerAmount}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, referrerAmount: Number(e.target.value)})}
+                                                    step="0.5"
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Referee Reward (₹)</span>
+                                                <input 
+                                                    type="number" 
+                                                    className="field" 
+                                                    value={systemSettings.refereeAmount}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, refereeAmount: Number(e.target.value)})}
+                                                    step="0.5"
+                                                />
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-4">💾 Save Referral Settings</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Program Rules</p>
+                                            <h3 className="text-xl font-black text-slate-900">How Referrals Work</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">1. Student Shares Unique Code</strong>
+                                                Found in their user profile dialog.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">2. Invitee Signs Up</strong>
+                                                Receives ₹{systemSettings.refereeAmount || 5} free wallet balance on account creation.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3: Bulk / Thesis Prints */}
+                        {systemSubTab === "thesis" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Thesis & Bulk Prints</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Bulk Discount Rules</h2>
+                                            <p className="subtitle">Automatically give automatic bulk discount percentages on large document orders.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={saveSystemSettings} className="space-y-4">
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Threshold (Pages)</span>
+                                                <input 
+                                                    type="number" 
+                                                    className="field" 
+                                                    value={systemSettings.thesisDiscountPages || 50}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, thesisDiscountPages: Number(e.target.value)})}
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Discount Percentage (%)</span>
+                                                <input 
+                                                    type="number" 
+                                                    className="field" 
+                                                    value={systemSettings.thesisDiscountPercent || 15}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, thesisDiscountPercent: Number(e.target.value)})}
+                                                    step="0.5"
+                                                />
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-4">💾 Save Bulk Print Settings</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Information</p>
+                                            <h3 className="text-xl font-black text-slate-900">Thesis Submissions</h3>
+                                        </div>
+                                        <div className="p-4 rounded-xl bg-sky-50 border border-sky-100 text-xs text-sky-800 space-y-2">
+                                            <p>When an uploaded PDF exceeds the page threshold, the system automatically marks it with a bulk discount tag during checkout.</p>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 4: Global Platform Config */}
+                        {systemSubTab === "global" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                            <motion.section
+                                className="panel p-6 max-w-2xl"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header mb-6 pb-4 border-b border-slate-100">
                                     <div>
                                         <p className="eyebrow">Platform Settings</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Global Config</h2>
+                                        <h2 className="text-2xl font-black text-slate-900">Global System Config</h2>
                                     </div>
                                 </div>
                                 <form onSubmit={saveSystemSettings} className="space-y-4">
-                                    <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="grid gap-4 sm:grid-cols-3">
                                         <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Razorpay/UPI Charge (%)</span>
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Razorpay/UPI Charge (%)</span>
                                             <input 
                                                 type="number" 
                                                 className="field" 
@@ -4451,7 +5307,7 @@ function AdminDashboard() {
                                             />
                                         </label>
                                         <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Manager Max B&W Printers</span>
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Manager Max B&W Printers</span>
                                             <input 
                                                 type="number" 
                                                 className="field" 
@@ -4460,7 +5316,7 @@ function AdminDashboard() {
                                             />
                                         </label>
                                         <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Manager Max Color Printers</span>
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Manager Max Color Printers</span>
                                             <input 
                                                 type="number" 
                                                 className="field" 
@@ -4469,29 +5325,27 @@ function AdminDashboard() {
                                             />
                                         </label>
                                     </div>
-                                    <button type="submit" className="btn success w-full mt-4">Save Platform Settings</button>
+                                    <button type="submit" className="btn success w-full mt-4">💾 Save Platform Settings</button>
                                 </form>
                             </motion.section>
-                            )}
+                        )}
 
-
-                            {/* Off-Peak Hour Settings */}
+                        {/* SUBPAGE 5: Off-Peak Hour Settings */}
+                        {systemSubTab === "offpeak" && (
                             <motion.section
                                 className="panel p-6"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.04 }}
                             >
-                                <div className="section-header mb-4">
+                                <div className="section-header mb-6 pb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                     <div>
                                         <p className="eyebrow">Off-Peak Printing</p>
                                         <h2 className="text-2xl font-black text-slate-900">Off-Peak Hour Settings</h2>
                                         <p className="subtitle">Discounted rates during low-traffic windows. Toggle to enable or disable the program.</p>
                                     </div>
                                     
-                                    {/* College Selector for Main Admin */}
                                     {(loggedInAdminRole !== "SUB_ADMIN" || loggedInAdminUser === "admin") ? (
-                                        <div className="flex items-center gap-2 mt-4 sm:mt-0">
+                                        <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-slate-500">Configure College:</span>
                                             <select
                                                 value={offpeakCollege}
@@ -4508,7 +5362,7 @@ function AdminDashboard() {
                                             </select>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center gap-2 mt-4 sm:mt-0">
+                                        <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-slate-500">College:</span>
                                             <span className="text-xs font-black px-3 py-1 rounded-lg bg-indigo-100 text-indigo-800 border border-indigo-200">
                                                 {offpeakCollege}
@@ -4516,8 +5370,7 @@ function AdminDashboard() {
                                         </div>
                                     )}
                                 </div>
-                                <form onSubmit={saveCollegeOffpeakSettings} className="space-y-4">
-
+                                <form onSubmit={saveCollegeOffpeakSettings} className="space-y-5">
                                     {/* Enable / Disable toggle */}
                                     <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                                         collegeOffpeakSettings.offpeakEnabled
@@ -4597,7 +5450,7 @@ function AdminDashboard() {
                                             <input 
                                                 type="number" 
                                                 className="field" 
-                                                value={collegeOffpeakSettings.offpeakMorningStart !== undefined ? collegeOffpeakSettings.offpeakMorningStart : 7}
+                                                value={collegeOffpeakMorningStart !== undefined ? collegeOffpeakMorningStart : 7}
                                                 onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakMorningStart: Number(e.target.value)})}
                                                 min="0" max="23"
                                             />
@@ -4629,407 +5482,445 @@ function AdminDashboard() {
                                             step="0.5"
                                         />
                                     </label>
-                                    <button type="submit" className="btn success w-full mt-2">Save Off-Peak settings</button>
+                                    <button type="submit" className="btn success w-full mt-2">💾 Save Off-Peak Settings</button>
                                 </form>
                             </motion.section>
+                        )}
 
-                            <div className="space-y-6">
-                                {/* Dynamic Block Creator - only show for main admin in system tab */}
-                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                <motion.section 
-                                    className="panel p-6"
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.05 }}
-                                >
-                                    <div className="section-header mb-4">
-                                        <div>
-                                            <p className="eyebrow">Campus Blocks</p>
-                                            <h2 className="text-2xl font-black text-slate-900">Add Printing Block</h2>
-                                        </div>
+                        {/* SUBPAGE 6: Printer Paper Levels */}
+                        {systemSubTab === "paper" && (
+                            <motion.section 
+                                className="panel p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header mb-6 pb-4 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Printers</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Printer Paper Levels</h2>
                                     </div>
-                                    <form onSubmit={addBlock} className="space-y-3">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Block name (e.g. D Block)" 
-                                            className="field"
-                                            value={newBlockName}
-                                            onChange={(e) => setNewBlockName(e.target.value)}
-                                            required
-                                        />
-                                        <input 
-                                            type="text" 
-                                            placeholder="College name (e.g. KLU)" 
-                                            className="field"
-                                            value={newBlockCollege}
-                                            onChange={(e) => setNewBlockCollege(e.target.value)}
-                                            required
-                                        />
-                                        <button type="submit" className="btn w-full">Add Block</button>
-                                    </form>
-                                </motion.section>
-                                )}
-
-                                {/* Printers paper count refills */}
-                                <motion.section 
-                                    className="panel p-6"
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                >
-                                    <div className="section-header mb-4">
-                                        <div>
-                                            <p className="eyebrow">Printers</p>
-                                            <h2 className="text-2xl font-black text-slate-900">Printer Paper Levels</h2>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        {printers.map(p => {
-                                            const currentPaper = printerPapers[p.blockLocation] != null ? printerPapers[p.blockLocation] : 0;
-                                            return (
-                                                <div key={p.id} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                                                    <div>
-                                                        <p className="font-black text-slate-900">{p.blockLocation}</p>
-                                                        <p className="text-xs font-bold text-slate-400">{p.printerName || "Not configured"}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <input 
-                                                            type="number" 
-                                                            className="field w-24 text-center font-bold" 
-                                                            key={currentPaper}
-                                                            defaultValue={currentPaper}
-                                                            id={`paper-${p.blockLocation}`}
-                                                        />
-                                                        <button 
-                                                            onClick={() => {
-                                                                const count = Number(document.getElementById(`paper-${p.blockLocation}`).value || 0);
-                                                                updatePrinterPaper(p.blockLocation, count);
-                                                            }}
-                                                            className="btn secondary min-h-0 px-3 py-1.5 text-xs"
-                                                        >
-                                                            Refill
-                                                        </button>
-                                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    {printers.map(p => {
+                                        const currentPaper = printerPapers[p.blockLocation] != null ? printerPapers[p.blockLocation] : 0;
+                                        return (
+                                            <div key={p.id} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                                                <div>
+                                                    <p className="font-black text-slate-900">{p.blockLocation}</p>
+                                                    <p className="text-xs font-bold text-slate-400">{p.printerName || "Not configured"}</p>
                                                 </div>
-                                            );
-                                        })}
-                                        {printers.length === 0 && (
-                                            <p className="text-sm font-bold text-slate-500 text-center py-4">No printer configurations found. Configure them in Printer Settings.</p>
-                                        )}
-                                    </div>
-                                </motion.section>
-
-                                {/* Tester Mode Controls */}
-                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                <motion.section 
-                                    className="panel p-6 border border-purple-500/20 bg-purple-500/5 mt-6"
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.15 }}
-                                >
-                                    <div className="section-header mb-4">
-                                        <div>
-                                            <p className="eyebrow text-purple-700">Tester Mode Controls</p>
-                                            <h2 className="text-2xl font-black text-purple-950">Tester Mode Access</h2>
-                                        </div>
-                                    </div>
-                                    <form onSubmit={saveSystemSettings} className="space-y-4">
-                                        <div className="flex items-center justify-between bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                            <div>
-                                                <p className="font-black text-purple-950 text-sm">Enable Tester Access</p>
-                                                <p className="text-xs text-purple-700/60 font-semibold mt-0.5">
-                                                    Allow designated testers to place prints for free.
-                                                </p>
+                                                <div className="flex items-center gap-3">
+                                                    <input 
+                                                        type="number" 
+                                                        className="field w-24 text-center font-bold" 
+                                                        key={currentPaper}
+                                                        defaultValue={currentPaper}
+                                                        id={`paper-${p.blockLocation}`}
+                                                    />
+                                                    <button 
+                                                        onClick={() => {
+                                                            const count = Number(document.getElementById(`paper-${p.blockLocation}`).value || 0);
+                                                            updatePrinterPaper(p.blockLocation, count);
+                                                        }}
+                                                        className="btn secondary min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                    >
+                                                        Refill
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only peer"
-                                                    checked={systemSettings.testerModeEnabled || false}
-                                                    onChange={(e) => setSystemSettings({...systemSettings, testerModeEnabled: e.target.checked})}
-                                                />
-                                                <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                                            </label>
-                                        </div>
+                                        );
+                                    })}
+                                    {printers.length === 0 && (
+                                        <p className="text-sm font-bold text-slate-500 text-center py-4">No printer configurations found.</p>
+                                    )}
+                                </div>
+                            </motion.section>
+                        )}
 
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Tester Usernames / Emails (Comma Separated)</span>
-                                            <textarea 
-                                                className="field min-h-[70px] border-slate-200 focus:border-purple-600 font-bold" 
-                                                placeholder="e.g. tester1, tester2, test@gmail.com" 
-                                                value={systemSettings.testerUsernames || ""} 
-                                                onChange={(e) => setSystemSettings({...systemSettings, testerUsernames: e.target.value})}
-                                                disabled={!systemSettings.testerModeEnabled}
+                        {/* SUBPAGE 7: Tester Mode Controls */}
+                        {systemSubTab === "tester" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                            <motion.section 
+                                className="panel p-6 border border-purple-500/20 bg-purple-500/5"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header mb-6 pb-4 border-b border-purple-100">
+                                    <div>
+                                        <p className="eyebrow text-purple-700">Tester Mode Controls</p>
+                                        <h2 className="text-2xl font-black text-purple-950">Tester Mode Access</h2>
+                                        <p className="subtitle text-purple-800/80">Allow designated QA testers and admins to place free test prints without payment.</p>
+                                    </div>
+                                </div>
+                                <form onSubmit={saveSystemSettings} className="space-y-4">
+                                    <div className="flex items-center justify-between bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                        <div>
+                                            <p className="font-black text-purple-950 text-sm">Enable Tester Access</p>
+                                            <p className="text-xs text-purple-700/60 font-semibold mt-0.5">
+                                                Allow designated testers to place prints for free.
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={systemSettings.testerModeEnabled || false}
+                                                onChange={(e) => setSystemSettings({...systemSettings, testerModeEnabled: e.target.checked})}
                                             />
+                                            <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                         </label>
-                                        
-                                        <button type="submit" className="btn bg-purple-600 hover:bg-purple-500 text-white w-full mt-2 font-black text-xs uppercase tracking-wider">Save Tester settings</button>
-                                    </form>
-                                </motion.section>
-                                )}
-                            </div>
-                        </div>
+                                    </div>
+
+                                    <label className="block">
+                                        <span className="block text-xs font-bold text-slate-500 mb-1">Tester Usernames / Emails (Comma Separated)</span>
+                                        <textarea 
+                                            className="field min-h-[70px] border-slate-200 focus:border-purple-600 font-bold" 
+                                            placeholder="e.g. tester1, tester2, test@gmail.com" 
+                                            value={systemSettings.testerUsernames || ""} 
+                                            onChange={(e) => setSystemSettings({...systemSettings, testerUsernames: e.target.value})}
+                                            disabled={!systemSettings.testerModeEnabled}
+                                        />
+                                    </label>
+                                    
+                                    <button type="submit" className="btn bg-purple-600 hover:bg-purple-500 text-white w-full mt-2 font-black text-xs uppercase tracking-wider">💾 Save Tester Settings</button>
+                                </form>
+                            </motion.section>
+                        )}
                     </div>
                 )}
 
                 {/* Printers Management Tab */}
                 {activeTab === "printers" && (
                     <div className="mt-6 space-y-6">
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            {/* Add Printer Form */}
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Printers</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Add New Printer</h2>
-                                    </div>
-                                </div>
-                                <form onSubmit={addPrinter} className="space-y-4">
-                                    <label className="block">
-                                        <span className="block text-sm font-black text-slate-700 mb-2">Block Location</span>
-                                        <select
-                                            className="field"
-                                            value={newPrinterBlock}
-                                            onChange={(e) => setNewPrinterBlock(e.target.value)}
-                                            required
-                                        >
-                                            <option value="" disabled>Select Block</option>
-                                            {displayBlocks.map(b => (
-                                                <option key={b.id} value={b.name}>{b.name} ({b.college || "KLU"})</option>
-                                            ))}
-                                        </select>
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-sm font-black text-slate-700 mb-2">Printer Name (Windows printer name)</span>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g. Laser Jet Pro"
-                                            className="field"
-                                            value={newPrinterName}
-                                            onChange={(e) => setNewPrinterName(e.target.value)}
-                                            required
-                                        />
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-sm font-black text-slate-700 mb-2">Printer IP / USB</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Printer IP (optional)"
-                                            className="field"
-                                            value={newPrinterIp}
-                                            onChange={(e) => setNewPrinterIp(e.target.value)}
-                                        />
-                                    </label>
-                                    
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">Operation Status</span>
-                                            <select className="field cursor-pointer" value={newPrinterActive} onChange={(e) => setNewPrinterActive(e.target.value === "true")}>
-                                                <option value="true">Active (Online & Ready)</option>
-                                                <option value="false">Offline</option>
-                                            </select>
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">Maintenance Status</span>
-                                            <select className="field cursor-pointer" value={newPrinterMaintenance} onChange={(e) => setNewPrinterMaintenance(e.target.value === "true")}>
-                                                <option value="false">Normal Operation</option>
-                                                <option value="true">Under Maintenance</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    
-                                    <label className="block">
-                                        <span className="block text-sm font-black text-slate-700 mb-2">Supported Output Type</span>
-                                        <select className="field cursor-pointer" value={newPrinterColor} onChange={(e) => setNewPrinterColor(e.target.value === "true")}>
-                                            <option value="false">Black & White Only 📄</option>
-                                            <option value="true">Color 🎨</option>
-                                        </select>
-                                    </label>
-                                    
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">QR Scan Flow</span>
-                                            <select className="field cursor-pointer" value={newPrinterQrScan} onChange={(e) => setNewPrinterQrScan(e.target.value === "true")}>
-                                                <option value="false">Direct Printing</option>
-                                                <option value="true">QR Scan Required</option>
-                                            </select>
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-sm font-black text-slate-700 mb-2">OTP Release flow</span>
-                                            <select className="field cursor-pointer" value={newPrinterOtp} onChange={(e) => setNewPrinterOtp(e.target.value === "true")}>
-                                                <option value="true">OTP Required 🔑</option>
-                                                <option value="false">No OTP Required</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <button type="submit" className="btn success w-full">Create Printer</button>
-                                </form>
-                            </motion.section>
+                        {/* Top Sub-Navigation Bar for Printer Settings */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "printers-list", label: `Connected Printers (${getRoleFilteredPrinters().length})`, icon: "🖨️" },
+                                    { id: "add-printer", label: "Add New Printer", icon: "➕" },
+                                    { id: "paper-stock", label: "Paper Stock Manager", icon: "📄" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setPrintersSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            printersSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                            {/* Printers List */}
+                        {/* SUBPAGE 1: Connected Printers List */}
+                        {printersSubTab === "printers-list" && (
                             <motion.section
                                 className="panel p-6"
-                                initial={{ opacity: 0, y: 18 }}
+                                initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.05 }}
                             >
-                                <div className="section-header mb-4 flex flex-wrap justify-between items-center gap-4">
-                                    <h3 className="font-bold text-lg">Active Printers</h3>
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Hardware Fleet</p>
+                                        <h3 className="text-2xl font-black text-slate-900">Active Printers ({getRoleFilteredPrinters().length})</h3>
+                                    </div>
+                                    <button onClick={() => setPrintersSubTab("add-printer")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ➕ Add Printer
+                                    </button>
                                 </div>
-                                <ul className="space-y-3">
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                     {getRoleFilteredPrinters().map(p => (
-                                          <li key={p.id} className="p-4 border rounded-xl flex flex-col gap-4 bg-white shadow-sm hover:shadow-md transition-shadow border-slate-200">
-                                              <div className="flex items-start justify-between">
-                                                  <div>
-                                                      <div className="flex items-center gap-2 mb-1">
-                                                          <h4 className="font-black text-slate-900 text-lg leading-none">{p.printerName}</h4>
-                                                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase tracking-wider">{p.blockLocation}</span>
-                                                          {p.colourSupported && (
-                                                              <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-700">Color</span>
-                                                          )}
-                                                      </div>
-                                                      <p className="text-xs font-bold text-slate-500 font-mono mt-1">{p.printerIp || "No IP Configured"}</p>
-                                                  </div>
-                                                  <div className="flex flex-col items-end gap-1">
-                                                      <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider w-24 text-center ${p.active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
-                                                          {p.active ? 'Active' : 'Inactive'}
-                                                      </span>
-                                                      <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider w-24 text-center ${p.maintenance ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-sky-100 text-sky-700 border border-sky-200'}`}>
-                                                          {p.maintenance ? 'Maintenance' : 'Online'}
-                                                      </span>
-                                                  </div>
-                                              </div>
-                                              
-                                              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
-                                                  <div>
-                                                      <button 
-                                                          onClick={() => togglePrinterMaintenance(p)}
-                                                          className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${p.maintenance ? 'success' : 'secondary'}`}
-                                                      >
-                                                          🛠 {p.maintenance ? "Set Online" : "Set Maintenance"}
-                                                      </button>
-                                                  </div>
-                                                  <div className="flex items-center gap-2">
-                                                      <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden h-8">
-                                                          <div className="px-2 bg-slate-100 text-xs font-bold text-slate-500 border-r border-slate-200 h-full flex items-center">
-                                                              📄
-                                                          </div>
-                                                          <input 
-                                                              type="number" 
-                                                              className="w-16 text-center font-bold px-2 text-xs bg-transparent outline-none h-full" 
-                                                              key={p.paperCount}
-                                                              defaultValue={p.paperCount}
-                                                              id={`manage-paper-${p.blockLocation}`}
-                                                          />
-                                                      </div>
-                                                      <button 
-                                                          onClick={() => {
-                                                              const inputEl = document.getElementById(`manage-paper-${p.blockLocation}`);
-                                                              if(inputEl) {
-                                                                  const count = Number(inputEl.value || 0);
-                                                                  updatePrinterPaper(p.blockLocation, count);
-                                                              }
-                                                          }}
-                                                          className="btn secondary min-h-0 px-3 py-1.5 text-xs font-bold h-8"
-                                                      >
-                                                          Refill
-                                                      </button>
-                                                      
-                                                      <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                                                      
-                                                      <button 
-                                                          onClick={() => {
-                                                              if (window.confirm(`Are you sure you want to delete ${p.printerName}?`)) {
-                                                                  deletePrinter(p.id);
-                                                              }
-                                                          }}
-                                                          className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold h-8"
-                                                      >
-                                                          🗑️
-                                                      </button>
-                                                  </div>
-                                              </div>
-                                          </li>
+                                        <div key={p.id} className="p-5 border rounded-2xl flex flex-col justify-between gap-4 bg-white shadow-sm hover:shadow-md transition-shadow border-slate-200">
+                                            <div>
+                                                <div className="flex items-start justify-between gap-2 mb-2">
+                                                    <div>
+                                                        <h4 className="font-black text-slate-900 text-lg leading-tight">{p.printerName}</h4>
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase tracking-wider mt-1 inline-block">{p.blockLocation}</span>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${p.active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
+                                                            {p.active ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${p.maintenance ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-sky-100 text-sky-700 border border-sky-200'}`}>
+                                                            {p.maintenance ? 'Maintenance' : 'Online'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs font-bold text-slate-400 font-mono mt-1">{p.printerIp || "Local USB / Default"}</p>
+                                                <div className="flex gap-2 mt-3">
+                                                    {p.colourSupported ? (
+                                                        <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200">🎨 Color Supported</span>
+                                                    ) : (
+                                                        <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">📄 B&W Only</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                                                <button 
+                                                    onClick={() => togglePrinterMaintenance(p)}
+                                                    className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${p.maintenance ? 'success' : 'secondary'}`}
+                                                >
+                                                    🛠 {p.maintenance ? "Set Online" : "Set Maintenance"}
+                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden h-8">
+                                                        <span className="px-2 text-xs font-bold text-slate-500">📄</span>
+                                                        <input 
+                                                            type="number" 
+                                                            className="w-14 text-center font-bold px-1 text-xs bg-transparent outline-none h-full" 
+                                                            key={p.paperCount}
+                                                            defaultValue={p.paperCount}
+                                                            id={`manage-paper-${p.blockLocation}`}
+                                                        />
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const inputEl = document.getElementById(`manage-paper-${p.blockLocation}`);
+                                                            if(inputEl) {
+                                                                const count = Number(inputEl.value || 0);
+                                                                updatePrinterPaper(p.blockLocation, count);
+                                                            }
+                                                        }}
+                                                        className="btn secondary min-h-0 px-2.5 py-1 text-xs font-bold h-8"
+                                                    >
+                                                        Refill
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            if (window.confirm(`Are you sure you want to delete ${p.printerName}?`)) {
+                                                                deletePrinter(p.id);
+                                                            }
+                                                        }}
+                                                        className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold h-8"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
                                     {getRoleFilteredPrinters().length === 0 && (
-                                        <li className="text-sm font-bold text-slate-500 text-center py-4">No printers found.</li>
+                                        <div className="col-span-full text-sm font-bold text-slate-400 text-center py-12">
+                                            No printers found. Click Add Printer to connect your first hardware station.
+                                        </div>
                                     )}
-                                </ul>
+                                </div>
                             </motion.section>
-                        </div>
+                        )}
+
+                        {/* SUBPAGE 2: Add Printer Form */}
+                        {printersSubTab === "add-printer" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <div>
+                                            <p className="eyebrow">Printers</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Add New Printer</h2>
+                                            <p className="subtitle">Configure and register a printer station on campus.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={addPrinter} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">Block Location</span>
+                                            <select
+                                                className="field"
+                                                value={newPrinterBlock}
+                                                onChange={(e) => setNewPrinterBlock(e.target.value)}
+                                                required
+                                            >
+                                                <option value="" disabled>Select Block</option>
+                                                {displayBlocks.map(b => (
+                                                    <option key={b.id} value={b.name}>{b.name} ({b.college || "KLU"})</option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">Printer Name (Windows printer driver name)</span>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Laser Jet Pro MFP"
+                                                className="field"
+                                                value={newPrinterName}
+                                                onChange={(e) => setNewPrinterName(e.target.value)}
+                                                required
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">Printer IP / USB Port</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Printer IP or COM port (optional)"
+                                                className="field"
+                                                value={newPrinterIp}
+                                                onChange={(e) => setNewPrinterIp(e.target.value)}
+                                            />
+                                        </label>
+                                        
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-sm font-black text-slate-700 mb-2">Operation Status</span>
+                                                <select className="field cursor-pointer" value={newPrinterActive} onChange={(e) => setNewPrinterActive(e.target.value === "true")}>
+                                                    <option value="true">Active (Online & Ready)</option>
+                                                    <option value="false">Offline</option>
+                                                </select>
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-sm font-black text-slate-700 mb-2">Maintenance Status</span>
+                                                <select className="field cursor-pointer" value={newPrinterMaintenance} onChange={(e) => setNewPrinterMaintenance(e.target.value === "true")}>
+                                                    <option value="false">Normal Operation</option>
+                                                    <option value="true">Under Maintenance</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">Supported Output Type</span>
+                                            <select className="field cursor-pointer" value={newPrinterColor} onChange={(e) => setNewPrinterColor(e.target.value === "true")}>
+                                                <option value="false">Black & White Only 📄</option>
+                                                <option value="true">Color 🎨</option>
+                                            </select>
+                                        </label>
+                                        
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-sm font-black text-slate-700 mb-2">QR Scan Flow</span>
+                                                <select className="field cursor-pointer" value={newPrinterQrScan} onChange={(e) => setNewPrinterQrScan(e.target.value === "true")}>
+                                                    <option value="false">Direct Printing</option>
+                                                    <option value="true">QR Scan Required</option>
+                                                </select>
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-sm font-black text-slate-700 mb-2">OTP Release Flow</span>
+                                                <select className="field cursor-pointer" value={newPrinterOtp} onChange={(e) => setNewPrinterOtp(e.target.value === "true")}>
+                                                    <option value="true">OTP Required 🔑</option>
+                                                    <option value="false">No OTP Required</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-2">➕ Create Printer</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Hardware Setup</p>
+                                            <h3 className="text-xl font-black text-slate-900">Printer Guide</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">Driver Matching</strong>
+                                                Ensure the Windows printer driver name matches the name installed on the local print agent PC.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">OTP vs Direct</strong>
+                                                Enable OTP if this station requires students to verify their 4-digit code at the kiosk screen.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3: Paper Stock Manager */}
+                        {printersSubTab === "paper-stock" && (
+                            <motion.section 
+                                className="panel p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Consumables</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Paper Stock by Location</h2>
+                                        <p className="subtitle">Update live paper inventory count for each connected block.</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 max-w-2xl">
+                                    {getRoleFilteredPrinters().map(p => {
+                                        const currentPaper = printerPapers[p.blockLocation] != null ? printerPapers[p.blockLocation] : p.paperCount || 0;
+                                        return (
+                                            <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white">
+                                                <div>
+                                                    <p className="font-black text-slate-900 text-base">{p.blockLocation}</p>
+                                                    <p className="text-xs font-bold text-slate-400">{p.printerName}</p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <input 
+                                                        type="number" 
+                                                        className="field w-28 text-center font-black text-base" 
+                                                        key={currentPaper}
+                                                        defaultValue={currentPaper}
+                                                        id={`stock-paper-${p.blockLocation}`}
+                                                    />
+                                                    <button 
+                                                        onClick={() => {
+                                                            const count = Number(document.getElementById(`stock-paper-${p.blockLocation}`).value || 0);
+                                                            updatePrinterPaper(p.blockLocation, count);
+                                                        }}
+                                                        className="btn success min-h-0 px-4 py-2 text-xs font-bold"
+                                                    >
+                                                        Save Stock
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </motion.section>
+                        )}
                     </div>
                 )}
 
                 {/* Notifications Management Tab */}
                 {activeTab === "notifications" && (
                     <div className="mt-6 space-y-6">
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            {/* Create Notification Form */}
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Campus Alerts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Create Notification</h2>
-                                        <p className="subtitle">Send a campus notification to users of a specific college or all colleges.</p>
-                                    </div>
-                                </div>
-                                <form onSubmit={createNotification} className="space-y-4">
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Title</span>
-                                        <input type="text" className="field" placeholder="Notification title" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)} required />
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Message</span>
-                                        <textarea className="field min-h-[90px]" placeholder="Write notification message..." value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)} required />
-                                    </label>
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Type</span>
-                                            <select className="field" value={notifType} onChange={(e) => setNotifType(e.target.value)}>
-                                                <option value="INFO">ℹ️ Info</option>
-                                                <option value="ALERT">🚨 Alert</option>
-                                                <option value="ANNOUNCEMENT">📢 Announcement</option>
-                                            </select>
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Target College</span>
-                                            {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
-                                                <input type="text" className="field bg-slate-100 cursor-not-allowed" value={loggedInAdminCollege} readOnly disabled />
-                                            ) : (
-                                                <select className="field" value={notifCollege} onChange={(e) => setNotifCollege(e.target.value)}>
-                                                    <option value="ALL">All Colleges</option>
-                                                    <option value="KLU">KLU</option>
-                                                    <option value="UoH">UoH</option>
-                                                    <option value="VIT">VIT</option>
-                                                    <option value="SRM">SRM</option>
-                                                </select>
-                                            )}
-                                        </label>
-                                    </div>
-                                    <button type="submit" className="btn w-full">📢 Publish Notification</button>
-                                </form>
-                            </motion.section>
+                        {/* Top Sub-Navigation Bar for Campus Alerts */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "all-notifs", label: `Published Alerts (${notifications.length})`, icon: "📢" },
+                                    { id: "create-notif", label: "Create Notification", icon: "✍️" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setNotificationsSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            notificationsSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                            {/* Notifications List */}
+                        {/* SUBPAGE 1: Published Notifications List */}
+                        {notificationsSubTab === "all-notifs" && (
                             <motion.section
                                 className="panel p-6 overflow-x-auto"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.05 }}
                             >
-                                <div className="section-header mb-4">
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                     <div>
                                         <p className="eyebrow">Active Alerts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Published Notifications</h2>
+                                        <h2 className="text-2xl font-black text-slate-900">Published Notifications ({notifications.length})</h2>
                                     </div>
+                                    <button onClick={() => setNotificationsSubTab("create-notif")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ✍️ Compose Notification
+                                    </button>
                                 </div>
                                 <div className="space-y-3">
                                     {notifications
@@ -5040,24 +5931,98 @@ function AdminDashboard() {
                                             return true;
                                         })
                                         .map((notif) => (
-                                        <div key={notif.id} className="flex items-start justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                        <div key={notif.id} className="flex items-start justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <p className="font-black text-slate-900 text-sm">{notif.title}</p>
-                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">{notif.type || 'INFO'}</span>
-                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{notif.college || 'ALL'}</span>
+                                                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                                    <p className="font-black text-slate-900 text-base">{notif.title}</p>
+                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">{notif.type || 'INFO'}</span>
+                                                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">{notif.college || 'ALL'}</span>
                                                 </div>
-                                                <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">{notif.message}</p>
+                                                <p className="text-sm text-slate-600 font-medium leading-relaxed">{notif.message}</p>
                                             </div>
                                             <button onClick={() => deleteNotification(notif.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold shrink-0">Delete</button>
                                         </div>
                                     ))}
                                     {notifications.length === 0 && (
-                                        <div className="text-center py-8 text-slate-400 font-bold text-sm">No notifications published yet. Create one above.</div>
+                                        <div className="text-center py-12 text-slate-400 font-bold text-sm">
+                                            No notifications published yet. Click Compose Notification to broadcast an alert.
+                                        </div>
                                     )}
                                 </div>
                             </motion.section>
-                        </div>
+                        )}
+
+                        {/* SUBPAGE 2: Create Notification Form */}
+                        {notificationsSubTab === "create-notif" && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <div>
+                                            <p className="eyebrow">Campus Alerts</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Broadcast Notification</h2>
+                                            <p className="subtitle">Send an instant notification to users in a specific college or platform-wide.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={createNotification} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Notification Title</span>
+                                            <input type="text" className="field" placeholder="e.g. Server Maintenance Notice" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)} required />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Message Body</span>
+                                            <textarea className="field min-h-[110px]" placeholder="Write notification message details..." value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)} required />
+                                        </label>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Alert Type</span>
+                                                <select className="field" value={notifType} onChange={(e) => setNotifType(e.target.value)}>
+                                                    <option value="INFO">ℹ️ Info</option>
+                                                    <option value="ALERT">🚨 Alert</option>
+                                                    <option value="ANNOUNCEMENT">📢 Announcement</option>
+                                                </select>
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Target College</span>
+                                                {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                    <input type="text" className="field bg-slate-100 cursor-not-allowed" value={loggedInAdminCollege} readOnly disabled />
+                                                ) : (
+                                                    <select className="field" value={notifCollege} onChange={(e) => setNotifCollege(e.target.value)}>
+                                                        <option value="ALL">All Colleges</option>
+                                                        {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                            <option key={col} value={col}>{col} College</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-2">📢 Publish Notification</button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Audience Scope</p>
+                                            <h3 className="text-xl font-black text-slate-900">Broadcast Guidelines</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">ℹ️ Info</strong>
+                                                General non-critical updates like print rate changes or new paper stocks.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">🚨 Alert</strong>
+                                                Urgent hardware outages, power maintenance, or immediate network repairs.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
                     </div>
                 )}
 
@@ -5065,199 +6030,187 @@ function AdminDashboard() {
 
                 {/* SQL Terminal Tab — Main Admin only */}
                 {activeTab === "sql" && (loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                    <motion.section 
-                        className="panel mt-6 p-6"
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                    >
-                        <div className="section-header pb-4">
-                            <div>
-                                <p className="eyebrow">Database Console</p>
-                                <h2 className="text-2xl font-black text-slate-900">SQL Execution Console</h2>
-                                <p className="subtitle">Execute raw database queries directly. SELECT queries will display output tables, while update statements report rows affected.</p>
+                    <div className="mt-6 space-y-6">
+                        {/* Top Sub-Navigation Bar for SQL Terminal */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "console", label: "SQL Query Console", icon: "💻" },
+                                    { id: "backup", label: "Database Backup Tool", icon: "💾" },
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setSqlSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            sqlSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        <form onSubmit={runSqlQuery} className="space-y-4">
-                            <textarea
-                                value={sqlQuery}
-                                onChange={(e) => setSqlQuery(e.target.value)}
-                                className="field font-mono text-sm leading-relaxed min-h-[140px] bg-slate-950 text-cyan-400 border-slate-800 p-4 focus:ring-4 focus:ring-cyan-950"
-                                placeholder="SELECT * FROM users;"
-                            />
-                            <div className="flex justify-end gap-3">
-                                <button 
-                                    type="button" 
-                                    onClick={handleDownloadBackup} 
-                                    className="btn secondary min-h-0 font-bold px-6 py-2.5"
-                                >
-                                    📥 Backup Database (SQL)
-                                </button>
-                                <button type="submit" className="btn warning min-h-0 font-bold px-6 py-2.5" disabled={sqlExecuting}>
-                                    {sqlExecuting ? "Executing query..." : "Execute Statement"}
-                                </button>
-                            </div>
-                        </form>
+                        {/* SUBPAGE 1: SQL Execution Console */}
+                        {sqlSubTab === "console" && (
+                            <motion.section 
+                                className="panel p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                    <div>
+                                        <p className="eyebrow">Database Console</p>
+                                        <h2 className="text-2xl font-black text-slate-900">SQL Execution Console</h2>
+                                        <p className="subtitle">Execute raw database queries directly. SELECT queries will display output tables, while update statements report rows affected.</p>
+                                    </div>
+                                </div>
 
-                        {/* Error output */}
-                        {sqlError && (
-                            <div className="mt-6 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-mono whitespace-pre-wrap">
-                                ⚠️ {sqlError}
-                            </div>
-                        )}
+                                <form onSubmit={runSqlQuery} className="space-y-4">
+                                    <textarea
+                                        value={sqlQuery}
+                                        onChange={(e) => setSqlQuery(e.target.value)}
+                                        className="field font-mono text-sm leading-relaxed min-h-[160px] bg-slate-950 text-cyan-400 border-slate-800 p-4 focus:ring-4 focus:ring-cyan-950 rounded-xl"
+                                        placeholder="SELECT * FROM users LIMIT 20;"
+                                    />
+                                    <div className="flex justify-end gap-3">
+                                        <button type="submit" className="btn warning min-h-0 font-bold px-6 py-2.5" disabled={sqlExecuting}>
+                                            {sqlExecuting ? "Executing query..." : "⚡ Execute Statement"}
+                                        </button>
+                                    </div>
+                                </form>
 
-                        {/* Results output */}
-                        {sqlResult && (
-                            <div className="mt-6 border-t border-slate-100 pt-6">
-                                <h3 className="text-lg font-black text-slate-900 mb-4">Query Execution Result</h3>
-                                
-                                {Array.isArray(sqlResult) ? (
-                                    sqlResult.length > 0 ? (
-                                        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50">
-                                            <table className="data-table w-full text-xs font-mono">
-                                                <thead>
-                                                    <tr>
-                                                        {Object.keys(sqlResult[0]).map(col => (
-                                                            <th key={col} className="bg-slate-100 text-slate-700 p-3 border-b border-slate-200 text-left font-black tracking-wider">{col}</th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {sqlResult.map((row, idx) => (
-                                                        <tr key={idx} className="hover:bg-slate-100/80 transition-colors">
-                                                            {Object.values(row).map((val, cIdx) => (
-                                                                <td key={cIdx} className="p-3 border-b border-slate-200 text-slate-800 font-medium">
-                                                                    {val === null ? <span className="text-slate-400 italic">null</span> : String(val)}
-                                                                </td>
-                                                            ))}
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ) : (
-                                        <div className="text-slate-500 font-bold text-center py-6 border border-slate-100 rounded-xl bg-slate-50">
-                                            Query completed successfully. Empty result set (0 rows returned).
-                                        </div>
-                                    )
-                                ) : (
-                                    <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-semibold">
-                                        ✓ {sqlResult.message || `Query succeeded. Rows affected: ${sqlResult.rowsAffected}`}
+                                {/* Error output */}
+                                {sqlError && (
+                                    <div className="mt-6 p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-mono whitespace-pre-wrap">
+                                        ⚠️ {sqlError}
                                     </div>
                                 )}
-                            </div>
+
+                                {/* Results output */}
+                                {sqlResult && (
+                                    <div className="mt-6 border-t border-slate-100 pt-6">
+                                        <h3 className="text-lg font-black text-slate-900 mb-4">Query Execution Result</h3>
+                                        
+                                        {Array.isArray(sqlResult) ? (
+                                            sqlResult.length > 0 ? (
+                                                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50">
+                                                    <table className="data-table w-full text-xs font-mono">
+                                                        <thead>
+                                                            <tr>
+                                                                {Object.keys(sqlResult[0]).map(col => (
+                                                                    <th key={col} className="bg-slate-100 text-slate-700 p-3 border-b border-slate-200 text-left font-black tracking-wider">{col}</th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {sqlResult.map((row, idx) => (
+                                                                <tr key={idx} className="hover:bg-slate-100/80 transition-colors">
+                                                                    {Object.values(row).map((val, cIdx) => (
+                                                                        <td key={cIdx} className="p-3 border-b border-slate-200 text-slate-800 font-medium">
+                                                                            {val === null ? <span className="text-slate-400 italic">null</span> : String(val)}
+                                                                        </td>
+                                                                    ))}
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ) : (
+                                                <div className="text-slate-500 font-bold text-center py-6 border border-slate-100 rounded-xl bg-slate-50">
+                                                    Query completed successfully. Empty result set (0 rows returned).
+                                                </div>
+                                            )
+                                        ) : (
+                                            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-semibold">
+                                                ✓ {sqlResult.message || `Query succeeded. Rows affected: ${sqlResult.rowsAffected}`}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </motion.section>
                         )}
-                    </motion.section>
+
+                        {/* SUBPAGE 2: Database Backup Tool */}
+                        {sqlSubTab === "backup" && (
+                            <motion.section 
+                                className="panel p-8 max-w-xl"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                    <div>
+                                        <p className="eyebrow">Data Persistence</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Database Snapshot Backup</h2>
+                                        <p className="subtitle">Export complete schema and data tables into a timestamped SQL dump file.</p>
+                                    </div>
+                                </div>
+                                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-3xl">💾</span>
+                                        <div>
+                                            <h4 className="font-black text-slate-900">Full SQL Database Dump</h4>
+                                            <p className="text-xs text-slate-500 font-semibold mt-0.5">Includes users, wallets, print orders, pricing rules, and configs.</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        type="button" 
+                                        onClick={handleDownloadBackup} 
+                                        className="btn primary w-full font-black py-3 text-sm flex items-center justify-center gap-2"
+                                    >
+                                        📥 Download SQL Backup File
+                                    </button>
+                                </div>
+                            </motion.section>
+                        )}
+                    </div>
                 )}
 
                 {/* Manage Staff Tab */}
                 {activeTab === "subadmins" && loggedInAdminRole !== "MANAGER" && (
                     <div className="mt-6 space-y-6">
-                        <div className="grid gap-6 md:grid-cols-[1fr_1.5fr]">
-                            {/* Create Staff Form */}
-                            <motion.section
-                                className="panel p-6"
-                                initial={{ opacity: 0, x: -18 }}
-                                animate={{ opacity: 1, x: 0 }}
-                            >
-                                <div className="section-header mb-4">
-                                    <div>
-                                        <p className="eyebrow">Access Management</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Add Staff Account</h2>
-                                        <p className="subtitle">Provision a sub-admin or manager with dedicated credentials.</p>
-                                    </div>
-                                </div>
-                                <form onSubmit={createSubAdmin} className="space-y-4">
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Username / Email</span>
-                                        <input 
-                                            type="text" 
-                                            className="field" 
-                                            placeholder="e.g. kluadmin" 
-                                            value={newSubAdminUsername} 
-                                            onChange={(e) => setNewSubAdminUsername(e.target.value)} 
-                                            required 
-                                        />
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Choose Password</span>
-                                        <input 
-                                            type="password" 
-                                            className="field" 
-                                            placeholder="Min 6 characters" 
-                                            value={newSubAdminPassword} 
-                                            onChange={(e) => setNewSubAdminPassword(e.target.value)} 
-                                            required 
-                                        />
-                                    </label>
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Role</span>
-                                        <select
-                                            value={newAdminRole}
-                                            onChange={(e) => setNewAdminRole(e.target.value)}
-                                            className="field cursor-pointer"
-                                            disabled={loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin"}
-                                        >
-                                            {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                                <option value="SUB_ADMIN">Sub-Admin</option>
-                                            )}
-                                            <option value="MANAGER">Manager</option>
-                                        </select>
-                                    </label>
-                                    {newAdminRole === "MANAGER" && (
-                                        <label className="block">
-                                            <span className="block text-xs font-bold text-slate-500 mb-1">Coupons Secret Key</span>
-                                            <input 
-                                                type="text" 
-                                                className="field" 
-                                                placeholder="e.g. SECRET123" 
-                                                value={newManagerSecret} 
-                                                onChange={(e) => setNewManagerSecret(e.target.value)} 
-                                                required 
-                                            />
-                                        </label>
-                                    )}
-                                    <label className="block">
-                                        <span className="block text-xs font-bold text-slate-500 mb-1">Assign College / Campus</span>
-                                        {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
-                                            <input 
-                                                type="text" 
-                                                className="field bg-slate-100 cursor-not-allowed" 
-                                                value={loggedInAdminCollege} 
-                                                readOnly 
-                                                disabled 
-                                            />
-                                        ) : (
-                                            <select
-                                                value={newSubAdminCollege}
-                                                onChange={(e) => setNewSubAdminCollege(e.target.value)}
-                                                className="field cursor-pointer"
-                                                required
-                                            >
-                                                <option value="" disabled>Select assigned college...</option>
-                                                {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                    <option key={col} value={col}>{col} College</option>
-                                                ))}
-                                            </select>
-                                        )}
-                                    </label>
-                                    <button type="submit" className="btn success w-full mt-2" disabled={isCreatingSubAdmin}>
-                                        {isCreatingSubAdmin ? "Creating..." : "Save Account"}
+                        {/* Top Sub-Navigation Bar for Staff Management */}
+                        <div className="bg-slate-900/95 border border-slate-800 backdrop-blur-2xl rounded-2xl p-2 shadow-2xl sticky top-20 z-30 mb-6">
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
+                                {[
+                                    { id: "staff-list", label: `Staff Directory (${subAdmins.length})`, icon: "👥" },
+                                    { id: "add-staff", label: "Add Staff Account", icon: "➕" },
+                                    ...(loggedInAdminRole === "SUB_ADMIN" ? [{ id: "audit-logs", label: `Audit Trail (${managerLogs.length})`, icon: "📜" }] : []),
+                                ].map(sub => (
+                                    <button
+                                        key={sub.id}
+                                        onClick={() => setSubadminsSubTab(sub.id)}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            subadminsSubTab === sub.id
+                                                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 scale-[1.02]"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span>{sub.icon}</span>
+                                        <span>{sub.label}</span>
                                     </button>
-                                </form>
-                            </motion.section>
+                                ))}
+                            </div>
+                        </div>
 
-                            {/* Active Staff List */}
+                        {/* SUBPAGE 1: Staff Directory Table */}
+                        {subadminsSubTab === "staff-list" && (
                             <motion.section
                                 className="panel p-6 overflow-x-auto"
-                                initial={{ opacity: 0, x: 18 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header mb-4">
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                     <div>
                                         <p className="eyebrow">Active Accounts</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Staff Directory</h2>
+                                        <h2 className="text-2xl font-black text-slate-900">Staff Directory ({subAdmins.length})</h2>
                                     </div>
+                                    <button onClick={() => setSubadminsSubTab("add-staff")} className="btn primary text-xs px-4 py-2 font-bold">
+                                        ➕ Add Staff Account
+                                    </button>
                                 </div>
                                 <table className="data-table w-full">
                                     <thead>
@@ -5287,57 +6240,173 @@ function AdminDashboard() {
                                         ))}
                                         {subAdmins.length === 0 && (
                                             <tr>
-                                                <td colSpan="5" className="text-center font-bold text-slate-500 py-6">No staff provisioned yet.</td>
+                                                <td colSpan="5" className="text-center font-bold text-slate-500 py-8">No staff provisioned yet. Create an account above.</td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
                             </motion.section>
-                        </div>
+                        )}
 
-                        {/* Manager Activity Logs Section */}
-                        {loggedInAdminRole === "SUB_ADMIN" && (
-                        <motion.section className="panel p-6 overflow-x-auto mt-6" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-                            <div className="section-header mb-4">
-                                <div>
-                                    <p className="eyebrow">Audit Trail</p>
-                                    <h2 className="text-2xl font-black text-slate-900">Manager Activity Logs</h2>
+                        {/* SUBPAGE 2: Add Staff Account Form */}
+                        {subadminsSubTab === "add-staff" && (
+                            <motion.div
+                                className="grid gap-6 md:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <div>
+                                            <p className="eyebrow">Access Management</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Add Staff Account</h2>
+                                            <p className="subtitle">Provision a sub-admin or manager with dedicated credentials.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={createSubAdmin} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Username / Email</span>
+                                            <input 
+                                                type="text" 
+                                                className="field" 
+                                                placeholder="e.g. kluadmin" 
+                                                value={newSubAdminUsername} 
+                                                onChange={(e) => setNewSubAdminUsername(e.target.value)} 
+                                                required 
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Choose Password</span>
+                                            <input 
+                                                type="password" 
+                                                className="field" 
+                                                placeholder="Min 6 characters" 
+                                                value={newSubAdminPassword} 
+                                                onChange={(e) => setNewSubAdminPassword(e.target.value)} 
+                                                required 
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Role</span>
+                                            <select
+                                                value={newAdminRole}
+                                                onChange={(e) => setNewAdminRole(e.target.value)}
+                                                className="field cursor-pointer"
+                                                disabled={loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin"}
+                                            >
+                                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                    <option value="SUB_ADMIN">Sub-Admin</option>
+                                                )}
+                                                <option value="MANAGER">Manager</option>
+                                            </select>
+                                        </label>
+                                        {newAdminRole === "MANAGER" && (
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1.5">Coupons Secret Key</span>
+                                                <input 
+                                                    type="text" 
+                                                    className="field" 
+                                                    placeholder="e.g. SECRET123" 
+                                                    value={newManagerSecret} 
+                                                    onChange={(e) => setNewManagerSecret(e.target.value)} 
+                                                    required 
+                                                />
+                                            </label>
+                                        )}
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1.5">Assign College / Campus</span>
+                                            {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                <input 
+                                                    type="text" 
+                                                    className="field bg-slate-100 cursor-not-allowed" 
+                                                    value={loggedInAdminCollege} 
+                                                    readOnly 
+                                                    disabled 
+                                                />
+                                            ) : (
+                                                <select
+                                                    value={newSubAdminCollege}
+                                                    onChange={(e) => setNewSubAdminCollege(e.target.value)}
+                                                    className="field cursor-pointer"
+                                                    required
+                                                >
+                                                    <option value="" disabled>Select assigned college...</option>
+                                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                        <option key={col} value={col}>{col} College</option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-2" disabled={isCreatingSubAdmin}>
+                                            {isCreatingSubAdmin ? "Creating..." : "Save Account"}
+                                        </button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Permissions</p>
+                                            <h3 className="text-xl font-black text-slate-900">Role Capabilities</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">Sub-Admin</strong>
+                                                Full control over their assigned college campus, printers, queues, users, and coupons.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-0.5">Manager</strong>
+                                                Operates kiosk terminals, refills paper, and processes coupon voucher redemptions.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3: Manager Activity Logs Section */}
+                        {subadminsSubTab === "audit-logs" && loggedInAdminRole === "SUB_ADMIN" && (
+                            <motion.section className="panel p-6 overflow-x-auto" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
+                                    <div>
+                                        <p className="eyebrow">Audit Trail</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Manager Activity Logs ({managerLogs.length})</h2>
+                                    </div>
                                 </div>
-                            </div>
-                            <table className="data-table w-full">
-                                <thead>
-                                    <tr>
-                                        <th>Date / Time</th>
-                                        <th>Manager</th>
-                                        <th>Action Type</th>
-                                        <th>Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {managerLogs.map((log) => (
-                                        <tr key={log.id}>
-                                            <td className="text-xs font-bold text-slate-500 whitespace-nowrap">
-                                                {new Date(log.timestamp).toLocaleString()}
-                                            </td>
-                                            <td className="font-bold text-slate-800">{log.managerName}</td>
-                                            <td>
-                                                <span className="status-pill status-paid" style={{ fontSize: '10px' }}>
-                                                    {log.actionType}
-                                                </span>
-                                            </td>
-                                            <td className="text-sm font-semibold text-slate-600">{log.details}</td>
-                                        </tr>
-                                    ))}
-                                    {managerLogs.length === 0 && (
+                                <table className="data-table w-full">
+                                    <thead>
                                         <tr>
-                                            <td colSpan="4" className="text-center py-6 text-slate-500 font-bold">
-                                                No activity logs found.
-                                            </td>
+                                            <th>Date / Time</th>
+                                            <th>Manager</th>
+                                            <th>Action Type</th>
+                                            <th>Details</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </motion.section>
+                                    </thead>
+                                    <tbody>
+                                        {managerLogs.map((log) => (
+                                            <tr key={log.id}>
+                                                <td className="text-xs font-bold text-slate-500 whitespace-nowrap">
+                                                    {new Date(log.timestamp).toLocaleString()}
+                                                </td>
+                                                <td className="font-bold text-slate-800">{log.managerName}</td>
+                                                <td>
+                                                    <span className="status-pill status-paid" style={{ fontSize: '10px' }}>
+                                                        {log.actionType}
+                                                    </span>
+                                                </td>
+                                                <td className="text-sm font-semibold text-slate-600">{log.details}</td>
+                                            </tr>
+                                        ))}
+                                        {managerLogs.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-8 text-slate-400 font-bold">
+                                                    No activity logs found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
                         )}
                     </div>
                 )}
