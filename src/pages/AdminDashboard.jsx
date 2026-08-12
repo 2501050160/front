@@ -1039,7 +1039,7 @@ function AdminDashboard() {
         const getPeriodFilteredOrders = (list, period) => {
             if (period === "all") return list;
             const startOfPeriod = new Date();
-            if (period === "today") {
+            if (period === "today" || period === "day") {
                 startOfPeriod.setHours(0,0,0,0);
             } else if (period === "week") {
                 const day = startOfPeriod.getDay();
@@ -2525,115 +2525,377 @@ function AdminDashboard() {
                             </motion.div>
                         )}
 
-                        {/* Subpage 4: Revenue Analytics */}
+                        {/* Subpage 4: Revenue Analytics & Gross vs Net Flow */}
                         {queueSubTab === "revenue" && (
                             <motion.div
                                 className="space-y-6"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <motion.section className="panel p-6">
-                                    <div className="section-header">
+                                {/* Main Panel Header & Filter Strip */}
+                                <section className="panel p-6 sm:p-8 bg-white border border-slate-200/90 rounded-3xl shadow-sm">
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
                                         <div>
-                                            <p className="eyebrow">Revenue Analytics</p>
-                                            <h2 className="text-2xl font-black text-slate-900">
-                                                Gross vs Net After Coupons
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    FINANCIAL RECONCILIATION
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-400">
+                                                    • Live Audit Engine
+                                                </span>
+                                            </div>
+                                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                                                Gross vs Net Revenue
                                             </h2>
-                                            <p className="subtitle">
+                                            <p className="text-sm font-semibold text-slate-500 mt-1 max-w-2xl">
                                                 Net revenue = gross revenue − coupon discounts − Razorpay charges ({systemSettings.razorpayChargePercentage || 2.36}%)
                                             </p>
                                         </div>
 
                                         <div className="flex flex-wrap items-center gap-3">
-                                            {/* College Filter Selection Dropdown - hidden for sub-admins and managers */}
+                                            {/* College Filter Selection Dropdown */}
                                             {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") ? (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-slate-500">Filter College:</span>
+                                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                                                    <span className="text-xs font-bold text-slate-500">Campus:</span>
                                                     <select
                                                         value={selectedCollegeFilter}
                                                         onChange={(e) => setSelectedCollegeFilter(e.target.value)}
-                                                        className="field !w-auto text-xs py-1 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                                        className="text-xs font-black bg-transparent text-slate-800 focus:outline-none cursor-pointer"
                                                     >
-                                                        <option value="ALL">All Colleges</option>
+                                                        <option value="ALL">All Campuses ({Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).length})</option>
                                                         {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                            <option key={col} value={col}>{col} College</option>
+                                                            <option key={col} value={col}>{col}</option>
                                                         ))}
                                                     </select>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-slate-500">Campus:</span>
-                                                    <span className="text-xs font-black px-3 py-1 rounded-lg bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                                <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl">
+                                                    <span className="text-xs font-bold text-indigo-500">Campus:</span>
+                                                    <span className="text-xs font-black text-indigo-900 uppercase">
                                                         {loggedInAdminCollege}
                                                     </span>
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                                            {/* Period Segmented Switcher */}
+                                            <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
                                                 {[
                                                     ["all", "All Time"],
-                                                    ["day", "Today"],
+                                                    ["today", "Today"],
                                                     ["week", "This Week"],
                                                     ["month", "This Month"],
-                                                ].map(([period, label]) => (
-                                                    <button
-                                                        key={period}
-                                                        onClick={() => setRevenuePeriod(period)}
-                                                        className={`btn min-h-0 px-3 py-1.5 text-xs font-bold ${
-                                                            revenuePeriod === period ? "primary" : "ghost"
-                                                        }`}
-                                                    >
-                                                        {label}
-                                                    </button>
-                                                ))}
+                                                ].map(([period, label]) => {
+                                                    const isActive = revenuePeriod === period || (period === "today" && revenuePeriod === "day");
+                                                    return (
+                                                        <button
+                                                            key={period}
+                                                            onClick={() => setRevenuePeriod(period)}
+                                                            className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                                                                isActive
+                                                                    ? "bg-white text-slate-900 shadow-sm border border-slate-200/60 font-black"
+                                                                    : "text-slate-500 hover:text-slate-800"
+                                                            }`}
+                                                        >
+                                                            {label}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
+
+                                            <button
+                                                onClick={() => exportToCSV(orders, "revenue_financial_audit", ["Order ID", "Date & Time", "Customer", "Location", "Price", "Payment", "Order Status"])}
+                                                className="btn secondary min-h-0 px-3.5 py-2 text-xs font-bold flex items-center gap-1.5"
+                                            >
+                                                <span>📥</span>
+                                                <span>Export CSV</span>
+                                            </button>
                                         </div>
                                     </div>
 
-                                    <div className="revenue-grid mt-6">
-                                        {revenueCards.map(([label, value, background, subtitle], index) => (
-                                            <motion.div
-                                                key={label}
-                                                className="revenue-card"
-                                                style={{ background }}
-                                                initial={{ opacity: 0, y: 18 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.06 }}
-                                            >
-                                                <p className="relative z-10 text-sm font-bold text-white/80">
-                                                    {label}
-                                                </p>
-                                                <p className="relative z-10 mt-2 text-2xl font-black truncate" title={`Rs. ${Number(value).toFixed(2)}`}>
-                                                    Rs. {Number(value).toFixed(2)}
-                                                </p>
-                                                {subtitle && (
-                                                    <p className="relative z-10 mt-2 text-[10px] font-black uppercase tracking-widest bg-white/20 rounded-md px-2 py-0.5 inline-block">
-                                                        {subtitle}
-                                                    </p>
-                                                )}
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </motion.section>
+                                    {/* Visual Interactive Financial Formula Strip */}
+                                    <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-md relative overflow-hidden">
+                                        <div className="absolute right-0 top-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-                                <section className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                                    {statCards.map(([label, value, background], index) => (
-                                        <motion.div
-                                            key={label}
-                                            className="stat-card"
-                                            style={{ background }}
-                                            initial={{ opacity: 0, y: 18 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.04 }}
-                                        >
-                                            <p className="text-sm font-bold text-white/80">
-                                                {label}
-                                            </p>
-                                            <p className="text-2xl font-black">
-                                                {value}
-                                            </p>
-                                        </motion.div>
-                                    ))}
+                                        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 relative z-10">
+                                            
+                                            {/* 1. Gross Revenue Box */}
+                                            <div className="flex-1 p-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-sky-300">1. Gross Billing</span>
+                                                    <span className="text-base">💵</span>
+                                                </div>
+                                                <p className="text-xl sm:text-2xl font-black mt-2 text-white">
+                                                    ₹{(localStats.grossRevenue || 0).toFixed(2)}
+                                                </p>
+                                                <span className="text-[10px] text-slate-300 font-semibold mt-0.5">Total Invoiced Spend</span>
+                                            </div>
+
+                                            {/* Minus Operator Pill */}
+                                            <div className="self-center flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 font-black text-sm shrink-0">
+                                                −
+                                            </div>
+
+                                            {/* 2. Coupon Deductions */}
+                                            <div className="flex-1 p-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">2. Coupon Discounts</span>
+                                                    <span className="text-base">🎟️</span>
+                                                </div>
+                                                <p className="text-xl sm:text-2xl font-black mt-2 text-amber-200">
+                                                    ₹{(localStats.totalDiscounts || 0).toFixed(2)}
+                                                </p>
+                                                <span className="text-[10px] text-amber-300/80 font-semibold mt-0.5">
+                                                    {localStats.grossRevenue > 0 ? ((localStats.totalDiscounts / localStats.grossRevenue) * 100).toFixed(1) : 0}% of gross
+                                                </span>
+                                            </div>
+
+                                            {/* Minus Operator Pill */}
+                                            <div className="self-center flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300 font-black text-sm shrink-0">
+                                                −
+                                            </div>
+
+                                            {/* 3. Razorpay Gateway Fees */}
+                                            <div className="flex-1 p-3.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-300">3. Gateway Charges</span>
+                                                    <span className="text-base">💳</span>
+                                                </div>
+                                                <p className="text-xl sm:text-2xl font-black mt-2 text-purple-200">
+                                                    ₹{(localStats.razorpayCharges || 0).toFixed(2)}
+                                                </p>
+                                                <span className="text-[10px] text-purple-300/80 font-semibold mt-0.5">
+                                                    {systemSettings.razorpayChargePercentage || 2.36}% on UPI transactions
+                                                </span>
+                                            </div>
+
+                                            {/* Equals Operator Pill */}
+                                            <div className="self-center flex items-center justify-center w-9 h-9 rounded-full bg-emerald-500/30 border border-emerald-400 text-emerald-300 font-black text-base shrink-0 shadow-lg shadow-emerald-500/20">
+                                                =
+                                            </div>
+
+                                            {/* 4. Realized Net Revenue (Hero Result) */}
+                                            <div className="flex-[1.2] p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 border border-emerald-300/50 shadow-lg shadow-emerald-950/40 flex flex-col justify-between">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-100">4. Realized Net Revenue</span>
+                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/20 text-white">Actual Inflow</span>
+                                                </div>
+                                                <p className="text-2xl sm:text-3xl font-black mt-1 text-white tracking-tight">
+                                                    ₹{((localStats.netRevenue || 0) - (localStats.razorpayCharges || 0)).toFixed(2)}
+                                                </p>
+                                                <span className="text-[10px] text-emerald-100 font-bold mt-0.5">
+                                                    {localStats.grossRevenue > 0 ? ((((localStats.netRevenue || 0) - (localStats.razorpayCharges || 0)) / localStats.grossRevenue) * 100).toFixed(1) : 100}% retention rate
+                                                </span>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    {/* 6 Key Financial Metric Cards */}
+                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mt-6">
+                                        {/* Card 1: Gross Revenue */}
+                                        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-bold text-slate-500">Gross Revenue</span>
+                                                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">💵</div>
+                                            </div>
+                                            <p className="text-xl font-black text-slate-900">₹{(localStats.grossRevenue || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                                Invoiced Spend
+                                            </span>
+                                        </div>
+
+                                        {/* Card 2: Coupon Discounts */}
+                                        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-bold text-slate-500">Coupon Discounts</span>
+                                                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">🎟️</div>
+                                            </div>
+                                            <p className="text-xl font-black text-amber-700">₹{(localStats.totalDiscounts || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-100">
+                                                Savings Given
+                                            </span>
+                                        </div>
+
+                                        {/* Card 3: Razorpay Charges */}
+                                        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-bold text-slate-500">Razorpay Charges</span>
+                                                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">💳</div>
+                                            </div>
+                                            <p className="text-xl font-black text-purple-700">₹{(localStats.razorpayCharges || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-100">
+                                                {systemSettings.razorpayChargePercentage || 2.36}% on UPI
+                                            </span>
+                                        </div>
+
+                                        {/* Card 4: Net Revenue (Highlighted) */}
+                                        <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-black text-emerald-800">Realized Net</span>
+                                                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-sm shadow-emerald-500/30">💎</div>
+                                            </div>
+                                            <p className="text-xl font-black text-emerald-900">₹{((localStats.netRevenue || 0) - (localStats.razorpayCharges || 0)).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-black bg-emerald-600 text-white">
+                                                Actual Inflow
+                                            </span>
+                                        </div>
+
+                                        {/* Card 5: Wallet Cash */}
+                                        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-bold text-slate-500">Wallet Cash</span>
+                                                <div className="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold text-sm">👛</div>
+                                            </div>
+                                            <p className="text-xl font-black text-slate-900">₹{(localStats.walletRevenue || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-100">
+                                                Prepaid Credits
+                                            </span>
+                                        </div>
+
+                                        {/* Card 6: UPI Cash */}
+                                        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-bold text-slate-500">Direct UPI Cash</span>
+                                                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">⚡</div>
+                                            </div>
+                                            <p className="text-xl font-black text-slate-900">₹{(localStats.upiRevenue || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-100">
+                                                Razorpay Gateway
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Payment Channels & Retention Distribution Bars */}
+                                    <div className="grid gap-6 md:grid-cols-2 mt-6 pt-6 border-t border-slate-100">
+                                        {/* Channel 1: Payment Method Breakdown */}
+                                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Payment Method Distribution</span>
+                                                <span className="text-xs font-bold text-slate-500">Total: ₹{(localStats.netRevenue || 0).toFixed(2)}</span>
+                                            </div>
+                                            {/* Progress Bar */}
+                                            <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden flex my-2">
+                                                <div 
+                                                    className="bg-cyan-500 h-full transition-all" 
+                                                    style={{ width: `${localStats.netRevenue > 0 ? ((localStats.walletRevenue / localStats.netRevenue) * 100) : 50}%` }}
+                                                    title={`Wallet: ${localStats.netRevenue > 0 ? ((localStats.walletRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%`}
+                                                />
+                                                <div 
+                                                    className="bg-indigo-500 h-full transition-all" 
+                                                    style={{ width: `${localStats.netRevenue > 0 ? ((localStats.upiRevenue / localStats.netRevenue) * 100) : 50}%` }}
+                                                    title={`UPI: ${localStats.netRevenue > 0 ? ((localStats.upiRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%`}
+                                                />
+                                            </div>
+                                            <div className="flex items-center justify-between text-xs font-bold pt-1">
+                                                <div className="flex items-center gap-1.5 text-cyan-800">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span>
+                                                    <span>Wallet: ₹{(localStats.walletRevenue || 0).toFixed(2)} ({localStats.netRevenue > 0 ? ((localStats.walletRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%)</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-indigo-800">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+                                                    <span>Direct UPI: ₹{(localStats.upiRevenue || 0).toFixed(2)} ({localStats.netRevenue > 0 ? ((localStats.upiRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Channel 2: Retention Breakdown */}
+                                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Revenue Retention Health</span>
+                                                <span className="text-xs font-bold text-emerald-700 font-mono">
+                                                    {localStats.grossRevenue > 0 ? ((((localStats.netRevenue || 0) - (localStats.razorpayCharges || 0)) / localStats.grossRevenue) * 100).toFixed(1) : 100}% Retained
+                                                </span>
+                                            </div>
+                                            {/* Multi-segment Progress Bar */}
+                                            <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden flex my-2">
+                                                <div 
+                                                    className="bg-emerald-500 h-full transition-all" 
+                                                    style={{ width: `${localStats.grossRevenue > 0 ? (((localStats.netRevenue - localStats.razorpayCharges) / localStats.grossRevenue) * 100) : 100}%` }}
+                                                />
+                                                <div 
+                                                    className="bg-amber-400 h-full transition-all" 
+                                                    style={{ width: `${localStats.grossRevenue > 0 ? ((localStats.totalDiscounts / localStats.grossRevenue) * 100) : 0}%` }}
+                                                />
+                                                <div 
+                                                    className="bg-purple-400 h-full transition-all" 
+                                                    style={{ width: `${localStats.grossRevenue > 0 ? ((localStats.razorpayCharges / localStats.grossRevenue) * 100) : 0}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex flex-wrap items-center justify-between text-xs font-bold pt-1 gap-2">
+                                                <div className="flex items-center gap-1.5 text-emerald-800">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                                                    <span>Net Kept: ₹{((localStats.netRevenue || 0) - (localStats.razorpayCharges || 0)).toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-amber-800">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
+                                                    <span>Discounts: ₹{(localStats.totalDiscounts || 0).toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-purple-800">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-purple-400 inline-block"></span>
+                                                    <span>Fees: ₹{(localStats.razorpayCharges || 0).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Operational KPI Cards */}
+                                <section className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+                                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-500">Today's Inflow</span>
+                                            <span className="text-sm">🌅</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-slate-900">₹{(localStats.todayRevenue || 0).toFixed(2)}</p>
+                                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Live Today</span>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-500">Total Orders</span>
+                                            <span className="text-sm">📦</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-slate-900">{localStats.totalOrders || 0}</p>
+                                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Customer Jobs</span>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-500">Printed Sheets</span>
+                                            <span className="text-sm">📄</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-slate-900">{localStats.totalCopies || 0}</p>
+                                        <span className="text-[10px] text-slate-400 font-semibold mt-1 block">Paper Consumed</span>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-500">Pending Queue</span>
+                                            <span className="text-sm">⏳</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-amber-600">{localStats.pendingOrders || 0}</p>
+                                        <span className="text-[10px] text-amber-700 font-semibold mt-1 block">In Pipeline</span>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-500">Printing Now</span>
+                                            <span className="text-sm">🖨️</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-blue-600">{localStats.printingOrders || 0}</p>
+                                        <span className="text-[10px] text-blue-700 font-semibold mt-1 block">Active On Kiosks</span>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-500">Completed</span>
+                                            <span className="text-sm">✅</span>
+                                        </div>
+                                        <p className="text-2xl font-black text-emerald-600">{localStats.completedOrders || 0}</p>
+                                        <span className="text-[10px] text-emerald-700 font-semibold mt-1 block">
+                                            {localStats.totalOrders > 0 ? ((localStats.completedOrders / localStats.totalOrders) * 100).toFixed(0) : 100}% Success Rate
+                                        </span>
+                                    </div>
                                 </section>
                             </motion.div>
                         )}
