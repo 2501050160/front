@@ -5941,6 +5941,36 @@ function AdminDashboard() {
                                     </div>
 
                                     <form onSubmit={runSqlQuery} className="space-y-4">
+                                        {/* Quick Table Presets */}
+                                        <div className="space-y-1.5">
+                                            <span className="block text-xs font-black text-slate-500 uppercase tracking-wider">⚡ Quick Table Presets (Click table to populate SELECT query):</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {[
+                                                    "users",
+                                                    "print_orders",
+                                                    "wallets",
+                                                    "colleges",
+                                                    "blocks",
+                                                    "printers",
+                                                    "coupons",
+                                                    "support_tickets",
+                                                    "manager_logs",
+                                                    "system_settings",
+                                                    "whatsapp_orders"
+                                                ].map((tableName) => (
+                                                    <button
+                                                        key={tableName}
+                                                        type="button"
+                                                        onClick={() => setSqlQuery(`SELECT * FROM ${tableName} LIMIT 50;`)}
+                                                        className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-cyan-600 text-slate-700 hover:text-white font-mono text-xs font-bold transition-all border border-slate-200 hover:border-cyan-500 shadow-sm cursor-pointer flex items-center gap-1.5"
+                                                    >
+                                                        <span>📋</span>
+                                                        <span>SELECT * FROM {tableName}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                         <textarea
                                             value={sqlQuery}
                                             onChange={(e) => setSqlQuery(e.target.value)}
