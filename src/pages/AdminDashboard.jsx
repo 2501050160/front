@@ -5907,10 +5907,10 @@ function AdminDashboard() {
                                                         key={tableName}
                                                         type="button"
                                                         onClick={() => setSqlQuery(`SELECT * FROM ${tableName} LIMIT 50;`)}
-                                                        className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-cyan-600 text-slate-700 hover:text-white font-mono text-xs font-bold transition-all border border-slate-200 hover:border-cyan-500 shadow-sm cursor-pointer flex items-center gap-1.5"
+                                                        className="px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-600 text-slate-800 hover:text-white font-mono text-xs font-bold transition-all border border-slate-200 hover:border-cyan-400 shadow-sm hover:shadow-md cursor-pointer flex items-center gap-1.5 shrink-0"
                                                     >
-                                                        <span>📋</span>
-                                                        <span>SELECT * FROM {tableName}</span>
+                                                        <span>📊</span>
+                                                        <span>{tableName}</span>
                                                     </button>
                                                 ))}
                                             </div>
