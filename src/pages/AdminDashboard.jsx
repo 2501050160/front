@@ -2051,16 +2051,20 @@ function AdminDashboard() {
                             ].map(sub => (
                                 <button
                                     key={sub.id}
-                                    onClick={() => setCollegesSubTab(sub.id)}
+                                    onClick={() => {
+                                        setCollegesSubTab(sub.id);
+                                        setBlocksSubTab(sub.id);
+                                        setPrintersSubTab(sub.id);
+                                    }}
                                     className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                        collegesSubTab === sub.id
+                                        collegesSubTab === sub.id || blocksSubTab === sub.id || printersSubTab === sub.id
                                             ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
                                             : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                     }`}
                                 >
                                     <span className="text-xl mb-1">{sub.icon}</span>
                                     <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${collegesSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${collegesSubTab === sub.id || blocksSubTab === sub.id || printersSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
                                         {sub.desc}
                                     </span>
                                 </button>
@@ -4260,6 +4264,253 @@ function AdminDashboard() {
                                     </div>
                                 </section>
                             </motion.div>
+                        )}
+
+                        {/* SUBPAGE 6: Printers Fleet Directory Table */}
+                        {(collegesSubTab === "printers-list" || printersSubTab === "printers-list") && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Hardware Fleet</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Printers Directory ({getRoleFilteredPrinters().length})</h2>
+                                        <p className="subtitle">View terminal IP addresses, toggle active maintenance status, and restock paper trays.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => { setCollegesSubTab("add-printer"); setPrintersSubTab("add-printer"); }}
+                                        className="btn primary min-h-0 px-4 py-2 text-xs font-bold"
+                                    >
+                                        ➕ Add Printer
+                                    </button>
+                                </div>
+                                <table className="data-table w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Terminal Name</th>
+                                            <th>IP Address</th>
+                                            <th>Block Location</th>
+                                            <th>Print Type</th>
+                                            <th>Status</th>
+                                            <th>Maintenance Mode</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {getRoleFilteredPrinters().map((p) => (
+                                            <tr key={p.id}>
+                                                <td>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xl">🖨️</span>
+                                                        <span className="font-black text-slate-900">{p.printerName}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="font-mono font-bold text-slate-600">{p.printerIp || "192.168.1.100"}</td>
+                                                <td><span className="text-xs font-black bg-slate-100 px-2 py-1 rounded text-slate-700">{p.blockLocation}</span></td>
+                                                <td>
+                                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${p.colourSupported ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                        {p.colourSupported ? 'COLOR' : 'B&W'}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={`status-pill ${p.active ? 'status-paid' : 'status-unpaid'}`}>
+                                                        {p.active ? 'ONLINE' : 'OFFLINE'}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => togglePrinterMaintenance(p)}
+                                                        className={`btn small font-bold ${p.maintenance ? 'danger' : 'secondary'}`}
+                                                    >
+                                                        {p.maintenance ? '🛠️ In Maintenance' : '✅ Operational'}
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => deletePrinter(p.id)}
+                                                        className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                    >
+                                                        🗑️ Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {getRoleFilteredPrinters().length === 0 && (
+                                            <tr>
+                                                <td colSpan="7" className="text-center font-bold text-slate-400 py-10">
+                                                    No printers configured. Click Add Printer to connect a new station.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 7: Add Printer Form */}
+                        {(collegesSubTab === "add-printer" || printersSubTab === "add-printer") && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header mb-6">
+                                        <div>
+                                            <p className="eyebrow">Terminal Setup</p>
+                                            <h2 className="text-2xl font-black text-slate-900">Add New Printer</h2>
+                                            <p className="subtitle">Connect a physical printer terminal to an active campus block location.</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={addPrinter} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1">Select Campus Block</span>
+                                            <select
+                                                value={newPrinterBlock}
+                                                onChange={(e) => setNewPrinterBlock(e.target.value)}
+                                                className="field cursor-pointer"
+                                                required
+                                            >
+                                                <option value="">-- Choose Block --</option>
+                                                {blocks.map(b => (
+                                                    <option key={b.id} value={b.name}>{b.name} ({b.college || "KLU"})</option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1">Printer Station Name</span>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. C Block HP LaserJet Pro"
+                                                className="field"
+                                                value={newPrinterName}
+                                                onChange={(e) => setNewPrinterName(e.target.value)}
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-xs font-black text-slate-700 mb-1">Local Network IP Address</span>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. 192.168.1.100"
+                                                className="field font-mono"
+                                                value={newPrinterIp}
+                                                onChange={(e) => setNewPrinterIp(e.target.value)}
+                                            />
+                                        </label>
+                                        <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                                            <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={newPrinterColor}
+                                                    onChange={(e) => setNewPrinterColor(e.target.checked)}
+                                                    className="w-4 h-4 accent-sky-600 rounded"
+                                                />
+                                                <span className="text-xs font-bold text-slate-800">Color Supported</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={newPrinterActive}
+                                                    onChange={(e) => setNewPrinterActive(e.target.checked)}
+                                                    className="w-4 h-4 accent-sky-600 rounded"
+                                                />
+                                                <span className="text-xs font-bold text-slate-800">Set Online Immediately</span>
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="btn success w-full mt-4">
+                                            ➕ Save & Pair Printer Station
+                                        </button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Hardware Configuration</p>
+                                            <h3 className="text-xl font-black text-slate-900">Printer Pairing</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-100 text-sky-800">
+                                                <strong className="block mb-0.5 text-sky-950">📡 Local IP Routing</strong>
+                                                Each kiosk agent communicates with its assigned printer IP over local subnet or USB driver spooler.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-purple-50 border border-purple-100 text-purple-800">
+                                                <strong className="block mb-0.5 text-purple-950">🖨️ B&W vs Color Assignment</strong>
+                                                You can configure separate Black & White and Color printer terminals for the same block.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 8: Paper Stock Tray Restock */}
+                        {(collegesSubTab === "paper-stock" || printersSubTab === "paper-stock") && (
+                            <motion.section
+                                className="panel p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Paper Inventory</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Paper Tray Stock Management</h2>
+                                        <p className="subtitle">Monitor and update remaining paper sheets for each campus block printer tray.</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {blocks.map((b) => {
+                                        const printer = printers.find(p => p.blockLocation === b.name);
+                                        const currentCount = printer?.paperCount ?? 500;
+                                        const isLow = currentCount < 50;
+                                        return (
+                                            <div key={b.id} className="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col justify-between gap-4">
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <h4 className="font-black text-slate-900 text-lg">🏛️ {b.name}</h4>
+                                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLow ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
+                                                            {isLow ? 'LOW STOCK' : 'STOCKED'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs font-semibold text-slate-500">{b.college || "KLU"}</p>
+                                                    <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                                                        <p className="text-3xl font-black text-slate-900">{currentCount}</p>
+                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Sheets Remaining</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Add sheets e.g. 500"
+                                                        className="field text-xs py-2 px-3"
+                                                        id={`paper-input-${b.name}`}
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            const input = document.getElementById(`paper-input-${b.name}`);
+                                                            const val = input ? parseInt(input.value) : 0;
+                                                            if (val > 0) {
+                                                                updatePaperCount(b.name, currentCount + val);
+                                                                if (input) input.value = "";
+                                                            } else {
+                                                                showAlert("Invalid Number", "Please enter a valid positive number of sheets.", "warning");
+                                                            }
+                                                        }}
+                                                        className="btn primary text-xs px-4 py-2 font-bold shrink-0"
+                                                    >
+                                                        📥 Restock
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {blocks.length === 0 && (
+                                        <div className="col-span-full text-center py-8 text-slate-400 font-bold text-sm">No campus blocks found to manage paper stock.</div>
+                                    )}
+                                </div>
+                            </motion.section>
                         )}
                     </div>
                 )}
