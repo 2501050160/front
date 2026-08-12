@@ -1950,6 +1950,9 @@ function AdminDashboard() {
                                 { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: "Bot Orders" },
                                 { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
                                 { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
+                                { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
+                                { id: "history", label: "Order History", icon: "📜", desc: `${allOrders.length} Total Logs` },
+                                { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
                             ];
                         }
                         if (activeTab === "users") {
@@ -1982,6 +1985,10 @@ function AdminDashboard() {
                     };
 
                     const handleCurrentSubTabChange = (tabId) => {
+                        if (tabId === "display-panel") {
+                            navigate("/display-panel");
+                            return;
+                        }
                         if (activeTab === "frontend") setFrontendSubTab(tabId);
                         if (activeTab === "queue" || activeTab === "order-queue") setQueueSubTab(tabId);
                         if (activeTab === "users") setUsersSubTab(tabId);
@@ -2013,10 +2020,14 @@ function AdminDashboard() {
                                     { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
                                     { id: "charts", label: "Visual Charts", icon: "📈", desc: "Trends & Peaks" },
                                     { id: "history", label: "Order History", icon: "📜", desc: `${orders.length} Total Logs` },
+                                    { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
                                 ].map(sub => (
                                     <button
                                         key={sub.id}
-                                        onClick={() => setQueueSubTab(sub.id)}
+                                        onClick={() => {
+                                            if (sub.id === "display-panel") navigate("/display-panel");
+                                            else setQueueSubTab(sub.id);
+                                        }}
                                         className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                             queueSubTab === sub.id
                                                 ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
