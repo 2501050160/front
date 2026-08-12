@@ -1000,16 +1000,24 @@ function Dashboard() {
             `}</style>
             <div className="dashboard-immersive-image" style={{ backgroundImage: `url(${printKioskBg})` }} />
             {/* Flex row container that places the sidebar at the very left edge of the page */}
-            <div className="flex flex-col md:flex-row min-h-screen w-full">
-                {/* Left Sidebar / Top Mobile Icons Row */}
-                <div className={`shrink-0 flex transition-all duration-300 user-dash-sidebar border-r border-slate-200/80 p-4 sticky top-0 z-30 ${
+            <div className="flex flex-row min-h-screen w-full relative">
+                {/* Mobile Backdrop Overlay when sidebar is expanded */}
+                {isSidebarExpanded && (
+                    <div 
+                        onClick={() => setIsSidebarExpanded(false)} 
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300" 
+                    />
+                )}
+
+                {/* Left Sidebar / Mobile Icons Rail */}
+                <div className={`shrink-0 flex transition-all duration-300 user-dash-sidebar border-r border-slate-200/80 p-3 sm:p-4 z-30 ${
                     isSidebarExpanded 
-                        ? "w-full md:w-60 flex-col h-auto md:h-screen justify-between" 
-                        : "w-full md:w-20 flex-row md:flex-col items-center justify-around md:justify-start h-auto md:h-screen gap-6"
+                        ? "fixed inset-y-0 left-0 w-64 h-screen z-50 md:relative md:w-60 md:sticky md:top-0 flex-col justify-between shadow-2xl md:shadow-none" 
+                        : "w-14 sm:w-16 md:w-20 sticky top-0 h-screen flex-col items-center justify-between"
                 }`}>
                     <div>
                         {/* Hamburger / Toggle Header */}
-                        <div className={`flex items-center ${isSidebarExpanded ? "justify-between w-full mb-6" : "justify-center mb-0 md:mb-6"}`}>
+                        <div className={`flex items-center ${isSidebarExpanded ? "justify-between w-full mb-6" : "justify-center mb-6"}`}>
                             {isSidebarExpanded && (
                                 <span className="text-xs font-black uppercase tracking-wider text-slate-400">Navigation</span>
                             )}
@@ -1023,18 +1031,23 @@ function Dashboard() {
                         </div>
 
                         {/* Navigation Buttons */}
-                        <div className={`flex ${isSidebarExpanded ? "flex-col gap-2 w-full" : "flex-row md:flex-col gap-3 flex-1 md:flex-initial w-full justify-around md:justify-start"}`}>
+                        <div className="flex flex-col gap-2 w-full">
                             {tabs.map((tab) => {
                                 const isActive = activeTab === tab.id;
                                 const TabIcon = tab.icon;
                                 return (
                                     <button
                                         key={tab.id}
-                                        onClick={() => setActiveTab(tab.id)}
+                                        onClick={() => {
+                                            setActiveTab(tab.id);
+                                            if (window.innerWidth < 768) {
+                                                setIsSidebarExpanded(false);
+                                            }
+                                        }}
                                         className={`font-black text-sm rounded-xl transition-all flex items-center justify-center cursor-pointer ${
                                             isSidebarExpanded 
                                                 ? "w-full text-left justify-start px-4 py-3 gap-3" 
-                                                : "w-12 h-12 md:w-12 justify-center px-0 py-0"
+                                                : "w-10 h-10 sm:w-12 sm:h-12 justify-center px-0 py-0"
                                         } ${
                                             isActive 
                                                 ? "bg-gradient-to-r from-cyan-600 to-emerald-600 text-white shadow-md shadow-cyan-500/20" 

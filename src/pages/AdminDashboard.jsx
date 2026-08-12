@@ -1639,6 +1639,9 @@ function AdminDashboard() {
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);
         setSearchParams({ tab: tabId });
+        if (window.innerWidth < 768) {
+            setIsSidebarCollapsed(true);
+        }
         if (tabId === "settings") {
             fetchPrices(selectedPricingBlock);
             fetchCoupons();
@@ -1685,11 +1688,23 @@ function AdminDashboard() {
     }, [searchParams]);
 
     return (
-        <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-col md:flex-row min-h-screen">
+        <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-row min-h-screen w-full relative">
+            {/* Mobile Backdrop Overlay when sidebar is expanded */}
+            {!isSidebarCollapsed && (
+                <div 
+                    onClick={() => setIsSidebarCollapsed(true)} 
+                    className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300" 
+                />
+            )}
+
             {/* Left Navigation Bar for Admin Panel — Light Theme */}
-            <aside className={`${isSidebarCollapsed ? "w-full md:w-20" : "w-full md:w-64"} shrink-0 bg-white border-r border-slate-200 text-slate-800 flex flex-col justify-between sticky top-0 md:h-screen z-40 backdrop-blur-xl shadow-lg transition-all duration-300`}>
+            <aside className={`${
+                isSidebarCollapsed 
+                    ? "w-14 sm:w-16 md:w-20 sticky top-0 h-screen z-30" 
+                    : "fixed inset-y-0 left-0 w-64 sm:w-72 h-screen z-50 md:relative md:w-64 md:sticky md:top-0 shadow-2xl md:shadow-lg"
+            } shrink-0 bg-white border-r border-slate-200 text-slate-800 flex flex-col justify-between backdrop-blur-xl transition-all duration-300`}>
                 <div>
-                    <div className={`p-4 border-b border-slate-200 flex items-center ${isSidebarCollapsed ? "justify-center flex-col gap-2" : "justify-between"}`}>
+                    <div className={`p-3 sm:p-4 border-b border-slate-200 flex items-center ${isSidebarCollapsed ? "justify-center flex-col gap-2" : "justify-between"}`}>
                         <div className="flex items-center gap-3">
                             <div className="brand-mark brand-mark-sm bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-black cursor-pointer shadow-md shadow-sky-500/20" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} title="Toggle Navigation (☰)">CP</div>
                             {!isSidebarCollapsed && (
@@ -1703,14 +1718,18 @@ function AdminDashboard() {
                         <button
                             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 transition-all cursor-pointer shadow-sm flex items-center justify-center group"
-                            title={isSidebarCollapsed ? "Expand Side Navigation (☰)" : "Collapse Side Navigation (☰)"}
+                            title={isSidebarCollapsed ? "Expand Side Navigation (☰)" : "Collapse Side Navigation (✕)"}
                             aria-label="Toggle Side Navigation"
                         >
-                            <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
-                                <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
-                                <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
-                                <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
-                            </div>
+                            {isSidebarCollapsed ? (
+                                <div className="w-4 h-3.5 flex flex-col justify-between items-center py-0.5">
+                                    <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                    <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                    <span className="w-4 h-0.5 bg-slate-500 rounded-full group-hover:bg-sky-600 transition-all"></span>
+                                </div>
+                            ) : (
+                                <span className="text-sm font-black text-slate-500 group-hover:text-slate-900">✕</span>
+                            )}
                         </button>
                     </div>
 
