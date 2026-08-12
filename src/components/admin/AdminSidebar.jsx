@@ -49,9 +49,7 @@ export function AdminSidebar({
         { id: "queue", label: "Live Queue", icon: ListOrdered, badge: orderCount > 0 ? orderCount : null },
         { id: "settings", label: "Pricing & Coupons", icon: Tag },
         { id: "colleges", label: "College & Campus Management", icon: School, hideForManager: true },
-        { id: "users", label: "User Moderation", icon: Users },
-        { id: "whatsapp", label: "WhatsApp Orders", icon: MessageSquare },
-        { id: "support", label: "Support Tickets", icon: Headphones, hideForManager: true },
+        { id: "users", label: "User Moderation & Support", icon: Users },
         { id: "frontend", label: "Frontend & Ads", icon: Palette, hideForManager: true },
         { id: "system", label: "System Config & SQL", icon: SettingsIcon, hideForManager: true },
     ];

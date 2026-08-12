@@ -4138,6 +4138,7 @@ function AdminDashboard() {
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
                                 {[
                                     { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
+                                    { id: "tickets", label: "Support Tickets", icon: "🎧", desc: `${allSupportTickets.length} Inquiries` },
                                     { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
                                     { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
                                     { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
@@ -4666,52 +4667,22 @@ function AdminDashboard() {
                                 </table>
                             </motion.section>
                         )}
-                    </div>
-                )}
-
-                {/* Support Tickets Tab */}
-                {activeTab === "support" && (
-                    <div className="mt-6 space-y-6">
-                        {/* Top Sub-Navigation Bar for Support Desk — Light Theme Cards */}
-                        <div className="bg-white/90 border border-slate-200 backdrop-blur-2xl rounded-2xl p-2.5 shadow-sm sticky top-20 z-30 mb-6">
-                            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar">
-                                {[
-                                    { id: "all-tickets", label: "All Tickets", icon: "🎫", desc: `${supportTickets.length} Inquiries` },
-                                    { id: "pending", label: "Pending Issues", icon: "⏳", desc: `${supportTickets.filter(t => t.status === "PENDING").length} Awaiting` },
-                                    { id: "resolved", label: "Resolved Archive", icon: "✅", desc: `${supportTickets.filter(t => t.status !== "PENDING").length} Closed` },
-                                ].map(sub => (
-                                    <button
-                                        key={sub.id}
-                                        onClick={() => setSupportSubTab(sub.id)}
-                                        className={`min-w-[125px] flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
-                                            supportSubTab === sub.id
-                                                ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
-                                                : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                        }`}
-                                    >
-                                        <span className="text-2xl mb-1.5">{sub.icon}</span>
-                                        <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                        <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${supportSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
-                                            {sub.desc}
-                                        </span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* SUBPAGE 1: All Support Tickets */}
-                        {supportSubTab === "all-tickets" && (
+                        {/* SUBPAGE: Support Tickets */}
+                        {usersSubTab === "tickets" && (
                             <motion.section
                                 className="panel overflow-x-auto p-6"
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header pb-4 mb-4 border-b border-slate-100 flex justify-between items-center">
+                                <div className="section-header pb-4 mb-4 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
                                     <div>
                                         <p className="eyebrow">Support Desk</p>
                                         <h2 className="text-2xl font-black text-slate-900">Customer Support Tickets ({supportTickets.length})</h2>
                                         <p className="subtitle">View customer issues, resolve tickets, or remove them.</p>
                                     </div>
+                                    <button onClick={fetchSupportTickets} className="btn secondary px-4 py-2 text-xs font-bold min-h-0 cursor-pointer">
+                                        🔄 Refresh Tickets
+                                    </button>
                                 </div>
 
                                 <table className="data-table w-full">
@@ -4753,14 +4724,14 @@ function AdminDashboard() {
                                                         {ticket.status === "PENDING" && (
                                                             <button
                                                                 onClick={() => resolveSupportTicket(ticket.id)}
-                                                                className="btn success min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                                className="btn success min-h-0 px-3 py-1.5 text-xs font-bold cursor-pointer"
                                                             >
                                                                 Mark as Done
                                                             </button>
                                                         )}
                                                         <button
                                                             onClick={() => deleteSupportTicket(ticket.id)}
-                                                            className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
+                                                            className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold cursor-pointer"
                                                         >
                                                             Remove
                                                         </button>
@@ -4772,111 +4743,6 @@ function AdminDashboard() {
                                             <tr>
                                                 <td colSpan="7" className="text-center font-bold text-slate-500 py-8">
                                                     No support tickets found
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </motion.section>
-                        )}
-
-                        {/* SUBPAGE 2: Pending Issues */}
-                        {supportSubTab === "pending" && (
-                            <motion.section
-                                className="panel overflow-x-auto p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
-                                    <div>
-                                        <p className="eyebrow">Action Required</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Pending Customer Issues ({supportTickets.filter(t => t.status === "PENDING").length})</h2>
-                                        <p className="subtitle">Tickets awaiting admin response or resolution.</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {supportTickets.filter(t => t.status === "PENDING").map(ticket => (
-                                        <div key={ticket.id} className="p-5 rounded-2xl bg-amber-50/50 border border-amber-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-black text-slate-900">#{ticket.id}</span>
-                                                    <span className="font-bold text-slate-800">— {ticket.name}</span>
-                                                    <span className="text-xs text-slate-500 font-semibold">({ticket.email})</span>
-                                                </div>
-                                                <p className="text-sm text-slate-700 bg-white p-3 rounded-xl border border-slate-200 mt-2 font-medium">
-                                                    {ticket.message}
-                                                </p>
-                                                <span className="text-[11px] text-slate-400 font-bold block pt-1">
-                                                    Submitted: {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "N/A"}
-                                                </span>
-                                            </div>
-                                            <div className="flex gap-2 shrink-0">
-                                                <button
-                                                    onClick={() => resolveSupportTicket(ticket.id)}
-                                                    className="btn success px-4 py-2 text-xs font-bold"
-                                                >
-                                                    ✅ Mark Resolved
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteSupportTicket(ticket.id)}
-                                                    className="btn danger px-3 py-2 text-xs font-bold"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {supportTickets.filter(t => t.status === "PENDING").length === 0 && (
-                                        <div className="text-center py-12 text-slate-400 font-bold">
-                                            <span className="text-4xl block mb-2">🎉</span>
-                                            <span>All customer inquiries are resolved! No pending issues.</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.section>
-                        )}
-
-                        {/* SUBPAGE 3: Resolved Archive */}
-                        {supportSubTab === "resolved" && (
-                            <motion.section
-                                className="panel overflow-x-auto p-6"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                            >
-                                <div className="section-header pb-4 mb-4 border-b border-slate-100">
-                                    <div>
-                                        <p className="eyebrow">Archive</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Resolved Ticket Archive ({supportTickets.filter(t => t.status !== "PENDING").length})</h2>
-                                    </div>
-                                </div>
-
-                                <table className="data-table w-full">
-                                    <thead>
-                                        <tr>
-                                            <th>Ticket ID</th>
-                                            <th>Customer</th>
-                                            <th>Email</th>
-                                            <th>Message</th>
-                                            <th>Date</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {supportTickets.filter(t => t.status !== "PENDING").map(ticket => (
-                                            <tr key={ticket.id}>
-                                                <td className="font-black text-slate-500">#{ticket.id}</td>
-                                                <td className="font-bold text-slate-900">{ticket.name}</td>
-                                                <td className="text-xs text-slate-600">{ticket.email}</td>
-                                                <td className="text-sm text-slate-600 max-w-[300px] truncate">{ticket.message}</td>
-                                                <td className="text-xs text-slate-400">{ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "N/A"}</td>
-                                                <td><span className="status-pill status-completed">RESOLVED</span></td>
-                                            </tr>
-                                        ))}
-                                        {supportTickets.filter(t => t.status !== "PENDING").length === 0 && (
-                                            <tr>
-                                                <td colSpan="6" className="text-center font-bold text-slate-400 py-8">
-                                                    No resolved tickets in archive.
                                                 </td>
                                             </tr>
                                         )}
