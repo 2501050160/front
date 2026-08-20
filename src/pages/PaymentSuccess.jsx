@@ -61,7 +61,7 @@ function PaymentSuccess() {
     };
 
     useEffect(() => {
-        if (!userId) {
+        if (!userId && !orderId) {
             navigate("/");
             return;
         }
@@ -234,6 +234,16 @@ function PaymentSuccess() {
                             Status: <span className="text-emerald-400">{status}</span>
                         </p>
                     </div>
+
+                    {otpCode && (
+                        <div className="mt-4 p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 w-full max-w-sm">
+                            <p className="text-[10px] font-black text-emerald-300 uppercase tracking-widest mb-0.5">🔑 Release OTP</p>
+                            <div className="text-2xl font-black text-white tracking-widest">{otpCode}</div>
+                            <p className="text-[11px] text-slate-300 mt-1 font-semibold">
+                                📍 Enter on <strong>{blockLocation || 'Kiosk'}</strong> display keypad to print
+                            </p>
+                        </div>
+                    )}
 
                     <div className="mt-8 grid gap-4 grid-cols-2 w-full max-w-sm">
                         <button
