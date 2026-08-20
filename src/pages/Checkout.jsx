@@ -33,7 +33,11 @@ function Checkout() {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
-        const orderIdParam = searchParams.get("orderId");
+        let orderIdParam = searchParams.get("orderId");
+        if (!orderIdParam) {
+            const match = window.location.pathname.match(/\/pay\/([^/?]+)/);
+            if (match) orderIdParam = match[1];
+        }
 
         if (orderIdParam) {
             api.get(`/pdf/order/${orderIdParam}`)
@@ -43,13 +47,18 @@ function Checkout() {
                         setCurrentOrder(res.data);
                         setFinalAmount(res.data.price || 0);
                         if (res.data.nupLayout) setNupLayout(res.data.nupLayout);
+
+                        if (res.data.paymentStatus === "PAID" || res.data.status === "QUEUE" || res.data.status === "PRINTING" || res.data.status === "COMPLETED") {
+                            navigate(`/payment-success?orderId=${res.data.orderId}`);
+                            return;
+                        }
                     }
                 })
                 .catch((err) => {
                     console.error("Failed to fetch order from URL parameter:", err.message);
                 });
         }
-    }, []);
+    }, [navigate]);
 
     const updatePrintSettings = async (newNup) => {
         try {

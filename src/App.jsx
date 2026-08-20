@@ -67,9 +67,25 @@ function App() {
             <Route path="/display-panel" element={<DisplayPanel />} />
             <Route path="/chatbot" element={<Chatbot />} />
 
-            {/* Checkout & Payment Success: Supports WhatsApp bot orders & guest payments without forcing login */}
+            {/* Checkout & Direct Payment: Supports WhatsApp bot orders & guest payments without forcing login */}
             <Route 
               path="/checkout" 
+              element={
+                <ProtectedRoute allowGuestOrder>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/pay" 
+              element={
+                <ProtectedRoute allowGuestOrder>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/pay/:orderId" 
               element={
                 <ProtectedRoute allowGuestOrder>
                   <Checkout />
