@@ -651,6 +651,23 @@ function AdminDashboard() {
         }
     };
 
+    const handleChangeUserCollege = async (user) => {
+        const currentCol = user.college || "KLU";
+        const newCol = window.prompt(`Change campus/college for ${user.name || user.email}.\nCurrent College: ${currentCol}\nEnter new college code (e.g. KLU, VNR, CBIT):`, currentCol);
+        if (!newCol || !newCol.trim()) return;
+        const target = newCol.trim().toUpperCase();
+        try {
+            await api.post("/admin/users/update-college", null, {
+                params: { id: user.id, college: target }
+            });
+            showAlert("Success", `College for ${user.name || user.email} updated to ${target}!`, "success");
+            fetchUsers();
+        } catch (error) {
+            console.error("Error updating user college:", error);
+            showAlert("Error", "Failed to update user college.", "error");
+        }
+    };
+
     const fetchSupportTickets = async () => {
         try {
             const response = await api.get("/support/all");
@@ -4404,9 +4421,13 @@ function AdminDashboard() {
                                                 <td className="font-black text-slate-900">{user.name || "Anonymous User"}</td>
                                                 <td className="text-slate-600 text-xs font-semibold">{user.email}</td>
                                                 <td>
-                                                    <span className="text-xs font-black uppercase text-[#4F9DFF] bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">
-                                                        {user.college || "KLU"}
-                                                    </span>
+                                                    <button
+                                                        onClick={() => handleChangeUserCollege(user)}
+                                                        className="text-xs font-black uppercase text-[#4F9DFF] bg-blue-50/80 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-100 transition-colors cursor-pointer"
+                                                        title="Click to change college"
+                                                    >
+                                                        {user.college || "KLU"} ✎
+                                                    </button>
                                                 </td>
                                                 <td className="font-black text-slate-700">
                                                     {allOrders.filter(o => o.email === user.email).length}
@@ -4424,6 +4445,13 @@ function AdminDashboard() {
                                                 </td>
                                                 <td>
                                                     <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => handleChangeUserCollege(user)}
+                                                            className="btn secondary min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                                            title="Change User College"
+                                                        >
+                                                            <span>🏫</span> College
+                                                        </button>
                                                         <button
                                                             onClick={() => handleAddWalletMoney(user)}
                                                             className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"

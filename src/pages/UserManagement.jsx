@@ -12,7 +12,9 @@ import {
   Mail,
   User,
   Shield,
-  Coins
+  Coins,
+  School,
+  Edit3
 } from "lucide-react";
 import api from "../services/api";
 
@@ -23,6 +25,11 @@ function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [creditAmount, setCreditAmount] = useState("");
   const [showModal, setShowModal] = useState(false);
+  
+  const [changeCollegeUser, setChangeCollegeUser] = useState(null);
+  const [selectedNewCollege, setSelectedNewCollege] = useState("KLU");
+  const [customCollege, setCustomCollege] = useState("");
+  const [availableColleges, setAvailableColleges] = useState(["KLU", "VNR", "CBIT"]);
 
   const fetchUsers = async () => {
     try {
@@ -37,6 +44,16 @@ function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
+    api.get("/college-config")
+      .then(res => {
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          const names = res.data.map(c => c.collegeName).filter(Boolean);
+          if (names.length > 0) {
+            setAvailableColleges(Array.from(new Set([...names, "KLU", "VNR", "CBIT"])));
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleToggleBlock = async (userId) => {
@@ -84,6 +101,31 @@ function UserManagement() {
     } catch (err) {
       console.error(err);
       alert("Error updating wallet balance");
+    }
+  };
+
+  const handleChangeCollege = async (e) => {
+    e.preventDefault();
+    if (!changeCollegeUser) return;
+    const targetCollege = selectedNewCollege === "OTHER" ? customCollege.trim().toUpperCase() : selectedNewCollege.trim().toUpperCase();
+    if (!targetCollege) {
+      alert("Please select or enter a valid college code.");
+      return;
+    }
+    try {
+      await api.post("/admin/users/update-college", null, {
+        params: {
+          id: changeCollegeUser.id,
+          college: targetCollege
+        }
+      });
+      alert(`College updated to ${targetCollege} for ${changeCollegeUser.name || 'Student'}`);
+      setChangeCollegeUser(null);
+      setCustomCollege("");
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update user college");
     }
   };
 
@@ -159,6 +201,7 @@ function UserManagement() {
                 <tr>
                   <th>Student Info</th>
                   <th>Contact Email</th>
+                  <th>Campus / College</th>
                   <th>Wallet Balance</th>
                   <th>Status</th>
                   <th>Security / Actions</th>
@@ -173,7 +216,7 @@ function UserManagement() {
                           <User className="w-4 h-4 text-slate-500" />
                         </div>
                         <div>
-                          <p className="font-black text-slate-950">{user.username || "Student"}</p>
+                          <p className="font-black text-slate-950">{user.name || user.username || "Student"}</p>
                           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ID: {user.id}</p>
                         </div>
                       </div>
@@ -182,6 +225,21 @@ function UserManagement() {
                       <span className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
                         <Mail className="w-3.5 h-3.5 text-slate-400" /> {user.email}
                       </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => {
+                          setChangeCollegeUser(user);
+                          setSelectedNewCollege(user.college || "KLU");
+                          setCustomCollege("");
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-black border border-blue-200 transition-all cursor-pointer"
+                        title="Click to change college"
+                      >
+                        <School className="w-3.5 h-3.5 text-blue-600" />
+                        <span>{user.college || "KLU"}</span>
+                        <Edit3 className="w-3 h-3 text-blue-400" />
+                      </button>
                     </td>
                     <td>
                       <span className="font-black text-slate-900 flex items-center gap-1">
@@ -195,6 +253,17 @@ function UserManagement() {
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setChangeCollegeUser(user);
+                            setSelectedNewCollege(user.college || "KLU");
+                            setCustomCollege("");
+                          }}
+                          className="btn secondary py-1.5 px-3 min-h-0 text-xs font-black flex items-center gap-1"
+                          title="Change College"
+                        >
+                          <School className="w-3.5 h-3.5 text-sky-600" /> College
+                        </button>
                         <button
                           onClick={() => {
                             setSelectedUser(user);
@@ -233,7 +302,7 @@ function UserManagement() {
                 ))}
                 {filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="text-center py-10 font-bold text-slate-500">
+                    <td colSpan="6" className="text-center py-10 font-bold text-slate-500">
                       No users found.
                     </td>
                   </tr>
@@ -242,6 +311,76 @@ function UserManagement() {
             </table>
           )}
         </div>
+
+        {/* Modal: Change User College */}
+        {changeCollegeUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
+            <form onSubmit={handleChangeCollege} className="bg-white rounded-3xl p-8 max-w-sm w-full border border-slate-200 shadow-2xl relative">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                  <School className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">Change College</h3>
+                  <p className="text-xs font-bold text-slate-500">{changeCollegeUser.name || changeCollegeUser.email}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-bold">
+                <span className="text-slate-500">Current College:</span>
+                <span className="text-blue-600 font-black uppercase text-sm">{changeCollegeUser.college || "KLU"}</span>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">
+                  Select New Campus / College
+                </label>
+                <select
+                  value={selectedNewCollege}
+                  onChange={(e) => setSelectedNewCollege(e.target.value)}
+                  className="field py-2.5 px-3 font-black text-sm"
+                >
+                  {availableColleges.map((col) => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                  <option value="OTHER">+ Other (Custom Code)</option>
+                </select>
+              </div>
+
+              {selectedNewCollege === "OTHER" && (
+                <div className="mt-3 flex flex-col gap-1">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Custom College Code</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. IITB, BITS, SRM"
+                    value={customCollege}
+                    onChange={(e) => setCustomCollege(e.target.value.toUpperCase())}
+                    className="field py-2.5 px-3 font-black uppercase text-sm"
+                  />
+                </div>
+              )}
+
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeCollegeUser(null);
+                    setCustomCollege("");
+                  }}
+                  className="btn secondary px-5 py-2.5 text-sm font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn success px-6 py-2.5 text-sm font-black"
+                >
+                  Save Campus 🏫
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Modal: Top-up / Adjust Wallet Balance */}
         {showModal && selectedUser && (

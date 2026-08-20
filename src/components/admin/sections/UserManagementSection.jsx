@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Users, Search, ShieldCheck, ShieldAlert, DollarSign, Trash2, Download, CheckSquare, Square, UserPlus } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Users, Search, ShieldCheck, ShieldAlert, DollarSign, Trash2, Download, CheckSquare, Square, UserPlus, School, Edit3 } from "lucide-react";
 import api from "../../../services/api";
 
 export function UserManagementSection({
@@ -15,6 +15,24 @@ export function UserManagementSection({
     const [selectedUserIds, setSelectedUserIds] = useState([]);
     const [walletAdjustUser, setWalletAdjustUser] = useState(null);
     const [walletDelta, setWalletDelta] = useState("");
+    const [changeCollegeUser, setChangeCollegeUser] = useState(null);
+    const [selectedNewCollege, setSelectedNewCollege] = useState("KLU");
+    const [customCollege, setCustomCollege] = useState("");
+    const [availableColleges, setAvailableColleges] = useState(["KLU", "VNR", "CBIT"]);
+
+    useEffect(() => {
+        api.get("/college-config")
+            .then(res => {
+                if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+                    const names = res.data.map(c => c.collegeName).filter(Boolean);
+                    if (names.length > 0) {
+                        const merged = Array.from(new Set([...names, "KLU", "VNR", "CBIT"]));
+                        setAvailableColleges(merged);
+                    }
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const toggleSelectUser = (id) => {
         setSelectedUserIds(prev =>
@@ -82,6 +100,33 @@ export function UserManagementSection({
         }
     };
 
+    const handleChangeCollegeSubmit = async (e) => {
+        e.preventDefault();
+        if (!changeCollegeUser) return;
+
+        const targetCollege = selectedNewCollege === "OTHER" ? customCollege.trim().toUpperCase() : selectedNewCollege.trim().toUpperCase();
+        if (!targetCollege) {
+            showAlert("Required", "Please select or enter a valid college code.", "warning");
+            return;
+        }
+
+        try {
+            await api.post("/admin/users/update-college", null, {
+                params: {
+                    id: changeCollegeUser.id,
+                    college: targetCollege
+                }
+            });
+            showAlert("Success", `College for ${changeCollegeUser.name || 'User'} updated to ${targetCollege}`, "success");
+            setChangeCollegeUser(null);
+            setCustomCollege("");
+            if (onFetchUsers) onFetchUsers();
+        } catch (error) {
+            console.error(error);
+            showAlert("Error", "Failed to update user college", "error");
+        }
+    };
+
     const filteredUsers = users.filter(u => {
         if (collegeFilter !== "ALL" && (u.college || "KLU").toUpperCase() !== collegeFilter.toUpperCase()) return false;
         if (searchTerm.trim()) {
@@ -127,9 +172,9 @@ export function UserManagementSection({
                         className="px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white outline-none cursor-pointer font-bold"
                     >
                         <option value="ALL">All Campuses</option>
-                        <option value="KLU">KLU</option>
-                        <option value="VNR">VNR</option>
-                        <option value="CBIT">CBIT</option>
+                        {availableColleges.map(col => (
+                            <option key={col} value={col}>{col}</option>
+                        ))}
                     </select>
                 </div>
 
@@ -161,7 +206,7 @@ export function UserManagementSection({
                                 </th>
                                 <th className="p-4">Student Name & ID</th>
                                 <th className="p-4">Email</th>
-                                <th className="p-4">Campus</th>
+                                <th className="p-4">Campus / College</th>
                                 <th className="p-4">Referral Code</th>
                                 <th className="p-4">Wallet Balance</th>
                                 <th className="p-4">Status</th>
@@ -202,9 +247,19 @@ export function UserManagementSection({
                                             </td>
                                             <td className="p-4 text-slate-300 font-medium">{user.email}</td>
                                             <td className="p-4">
-                                                <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-300 text-[10px] font-black border border-slate-700">
-                                                    {user.college || "KLU"}
-                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        setChangeCollegeUser(user);
+                                                        setSelectedNewCollege(user.college || "KLU");
+                                                        setCustomCollege("");
+                                                    }}
+                                                    className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 text-[11px] font-black border border-slate-700 hover:border-cyan-500/40 transition-all cursor-pointer"
+                                                    title="Click to change college"
+                                                >
+                                                    <School className="w-3 h-3 text-cyan-400 group-hover:scale-110 transition-transform" />
+                                                    <span>{user.college || "KLU"}</span>
+                                                    <Edit3 className="w-2.5 h-2.5 text-slate-400 group-hover:text-cyan-300" />
+                                                </button>
                                             </td>
                                             <td className="p-4 font-mono font-bold text-amber-400">{user.referralCode || "—"}</td>
                                             <td className="p-4">
@@ -223,6 +278,20 @@ export function UserManagementSection({
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
+                                                    {/* Change College Button */}
+                                                    <button
+                                                        onClick={() => {
+                                                            setChangeCollegeUser(user);
+                                                            setSelectedNewCollege(user.college || "KLU");
+                                                            setCustomCollege("");
+                                                        }}
+                                                        className="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                                                        title="Change Student College"
+                                                    >
+                                                        <School className="w-3 h-3" />
+                                                        College
+                                                    </button>
+
                                                     {/* Adjust Wallet */}
                                                     <button
                                                         onClick={() => {
@@ -266,6 +335,71 @@ export function UserManagementSection({
                     </table>
                 </div>
             </div>
+
+            {/* Change College Modal */}
+            {changeCollegeUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                    <form onSubmit={handleChangeCollegeSubmit} className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                                <School className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-black text-white">Change User College</h3>
+                                <p className="text-xs text-slate-400">{changeCollegeUser.name || "Student"} (#{changeCollegeUser.id})</p>
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Current College:</span>
+                            <span className="font-black text-sky-400 text-sm uppercase">{changeCollegeUser.college || "KLU"}</span>
+                        </div>
+
+                        <div>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase">Select New College / Campus</label>
+                            <select
+                                value={selectedNewCollege}
+                                onChange={(e) => setSelectedNewCollege(e.target.value)}
+                                className="w-full mt-1 px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-xs outline-none focus:border-sky-500 cursor-pointer"
+                            >
+                                {availableColleges.map(col => (
+                                    <option key={col} value={col}>{col}</option>
+                                ))}
+                                <option value="OTHER">+ Other (Custom College Code)</option>
+                            </select>
+                        </div>
+
+                        {selectedNewCollege === "OTHER" && (
+                            <div>
+                                <label className="text-[11px] font-bold text-slate-400 uppercase">Enter Custom College Code</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. IITB, BITS, SRM"
+                                    value={customCollege}
+                                    onChange={(e) => setCustomCollege(e.target.value.toUpperCase())}
+                                    className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white font-black text-xs uppercase outline-none focus:border-sky-500"
+                                />
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setChangeCollegeUser(null)}
+                                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs shadow-lg shadow-sky-600/20 cursor-pointer"
+                            >
+                                Save College
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
             {/* Wallet Adjust Modal */}
             {walletAdjustUser && (
