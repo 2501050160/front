@@ -56,17 +56,17 @@ function CustomModal({
 
     if (!isOpen) return null;
 
-    // Render non-intrusive Toast Banner for notifications (type !== "confirm")
+    // Render non-intrusive Toast Banner at active viewport level (type !== "confirm")
     if (type !== "confirm") {
         return (
             <AnimatePresence>
-                <div className="fixed top-5 right-5 sm:right-6 z-[9999] max-w-sm sm:max-w-md w-[calc(100vw-2.5rem)] pointer-events-none">
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[99999] max-w-sm sm:max-w-md w-[calc(100vw-2rem)] pointer-events-none">
                     <motion.div
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 40, scale: 0.92 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        exit={{ opacity: 0, y: 40, scale: 0.92 }}
                         transition={{ type: "spring", damping: 25, stiffness: 350 }}
-                        className={`pointer-events-auto p-4 rounded-2xl border backdrop-blur-xl shadow-2xl flex items-start gap-3.5 relative overflow-hidden ${toastBgMap[type]}`}
+                        className={`pointer-events-auto p-4 rounded-2xl border backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] flex items-start gap-3.5 relative overflow-hidden ${toastBgMap[type]}`}
                     >
                         {/* Accent Bar */}
                         <div className={`absolute top-0 left-0 bottom-0 w-1.5 ${
