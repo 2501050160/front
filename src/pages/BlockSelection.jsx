@@ -7,9 +7,6 @@ import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
 import BarcodeScannerModal from "../components/BarcodeScannerModal";
-import blocksVideo from "../assets/blocks.mp4";
-import collectVideo from "../assets/collect.mp4";
-import inVideo from "../assets/in.mp4";
 import { 
   User, 
   LogOut, 
@@ -645,43 +642,45 @@ function BlockSelection() {
         <main className="premium-block-bg min-h-screen py-6 px-0 sm:px-4 md:px-8 xl:px-12 relative overflow-hidden font-sans text-slate-950 flex flex-col justify-between">
             {/* Styles for glassmorphism, background, and maintenance stamp */}
             <style dangerouslySetInnerHTML={{__html: `
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
                 body {
                     font-family: 'Plus Jakarta Sans', sans-serif;
-                    background-color: #f7fbff;
+                    background-color: #020617;
                 }
                 .premium-block-bg {
                     background:
-                        radial-gradient(circle at 76% 12%, rgba(45, 212, 191, 0.24), transparent 24rem),
-                        radial-gradient(circle at 16% 28%, rgba(14, 165, 233, 0.26), transparent 28rem),
-                        linear-gradient(135deg, #020617 0%, #082f49 46%, #0f766e 100%);
+                        radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.22), transparent 32rem),
+                        radial-gradient(circle at 15% 45%, rgba(147, 51, 234, 0.20), transparent 30rem),
+                        radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.18), transparent 28rem),
+                        linear-gradient(135deg, #020617 0%, #081528 50%, #031427 100%);
                 }
                 .premium-block-bg::before {
                     content: "";
                     position: fixed;
                     inset: 0;
                     pointer-events: none;
-                    background:
-                        linear-gradient(115deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 42px),
-                        linear-gradient(to bottom, rgba(2,6,23,0.16), rgba(2,6,23,0.78));
-                    opacity: 0.95;
+                    background-image: 
+                        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+                    background-size: 36px 36px;
+                    mask-image: radial-gradient(circle at center, black 50%, transparent 95%);
                 }
                 .premium-block-bg::after {
                     content: "";
                     position: fixed;
                     inset: 0;
                     pointer-events: none;
-                    background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
-                    background-size: 22px 22px;
-                    mask-image: linear-gradient(to bottom, transparent, black 18%, black 84%, transparent);
+                    background-image: radial-gradient(rgba(56, 189, 248, 0.15) 1px, transparent 1px);
+                    background-size: 24px 24px;
+                    opacity: 0.7;
                 }
                 .glass-panel {
                     position: relative;
-                    background: rgba(255, 255, 255, 0.04);
-                    backdrop-filter: blur(22px);
-                    -webkit-backdrop-filter: blur(22px);
-                    border: 1px solid rgba(255, 255, 255, 0.12);
-                    box-shadow: 0 28px 80px rgba(2, 6, 23, 0.34);
+                    background: rgba(15, 23, 42, 0.65);
+                    backdrop-filter: blur(24px);
+                    -webkit-backdrop-filter: blur(24px);
+                    border: 1px solid rgba(255, 255, 255, 0.10);
+                    box-shadow: 0 28px 80px rgba(2, 6, 23, 0.6);
                 }
                 .glass-panel::before {
                     content: "";
@@ -689,7 +688,7 @@ function BlockSelection() {
                     inset: 0;
                     border-radius: inherit;
                     pointer-events: none;
-                    background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 36%);
+                    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 40%);
                 }
                 .premium-block-bg .glass-panel .text-slate-950,
                 .premium-block-bg .glass-panel .text-slate-800,
@@ -702,28 +701,28 @@ function BlockSelection() {
                 }
                 .glow-btn {
                     background: linear-gradient(135deg, #0891b2 0%, #059669 100%);
-                    box-shadow: 0 12px 28px rgba(8, 145, 178, 0.24);
+                    box-shadow: 0 12px 28px rgba(8, 145, 178, 0.3);
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .glow-btn:hover {
-                    box-shadow: 0 16px 34px rgba(5, 150, 105, 0.28);
+                    box-shadow: 0 16px 34px rgba(5, 150, 105, 0.35);
                     transform: scale(1.03);
                 }
                 .maintenance-stamp {
                     position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) rotate(-12deg);
-                    border: 2px solid #e11d48;
-                    color: #be123c;
-                    background-color: rgba(255, 241, 242, 0.92);
-                    font-size: 13px;
+                    top: 18px;
+                    right: 18px;
+                    border: 1px solid rgba(244, 63, 94, 0.4);
+                    color: #fb7185;
+                    background: rgba(136, 19, 55, 0.6);
+                    backdrop-filter: blur(8px);
+                    font-size: 10px;
                     font-weight: 900;
-                    letter-spacing: 1px;
-                    padding: 7px 12px;
+                    letter-spacing: 0.08em;
+                    padding: 4px 10px;
                     text-transform: uppercase;
                     border-radius: 999px;
-                    box-shadow: 0 12px 26px rgba(225, 29, 72, 0.16);
+                    box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25);
                     pointer-events: none;
                     z-index: 20;
                 }
@@ -731,17 +730,16 @@ function BlockSelection() {
                     position: absolute;
                     top: 18px;
                     right: 18px;
-                    transform: none;
-                    border: 1px solid #cbd5e1;
-                    color: #64748b;
-                    background-color: rgba(248, 250, 252, 0.92);
-                    font-size: 11px;
+                    border: 1px solid rgba(148, 163, 184, 0.3);
+                    color: #cbd5e1;
+                    background: rgba(30, 41, 59, 0.7);
+                    backdrop-filter: blur(8px);
+                    font-size: 10px;
                     font-weight: 900;
                     letter-spacing: 0.08em;
-                    padding: 6px 10px;
+                    padding: 4px 10px;
                     text-transform: uppercase;
                     border-radius: 999px;
-                    box-shadow: 0 10px 24px rgba(100, 116, 139, 0.14);
                     pointer-events: none;
                     z-index: 20;
                 }
@@ -749,46 +747,32 @@ function BlockSelection() {
                     position: absolute;
                     top: 18px;
                     right: 18px;
-                    transform: none;
-                    border: 1px solid rgba(5, 150, 105, 0.24);
-                    color: #047857;
-                    background-color: rgba(236, 253, 245, 0.94);
-                    font-size: 11px;
+                    border: 1px solid rgba(16, 185, 129, 0.4);
+                    color: #34d399;
+                    background: rgba(6, 78, 59, 0.6);
+                    backdrop-filter: blur(8px);
+                    font-size: 10px;
                     font-weight: 900;
                     letter-spacing: 0.08em;
-                    padding: 6px 10px;
+                    padding: 4px 10px;
                     text-transform: uppercase;
                     border-radius: 999px;
-                    box-shadow: 0 10px 24px rgba(5, 150, 105, 0.14);
+                    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
                     pointer-events: none;
                     z-index: 20;
                 }
                 .notif-panel-enter { animation: slideInRight 0.28s cubic-bezier(0.16,1,0.3,1); }
                 @keyframes slideInRight { from { opacity:0; transform: translateX(24px); } to { opacity:1; transform: translateX(0); } }
-                .block-video-bg {
-                    position: fixed;
-                    inset: 0;
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    pointer-events: none;
-                    opacity: 0.42;
-                    mix-blend-mode: screen;
-                    filter: saturate(1.25) contrast(1.04);
-                }
                 .block-ambient-scrim {
                     position: fixed;
                     inset: 0;
                     pointer-events: none;
                     background:
-                        linear-gradient(180deg, rgba(2,6,23,0.76), rgba(2,6,23,0.36) 44%, rgba(2,6,23,0.54) 100%),
-                        radial-gradient(circle at 70% 16%, rgba(125,211,252,0.18), transparent 28rem);
+                        radial-gradient(circle at 80% 10%, rgba(56, 189, 248, 0.12), transparent 30rem),
+                        radial-gradient(circle at 20% 60%, rgba(168, 85, 247, 0.12), transparent 28rem);
                 }
             `}} />
 
-            <video autoPlay loop muted playsInline className="block-video-bg">
-                <source src={blocksVideo} type="video/mp4" />
-            </video>
             <div className="block-ambient-scrim" />
 
             {/* === SUSPENSION SCREEN OVERLAY === */}
@@ -1200,11 +1184,14 @@ function BlockSelection() {
 
                                                 {/* Select button */}
                                                 <button
-                                                    className="w-full h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 border border-white/10 hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/10 mt-3 flex items-center justify-center gap-1.5 pointer-events-none"
+                                                    className={`w-full h-11 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 mt-3 shadow-lg cursor-pointer ${
+                                                        !block.maintenance && block.isOnline
+                                                            ? "bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 text-slate-950 hover:scale-[1.02] hover:shadow-cyan-500/30 font-black"
+                                                            : "bg-slate-900/80 text-slate-500 border border-white/5 cursor-not-allowed"
+                                                    }`}
                                                     disabled={block.maintenance || !block.isOnline}
-                                                    style={(block.maintenance || !block.isOnline) ? { opacity: 0.5 } : {}}
                                                 >
-                                                    Select Print Counter <ChevronRight className="w-4 h-4" />
+                                                    {block.maintenance ? "Maintenance In Progress" : !block.isOnline ? "Printer Offline" : "Select Print Counter"} <ChevronRight className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </motion.div>

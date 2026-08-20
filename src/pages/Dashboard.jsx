@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
@@ -26,7 +26,20 @@ import {
     PanelLeftClose,
     Printer,
     UploadCloud,
-    Wallet
+    Wallet,
+    Check,
+    Plus,
+    Minus,
+    Layers,
+    Palette,
+    FileCheck,
+    Sparkles,
+    AlertCircle,
+    CheckCircle2,
+    Sliders,
+    Zap,
+    RotateCw,
+    Maximize2
 } from "lucide-react";
 
 function Dashboard() {
@@ -53,12 +66,14 @@ function Dashboard() {
     const [orderId, setOrderId] = useState("");
     const [uploaded, setUploaded] = useState(false);
     const [copies, setCopies] = useState(1);
+    const [orientation, setOrientation] = useState("portrait"); // "portrait" | "landscape"
     const [pageOption, setPageOption] = useState("ALL");
     const [startPage, setStartPage] = useState("");
     const [endPage, setEndPage] = useState("");
     const [nupLayout, setNupLayout] = useState("1-up");
     const [doubleSided, setDoubleSided] = useState(false);
     const [haveCoupon, setHaveCoupon] = useState(false);
+    const printSettingsRef = useRef(null);
     const [couponCode, setCouponCode] = useState("");
     const [couponApplied, setCouponApplied] = useState(false);
     const [couponDetails, setCouponDetails] = useState(null);
@@ -237,27 +252,57 @@ function Dashboard() {
         fetchPrinterConfig();
     }, [blockLocation]);
 
-    useEffect(() => {
-        const checkStatus = async () => {
-            try {
-                const response = await api.get("/system/status", {
-                    params: { blockLocation }
-                });
-                setSystemStatus(response.data);
-            } catch (err) {
-                setSystemStatus({
-                    databaseConnected: false,
-                    agentOnline: false,
-                    printerConfigured: false
-                });
+    const verifyKioskStatus = async (showErrorMessage = true) => {
+        if (!blockLocation) return false;
+        try {
+            const response = await api.get("/system/status", {
+                params: { blockLocation }
+            });
+            const status = response.data || {};
+            setSystemStatus(status);
+            if (status.paperCount !== undefined) {
+                setPaperCount(status.paperCount);
             }
-            fetchPaperCount();
-        };
 
+            const isAvailable = Boolean(
+                status.databaseConnected &&
+                (status.available !== undefined ? status.available : (status.printerConfigured && status.active && !status.paused && !status.maintenance))
+            );
+
+            if (!isAvailable && showErrorMessage) {
+                let errorMsg = `Print Kiosk at ${blockLocation} is currently unavailable for printing.`;
+                if (!status.databaseConnected) {
+                    errorMsg = "Central database server is disconnected. Please try again in a few moments.";
+                } else if (status.maintenance) {
+                    errorMsg = `Print Kiosk at ${blockLocation} is currently undergoing maintenance. Please choose another location.`;
+                } else if (!status.active || status.paused) {
+                    errorMsg = `Print Kiosk at ${blockLocation} is currently offline or paused by administrator.`;
+                } else if (!status.printerConfigured) {
+                    errorMsg = `No active printer configured for ${blockLocation}. Please select an active campus block.`;
+                }
+                showAlert("Print Kiosk Unavailable", errorMsg, "error");
+            }
+            return isAvailable;
+        } catch (err) {
+            console.error("Failed to verify print kiosk status:", err);
+            setSystemStatus({
+                databaseConnected: false,
+                agentOnline: false,
+                printerConfigured: false,
+                available: false
+            });
+            if (showErrorMessage) {
+                showAlert("Connection Error", "Cannot reach the print kiosk server. Please check your network and try again.", "error");
+            }
+            return false;
+        }
+    };
+
+    // 1. Initial single load on location change (Zero continuous polling)
+    useEffect(() => {
         if (blockLocation) {
-            checkStatus();
-            const interval = setInterval(checkStatus, 8000);
-            return () => clearInterval(interval);
+            verifyKioskStatus(false);
+            fetchPaperCount();
         }
     }, [blockLocation]);
 
@@ -323,6 +368,13 @@ function Dashboard() {
             return;
         }
 
+        // On-demand validation of kiosk server availability before upload
+        const isKioskReady = await verifyKioskStatus(true);
+        if (!isKioskReady) {
+            showAlert("Kiosk Offline", `The print kiosk at ${blockLocation} is currently unavailable. Upload is blocked until the kiosk is available.`, "error");
+            return;
+        }
+
         const formData = new FormData();
         if (filesToUpload.length === 1) {
             formData.append("file", filesToUpload[0]);
@@ -360,6 +412,11 @@ function Dashboard() {
             setEnteredReferralCode("");
             setReferralApplied(false);
             showAlert("Success", "Files processed and uploaded successfully!", "success");
+
+            // Auto-scroll the page down to print settings & summary on mobile / all views
+            setTimeout(() => {
+                printSettingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 300);
         } catch (error) {
             console.error(error);
             const detailedError = error.response?.data?.message || error.response?.data || error.message || "Could not upload and process the files.";
@@ -434,6 +491,9 @@ function Dashboard() {
             showAlert("Files Not Uploaded", "Please upload selected files first.", "warning");
             return;
         }
+
+        const isKioskReady = await verifyKioskStatus(true);
+        if (!isKioskReady) return;
 
         if (pageOption === "CUSTOM") {
             const start = parseInt(startPage);
@@ -549,6 +609,9 @@ function Dashboard() {
             return;
         }
 
+        const isKioskReady = await verifyKioskStatus(true);
+        if (!isKioskReady) return;
+
         if (pageOption === "CUSTOM") {
             const start = parseInt(startPage);
             const end = parseInt(endPage);
@@ -650,6 +713,9 @@ function Dashboard() {
             showAlert("Files Not Uploaded", "Please upload selected files first.", "warning");
             return;
         }
+
+        const isKioskReady = await verifyKioskStatus(true);
+        if (!isKioskReady) return;
 
         if (pageOption === "CUSTOM") {
             const start = parseInt(startPage);
@@ -875,7 +941,7 @@ function Dashboard() {
     const isLowPaper = uploaded && estimatedTotalPages > paperCount;
     const basePrice = sheetsToPrint * Number(copies || 1) * rate;
     const estimatedTotal = couponApplied && couponDetails ? Math.max(0, basePrice - (basePrice * couponDetails.discountPercentage) / 100) : basePrice;
-    const isPrintingDisabled = !systemStatus.databaseConnected || !systemStatus.agentOnline || !systemStatus.printerConfigured || isLowPaper || systemStatus.maintenance;
+    const isPrintingDisabled = !systemStatus.databaseConnected || (systemStatus.available === false) || !systemStatus.printerConfigured || isLowPaper || systemStatus.maintenance || systemStatus.paused || (systemStatus.active === false);
 
     const displayAdText = settings.adEnabled && settings.adText ? settings.adText.replace("{referralCode}", referralCode) : "";
 
@@ -1594,123 +1660,415 @@ function Dashboard() {
                         <AnimatePresence>
                             {uploaded && (
                                 <motion.section
-                                    className="user-dash-card mt-6 p-6 lg:col-span-2 rounded-3xl text-left"
+                                    ref={printSettingsRef}
+                                    className="user-dash-card mt-6 p-6 lg:col-span-2 rounded-3xl text-left shadow-2xl border border-white/10 relative overflow-hidden"
                                     initial={{ opacity: 0, y: 18 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 18 }}
                                 >
-                                    <div className="section-header">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4 mb-6">
                                         <div>
-                                            <p className="eyebrow text-cyan-200">Step 2</p>
-                                            <h2 className="text-2xl font-black text-white">
-                                                Print Settings
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                                    Step 2 of 2
+                                                </span>
+                                                <span className="text-xs text-slate-400 font-bold">• Instant Print Spooling</span>
+                                            </div>
+                                            <h2 className="text-2xl md:text-3xl font-black text-white mt-1">
+                                                Print & Layout Settings
                                             </h2>
+                                        </div>
+                                        <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
+                                            <span>Document:</span>
+                                            <span className="text-cyan-300 font-black px-2.5 py-1 bg-cyan-950/60 rounded-lg border border-cyan-800/40">
+                                                {totalPages} {totalPages === 1 ? "Page" : "Pages"}
+                                            </span>
                                         </div>
                                     </div>
 
                                     {/* Low paper notification banner on dashboard */}
                                     {isLowPaper && (
-                                        <div style={{
-                                            background: "#ef4444",
-                                            color: "#ffffff",
-                                            padding: "10px 16px",
-                                            borderRadius: "10px",
-                                            fontSize: "13px",
-                                            fontWeight: "bold",
-                                            marginBottom: "16px",
-                                            boxShadow: "0 0 15px rgba(239, 68, 68, 0.3)"
-                                        }}>
-                                            <marquee scrollamount="4">⚠️ Print cannot be done due to low paper levels. Selected pages ({estimatedTotalPages}) exceed printer sheets ({paperCount}).</marquee>
+                                        <div className="mb-6 rounded-2xl bg-rose-500/20 border border-rose-500/40 p-4 text-rose-200 flex items-center gap-3">
+                                            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+                                            <p className="text-xs md:text-sm font-bold">
+                                                ⚠️ Print cannot be initiated due to paper shortage. Selected job requires {estimatedTotalPages} sheets, but only {paperCount} sheets remain.
+                                            </p>
                                         </div>
                                     )}
 
-                                    <div className="grid gap-4 md:grid-cols-5">
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Copies
-                                            </span>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={copies}
-                                                onChange={(e) => setCopies(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            />
-                                        </label>
+                                    {/* Interactive Print Options Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        
+                                        {/* 1. Page Orientation: Portrait vs Horizontal / Landscape */}
+                                        <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                                    <RotateCw className="w-4 h-4 text-cyan-400" />
+                                                    Page Orientation
+                                                </span>
+                                                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border shadow-sm ${
+                                                    orientation === "portrait"
+                                                        ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/40"
+                                                        : "bg-purple-500/20 text-purple-300 border-purple-400/40"
+                                                }`}>
+                                                    {orientation === "portrait" ? "Vertical (A4)" : "Horizontal (Wide)"}
+                                                </span>
+                                            </div>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Print Type
-                                            </span>
-                                            <select
-                                                value={printType}
-                                                onChange={(e) => setPrintType(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            >
-                                                {allowBw && <option value="BW" className="bg-slate-900 text-white">Black & White</option>}
-                                                {allowColor && <option value="COLOR" className="bg-slate-900 text-white">Color</option>}
-                                            </select>
-                                        </label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {/* Portrait Card */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOrientation("portrait")}
+                                                    className={`p-4 rounded-2xl border flex flex-col items-center gap-3 transition-all duration-200 text-center cursor-pointer relative overflow-hidden ${
+                                                        orientation === "portrait"
+                                                            ? "bg-gradient-to-br from-cyan-600 via-sky-600 to-blue-700 border-cyan-300 text-white shadow-xl shadow-cyan-500/30 scale-[1.02]"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-300 hover:border-cyan-500/50 hover:bg-slate-800/80 hover:text-white"
+                                                    }`}
+                                                >
+                                                    {/* Portrait Sheet Icon Visual */}
+                                                    <div className={`w-10 h-14 rounded-lg border-2 flex flex-col justify-between p-1.5 transition-all ${
+                                                        orientation === "portrait"
+                                                            ? "border-white bg-white/20 shadow-md"
+                                                            : "border-slate-500 bg-slate-800"
+                                                    }`}>
+                                                        <div className="w-full h-1 bg-current opacity-80 rounded-full" />
+                                                        <div className="w-3/4 h-1 bg-current opacity-60 rounded-full" />
+                                                        <div className="w-full h-1 bg-current opacity-60 rounded-full" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-black tracking-wide">Portrait</p>
+                                                        <p className={`text-[10px] font-bold mt-0.5 ${orientation === "portrait" ? "text-cyan-100" : "text-slate-400"}`}>Standard Vertical</p>
+                                                    </div>
+                                                </button>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Pages
-                                            </span>
-                                            <select
-                                                value={pageOption}
-                                                onChange={(e) => setPageOption(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            >
-                                                <option value="ALL" className="bg-slate-900 text-white">All Pages</option>
-                                                <option value="CUSTOM" className="bg-slate-900 text-white">Custom Range</option>
-                                            </select>
-                                        </label>
+                                                {/* Horizontal / Landscape Card */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOrientation("landscape")}
+                                                    className={`p-4 rounded-2xl border flex flex-col items-center gap-3 transition-all duration-200 text-center cursor-pointer relative overflow-hidden ${
+                                                        orientation === "landscape"
+                                                            ? "bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 border-purple-300 text-white shadow-xl shadow-purple-500/30 scale-[1.02]"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-300 hover:border-purple-500/50 hover:bg-slate-800/80 hover:text-white"
+                                                    }`}
+                                                >
+                                                    {/* Landscape Sheet Icon Visual */}
+                                                    <div className={`w-14 h-10 rounded-lg border-2 flex flex-col justify-between p-1.5 transition-all ${
+                                                        orientation === "landscape"
+                                                            ? "border-white bg-white/20 shadow-md"
+                                                            : "border-slate-500 bg-slate-800"
+                                                    }`}>
+                                                        <div className="w-full h-1 bg-current opacity-80 rounded-full" />
+                                                        <div className="w-2/3 h-1 bg-current opacity-60 rounded-full" />
+                                                        <div className="w-full h-1 bg-current opacity-60 rounded-full" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-black tracking-wide">Horizontal</p>
+                                                        <p className={`text-[10px] font-bold mt-0.5 ${orientation === "landscape" ? "text-purple-100" : "text-slate-400"}`}>Landscape (Wide)</p>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </div>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Pages Per Sheet
-                                            </span>
-                                            <select
-                                                value={nupLayout}
-                                                onChange={(e) => setNupLayout(e.target.value)}
-                                                className="field !bg-white/10 !border-white/15 !text-white"
-                                            >
-                                                <option value="1-up" className="bg-slate-900 text-white">1-up (Normal)</option>
-                                                <option value="2-up" className="bg-slate-900 text-white">2-up (Saver)</option>
-                                                <option value="4-up" className="bg-slate-900 text-white">4-up (Compact)</option>
-                                                <option value="6-up" className="bg-slate-900 text-white">6-up (Micro)</option>
-                                                <option value="8-up" className="bg-slate-900 text-white">8-up (Mini)</option>
-                                                <option value="9-up" className="bg-slate-900 text-white">9-up (Nano)</option>
-                                            </select>
-                                        </label>
+                                        {/* 2. Number of Copies: Stepper + Quick-Pick Pills */}
+                                        <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4 text-amber-400" />
+                                                    Number of Copies
+                                                </span>
+                                                <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                                                    {copies || 1} {Number(copies || 1) === 1 ? "Copy" : "Copies"}
+                                                </span>
+                                            </div>
 
-                                        <label className="block">
-                                            <span className="mb-2 block text-sm font-black text-cyan-50/80">
-                                                Print Sides
-                                            </span>
-                                            <select
-                                                value={doubleSided && printType !== "COLOR" ? "double" : "single"}
-                                                onChange={(e) => setDoubleSided(e.target.value === "double")}
-                                                disabled={printType === "COLOR"}
-                                                className="field !bg-white/10 !border-white/15 !text-white disabled:opacity-60 disabled:cursor-not-allowed"
-                                            >
-                                                <option value="single" className="bg-slate-900 text-white">Single Sided</option>
-                                                {printType !== "COLOR" && (
-                                                    <option value="double" className="bg-slate-900 text-white">Double Sided (Duplex)</option>
+                                            {/* Stepper Control */}
+                                            <div className="flex items-center justify-between bg-slate-900/90 border border-slate-700/80 rounded-2xl p-2.5 shadow-inner">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCopies(Math.max(1, Number(copies || 1) - 1))}
+                                                    disabled={Number(copies || 1) <= 1}
+                                                    className="w-11 h-11 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center font-black transition-all cursor-pointer border border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
+                                                >
+                                                    <Minus className="w-5 h-5 text-slate-200" />
+                                                </button>
+                                                
+                                                <div className="text-center px-4">
+                                                    <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-yellow-200 tracking-tight">
+                                                        {copies || 1}
+                                                    </span>
+                                                    <p className="text-[10px] font-black text-amber-300 uppercase tracking-widest mt-0.5">
+                                                        {Number(copies || 1) === 1 ? "Copy Required" : "Copies Required"}
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCopies(Number(copies || 1) + 1)}
+                                                    className="w-11 h-11 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 flex items-center justify-center font-black transition-all cursor-pointer shadow-lg shadow-orange-500/30 border border-amber-300"
+                                                >
+                                                    <Plus className="w-5 h-5 text-slate-950 font-black" />
+                                                </button>
+                                            </div>
+
+                                            {/* Quick-Pick Quantity Pills */}
+                                            <div className="grid grid-cols-5 gap-2 pt-1">
+                                                {[1, 2, 3, 5, 10].map((qty) => (
+                                                    <button
+                                                        key={qty}
+                                                        type="button"
+                                                        onClick={() => setCopies(qty)}
+                                                        className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                                                            Number(copies) === qty
+                                                                ? "bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-orange-500/30 scale-105 font-black"
+                                                                : "bg-slate-900/80 border-slate-700/60 text-slate-300 hover:border-amber-400/50 hover:bg-slate-800 hover:text-white"
+                                                        }`}
+                                                    >
+                                                        {qty}x
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* 3. Print Type: Black & White vs Vibrant Color */}
+                                        <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                                    <Palette className="w-4 h-4 text-pink-400" />
+                                                    Print Ink Mode
+                                                </span>
+                                                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border shadow-sm ${
+                                                    printType === "COLOR"
+                                                        ? "bg-pink-500/20 text-pink-300 border-pink-400/40"
+                                                        : "bg-slate-800 text-slate-300 border-slate-600"
+                                                }`}>
+                                                    {printType === "COLOR" ? "Full Color Ink" : "Monochrome B&W"}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {/* Black & White Card */}
+                                                <button
+                                                    type="button"
+                                                    disabled={!allowBw}
+                                                    onClick={() => setPrintType("BW")}
+                                                    className={`p-4 rounded-2xl border flex flex-col items-center gap-2.5 transition-all duration-200 text-center cursor-pointer ${
+                                                        printType === "BW"
+                                                            ? "bg-gradient-to-br from-slate-700 via-slate-800 to-zinc-900 border-slate-300 text-white shadow-xl shadow-slate-900/50 scale-[1.02]"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-slate-500 hover:bg-slate-800/80 hover:text-slate-200"
+                                                    } ${!allowBw ? "opacity-40 cursor-not-allowed" : ""}`}
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-200 shadow-md">
+                                                        <FileText className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black text-white">Black & White</p>
+                                                        <p className="text-[10px] text-cyan-300 font-extrabold mt-0.5">₹{bwPrice} / page</p>
+                                                    </div>
+                                                </button>
+
+                                                {/* Vibrant Color Card */}
+                                                <button
+                                                    type="button"
+                                                    disabled={!allowColor}
+                                                    onClick={() => setPrintType("COLOR")}
+                                                    className={`p-4 rounded-2xl border flex flex-col items-center gap-2.5 transition-all duration-200 text-center cursor-pointer ${
+                                                        printType === "COLOR"
+                                                            ? "bg-gradient-to-tr from-pink-600 via-rose-500 to-purple-600 border-pink-300 text-white shadow-xl shadow-pink-500/40 scale-[1.02]"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-pink-500/50 hover:bg-slate-800/80 hover:text-slate-200"
+                                                    } ${!allowColor ? "opacity-40 cursor-not-allowed" : ""}`}
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 flex items-center justify-center text-white shadow-lg">
+                                                        <Palette className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black text-white">Vibrant Color</p>
+                                                        <p className="text-[10px] text-pink-200 font-extrabold mt-0.5">₹{colorPrice} / page</p>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* 4. Print Sides: Single Sided vs Double Sided (Duplex) */}
+                                        <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                                    <Layers className="w-4 h-4 text-emerald-400" />
+                                                    Print Sides (Duplex)
+                                                </span>
+                                                {doubleSided && printType !== "COLOR" && (
+                                                    <span className="text-[10px] font-black uppercase text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-400/40 shadow-sm animate-pulse">
+                                                        🌱 Saves 50% Paper
+                                                    </span>
                                                 )}
-                                            </select>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {/* Single Sided Card */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDoubleSided(false)}
+                                                    className={`p-4 rounded-2xl border flex flex-col items-center gap-2.5 transition-all duration-200 text-center cursor-pointer ${
+                                                        !doubleSided || printType === "COLOR"
+                                                            ? "bg-gradient-to-br from-teal-600 via-cyan-600 to-sky-700 border-cyan-300 text-white shadow-xl shadow-cyan-500/30 scale-[1.02]"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-cyan-500/50 hover:bg-slate-800/80 hover:text-slate-200"
+                                                    }`}
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-600 flex items-center justify-center text-slate-200 shadow-md">
+                                                        <FileText className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black text-white">Single Side</p>
+                                                        <p className="text-[10px] text-cyan-200 font-extrabold mt-0.5">1 Page / Sheet</p>
+                                                    </div>
+                                                </button>
+
+                                                {/* Double Sided Card */}
+                                                <button
+                                                    type="button"
+                                                    disabled={printType === "COLOR"}
+                                                    onClick={() => setDoubleSided(true)}
+                                                    className={`p-4 rounded-2xl border flex flex-col items-center gap-2.5 transition-all duration-200 text-center cursor-pointer ${
+                                                        doubleSided && printType !== "COLOR"
+                                                            ? "bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 border-emerald-300 text-white shadow-xl shadow-emerald-500/40 scale-[1.02]"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-emerald-500/50 hover:bg-slate-800/80 hover:text-slate-200"
+                                                    } ${printType === "COLOR" ? "opacity-40 cursor-not-allowed" : ""}`}
+                                                >
+                                                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-md">
+                                                        <Layers className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black text-white">Double Side</p>
+                                                        <p className="text-[10px] text-emerald-200 font-extrabold mt-0.5">₹{bwDuplexPrice} / pg (Duplex)</p>
+                                                    </div>
+                                                </button>
+                                            </div>
                                             {printType === "COLOR" && (
-                                                <p className="mt-1 text-[11px] font-semibold text-amber-300">
-                                                    * Color print is supported in Single Sided only.
+                                                <p className="text-[10px] text-amber-300/90 font-bold bg-amber-500/10 p-2 rounded-xl border border-amber-500/20 text-center">
+                                                    * Color printing is supported in Single Sided mode only.
                                                 </p>
                                             )}
-                                        </label>
+                                        </div>
+
+                                        {/* 5. Page Range Selector */}
+                                        <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                                    <FileCheck className="w-4 h-4 text-cyan-400" />
+                                                    Page Selection
+                                                </span>
+                                                <span className="text-[10px] font-black uppercase text-cyan-300 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
+                                                    {pageOption === "ALL" ? `All ${totalPages} Pages` : "Custom Range"}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPageOption("ALL")}
+                                                    className={`py-3 px-3 rounded-2xl border text-xs font-black transition-all cursor-pointer shadow-md ${
+                                                        pageOption === "ALL"
+                                                            ? "bg-gradient-to-r from-sky-600 via-cyan-600 to-teal-600 border-cyan-300 text-white shadow-cyan-500/30"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-cyan-500/50 hover:text-white"
+                                                    }`}
+                                                >
+                                                    All Pages (1 - {totalPages})
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPageOption("CUSTOM")}
+                                                    className={`py-3 px-3 rounded-2xl border text-xs font-black transition-all cursor-pointer shadow-md ${
+                                                        pageOption === "CUSTOM"
+                                                            ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 border-purple-300 text-white shadow-purple-500/30"
+                                                            : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-purple-500/50 hover:text-white"
+                                                    }`}
+                                                >
+                                                    Custom Range
+                                                </button>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {pageOption === "CUSTOM" && (
+                                                    <motion.div
+                                                        className="grid grid-cols-2 gap-3 pt-2"
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: "auto" }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                    >
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">From Page</span>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max={totalPages}
+                                                                placeholder="1"
+                                                                value={startPage}
+                                                                onChange={(e) => setStartPage(e.target.value)}
+                                                                className="field mt-1 !bg-slate-900 !border-slate-700 !text-white text-center font-black rounded-xl"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">To Page</span>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max={totalPages}
+                                                                placeholder={totalPages}
+                                                                value={endPage}
+                                                                onChange={(e) => setEndPage(e.target.value)}
+                                                                className="field mt-1 !bg-slate-900 !border-slate-700 !text-white text-center font-black rounded-xl"
+                                                            />
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+
+                                        {/* 6. Layout & N-Up (Pages Per Sheet) */}
+                                        <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 flex flex-col justify-between space-y-4 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                                                    <Sliders className="w-4 h-4 text-purple-400" />
+                                                    Pages Per Sheet (N-Up)
+                                                </span>
+                                                <span className="text-[10px] font-black uppercase text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/30">
+                                                    {nupLayout} Layout
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                                {[
+                                                    { id: "1-up", label: "1-Up", desc: "Standard", gradient: "from-amber-500 to-orange-600 border-amber-300" },
+                                                    { id: "2-up", label: "2-Up", desc: "Saver", gradient: "from-sky-500 to-blue-600 border-sky-300" },
+                                                    { id: "4-up", label: "4-Up", desc: "Compact", gradient: "from-purple-500 to-indigo-600 border-purple-300" },
+                                                    { id: "6-up", label: "6-Up", desc: "Micro", gradient: "from-fuchsia-500 to-pink-600 border-pink-300" },
+                                                    { id: "8-up", label: "8-Up", desc: "Mini", gradient: "from-emerald-500 to-teal-600 border-emerald-300" },
+                                                    { id: "9-up", label: "9-Up", desc: "Nano", gradient: "from-rose-500 to-red-600 border-rose-300" }
+                                                ].map((layout) => (
+                                                    <button
+                                                        key={layout.id}
+                                                        type="button"
+                                                        onClick={() => setNupLayout(layout.id)}
+                                                        className={`py-2.5 px-1 rounded-xl text-center flex flex-col items-center justify-center transition-all cursor-pointer border shadow-md ${
+                                                            nupLayout === layout.id
+                                                                ? `bg-gradient-to-r ${layout.gradient} text-white font-black scale-105`
+                                                                : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-slate-500 hover:text-white"
+                                                        }`}
+                                                    >
+                                                        <span className="text-xs font-black">{layout.label}</span>
+                                                        <span className="text-[9px] opacity-80">{layout.desc}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                     </div>
 
-                                    <div className="mt-5 flex flex-col sm:flex-row justify-end gap-3">
+                                    {/* Action Buttons: Pay With Wallet or Razorpay */}
+                                    <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row justify-end items-center gap-3">
                                         <button
                                             onClick={payWithWalletDirect}
-                                            className="btn secondary px-8 py-3"
+                                            className="btn secondary w-full sm:w-auto px-8 py-3.5 flex items-center justify-center gap-2 cursor-pointer"
                                             disabled={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal}
                                             style={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
                                         >
@@ -1724,9 +2082,10 @@ function Dashboard() {
                                                 </>
                                             ) : `Pay with Wallet (₹${estimatedTotal.toFixed(2)})`}
                                         </button>
+                                        
                                         <button
                                             onClick={payNowDirect}
-                                            className="btn success px-8 py-3 flex items-center justify-center gap-2"
+                                            className="btn success w-full sm:w-auto px-8 py-3.5 flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-cyan-500/20"
                                             disabled={isPrintingDisabled || !!paymentMethod}
                                             style={isPrintingDisabled || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
                                         >
@@ -1741,37 +2100,6 @@ function Dashboard() {
                                             ) : "Proceed to Payment"}
                                         </button>
                                     </div>
-
-                                    <AnimatePresence>
-                                        {pageOption === "CUSTOM" && (
-                                            <motion.div
-                                                className="mt-4 grid gap-4 md:grid-cols-2"
-                                                initial={{ opacity: 0, y: -8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -8 }}
-                                            >
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    max={totalPages}
-                                                    placeholder="Start Page"
-                                                    value={startPage}
-                                                    onChange={(e) => setStartPage(e.target.value)}
-                                                    className="field"
-                                                />
-
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    max={totalPages}
-                                                    placeholder="End Page"
-                                                    value={endPage}
-                                                    onChange={(e) => setEndPage(e.target.value)}
-                                                    className="field"
-                                                />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
                                 </motion.section>
                             )}
                         </AnimatePresence>
