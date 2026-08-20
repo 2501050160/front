@@ -9,7 +9,8 @@ import {
     LogOut, 
     Wallet,
     Building2,
-    ChevronDown
+    ChevronDown,
+    KeyRound
 } from "lucide-react";
 import cloudprintLogo from "../assets/cloudprint_logo.png";
 import { useAuth } from "../context/AuthContext";
@@ -112,6 +113,22 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
                             <span>₹{Number(walletBalance || 0).toFixed(2)}</span>
                         </div>
                     )}
+
+                    {/* Direct Print Release Trigger Button */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (location.pathname === "/dashboard") {
+                                window.dispatchEvent(new CustomEvent('openDirectReleaseModal'));
+                            } else {
+                                navigate("/dashboard?action=release");
+                            }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all cursor-pointer shrink-0 shadow-sm"
+                    >
+                        <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Direct Print Release</span>
+                    </button>
 
                     {/* User Profile / Logout Dropdown */}
                     {userId && (

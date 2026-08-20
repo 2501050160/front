@@ -48,10 +48,12 @@ import {
     ChevronDown,
     ChevronUp,
     ArrowRight,
-    Tv
+    Tv,
+    KeyRound
 } from "lucide-react";
 
 function Dashboard() {
+    const [searchParams] = useSearchParams();
     const [bwPrice, setBwPrice] = useState(2);
     const [colorPrice, setColorPrice] = useState(5);
     const navigate = useNavigate();
@@ -75,6 +77,14 @@ function Dashboard() {
     const [releaseOtpError, setReleaseOtpError] = useState("");
     const [isReleasingPrint, setIsReleasingPrint] = useState(false);
     const [printReleasedSuccess, setPrintReleasedSuccess] = useState(false);
+
+    // Direct Print Release Modal State
+    const [showDirectReleaseModal, setShowDirectReleaseModal] = useState(false);
+    const [pendingOrdersForRelease, setPendingOrdersForRelease] = useState([]);
+    const [releaseModalOrderId, setReleaseModalOrderId] = useState("");
+    const [releaseModalOtp, setReleaseModalOtp] = useState("");
+    const [releaseModalError, setReleaseModalError] = useState("");
+    const [isReleasingFromModal, setIsReleasingFromModal] = useState(false);
     
     // Multiple files support
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -933,6 +943,62 @@ function Dashboard() {
         setReleaseOtpInput("");
     };
 
+    const openDirectReleaseModal = async () => {
+        setShowDirectReleaseModal(true);
+        setReleaseModalError("");
+        setReleaseModalOtp("");
+        try {
+            const res = await api.get("/pdf/userOrders");
+            const pending = (res.data || []).filter(o => 
+                o.status === "PENDING_SCAN" || o.status === "QUEUE" || o.status === "PAID" || o.status === "CREATED"
+            );
+            setPendingOrdersForRelease(pending);
+            if (pending.length > 0) {
+                setReleaseModalOrderId(pending[0].orderId);
+            }
+        } catch (err) {
+            console.warn("Could not load pending orders for direct release", err);
+        }
+    };
+
+    useEffect(() => {
+        const handler = () => openDirectReleaseModal();
+        window.addEventListener("openDirectReleaseModal", handler);
+        if (searchParams.get("action") === "release") {
+            openDirectReleaseModal();
+        }
+        return () => window.removeEventListener("openDirectReleaseModal", handler);
+    }, [searchParams]);
+
+    const handleDirectModalRelease = async (e) => {
+        e?.preventDefault();
+        if (!releaseModalOrderId) {
+            setReleaseModalError("Please select a pending order to release.");
+            return;
+        }
+        if (releaseModalOtp.trim().length !== 4) {
+            setReleaseModalError("Please enter the 4-digit OTP shown on the TV display panel.");
+            return;
+        }
+        setIsReleasingFromModal(true);
+        setReleaseModalError("");
+        try {
+            await api.post("/pdf/releasePrint", null, {
+                params: {
+                    orderId: releaseModalOrderId,
+                    otp: releaseModalOtp.trim()
+                }
+            });
+            setShowDirectReleaseModal(false);
+            showAlert("Print Released! 🚀", `Your document is now printing at the kiosk.`, "success");
+            fetchUserOrders();
+        } catch (err) {
+            setReleaseModalError(err.response?.data?.message || "Invalid OTP code. Please check the TV display panel.");
+        } finally {
+            setIsReleasingFromModal(false);
+        }
+    };
+
     const handleSupportSubmit = async (e) => {
         e.preventDefault();
         if (!supportName || !supportEmail || !supportMessage) {
@@ -1694,7 +1760,8 @@ function Dashboard() {
                                             </p>
 
                                             <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                                {walletBalance >= estimatedTotal ? (
+                                                {/* 1-Tap Wallet Print Button */}
+                                                {walletBalance >= estimatedTotal && (
                                                     <button
                                                         onClick={payWithWalletDirect}
                                                         disabled={isPrintingDisabled || !!paymentMethod}
@@ -1708,29 +1775,30 @@ function Dashboard() {
                                                         ) : (
                                                             <>
                                                                 <Zap className="w-4 h-4 fill-current" />
-                                                                1-Tap Wallet Print (₹{estimatedTotal.toFixed(2)})
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={payNowDirect}
-                                                        disabled={isPrintingDisabled || !!paymentMethod}
-                                                        className="btn success flex-1 flex items-center justify-center gap-2 py-3.5 !bg-gradient-to-r !from-cyan-500 !to-blue-600 hover:!from-cyan-400 hover:!to-blue-500 text-white font-black text-sm shadow-lg shadow-cyan-500/20 cursor-pointer"
-                                                    >
-                                                        {paymentMethod === "razorpay" ? (
-                                                            <>
-                                                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                                                Opening Payment...
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Zap className="w-4 h-4" />
-                                                                Pay & Print Now (₹{estimatedTotal.toFixed(2)})
+                                                                1-Tap Wallet (₹{estimatedTotal.toFixed(2)})
                                                             </>
                                                         )}
                                                     </button>
                                                 )}
+
+                                                {/* 1-Tap Instant UPI / Razorpay Print Button */}
+                                                <button
+                                                    onClick={payNowDirect}
+                                                    disabled={isPrintingDisabled || !!paymentMethod}
+                                                    className="btn success flex-1 flex items-center justify-center gap-2 py-3.5 !bg-gradient-to-r !from-cyan-500 !to-blue-600 hover:!from-cyan-400 hover:!to-blue-500 text-white font-black text-sm shadow-lg shadow-cyan-500/20 cursor-pointer"
+                                                >
+                                                    {paymentMethod === "razorpay" ? (
+                                                        <>
+                                                            <RefreshCw className="w-4 h-4 animate-spin" />
+                                                            Opening Payment...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Zap className="w-4 h-4" />
+                                                            {walletBalance >= estimatedTotal ? `Pay via UPI (₹${estimatedTotal.toFixed(2)})` : `1-Tap UPI Print (₹${estimatedTotal.toFixed(2)})`}
+                                                        </>
+                                                    )}
+                                                </button>
 
                                                 <button
                                                     type="button"
@@ -1742,7 +1810,7 @@ function Dashboard() {
                                                             }, 100);
                                                         }
                                                     }}
-                                                    className="btn secondary flex items-center justify-center gap-1.5 py-3 px-4 text-xs font-bold text-slate-300 border-white/20 hover:text-white cursor-pointer"
+                                                    className="btn secondary flex items-center justify-center gap-1.5 py-3 px-4 text-xs font-bold text-slate-300 border-white/20 hover:text-white cursor-pointer shrink-0"
                                                 >
                                                     <Sliders className="w-4 h-4 text-cyan-400" />
                                                     {showAdvancedSettings ? "Hide Settings" : "Customize Settings"}
@@ -2967,6 +3035,106 @@ function Dashboard() {
                                     Close Wallet
                                 </button>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Direct Print Release Popup Modal */}
+            <AnimatePresence>
+                {showDirectReleaseModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+                        <motion.div 
+                            className="bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full my-auto max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl border border-amber-500/30 flex flex-col text-left relative text-white"
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            transition={{ duration: 0.25 }}
+                        >
+                            <button 
+                                onClick={() => setShowDirectReleaseModal(false)}
+                                className="absolute top-4 right-4 text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer"
+                            >
+                                ✕ Close
+                            </button>
+
+                            <div className="border-b border-white/10 pb-3 pr-14">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full flex items-center gap-1.5 w-fit">
+                                    <KeyRound className="w-3 h-3 text-amber-400" />
+                                    Secure Release
+                                </span>
+                                <h3 className="text-xl font-black text-white mt-2 tracking-tight">Direct Print Release</h3>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                    Enter the 4-digit code shown on the TV display panel to release your print job.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleDirectModalRelease} className="mt-5 space-y-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Select Pending Order</label>
+                                    {pendingOrdersForRelease.length === 0 ? (
+                                        <p className="text-amber-300 text-xs font-semibold bg-amber-500/10 py-2.5 px-3 rounded-xl border border-amber-500/20">
+                                            No pending prints found. Upload a document to print.
+                                        </p>
+                                    ) : (
+                                        <select
+                                            value={releaseModalOrderId}
+                                            onChange={(e) => {
+                                                setReleaseModalError("");
+                                                setReleaseModalOrderId(e.target.value);
+                                            }}
+                                            className="w-full h-11 rounded-xl bg-slate-950 border border-white/15 text-xs font-bold text-white focus:border-amber-400 focus:outline-none appearance-none px-3 cursor-pointer"
+                                        >
+                                            {pendingOrdersForRelease.map(order => (
+                                                <option key={order.orderId} value={order.orderId} className="bg-slate-950 text-white">
+                                                    {order.orderId} • {order.fileName || "Document"} ({order.totalPages || 1} pgs)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Enter 4-Digit Kiosk OTP</label>
+                                    <input
+                                        type="text"
+                                        maxLength={4}
+                                        placeholder="••••"
+                                        value={releaseModalOtp}
+                                        onChange={(e) => {
+                                            setReleaseModalError("");
+                                            setReleaseModalOtp(e.target.value.replace(/[^0-9]/g, ''));
+                                        }}
+                                        className="w-full h-12 rounded-xl bg-slate-950 border border-white/15 text-center text-lg font-black text-amber-300 placeholder-slate-600 tracking-[0.5em] focus:border-amber-400 focus:outline-none"
+                                    />
+                                </div>
+
+                                {releaseModalError && (
+                                    <div className="text-xs font-bold text-rose-400 bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-xl">
+                                        ⚠️ {releaseModalError}
+                                    </div>
+                                )}
+
+                                <div className="pt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={isReleasingFromModal || !releaseModalOrderId || releaseModalOtp.length !== 4}
+                                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isReleasingFromModal ? (
+                                            <>
+                                                <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                                                Verifying &amp; Releasing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Zap className="w-4 h-4 fill-slate-950" />
+                                                Verify &amp; Release Print
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}
