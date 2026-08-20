@@ -1,7 +1,8 @@
 import { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import api from "./services/api";
-import { clearUserSession } from "./services/auth";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 
@@ -39,49 +40,6 @@ const PageLoader = () => (
     </div>
 );
 
-function SessionManager() {
-    const navigate = useNavigate();
-    const location = useLocation();
-
-    useEffect(() => {
-        const userId = localStorage.getItem("userId");
-        const adminId = localStorage.getItem("adminId");
-
-        // 2. Set up 5-minute inactivity timeout for normal users
-        if (userId && !adminId) {
-            localStorage.setItem("lastActivity", String(Date.now()));
-
-            const updateActivity = () => {
-                localStorage.setItem("lastActivity", String(Date.now()));
-            };
-
-            const events = ["mousedown", "keydown", "touchstart", "scroll", "click"];
-            events.forEach(event => window.addEventListener(event, updateActivity));
-
-            const interval = setInterval(() => {
-                const currentUserId = localStorage.getItem("userId");
-                const currentAdminId = localStorage.getItem("adminId");
-                
-                if (currentUserId && !currentAdminId) {
-                    const lastActivity = Number(localStorage.getItem("lastActivity") || Date.now());
-                    const elapsed = Date.now() - lastActivity;
-                    if (elapsed > 5 * 60 * 1000) { // 5 minutes
-                        clearUserSession();
-                        window.location.reload();
-                    }
-                }
-            }, 2000);
-
-            return () => {
-                events.forEach(event => window.removeEventListener(event, updateActivity));
-                clearInterval(interval);
-            };
-        }
-    }, [location.pathname]);
-
-    return null;
-}
-
 function App() {
   useEffect(() => {
     // Ping the backend immediately on application load to wake up the sleeping Render server
@@ -92,38 +50,144 @@ function App() {
 
   return (
     <BrowserRouter>
-      <SessionManager />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Navigate to="/login" replace />} />
-          <Route path="/verify" element={<VerifyToken />} />
-          <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/my-orders" element={<MyOrders />} />
-          <Route path="/referrals" element={<Referrals />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+      <AuthProvider>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public & Guest-Accessible Routes (WhatsApp Razorpay payments, landing, auth, display, bot) */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Navigate to="/login" replace />} />
+            <Route path="/verify" element={<VerifyToken />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/display-panel" element={<DisplayPanel />} />
+            <Route path="/chatbot" element={<Chatbot />} />
 
-          {/* Admin Operations Subroutes mapped to AdminDashboard with persistent Navbar & Sidebar */}
-          <Route path="/admin/queue" element={<Navigate to="/admin?tab=queue" replace />} />
-          <Route path="/admin/users" element={<Navigate to="/admin?tab=users" replace />} />
-          <Route path="/admin/analytics" element={<Navigate to="/admin?tab=analytics" replace />} />
-          <Route path="/admin/settings" element={<Navigate to="/admin?tab=settings" replace />} />
-          <Route path="/admin/whatsapp" element={<Navigate to="/admin?tab=whatsapp" replace />} />
+            {/* Checkout & Payment Success: Supports WhatsApp bot orders & guest payments without forcing login */}
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute allowGuestOrder>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payment-success" 
+              element={
+                <ProtectedRoute allowGuestOrder>
+                  <PaymentSuccess />
+                </ProtectedRoute>
+              } 
+            />
 
-          <Route path="/printer-settings" element={<PrinterSettings />} />
-          <Route path="/display-panel" element={<DisplayPanel />} />
-          <Route path="/blocks" element={<BlockSelection />} />
-          <Route path="/scan-to-print" element={<ScanToPrint />} />
-          <Route path="/chatbot" element={<Chatbot />} />
-        </Routes>
-      </Suspense>
+            {/* User Protected Routes: Explicitly require active user session */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-orders" 
+              element={
+                <ProtectedRoute>
+                  <MyOrders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/referrals" 
+              element={
+                <ProtectedRoute>
+                  <Referrals />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/blocks" 
+              element={
+                <ProtectedRoute>
+                  <BlockSelection />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/scan-to-print" 
+              element={
+                <ProtectedRoute>
+                  <ScanToPrint />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin Protected Routes: Require admin authentication */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/queue" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Navigate to="/admin?tab=queue" replace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Navigate to="/admin?tab=users" replace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/analytics" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Navigate to="/admin?tab=analytics" replace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Navigate to="/admin?tab=settings" replace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/whatsapp" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Navigate to="/admin?tab=whatsapp" replace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/printer-settings" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <PrinterSettings />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

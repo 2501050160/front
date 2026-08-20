@@ -12,27 +12,27 @@ import {
     ChevronDown
 } from "lucide-react";
 import cloudprintLogo from "../assets/cloudprint_logo.png";
-import { getWalletBalance, clearUserSession } from "../services/auth";
+import { useAuth } from "../context/AuthContext";
 
 function Navbar({ searchQuery, setSearchQuery, badge }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const [walletBalance, setWalletBalance] = useState(0);
+    const { user, walletBalance, logout, refreshWallet } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     
-    const userId = localStorage.getItem("userId");
-    const userName = localStorage.getItem("userName") || "Student User";
-    const userEmail = localStorage.getItem("userEmail") || "";
-    const userCollege = localStorage.getItem("userCollege") || "KLU";
+    const userId = user?.id || localStorage.getItem("userId");
+    const userName = user?.name || localStorage.getItem("userName") || "Student User";
+    const userEmail = user?.email || localStorage.getItem("userEmail") || "";
+    const userCollege = user?.college || localStorage.getItem("userCollege") || "KLU";
 
     useEffect(() => {
         if (userId) {
-            getWalletBalance(userId).then(setWalletBalance).catch(() => {});
+            refreshWallet();
         }
-    }, [userId]);
+    }, [userId, refreshWallet]);
 
     const handleLogout = () => {
-        clearUserSession();
+        logout();
         navigate("/");
     };
 
@@ -143,7 +143,7 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
                                     </Link>
                                     <button
                                         onClick={() => { setShowProfileMenu(false); handleLogout(); }}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
                                     >
                                         <LogOut className="w-4 h-4" />
                                         <span>Sign Out</span>
