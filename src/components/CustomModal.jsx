@@ -79,8 +79,8 @@ function CustomModal({
         onClose();
     };
 
-    // Render non-intrusive bottom-fixed Popup Banner (type !== "confirm")
-    if (type !== "confirm") {
+    // Render non-intrusive bottom-fixed Toast Banner ONLY when no custom children/form is embedded and type is not confirm/modal
+    if (!children && type !== "confirm" && type !== "modal") {
         return (
             <AnimatePresence>
                 {isOpen && (
@@ -127,11 +127,11 @@ function CustomModal({
         );
     }
 
-    // Render Modal Dialog for Confirmations (type === "confirm")
+    // Render Centered Modal Dialog for Custom Forms & Confirmations
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
                     <motion.div 
                         className="absolute inset-0"
                         initial={{ opacity: 0 }}
@@ -141,36 +141,42 @@ function CustomModal({
                     />
 
                     <motion.div
-                        className="relative my-auto w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 z-10 text-white"
+                        className="relative my-auto w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 z-10 text-slate-900"
                         initial={{ scale: 0.93, opacity: 0, y: 15 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.93, opacity: 0, y: 15 }}
                         transition={{ type: "spring", damping: 25, stiffness: 350 }}
                     >
-                        <div className="flex flex-col items-center text-center">
-                            <div className={`flex h-14 w-14 items-center justify-center rounded-2xl border-2 text-2xl font-black shadow-inner mb-4 ${iconBadgeMap[type]}`}>
-                                {iconMap[type]}
-                            </div>
+                        {/* Header with Title & Close Button */}
+                        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">{title}</h3>
+                            <button
+                                onClick={onClose}
+                                aria-label="Close modal"
+                                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center text-sm font-black transition-all cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
 
-                            <h3 className="text-xl font-black text-white mb-2">{title}</h3>
+                        {message && (
+                            <p className="text-xs font-semibold text-slate-500 mb-4 whitespace-pre-wrap leading-relaxed">
+                                {message}
+                            </p>
+                        )}
 
-                            {message && (
-                                <p className="text-sm font-semibold text-slate-400 mb-6 whitespace-pre-wrap leading-relaxed">
-                                    {message}
-                                </p>
-                            )}
+                        {children && <div className="w-full text-left">{children}</div>}
 
-                            {children && <div className="w-full mb-6 text-left">{children}</div>}
-
-                            <div className="flex flex-col sm:flex-row w-full gap-3">
-                                <button onClick={onClose} className="btn secondary flex-1 w-full">
+                        {!children && (
+                            <div className="flex flex-col sm:flex-row w-full gap-3 mt-6">
+                                <button onClick={onClose} className="btn secondary flex-1 w-full text-xs font-bold py-2.5">
                                     {cancelText}
                                 </button>
-                                <button onClick={handleConfirm} className="btn success flex-1 w-full">
+                                <button onClick={handleConfirm} className="btn success flex-1 w-full text-xs font-bold py-2.5">
                                     {confirmText}
                                 </button>
                             </div>
-                        </div>
+                        )}
                     </motion.div>
                 </div>
             )}
