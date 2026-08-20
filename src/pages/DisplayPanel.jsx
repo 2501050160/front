@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import api from "../services/api";
+import api, { API_BASE } from "../services/api";
 import { getBlockTheme } from "../config/blockThemes";
 import studentAd from "../assets/cloud_print_student_offers_ad.png";
 import collectVideo from "../assets/collect.mp4";
@@ -123,12 +123,43 @@ function DisplayPanel() {
     }, [displayBlock]);
 
     useEffect(() => {
+        // Initial fetch when display panel loads or block changes
         fetchOrders();
 
-        const interval = setInterval(fetchOrders, 3000);
+        // Real-Time Event-Driven Updates: Update ONLY when a user sends an order or status changes
+        const sseUrl = `${API_BASE}/api/sse/stream`;
+        let eventSource = null;
+
+        try {
+            eventSource = new EventSource(sseUrl);
+
+            eventSource.onmessage = () => {
+                fetchOrders();
+            };
+
+            eventSource.addEventListener("ORDER_UPDATED", () => {
+                fetchOrders();
+            });
+
+            eventSource.addEventListener("QUEUE_UPDATED", () => {
+                fetchOrders();
+            });
+
+            eventSource.addEventListener("PRINTER_ALERT", () => {
+                fetchOrders();
+            });
+
+            eventSource.onerror = () => {
+                // Connection auto-reconnects in background if network drops
+            };
+        } catch (e) {
+            console.warn("SSE EventSource initialization note:", e);
+        }
 
         return () => {
-            clearInterval(interval);
+            if (eventSource) {
+                eventSource.close();
+            }
             timersRef.current.forEach(clearTimeout);
         };
     }, [displayBlock]);
