@@ -269,8 +269,16 @@ function Checkout() {
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Cloud Print",
-                description: "Print Order Payment",
+                description: `Print Order Payment - ${order.orderId}`,
                 order_id: orderData.id,
+                prefill: {
+                    name: order.customerName || localStorage.getItem("userName") || "Student",
+                    email: localStorage.getItem("userEmail") || "student@cloudprint.website",
+                    contact: localStorage.getItem("userPhone") || "9999999999"
+                },
+                theme: {
+                    color: "#0ea5e9"
+                },
                 handler: async function (response) {
                     try {
                         // Mark coupon as used only after payment succeeds

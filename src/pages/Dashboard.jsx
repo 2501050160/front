@@ -816,8 +816,16 @@ function Dashboard() {
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Cloud Print",
-                description: "Print Order Payment",
+                description: `Print Order Payment - ${finalOrder.orderId}`,
                 order_id: orderData.id,
+                prefill: {
+                    name: userName || "Student",
+                    email: userEmail || "student@cloudprint.website",
+                    contact: localStorage.getItem("userPhone") || "9999999999"
+                },
+                theme: {
+                    color: "#0ea5e9"
+                },
                 handler: async function (response) {
                     try {
                         if (couponApplied && couponCode) {
