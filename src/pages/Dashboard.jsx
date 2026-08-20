@@ -411,9 +411,8 @@ function Dashboard() {
             setHaveReferral(false);
             setEnteredReferralCode("");
             setReferralApplied(false);
-            showAlert("Success", "Files processed and uploaded successfully!", "success");
 
-            // Auto-scroll the page down to print settings & summary on mobile / all views
+            // Auto-scroll the page down to print settings & summary silently without showing a popup
             setTimeout(() => {
                 printSettingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             }, 300);
