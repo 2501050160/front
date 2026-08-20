@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Wallet, X, Plus, ShieldCheck, Sparkles } from "lucide-react";
-import api, { RAZORPAY_KEY } from "../../../services/api";
+import api, { RAZORPAY_KEY, loadRazorpayScript } from "../../../services/api";
 import { getWalletBalance } from "../../../services/auth";
 
 export function WalletModal({
@@ -71,6 +71,13 @@ export function WalletModal({
                     color: "#0f766e"
                 }
             };
+
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded || !window.Razorpay) {
+                setErrorMsg("Payment gateway failed to load. Please check your internet connection.");
+                setProcessing(false);
+                return;
+            }
 
             const rzp = new window.Razorpay(options);
             rzp.open();

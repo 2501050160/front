@@ -333,11 +333,13 @@ function AdminDashboard() {
         fetchPrinters();
 
         const interval = setInterval(() => {
-            fetchOrders();
-            fetchStats();
-            fetchPrinters();
-            fetchSupportTickets();
-        }, 3000);
+            if (document.visibilityState === "visible") {
+                fetchOrders();
+                fetchStats();
+                fetchPrinters();
+                fetchSupportTickets();
+            }
+        }, 10000);
 
         return () => clearInterval(interval);
     }, [revenuePeriod]);

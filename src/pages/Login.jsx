@@ -124,8 +124,6 @@ function Login() {
             }
         };
         checkDb();
-        const interval = setInterval(checkDb, 10000);
-        return () => clearInterval(interval);
     }, []);
 
     const handleLogin = async (e) => {

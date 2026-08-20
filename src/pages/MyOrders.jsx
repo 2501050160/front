@@ -46,7 +46,11 @@ function MyOrders() {
         if (userId) {
             fetchOrders();
             getWalletBalance(userId).then(setWalletBalance);
-            const interval = setInterval(fetchOrders, 3000);
+            const interval = setInterval(() => {
+                if (document.visibilityState === "visible") {
+                    fetchOrders();
+                }
+            }, 8000);
             return () => clearInterval(interval);
         }
     }, [userId]);

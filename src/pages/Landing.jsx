@@ -142,8 +142,6 @@ function Landing() {
     };
 
     fetchStats();
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   // Auto-play demo video with audio when #how-it-works scrolls into view
@@ -265,10 +263,8 @@ function Landing() {
     };
     
     fetchBuildingData();
-    const interval = setInterval(fetchBuildingData, 10000);
     return () => {
       isMounted = false;
-      clearInterval(interval);
     };
   }, []);
 

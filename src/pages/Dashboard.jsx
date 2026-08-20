@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
-import api, { RAZORPAY_KEY } from "../services/api";
+import api, { RAZORPAY_KEY, loadRazorpayScript } from "../services/api";
 import Navbar from "../components/Navbar";
 import { getWalletBalance, clearUserSession } from "../services/auth";
 import CustomModal from "../components/CustomModal";
@@ -203,12 +203,12 @@ function Dashboard() {
     };
 
     useEffect(() => {
-        if (userId) {
+        if (userId && activeTab === "orders") {
             fetchOrders();
-            const interval = setInterval(fetchOrders, 3000);
+            const interval = setInterval(fetchOrders, 8000);
             return () => clearInterval(interval);
         }
-    }, [userId]);
+    }, [userId, activeTab]);
 
     const fetchActiveSections = async () => {
         try {
@@ -821,6 +821,13 @@ function Dashboard() {
                     }
                 }
             };
+
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded || !window.Razorpay) {
+                showAlert("Payment Gateway Error", "Unable to load Razorpay payment SDK. Please check your internet connection.", "error");
+                setPaymentMethod("");
+                return;
+            }
 
             const rzp = new window.Razorpay(options);
             

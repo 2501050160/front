@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import api, { RAZORPAY_KEY } from "../services/api";
+import api, { RAZORPAY_KEY, loadRazorpayScript } from "../services/api";
 import { getStoredWalletBalance, getWalletBalance } from "../services/auth";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
@@ -294,6 +294,13 @@ function Checkout() {
                     }
                 }
             };
+
+            const isLoaded = await loadRazorpayScript();
+            if (!isLoaded || !window.Razorpay) {
+                showAlert("Payment Gateway Error", "Unable to load Razorpay payment SDK. Please check your network connection.", "error");
+                setPaymentMethod("");
+                return;
+            }
 
             const rzp = new window.Razorpay(options);
             
