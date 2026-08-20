@@ -65,18 +65,22 @@ export function PrinterManagementSection({
         }
     };
 
+    const [testerPhone, setTesterPhone] = useState("8688500278");
+    const [testerIssueType, setTesterIssueType] = useState("OUT_OF_PAPER");
+
     const handleTestEmergencyAlert = async () => {
         setDispatchingAlert(true);
         try {
             const res = await api.post("/printer/report-issue", {
                 blockLocation: block || "C Block",
                 printerName: name || "Primary Kiosk Printer",
-                issueType: "TEST_ALERT",
-                details: "Admin manually triggered test alert to verify WhatsApp & Email delivery."
+                issueType: testerIssueType,
+                details: `Tester simulation for ${testerIssueType} alert.`,
+                testerPhone: testerPhone.trim()
             });
             showAlert(
                 "Alert Dispatched 🚨",
-                `Alert sent to:\n• Admin Phone: +91 9494189664 (WhatsApp)\n• Print Agent: +91 8688500278 (WhatsApp)\n• Admin Email: saipraveendasari1@gmail.com`,
+                `Notification successfully triggered for ${testerIssueType}! Dispatched to configured Admin, Print Agent, and Tester (${testerPhone}).`,
                 "success"
             );
         } catch (err) {
@@ -88,31 +92,56 @@ export function PrinterManagementSection({
 
     return (
         <div className="space-y-6">
-            {/* Emergency Hardware Alert Banner */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-950/60 via-slate-900 to-slate-900 border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
-                        <Bell className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-black uppercase tracking-wider text-rose-400">🚨 Automated Alert System</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold">Email + WhatsApp Active</span>
+            {/* Emergency Hardware Alert Banner & Tester Tool */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-950/60 via-slate-900 to-slate-900 border border-rose-500/30 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                            <Bell className="w-5 h-5 animate-pulse" />
                         </div>
-                        <p className="text-xs text-slate-300 mt-0.5">
-                            Auto-notifies <strong className="text-white">Admin (+91 9494189664)</strong> &amp; <strong className="text-white">Print Agent (+91 8688500278)</strong> on Paper Out / Jams.
-                        </p>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black uppercase tracking-wider text-rose-400">🚨 Automated Alert System</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold">Email + WhatsApp Active</span>
+                            </div>
+                            <p className="text-xs text-slate-300 mt-0.5">
+                                Automatically dispatches alerts to registered Admin &amp; Print Agent devices upon Out of Paper or Hardware Jams.
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <button
-                    type="button"
-                    onClick={handleTestEmergencyAlert}
-                    disabled={dispatchingAlert}
-                    className="py-2 px-4 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 border border-rose-500/40 text-rose-200 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                    {dispatchingAlert ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-                    {dispatchingAlert ? "Sending Alert..." : "Test Dispatch Alert"}
-                </button>
+
+                {/* Tester SMS / WhatsApp Dispatch Form */}
+                <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-3">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-rose-300 flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5" /> Test Notification:
+                    </span>
+                    <input
+                        type="tel"
+                        placeholder="Tester Mobile Number"
+                        value={testerPhone}
+                        onChange={(e) => setTesterPhone(e.target.value)}
+                        className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono outline-none focus:border-rose-500 w-36"
+                    />
+                    <select
+                        value={testerIssueType}
+                        onChange={(e) => setTesterIssueType(e.target.value)}
+                        className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white outline-none focus:border-rose-500 cursor-pointer"
+                    >
+                        <option value="OUT_OF_PAPER">Out of Paper Alert</option>
+                        <option value="PAPER_JAM">Paper Jam Alert</option>
+                        <option value="MAINTENANCE">Maintenance Alert</option>
+                    </select>
+                    <button
+                        type="button"
+                        onClick={handleTestEmergencyAlert}
+                        disabled={dispatchingAlert}
+                        className="py-1.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-rose-600/20"
+                    >
+                        {dispatchingAlert ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                        {dispatchingAlert ? "Dispatching..." : "Send Test Paper Alert SMS"}
+                    </button>
+                </div>
             </div>
                 {/* Add Printer Form */}
                 <form onSubmit={handleAddSubmit} className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
