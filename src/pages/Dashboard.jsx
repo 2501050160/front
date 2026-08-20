@@ -407,16 +407,15 @@ function Dashboard() {
             setCouponApplied(false);
             setCouponDetails(null);
             
-            // Reset referrals
-            setHaveReferral(false);
-            setEnteredReferralCode("");
-            setReferralApplied(false);
-            showAlert("Success", "Files processed and uploaded successfully!", "success");
+            // Store order details in localStorage for checkout
+            localStorage.setItem("order", JSON.stringify(response.data));
 
-            // Auto-scroll the page down to print settings & summary on mobile / all views
+            showAlert("Success", "File uploaded successfully! Redirecting to checkout page...", "success");
+
+            // Redirect immediately to new dedicated page after uploading files to avoid endless scrolling on mobile view
             setTimeout(() => {
-                printSettingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }, 300);
+                navigate(`/checkout?orderId=${response.data.orderId}`);
+            }, 500);
         } catch (error) {
             console.error(error);
             const detailedError = error.response?.data?.message || error.response?.data || error.message || "Could not upload and process the files.";
