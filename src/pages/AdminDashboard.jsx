@@ -4044,6 +4044,226 @@ function AdminDashboard() {
                             </motion.div>
                         )}
 
+                        {/* SUBPAGE 3: Block Directory Table & Actions */}
+                        {(collegesSubTab === "all-blocks" || blocksSubTab === "all-blocks") && (
+                            <motion.section
+                                className="panel overflow-x-auto p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Campus Locations</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Block Directory ({blocks.length})</h2>
+                                        <p className="subtitle">Manage physical campus blocks, generate kiosk print-agent config keys, and configure routing.</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        {((loggedInAdminRole !== "SUB_ADMIN" && loggedInAdminRole !== "MANAGER") || loggedInAdminUser === "admin") && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-500">Filter:</span>
+                                                <select
+                                                    value={blockCollegeFilter}
+                                                    onChange={(e) => setBlockCollegeFilter(e.target.value)}
+                                                    className="field !w-auto text-xs py-1.5 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                                >
+                                                    <option value="ALL">All Colleges</option>
+                                                    {Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                        <option key={col} value={col}>{col} College</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => { setCollegesSubTab("add-block"); setBlocksSubTab("add-block"); }}
+                                            className="btn primary min-h-0 px-4 py-2 text-xs font-bold"
+                                        >
+                                            ➕ Add Block
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {blocks.map(b => {
+                                        const assignedPrinters = printers.filter(p => p.blockLocation === b.name);
+                                        return (
+                                            <div key={b.id} className="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <span className="text-2xl">🏛️</span>
+                                                            <div>
+                                                                <h4 className="font-black text-slate-900 text-lg">{b.name}</h4>
+                                                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-sky-100 text-sky-700 border border-sky-200">
+                                                                    {b.college || "KLU"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
+                                                        <div className="flex justify-between text-slate-600 font-semibold">
+                                                            <span>Assigned Printers:</span>
+                                                            <strong className="text-slate-900">{assignedPrinters.length} Terminal(s)</strong>
+                                                        </div>
+                                                        <div className="flex justify-between text-slate-600 font-semibold">
+                                                            <span>Agent API Key:</span>
+                                                            <span className="font-mono text-[10px] text-slate-700 font-bold">{b.serverApiKey ? "Configured ✅" : "Not Generated ⚠️"}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                                                    {b.serverApiKey ? (
+                                                        <>
+                                                            <button onClick={() => downloadServerConfig(b)} className="btn secondary text-xs py-1.5 px-2.5 font-bold flex-1 flex items-center justify-center gap-1" title="Download config.json for Print Agent">
+                                                                📥 Config
+                                                            </button>
+                                                            <button onClick={() => regenerateBlockKey(b.id)} className="btn secondary text-xs py-1.5 px-2.5 font-bold text-amber-600 hover:text-amber-700" title="Reset / Revoke API Key">
+                                                                🔄 Key
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button onClick={() => regenerateBlockKey(b.id)} className="btn secondary text-xs py-1.5 px-2.5 font-bold flex-1 text-indigo-600">
+                                                            🔑 Generate Key
+                                                        </button>
+                                                    )}
+                                                    <button onClick={() => renameBlock(b.id, b.name)} className="btn secondary text-xs py-1.5 px-2.5 font-bold">
+                                                        ✏️ Rename
+                                                    </button>
+                                                    <button onClick={() => deleteBlock(b.id)} className="btn danger text-xs py-1.5 px-2.5 font-bold" title="Delete Block">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {blocks.length === 0 && (
+                                        <div className="col-span-full text-center py-12 text-slate-400 font-bold">
+                                            No blocks found in this view. Click "Add Block" to create one.
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.section>
+                        )}
+
+                        {/* SUBPAGE 4: Add New Block Form */}
+                        {(collegesSubTab === "add-block" || blocksSubTab === "add-block") && (
+                            <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <section className="panel p-6">
+                                    <div className="section-header pb-4 border-b border-slate-100 mb-6">
+                                        <p className="eyebrow">Campus Locations</p>
+                                        <h3 className="font-black text-2xl text-slate-900">Add New Block</h3>
+                                        <p className="text-sm text-slate-500 font-semibold mt-1">Register a new campus location for kiosk and queue routing.</p>
+                                    </div>
+                                    <form onSubmit={addBlock} className="space-y-4">
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">Block Name</span>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. C Block, L Block, Library, Central Kiosk"
+                                                className="field"
+                                                value={newBlockName}
+                                                onChange={(e) => setNewBlockName(e.target.value)}
+                                                required
+                                            />
+                                        </label>
+                                        <label className="block">
+                                            <span className="block text-sm font-black text-slate-700 mb-2">College Name</span>
+                                            {(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? (
+                                                <input
+                                                    type="text"
+                                                    className="field bg-slate-100 cursor-not-allowed"
+                                                    value={loggedInAdminCollege}
+                                                    readOnly
+                                                    disabled
+                                                />
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. KLU, Stanford, MIT"
+                                                    className="field"
+                                                    value={newBlockCollege}
+                                                    onChange={(e) => setNewBlockCollege(e.target.value)}
+                                                    required
+                                                />
+                                            )}
+                                        </label>
+                                        <button type="submit" className="btn success w-full mt-2">
+                                            ➕ Create Block Location
+                                        </button>
+                                    </form>
+                                </section>
+
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <p className="eyebrow">Kiosk Hardware Setup</p>
+                                            <h3 className="text-xl font-black text-slate-900">Block Configuration Guide</h3>
+                                        </div>
+                                        <div className="space-y-3 text-xs text-slate-600 font-medium">
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-1">🏛️ Physical Print Node</strong>
+                                                Each block corresponds to a designated location on campus where students pick up their prints.
+                                            </div>
+                                            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                                                <strong className="block text-slate-900 mb-1">📥 Agent Config JSON</strong>
+                                                After creating a block, download its <code>config.json</code> to connect your physical Raspberry Pi / Windows Print Agent.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 5: Block Overview / Rates & Health */}
+                        {(collegesSubTab === "overview" || blocksSubTab === "overview") && (
+                            <motion.section
+                                className="panel p-6"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="section-header pb-4 mb-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                                    <div>
+                                        <p className="eyebrow">Terminal Health</p>
+                                        <h2 className="text-2xl font-black text-slate-900">Block Overview & Terminal Status</h2>
+                                        <p className="subtitle">Live status of printers, paper levels, and queue health across all campus blocks.</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {blocks.map(b => {
+                                        const assignedPrinters = printers.filter(p => p.blockLocation === b.name);
+                                        const hasActivePrinter = assignedPrinters.some(p => p.active && !p.maintenance);
+                                        const printer = assignedPrinters[0];
+                                        const paperCount = printer?.paperCount ?? 500;
+                                        return (
+                                            <div key={b.id} className="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col justify-between gap-4">
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <h4 className="font-black text-slate-900 text-lg">🏛️ {b.name}</h4>
+                                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${hasActivePrinter ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}`}>
+                                                            {hasActivePrinter ? 'OPERATIONAL' : 'TERMINAL OFFLINE'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs font-semibold text-slate-500">{b.college || "KLU"}</p>
+                                                    <div className="mt-4 grid grid-cols-2 gap-2 text-center">
+                                                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                                            <span className="text-xl font-black text-slate-900">{assignedPrinters.length}</span>
+                                                            <span className="block text-[10px] font-bold text-slate-500 uppercase mt-0.5">Printers</span>
+                                                        </div>
+                                                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                                            <span className="text-xl font-black text-slate-900">{paperCount}</span>
+                                                            <span className="block text-[10px] font-bold text-slate-500 uppercase mt-0.5">Paper Sheets</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </motion.section>
+                        )}
+
                         {/* SUBPAGE 6: Printers Fleet Directory Table */}
                         {(collegesSubTab === "printers-list" || printersSubTab === "printers-list") && (
                             <motion.section
