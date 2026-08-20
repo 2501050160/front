@@ -47,12 +47,11 @@ import {
     RefreshCw,
     ChevronDown,
     ChevronUp,
-    ArrowRight
+    ArrowRight,
+    Tv
 } from "lucide-react";
 
 function Dashboard() {
-    const [searchParams] = useSearchParams();
-    const urlBlock = searchParams.get("block");
     const [bwPrice, setBwPrice] = useState(2);
     const [colorPrice, setColorPrice] = useState(5);
     const navigate = useNavigate();
@@ -67,12 +66,15 @@ function Dashboard() {
     const [bwDuplexPrice, setBwDuplexPrice] = useState(1.5);
     const [colorDuplexPrice, setColorDuplexPrice] = useState(4.0);
     const [isCollegeSuspended, setIsCollegeSuspended] = useState(false);
-    const [blockLocation, setBlockLocation] = useState(
-        urlBlock || localStorage.getItem("selectedBlock") || "C Block"
-    );
+    const blockLocation = localStorage.getItem("selectedBlock") || "C Block";
     const [completedOrder, setCompletedOrder] = useState(null);
     const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
-    const [copiedOtp, setCopiedOtp] = useState(false);
+    
+    // Display panel OTP release state
+    const [releaseOtpInput, setReleaseOtpInput] = useState("");
+    const [releaseOtpError, setReleaseOtpError] = useState("");
+    const [isReleasingPrint, setIsReleasingPrint] = useState(false);
+    const [printReleasedSuccess, setPrintReleasedSuccess] = useState(false);
     
     // Multiple files support
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -883,9 +885,52 @@ function Dashboard() {
         setReferralApplied(false);
         setEnteredReferralCode("");
         setShowAdvancedSettings(false);
+        setReleaseOtpInput("");
+        setReleaseOtpError("");
+        setPrintReleasedSuccess(false);
         if (userId) {
             getWalletBalance(userId).then(setWalletBalance).catch(() => {});
         }
+    };
+
+    const handleReleasePrint = async () => {
+        if (!completedOrder || releaseOtpInput.length !== 4) {
+            setReleaseOtpError("Please enter the 4-digit OTP shown on the TV display screen.");
+            return;
+        }
+        setIsReleasingPrint(true);
+        setReleaseOtpError("");
+        try {
+            await api.post("/pdf/releasePrint", null, {
+                params: {
+                    orderId: completedOrder.orderId,
+                    otp: releaseOtpInput.trim()
+                }
+            });
+            setPrintReleasedSuccess(true);
+            showAlert("Printing Started! 🚀", `Your document is printing at ${completedOrder.blockLocation || blockLocation}.`, "success");
+        } catch (err) {
+            setReleaseOtpError(err.response?.data?.message || "Invalid OTP code. Please check the TV display panel screen.");
+        } finally {
+            setIsReleasingPrint(false);
+        }
+    };
+
+    const handleKeypadPress = (val) => {
+        setReleaseOtpError("");
+        if (releaseOtpInput.length < 4) {
+            setReleaseOtpInput(prev => prev + val);
+        }
+    };
+
+    const handleKeypadBackspace = () => {
+        setReleaseOtpError("");
+        setReleaseOtpInput(prev => prev.slice(0, -1));
+    };
+
+    const handleKeypadClear = () => {
+        setReleaseOtpError("");
+        setReleaseOtpInput("");
     };
 
     const handleSupportSubmit = async (e) => {
@@ -1354,56 +1399,138 @@ function Dashboard() {
                             transition={{ duration: 0.4 }}
                             className="user-dash-card p-6 md:p-8 rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-slate-900/95 via-slate-950/95 to-slate-950 text-white shadow-2xl relative overflow-hidden"
                         >
-                            {/* Top Success Badge */}
+                            {/* Top Status Header */}
                             <div className="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/10">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
-                                        <CheckCircle2 className="w-7 h-7 animate-pulse" />
+                                        <CheckCircle2 className="w-7 h-7" />
                                     </div>
                                     <div>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Order Confirmed & Paid</span>
-                                        <h3 className="text-xl font-black text-white">Ready for Instant Print</h3>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                                            {printReleasedSuccess ? "Printing Started 🚀" : "Order Paid & In Queue"}
+                                        </span>
+                                        <h3 className="text-xl font-black text-white">
+                                            {printReleasedSuccess ? "Collecting Prints from Tray" : "Enter Display Panel OTP"}
+                                        </h3>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-full">
                                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                                    <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">{completedOrder.blockLocation || blockLocation} Kiosk</span>
+                                    <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">{completedOrder.blockLocation || blockLocation}</span>
                                 </div>
                             </div>
 
-                            {/* Big OTP Reveal Box */}
-                            <div className="my-6 p-6 rounded-2xl bg-slate-950/90 border border-cyan-500/30 text-center relative overflow-hidden shadow-inner">
-                                <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Your 4-Digit Release OTP</p>
-                                <div className="mt-3 flex items-center justify-center gap-3">
-                                    {String(completedOrder.otpCode || "----").split("").map((digit, i) => (
-                                        <span
-                                            key={i}
-                                            className="w-12 h-14 sm:w-16 sm:h-18 flex items-center justify-center rounded-xl bg-slate-900 border-2 border-cyan-400 text-3xl sm:text-4xl font-black text-cyan-200 tracking-wider shadow-lg shadow-cyan-500/20"
+                            {/* Main OTP Verification Section */}
+                            {!printReleasedSuccess ? (
+                                <div className="my-6 p-6 rounded-2xl bg-slate-950/90 border border-cyan-500/30 text-center relative overflow-hidden shadow-inner">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-black mb-3">
+                                        <Tv className="w-4 h-4 text-cyan-400" />
+                                        Step: Look at TV Display Panel
+                                    </div>
+                                    <h4 className="text-base font-black text-white">
+                                        Enter the 4-digit OTP shown on the TV Screen
+                                    </h4>
+                                    <p className="mt-1 text-xs text-slate-400 max-w-md mx-auto">
+                                        Find your order on the display panel at <strong className="text-cyan-300">{completedOrder.blockLocation || blockLocation}</strong> and enter the 4-digit release code:
+                                    </p>
+
+                                    {/* 4-Box Visual Display */}
+                                    <div className="mt-4 flex items-center justify-center gap-3">
+                                        {[0, 1, 2, 3].map((i) => (
+                                            <div
+                                                key={i}
+                                                className={`w-12 h-14 sm:w-16 sm:h-18 flex items-center justify-center rounded-xl bg-slate-900 border-2 text-3xl sm:text-4xl font-black transition-all ${
+                                                    releaseOtpInput[i]
+                                                        ? "border-cyan-400 text-cyan-200 shadow-lg shadow-cyan-500/20"
+                                                        : "border-slate-700 text-slate-600"
+                                                }`}
+                                            >
+                                                {releaseOtpInput[i] || "•"}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Error Banner */}
+                                    {releaseOtpError && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="mt-3 text-xs font-bold text-rose-400 bg-rose-950/40 border border-rose-500/30 py-2 px-4 rounded-lg inline-block"
                                         >
-                                            {digit}
-                                        </span>
-                                    ))}
+                                            ⚠️ {releaseOtpError}
+                                        </motion.div>
+                                    )}
+
+                                    {/* Mobile Keypad */}
+                                    <div className="mt-5 max-w-xs mx-auto grid grid-cols-3 gap-2">
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                                            <button
+                                                key={num}
+                                                type="button"
+                                                onClick={() => handleKeypadPress(String(num))}
+                                                className="h-12 rounded-xl bg-slate-900/90 border border-white/10 text-lg font-black text-white hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+                                            >
+                                                {num}
+                                            </button>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={handleKeypadClear}
+                                            className="h-12 rounded-xl bg-rose-950/30 border border-rose-500/20 text-xs font-black text-rose-300 hover:bg-rose-900/40 active:scale-95 transition-all cursor-pointer uppercase"
+                                        >
+                                            Clear
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleKeypadPress("0")}
+                                            className="h-12 rounded-xl bg-slate-900/90 border border-white/10 text-lg font-black text-white hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+                                        >
+                                            0
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleKeypadBackspace}
+                                            className="h-12 rounded-xl bg-slate-900/90 border border-white/10 text-sm font-black text-slate-300 hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
+                                        >
+                                            ⌫
+                                        </button>
+                                    </div>
+
+                                    {/* Verify Button */}
+                                    <div className="mt-5 max-w-xs mx-auto">
+                                        <button
+                                            type="button"
+                                            onClick={handleReleasePrint}
+                                            disabled={isReleasingPrint || releaseOtpInput.length !== 4}
+                                            className="btn success w-full flex items-center justify-center gap-2 py-3.5 !bg-gradient-to-r !from-emerald-500 !to-teal-600 text-white font-black text-base shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isReleasingPrint ? (
+                                                <>
+                                                    <RefreshCw className="w-5 h-5 animate-spin" />
+                                                    Verifying with Kiosk...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Zap className="w-5 h-5 fill-current" />
+                                                    Verify OTP & Release Print
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
-                                
-                                <div className="mt-4 flex items-center justify-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(completedOrder.otpCode || "");
-                                            setCopiedOtp(true);
-                                            setTimeout(() => setCopiedOtp(false), 2000);
-                                        }}
-                                        className="btn secondary text-xs py-1.5 px-4 flex items-center gap-2 cursor-pointer"
-                                    >
-                                        {copiedOtp ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                                        {copiedOtp ? "Copied to Clipboard!" : "Copy OTP"}
-                                    </button>
+                            ) : (
+                                <div className="my-6 p-6 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center relative overflow-hidden">
+                                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 mx-auto shadow-lg shadow-emerald-500/20">
+                                        <Check className="w-8 h-8 stroke-[3]" />
+                                    </div>
+                                    <h4 className="mt-4 text-xl font-black text-white">
+                                        Document Sent to Printer!
+                                    </h4>
+                                    <p className="mt-1 text-xs text-emerald-200">
+                                        Your print job has been released and is printing at the <strong className="text-white">{completedOrder.blockLocation || blockLocation}</strong> machine tray.
+                                    </p>
                                 </div>
-                                
-                                <p className="mt-3 text-xs text-slate-400 font-medium">
-                                    Walk up to <span className="font-bold text-white">{completedOrder.blockLocation || blockLocation}</span> machine and enter this 4-digit code on the touch screen.
-                                </p>
-                            </div>
+                            )}
 
                             {/* Order Specs Grid */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
