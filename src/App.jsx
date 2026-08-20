@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import api from "./services/api";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 
@@ -49,8 +50,9 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public & Guest-Accessible Routes (WhatsApp Razorpay payments, landing, auth, display, bot) */}
@@ -189,6 +191,7 @@ function App() {
         </Suspense>
       </AuthProvider>
     </BrowserRouter>
+  </ErrorBoundary>
   );
 }
 

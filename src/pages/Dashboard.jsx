@@ -39,7 +39,8 @@ import {
     Sliders,
     Zap,
     RotateCw,
-    Maximize2
+    Maximize2,
+    Ticket
 } from "lucide-react";
 
 function Dashboard() {
