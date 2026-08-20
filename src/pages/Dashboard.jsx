@@ -411,11 +411,14 @@ function Dashboard() {
             setHaveReferral(false);
             setEnteredReferralCode("");
             setReferralApplied(false);
+            
+            // Save order to localStorage for Checkout page
+            localStorage.setItem("order", JSON.stringify(response.data));
             showAlert("Success", "Files processed and uploaded successfully!", "success");
 
-            // Auto-scroll the page down to print settings & summary on mobile / all views
+            // Immediately redirect to dedicated /checkout page for Step 2 settings & payment
             setTimeout(() => {
-                printSettingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                navigate(`/checkout?orderId=${response.data.orderId}`);
             }, 300);
         } catch (error) {
             console.error(error);
