@@ -1413,248 +1413,31 @@ function Dashboard() {
                                 Estimate
                             </h2>
 
-                             <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                 {/* Sleek Black & White Single Sided Box */}
-                                 {allowBw && (
-                                     <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
-                                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">B&W (Single Side)</span>
-                                         <p className="mt-1 text-xl font-black text-white">Rs. {bwPrice} / pg</p>
-                                     </div>
-                                 )}
-
-                                 {/* Sleek Black & White Duplex Box */}
-                                 {allowBw && (
-                                     <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-3 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
-                                         <span className="text-[10px] font-black uppercase tracking-wider text-blue-300">B&W (Duplex / Both Sides)</span>
-                                         <p className="mt-1 text-xl font-black text-blue-100">Rs. {bwDuplexPrice} / pg</p>
-                                     </div>
-                                 )}
-
-                                 {/* Color Single Sided Box */}
-                                 {allowColor && (
-                                     <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/60 to-indigo-950/50 p-3 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
-                                         <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300">Color (Single Side Only)</span>
-                                         <p className="mt-1 text-xl font-black text-white">Rs. {colorPrice} / pg</p>
-                                     </div>
-                                 )}
-                             </div>
-
-                             <div className="mt-5 rounded-lg bg-slate-900 p-5 text-white">
-                                 <p className="text-sm font-bold text-slate-300">Estimated Total</p>
-                                 <motion.p
-                                     key={estimatedTotal}
-                                     className="mt-2 text-4xl font-black"
-                                     initial={{ scale: 0.96, opacity: 0.5 }}
-                                     animate={{ scale: 1, opacity: 1 }}
-                                 >
-                                     Rs. {estimatedTotal || 0}
-                                 </motion.p>
-                             </div>
-
-                             {/* Wallet Visual Card - Sleek Dark Theme */}
-                             <div className="mt-6 rounded-xl border border-white/10 bg-slate-950/40 p-4 flex items-center gap-4">
-                                 <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/20 shadow-sm animate-pulse" style={{ animationDuration: '2s' }}>
-                                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h1a2 2 0 012 2v2a2 2 0 01-2 2h-1m2-6h1a2 2 0 012 2v2a2 2 0 01-2 2h-1m-4-6v10m-3-3h12" />
-                                     </svg>
-                                 </div>
-                                 <div>
-                                     <p className="eyebrow text-cyan-200">Your Wallet</p>
-                                     <p className="text-xl font-black text-white">₹{walletBalance}</p>
-                                 </div>
-                             </div>
-
-                            {uploaded && (
-                                <div className="mt-5 space-y-3">
-                                    <button
-                                        onClick={payWithWalletDirect}
-                                        disabled={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal}
-                                        className="btn secondary w-full flex items-center justify-center gap-2"
-                                        style={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
-                                    >
-                                        {paymentMethod === "wallet" ? (
-                                            <>
-                                                <svg className="animate-spin h-4 w-4 text-slate-700" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                                </svg>
-                                                Processing Wallet...
-                                            </>
-                                        ) : `Pay with Wallet (₹${estimatedTotal.toFixed(2)})`}
-                                    </button>
-                                    <button
-                                        onClick={payNowDirect}
-                                        disabled={isPrintingDisabled || !!paymentMethod}
-                                        className="btn success w-full flex items-center justify-center gap-2"
-                                        style={isPrintingDisabled || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
-                                    >
-                                        {paymentMethod === "razorpay" ? (
-                                            <>
-                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                                </svg>
-                                                Proceeding to Payment...
-                                            </>
-                                        ) : "Proceed to Payment"}
-                                    </button>
+                            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Sleek Black & White Single Sided Box */}
+                                <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">B&W (Single Side)</span>
+                                    <p className="mt-1 text-xl font-black text-white">Rs. {bwPrice} / pg</p>
                                 </div>
-                            )}
 
-                              {/* Printer Info Panel - Sleek Dark Theme */}
-                            <div className="mt-6 rounded-xl border border-white/10 bg-slate-950/40 p-4">
-                                <p className="eyebrow text-cyan-200">Printer Details</p>
-                                <h3 className="mt-1 text-sm font-black text-white">
-                                    {blockLocation} Status
-                                </h3>
-                                
-                                <div className="mt-3 space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-300">Connection</span>
-                                        <span className={`status-pill ${systemStatus.agentOnline ? 'status-completed' : 'status-unpaid'}`} style={{ minHeight: '20px', fontSize: '9px', padding: '2px 8px' }}>
-                                            {systemStatus.agentOnline ? 'ONLINE' : 'OFFLINE'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-slate-300">Configured</span>
-                                        <span className={`status-pill ${systemStatus.printerConfigured ? 'status-completed' : 'status-unpaid'}`} style={{ minHeight: '20px', fontSize: '9px', padding: '2px 8px' }}>
-                                            {systemStatus.printerConfigured ? 'YES' : 'NO'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs border-t border-white/10 pt-2 mt-2">
-                                        <span className="font-bold text-slate-300">Paper Remaining</span>
-                                        <span className={`font-black ${paperCount < 50 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                            {paperCount} sheets
-                                        </span>
-                                    </div>
+                                {/* Sleek Black & White Duplex Box */}
+                                <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-4 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-300">B&W (Duplex / Both Sides)</span>
+                                    <p className="mt-1 text-xl font-black text-blue-100">Rs. {bwDuplexPrice} / pg</p>
                                 </div>
                             </div>
 
-                            {/* Coupon & Referral Section (Side by Side) - Sleek Dark Theme */}
-                            {uploaded && (
-                                <div className="grid grid-cols-2 gap-4 mt-4">
-                                    {/* Coupon Section */}
-                                    <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between">
-                                        <div>
-                                            <button
-                                                type="button"
-                                                onClick={() => !couponApplied && setHaveCoupon(!haveCoupon)}
-                                                disabled={couponApplied}
-                                                className={`w-full h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
-                                                    couponApplied 
-                                                    ? 'bg-emerald-600 border-emerald-700/30' 
-                                                    : 'bg-red-600 border-red-700/30 shadow-[0_4px_15px_rgba(220,38,38,0.25)]'
-                                                }`}
-                                            >
-                                                {/* Left section: White barcode */}
-                                                <div className="w-16 bg-white flex items-center justify-center relative border-r border-dashed border-slate-300">
-                                                    {/* Top and Bottom Scallop cutouts */}
-                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 -translate-y-1/2" />
-                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 translate-y-1/2" />
-                                                    
-                                                    {/* Barcode representation */}
-                                                    <div className="flex gap-[2px] items-center justify-center h-10">
-                                                        <div className="w-[2px] h-full bg-slate-900" />
-                                                        <div className="w-[4px] h-full bg-slate-900" />
-                                                        <div className="w-[1.5px] h-full bg-slate-900" />
-                                                        <div className="w-[3px] h-full bg-slate-900" />
-                                                        <div className="w-[1.5px] h-full bg-slate-900" />
-                                                        <div className="w-[4px] h-full bg-slate-900" />
-                                                        <div className="w-[2px] h-full bg-slate-900" />
-                                                    </div>
-                                                </div>
-
-                                                {/* Right section: Red/Green Coupon text */}
-                                                <div className="px-3.5 flex flex-col justify-center text-left text-white">
-                                                    <span className="text-[8px] font-black tracking-widest uppercase opacity-85">COUPON</span>
-                                                    <span className="text-xs font-black whitespace-nowrap mt-0.5">
-                                                        {couponApplied ? "APPLIED!" : "HAVE COUPON?"}
-                                                    </span>
-                                                </div>
-                                            </button>
-                                        </div>
-
-                                        {(haveCoupon || couponApplied) && (
-                                            <div className="mt-3 flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Coupon code"
-                                                    value={couponCode}
-                                                    onChange={(e) => setCouponCode(e.target.value)}
-                                                    className="field text-xs py-1.5 w-full !bg-white/10 !border-white/15 !text-white"
-                                                    disabled={couponApplied}
-                                                />
-                                                <button
-                                                    onClick={applyCoupon}
-                                                    disabled={couponApplied}
-                                                    className={couponApplied ? "btn secondary text-xs py-1.5 px-3 cursor-pointer" : "btn text-xs py-1.5 px-3 cursor-pointer"}
-                                                >
-                                                    {couponApplied ? "Applied" : "Apply"}
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Referral Section */}
-                                    <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between">
-                                        <div>
-                                            <button
-                                                type="button"
-                                                onClick={() => !referralApplied && setHaveReferral(!haveReferral)}
-                                                disabled={referralApplied}
-                                                className={`w-full h-14 rounded-lg flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer bg-white/10 ${
-                                                    referralApplied 
-                                                    ? 'bg-emerald-600 border-emerald-700/30' 
-                                                    : 'border-white/10'
-                                                }`}
-                                            >
-                                                {/* Left section: Referral icon image */}
-                                                <div className="w-16 bg-white/10 flex items-center justify-center relative border-r border-dashed border-white/10">
-                                                    {/* Top and Bottom Scallop cutouts */}
-                                                    <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 -translate-y-1/2" />
-                                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 translate-y-1/2" />
-                                                    
-                                                    <img
-                                                        src={referralIcon}
-                                                        alt="Referral"
-                                                        className="w-10 h-10 object-contain rounded-md"
-                                                    />
-                                                </div>
-
-                                                {/* Right section: Referral text */}
-                                                <div className="px-3.5 flex flex-col justify-center text-left text-white">
-                                                    <span className="text-[8px] font-black tracking-widest uppercase opacity-85">REFERRAL</span>
-                                                    <span className="text-xs font-black whitespace-nowrap mt-0.5">
-                                                        {referralApplied ? "APPLIED!" : "REFERRAL CODE?"}
-                                                    </span>
-                                                </div>
-                                            </button>
-                                        </div>
-
-                                        {(haveReferral || referralApplied) && (
-                                            <div className="mt-3 flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Referral code"
-                                                    value={enteredReferralCode}
-                                                    onChange={(e) => setEnteredReferralCode(e.target.value)}
-                                                    className="field text-xs py-1.5 w-full !bg-white/10 !border-white/15 !text-white"
-                                                    disabled={referralApplied}
-                                                />
-                                                <button
-                                                    onClick={applyReferral}
-                                                    disabled={referralApplied}
-                                                    className={referralApplied ? "btn secondary text-xs py-1.5 px-3 cursor-pointer" : "btn text-xs py-1.5 px-3 cursor-pointer"}
-                                                >
-                                                    {referralApplied ? "Applied" : "Apply"}
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
+                            <div className="mt-5 rounded-2xl bg-slate-900/90 border border-white/10 p-5 text-white shadow-xl">
+                                <p className="text-sm font-bold text-slate-300">Estimated Total</p>
+                                <motion.p
+                                    key={estimatedTotal}
+                                    className="mt-2 text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-300 to-emerald-400"
+                                    initial={{ scale: 0.96, opacity: 0.5 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                >
+                                    Rs. {estimatedTotal || 0}
+                                </motion.p>
+                            </div>
                         </motion.aside>
 
                         <AnimatePresence>
