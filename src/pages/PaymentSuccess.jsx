@@ -201,78 +201,57 @@ function PaymentSuccess() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <p className="eyebrow text-emerald-300 font-bold tracking-widest text-xs uppercase mb-2">Payment Successful</p>
-                    <h1 className="title text-3xl text-white font-black mb-2">Order Confirmed</h1>
-                    <p className="subtitle mx-auto max-w-sm text-sm text-slate-200 font-medium leading-relaxed">
-                        {searchParams.get("paymentMethod") === "wallet" ? (
-                            <>Order <strong>{orderId}</strong> paid via Wallet. Redirecting to your print job...</>
-                        ) : (
-                            <>Order <strong>{orderId}</strong> is paid. You can cancel within the countdown and the amount will be credited to your wallet.</>
-                        )}
+                    <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-3xl mb-4 shadow-inner text-emerald-400">
+                        ✓
+                    </div>
+                    <p className="eyebrow text-emerald-300 font-bold tracking-widest text-xs uppercase mb-1">Payment Successful</p>
+                    <h1 className="title text-3xl text-white font-black mb-2">Order Confirmed!</h1>
+                    <p className="subtitle mx-auto max-w-sm text-sm text-slate-200 font-medium leading-relaxed mb-6">
+                        Order <strong>{orderId}</strong> has been successfully placed and routed to your print queue.
                     </p>
 
-                    <div className="mx-auto mt-6 flex flex-col items-center">
-                        <div
-                            className="countdown-ring scale-90"
-                            style={{
-                                background: `conic-gradient(#34d399 ${progress}%, rgba(255,255,255,0.1) 0)`
-                            }}
-                        >
-                            <div className="countdown-ring-inner bg-slate-900/80 backdrop-blur-md">
-                                <motion.span
-                                    key={secondsLeft}
-                                    className="countdown-number text-white"
-                                    initial={{ scale: 0.88, opacity: 0.5 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                >
-                                    {secondsLeft}
-                                </motion.span>
-                                <span className="countdown-label text-slate-300">seconds left</span>
-                            </div>
+                    {/* Kiosk Display Screen Instructions */}
+                    <div className="w-full max-w-sm p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-left mb-6 backdrop-blur-md">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-base">📺</span>
+                            <h4 className="text-xs font-black text-sky-300 uppercase tracking-wider">Release OTP & Queue Position</h4>
                         </div>
-                        <p className="mt-4 text-xs font-bold text-slate-300 uppercase tracking-wider">
-                            Status: <span className="text-emerald-400">{status}</span>
+                        <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                            Please check your <strong>{blockLocation || 'designated kiosk'}</strong> display screen to find your 4-digit Release OTP, then enter it on the display keypad to print.
                         </p>
-                    </div>
-
-                    {otpCode && (
-                        <div className="mt-4 p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 w-full max-w-sm">
-                            <p className="text-[10px] font-black text-emerald-300 uppercase tracking-widest mb-0.5">🔑 Release OTP</p>
-                            <div className="text-2xl font-black text-white tracking-widest">{otpCode}</div>
-                            <p className="text-[11px] text-slate-300 mt-1 font-semibold">
-                                📍 Enter on <strong>{blockLocation || 'Kiosk'}</strong> display keypad to print
-                            </p>
+                        <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] font-bold text-slate-300">
+                            <span>Target Kiosk:</span>
+                            <span className="text-white font-black">{blockLocation || 'Campus Kiosk'}</span>
                         </div>
-                    )}
-
-                    <div className="mt-8 grid gap-4 grid-cols-2 w-full max-w-sm">
-                        <button
-                            onClick={cancelOrder}
-                            disabled={cancelling || proceeding}
-                            className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide text-white bg-red-500/80 hover:bg-red-500 transition-all border border-red-500/50 backdrop-blur-md disabled:opacity-50"
-                        >
-                            {cancelling ? "Cancelling..." : "Cancel"}
-                        </button>
-                        <button
-                            onClick={proceedOrder}
-                            disabled={proceeding || cancelling}
-                            className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide text-white bg-emerald-500/80 hover:bg-emerald-500 transition-all border border-emerald-500/50 backdrop-blur-md disabled:opacity-50"
-                        >
-                            {proceeding ? "Proceeding..." : "Proceed"}
-                        </button>
                     </div>
 
-                    {orderDetails && (
+                    <div className="grid gap-3 w-full max-w-sm">
                         <button
-                            onClick={() => window.print()}
-                            className="mt-4 w-full max-w-sm flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-white/10 hover:bg-white/20 transition-all rounded-xl border border-white/10"
+                            onClick={() => navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`)}
+                            className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide text-white bg-emerald-500/90 hover:bg-emerald-500 transition-all border border-emerald-400/50 shadow-lg shadow-emerald-500/20"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Download Invoice
+                            📺 View Live Queue on Kiosk Screen
                         </button>
-                    )}
+                        
+                        {orderDetails && (
+                            <button
+                                onClick={() => window.print()}
+                                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-slate-200 bg-white/10 hover:bg-white/20 transition-all rounded-xl border border-white/10"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Download Invoice Receipt
+                            </button>
+                        )}
+                        
+                        <button
+                            onClick={() => navigate("/")}
+                            className="w-full py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                        >
+                            🖨️ Print Another Document
+                        </button>
+                    </div>
                 </motion.div>
             </div>
 
