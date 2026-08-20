@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, ShieldCheck, ShieldAlert, DollarSign, Trash2, Download, CheckSquare, Square, UserPlus, School, Edit3 } from "lucide-react";
+import { Users, Search, ShieldCheck, ShieldAlert, DollarSign, Trash2, Download, CheckSquare, Square, UserPlus, School, Edit3, Lock } from "lucide-react";
 import api from "../../../services/api";
 
 export function UserManagementSection({
@@ -19,6 +19,10 @@ export function UserManagementSection({
     const [selectedNewCollege, setSelectedNewCollege] = useState("KLU");
     const [customCollege, setCustomCollege] = useState("");
     const [availableColleges, setAvailableColleges] = useState(["KLU", "VNR", "CBIT"]);
+
+    const loggedInAdminUser = localStorage.getItem("adminUser") || "admin";
+    const loggedInAdminRole = localStorage.getItem("adminRole") || "SUB_ADMIN";
+    const isMainAdmin = loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin";
 
     useEffect(() => {
         api.get("/college-config")
@@ -104,6 +108,11 @@ export function UserManagementSection({
         e.preventDefault();
         if (!changeCollegeUser) return;
 
+        if (!isMainAdmin) {
+            showAlert("Permission Denied", "Only the Main Admin is authorized to change user colleges.", "error");
+            return;
+        }
+
         const targetCollege = selectedNewCollege === "OTHER" ? customCollege.trim().toUpperCase() : selectedNewCollege.trim().toUpperCase();
         if (!targetCollege) {
             showAlert("Required", "Please select or enter a valid college code.", "warning");
@@ -114,7 +123,8 @@ export function UserManagementSection({
             await api.post("/admin/users/update-college", null, {
                 params: {
                     id: changeCollegeUser.id,
-                    college: targetCollege
+                    college: targetCollege,
+                    adminUsername: loggedInAdminUser
                 }
             });
             showAlert("Success", `College for ${changeCollegeUser.name || 'User'} updated to ${targetCollege}`, "success");
@@ -123,7 +133,7 @@ export function UserManagementSection({
             if (onFetchUsers) onFetchUsers();
         } catch (error) {
             console.error(error);
-            showAlert("Error", "Failed to update user college", "error");
+            showAlert("Error", error.response?.data || "Failed to update user college", "error");
         }
     };
 
@@ -247,19 +257,26 @@ export function UserManagementSection({
                                             </td>
                                             <td className="p-4 text-slate-300 font-medium">{user.email}</td>
                                             <td className="p-4">
-                                                <button
-                                                    onClick={() => {
-                                                        setChangeCollegeUser(user);
-                                                        setSelectedNewCollege(user.college || "KLU");
-                                                        setCustomCollege("");
-                                                    }}
-                                                    className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 text-[11px] font-black border border-slate-700 hover:border-cyan-500/40 transition-all cursor-pointer"
-                                                    title="Click to change college"
-                                                >
-                                                    <School className="w-3 h-3 text-cyan-400 group-hover:scale-110 transition-transform" />
-                                                    <span>{user.college || "KLU"}</span>
-                                                    <Edit3 className="w-2.5 h-2.5 text-slate-400 group-hover:text-cyan-300" />
-                                                </button>
+                                                {isMainAdmin ? (
+                                                    <button
+                                                        onClick={() => {
+                                                            setChangeCollegeUser(user);
+                                                            setSelectedNewCollege(user.college || "KLU");
+                                                            setCustomCollege("");
+                                                        }}
+                                                        className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 text-[11px] font-black border border-slate-700 hover:border-cyan-500/40 transition-all cursor-pointer"
+                                                        title="Main Admin: Click to change college"
+                                                    >
+                                                        <School className="w-3 h-3 text-cyan-400 group-hover:scale-110 transition-transform" />
+                                                        <span>{user.college || "KLU"}</span>
+                                                        <Edit3 className="w-2.5 h-2.5 text-slate-400 group-hover:text-cyan-300" />
+                                                    </button>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/60 text-slate-300 text-[11px] font-bold border border-slate-700/60">
+                                                        <School className="w-3 h-3 text-slate-400" />
+                                                        <span>{user.college || "KLU"}</span>
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="p-4 font-mono font-bold text-amber-400">{user.referralCode || "—"}</td>
                                             <td className="p-4">
@@ -278,19 +295,21 @@ export function UserManagementSection({
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
-                                                    {/* Change College Button */}
-                                                    <button
-                                                        onClick={() => {
-                                                            setChangeCollegeUser(user);
-                                                            setSelectedNewCollege(user.college || "KLU");
-                                                            setCustomCollege("");
-                                                        }}
-                                                        className="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
-                                                        title="Change Student College"
-                                                    >
-                                                        <School className="w-3 h-3" />
-                                                        College
-                                                    </button>
+                                                    {/* Change College Button (Main Admin Only) */}
+                                                    {isMainAdmin && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setChangeCollegeUser(user);
+                                                                setSelectedNewCollege(user.college || "KLU");
+                                                                setCustomCollege("");
+                                                            }}
+                                                            className="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                                                            title="Main Admin: Change Student College"
+                                                        >
+                                                            <School className="w-3 h-3" />
+                                                            College
+                                                        </button>
+                                                    )}
 
                                                     {/* Adjust Wallet */}
                                                     <button
@@ -336,8 +355,8 @@ export function UserManagementSection({
                 </div>
             </div>
 
-            {/* Change College Modal */}
-            {changeCollegeUser && (
+            {/* Change College Modal (Main Admin Only) */}
+            {changeCollegeUser && isMainAdmin && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
                     <form onSubmit={handleChangeCollegeSubmit} className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
                         <div className="flex items-center gap-3">

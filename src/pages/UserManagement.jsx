@@ -31,6 +31,11 @@ function UserManagement() {
   const [customCollege, setCustomCollege] = useState("");
   const [availableColleges, setAvailableColleges] = useState(["KLU", "VNR", "CBIT"]);
 
+  const loggedInAdminUser = localStorage.getItem("adminUser") || "admin";
+  const loggedInAdminRole = localStorage.getItem("adminRole") || "SUB_ADMIN";
+  const loggedInAdminCollege = localStorage.getItem("adminCollege") || "KLU";
+  const isMainAdmin = loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin";
+
   const fetchUsers = async () => {
     try {
       const response = await api.get("/admin/users");
@@ -107,6 +112,10 @@ function UserManagement() {
   const handleChangeCollege = async (e) => {
     e.preventDefault();
     if (!changeCollegeUser) return;
+    if (!isMainAdmin) {
+      alert("Permission Denied: Only the Main Admin is authorized to change student colleges.");
+      return;
+    }
     const targetCollege = selectedNewCollege === "OTHER" ? customCollege.trim().toUpperCase() : selectedNewCollege.trim().toUpperCase();
     if (!targetCollege) {
       alert("Please select or enter a valid college code.");
@@ -116,7 +125,8 @@ function UserManagement() {
       await api.post("/admin/users/update-college", null, {
         params: {
           id: changeCollegeUser.id,
-          college: targetCollege
+          college: targetCollege,
+          adminUsername: loggedInAdminUser
         }
       });
       alert(`College updated to ${targetCollege} for ${changeCollegeUser.name || 'Student'}`);
@@ -125,13 +135,9 @@ function UserManagement() {
       fetchUsers();
     } catch (err) {
       console.error(err);
-      alert("Failed to update user college");
+      alert(err.response?.data || "Failed to update user college");
     }
   };
-
-  const loggedInAdminUser = localStorage.getItem("adminUser") || "admin";
-  const loggedInAdminRole = localStorage.getItem("adminRole") || "SUB_ADMIN";
-  const loggedInAdminCollege = localStorage.getItem("adminCollege") || "KLU";
 
   const filteredUsers = users.filter(
     (u) => {
@@ -227,19 +233,26 @@ function UserManagement() {
                       </span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => {
-                          setChangeCollegeUser(user);
-                          setSelectedNewCollege(user.college || "KLU");
-                          setCustomCollege("");
-                        }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-black border border-blue-200 transition-all cursor-pointer"
-                        title="Click to change college"
-                      >
-                        <School className="w-3.5 h-3.5 text-blue-600" />
-                        <span>{user.college || "KLU"}</span>
-                        <Edit3 className="w-3 h-3 text-blue-400" />
-                      </button>
+                      {isMainAdmin ? (
+                        <button
+                          onClick={() => {
+                            setChangeCollegeUser(user);
+                            setSelectedNewCollege(user.college || "KLU");
+                            setCustomCollege("");
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-black border border-blue-200 transition-all cursor-pointer"
+                          title="Main Admin: Click to change college"
+                        >
+                          <School className="w-3.5 h-3.5 text-blue-600" />
+                          <span>{user.college || "KLU"}</span>
+                          <Edit3 className="w-3 h-3 text-blue-400" />
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                          <School className="w-3.5 h-3.5 text-slate-500" />
+                          <span>{user.college || "KLU"}</span>
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span className="font-black text-slate-900 flex items-center gap-1">
@@ -253,17 +266,19 @@ function UserManagement() {
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setChangeCollegeUser(user);
-                            setSelectedNewCollege(user.college || "KLU");
-                            setCustomCollege("");
-                          }}
-                          className="btn secondary py-1.5 px-3 min-h-0 text-xs font-black flex items-center gap-1"
-                          title="Change College"
-                        >
-                          <School className="w-3.5 h-3.5 text-sky-600" /> College
-                        </button>
+                        {isMainAdmin && (
+                          <button
+                            onClick={() => {
+                              setChangeCollegeUser(user);
+                              setSelectedNewCollege(user.college || "KLU");
+                              setCustomCollege("");
+                            }}
+                            className="btn secondary py-1.5 px-3 min-h-0 text-xs font-black flex items-center gap-1"
+                            title="Main Admin: Change College"
+                          >
+                            <School className="w-3.5 h-3.5 text-sky-600" /> College
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setSelectedUser(user);
@@ -312,8 +327,8 @@ function UserManagement() {
           )}
         </div>
 
-        {/* Modal: Change User College */}
-        {changeCollegeUser && (
+        {/* Modal: Change User College (Main Admin Only) */}
+        {changeCollegeUser && isMainAdmin && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
             <form onSubmit={handleChangeCollege} className="bg-white rounded-3xl p-8 max-w-sm w-full border border-slate-200 shadow-2xl relative">
               <div className="flex items-center gap-3">
