@@ -20,6 +20,39 @@ function DisplayPanel() {
     const [isReleasing, setIsReleasing] = useState(true);
     const [totalPagesToPrint, setTotalPagesToPrint] = useState(1);
     const [currentPagePrinted, setCurrentPagePrinted] = useState(0);
+    const [currentTime, setCurrentTime] = useState(Date.now());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const getOtpExpiryFormatted = (order) => {
+        let expireTimestamp;
+        if (order.cancelWindowEndsAt) {
+            const dateObj = new Date(order.cancelWindowEndsAt);
+            if (!isNaN(dateObj.getTime())) {
+                expireTimestamp = dateObj.getTime() + 10 * 60 * 1000;
+            }
+        } else if (order.uploadTime) {
+            const dateObj = new Date(order.uploadTime);
+            if (!isNaN(dateObj.getTime())) {
+                expireTimestamp = dateObj.getTime() + 10 * 60 * 1000;
+            }
+        }
+        
+        if (!expireTimestamp) {
+            return "10:00";
+        }
+
+        const leftSeconds = Math.max(0, Math.floor((expireTimestamp - currentTime) / 1000));
+        if (leftSeconds <= 0) {
+            return "Expired";
+        }
+        const mins = Math.floor(leftSeconds / 60);
+        const secs = leftSeconds % 60;
+        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    };
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -569,11 +602,12 @@ function DisplayPanel() {
 
                                         <div className="p-5">
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
-                                                <div className="grid grid-cols-[70px_1fr_1fr_340px_80px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                <div className="grid grid-cols-[60px_1fr_1fr_220px_140px_70px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
                                                     <span>Order</span>
                                                     <span>Student</span>
                                                     <span className="text-center">OTP / Status</span>
+                                                    <span className="text-center">OTP Expiry</span>
                                                     <span className="text-right">Pages</span>
                                                 </div>
 
@@ -629,7 +663,7 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[70px_1fr_1fr_340px_80px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-4 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[60px_1fr_1fr_220px_140px_70px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-4 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
@@ -659,9 +693,9 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-6 py-2.5 shadow-lg ${palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
-                                                                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200/80 leading-none">RELEASE OTP</p>
-                                                                            <p className="font-mono text-3xl font-black tracking-widest text-white mt-1 leading-none">
+                                                                        <div className={`rounded-2xl border px-4 py-2.5 shadow-lg ${palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
+                                                                            <p className="text-[9px] font-black uppercase tracking-widest text-cyan-200/80 leading-none">RELEASE OTP</p>
+                                                                            <p className="font-mono text-2xl font-black tracking-widest text-white mt-1 leading-none">
                                                                                 {order.otpCode}
                                                                             </p>
                                                                         </div>
@@ -671,6 +705,18 @@ function DisplayPanel() {
                                                                                 {order.status === "PRINTING" ? "Printing" : order.status === "CANCEL_WINDOW" ? "Confirming" : "Waiting"}
                                                                             </p>
                                                                         </div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="relative text-center">
+                                                                    {isPendingScan ? (
+                                                                        <div className="flex flex-col items-center justify-center">
+                                                                            <span className="text-[9px] font-black uppercase tracking-wider text-amber-300/80">Expires In</span>
+                                                                            <span className="font-mono text-base font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg mt-0.5 shadow-sm">
+                                                                                ⏱️ {getOtpExpiryFormatted(order)}
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-xs font-bold text-white/40">—</span>
                                                                     )}
                                                                 </div>
                                                                 <div className="relative text-right">
