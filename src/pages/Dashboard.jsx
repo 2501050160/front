@@ -1686,22 +1686,6 @@ function Dashboard() {
                                         </div>
                                     </div>
 
-                                    {/* Success Banner at user level when document is uploaded */}
-                                    <div className="mb-6 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900/90 to-slate-900/90 border border-emerald-500/40 p-4 text-emerald-200 flex items-center justify-between shadow-xl shadow-emerald-950/30">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-lg font-black shrink-0">
-                                                ✓
-                                            </div>
-                                            <div>
-                                                <h4 className="text-sm font-black text-white">Files Processed & Uploaded Successfully!</h4>
-                                                <p className="text-xs font-semibold text-emerald-200/80 mt-0.5">Customize your print layout options below and complete your order.</p>
-                                            </div>
-                                        </div>
-                                        <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                            Ready To Print
-                                        </span>
-                                    </div>
-
                                     {/* Low paper notification banner on dashboard */}
                                     {isLowPaper && (
                                         <div className="mb-6 rounded-2xl bg-rose-500/20 border border-rose-500/40 p-4 text-rose-200 flex items-center gap-3">
