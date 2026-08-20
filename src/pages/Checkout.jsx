@@ -6,6 +6,7 @@ import { getStoredWalletBalance, getWalletBalance } from "../services/auth";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
 import referralIcon from "../assets/referral-icon.jpg";
+import { FileText, RotateCw, Palette, Layers, Sliders, Copy, Sparkles, Check, Info } from "lucide-react";
 
 function Checkout() {
     const navigate = useNavigate();
@@ -13,6 +14,19 @@ function Checkout() {
     const [currentOrder, setCurrentOrder] = useState(initialOrder);
     const order = currentOrder;
     const userId = localStorage.getItem("userId");
+
+    const [pageRangeStart, setPageRangeStart] = useState(() => {
+        if (initialOrder?.selectedPages && initialOrder.selectedPages.includes("-")) {
+            return initialOrder.selectedPages.split("-")[0];
+        }
+        return "1";
+    });
+    const [pageRangeEnd, setPageRangeEnd] = useState(() => {
+        if (initialOrder?.selectedPages && initialOrder.selectedPages.includes("-")) {
+            return initialOrder.selectedPages.split("-")[1];
+        }
+        return String(initialOrder?.totalPages || "1");
+    });
 
     const [couponCode, setCouponCode] = useState("");
     const [discount, setDiscount] = useState(0);
@@ -51,26 +65,33 @@ function Checkout() {
         }
     }, []);
 
-    const updatePrintSettings = async (newNup) => {
+    const updatePrintOption = async (field, value) => {
+        if (!order) return;
+        const copiesVal = field === "copies" ? value : (order.copies || 1);
+        const selectedPagesVal = field === "selectedPages" ? value : (order.selectedPages || "ALL");
+        const printTypeVal = field === "printType" ? value : (order.printType || "BW");
+        const nupLayoutVal = field === "nupLayout" ? value : (order.nupLayout || "1-up");
+        const doubleSidedVal = field === "doubleSided" ? value : (order.doubleSided || false);
+        const orientationVal = field === "orientation" ? value : (order.orientation || "portrait");
+
         try {
             const response = await api.post("/pdf/updateOrder", null, {
                 params: {
                     orderId: order.orderId,
-                    copies: order.copies,
-                    selectedPages: order.selectedPages,
-                    printType: order.printType,
-                    blockLocation: order.blockLocation,
-                    nupLayout: newNup,
-                    doubleSided: order.doubleSided
+                    copies: copiesVal,
+                    selectedPages: selectedPagesVal,
+                    printType: printTypeVal,
+                    blockLocation: order.blockLocation || "C Block",
+                    nupLayout: nupLayoutVal,
+                    doubleSided: doubleSidedVal,
+                    orientation: orientationVal
                 }
             });
             const updated = response.data;
             localStorage.setItem("order", JSON.stringify(updated));
             setCurrentOrder(updated);
-            
-            // Reapply coupon if already applied
+
             if (couponApplied) {
-                // If coupon validation needs to run again, or simply clear it:
                 setCouponApplied(false);
                 setCouponCode("");
                 setDiscount(0);
@@ -79,7 +100,7 @@ function Checkout() {
                 setFinalAmount(updated.price);
             }
         } catch (err) {
-            console.error("Failed to update print settings:", err);
+            console.error("Failed to update print option:", err);
         }
     };
 
@@ -501,36 +522,264 @@ function Checkout() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.45 }}
                     >
-                        <p className="eyebrow">Order Summary</p>
-
-                        <div className="mt-5 space-y-4">
-                            {[
-                                ["Order ID", order.orderId],
-                                ["Customer", localStorage.getItem("userName") || "Customer"],
-                                ["Location", order.blockLocation || "C Block"],
-                                ["Pages", order.selectedPages],
-                                ["Copies", order.copies],
-                                ["Print Type", order.printType],
-                                ["Total Pages", order.totalPages]
-                            ].map(([label, value]) => (
-                                <div
-                                    key={label}
-                                    className="flex items-center justify-between border-b border-slate-100 pb-3"
-                                >
-                                    <span className="font-bold text-slate-500">{label}</span>
-                                    <span className="font-black text-slate-900">{value}</span>
-                                </div>
-                            ))}
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                            <div>
+                                <p className="eyebrow text-cyan-400">Print Configuration</p>
+                                <h3 className="text-lg font-black text-white truncate max-w-xs sm:max-w-md">{order.fileName || "Document.pdf"}</h3>
+                                <p className="text-xs text-slate-400 font-semibold mt-0.5">Order ID: <span className="text-cyan-300 font-bold">{order.orderId}</span> | Location: <span className="text-cyan-300 font-bold">{order.blockLocation || "C Block"}</span></p>
+                            </div>
                         </div>
 
-                        {/* Payment Animation Loop */}
-                        <div className="mt-6 flex justify-center">
-                            <div className="w-full max-w-[240px] rounded-xl border border-slate-100 bg-slate-50 p-4 flex flex-col items-center">
-                                <div className="relative w-16 h-10 bg-slate-800 rounded-md border border-slate-700 p-2 flex flex-col justify-between animate-pulse">
-                                    <div className="w-4 h-3 bg-yellow-400 rounded-sm" />
-                                    <div className="w-8 h-1 bg-slate-600 rounded-sm" />
+                        <div className="space-y-4">
+                            {/* 1. Page Orientation */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
+                                    <RotateCw className="w-3 h-3 text-cyan-400" />
+                                    Orientation
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => updatePrintOption("orientation", "portrait")}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                            (order.orientation || "portrait") === "portrait"
+                                                ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white border border-cyan-300 shadow-md shadow-cyan-500/20"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span className="w-2.5 h-3.5 border border-current rounded-xs inline-block" />
+                                        Portrait
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => updatePrintOption("orientation", "landscape")}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                            order.orientation === "landscape"
+                                                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border border-purple-300 shadow-md shadow-purple-500/20"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <span className="w-3.5 h-2.5 border border-current rounded-xs inline-block" />
+                                        Horizontal
+                                    </button>
                                 </div>
-                                <p className="text-xs text-slate-500 font-bold mt-3 animate-pulse">Waiting for Payment...</p>
+                            </div>
+
+                            {/* 2. Print Ink Color (B&W vs Color) */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
+                                    <Palette className="w-3 h-3 text-pink-400" />
+                                    Print Ink Color
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => updatePrintOption("printType", "BW")}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                                            (order.printType || "BW") === "BW"
+                                                ? "bg-gradient-to-r from-slate-700 to-zinc-800 text-white border border-slate-400 shadow-md"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        Black & White
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => updatePrintOption("printType", "COLOR")}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                                            order.printType === "COLOR"
+                                                ? "bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 text-white border border-pink-300 shadow-md shadow-pink-500/30"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        Full Color
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 3. Print Sides (Single Side vs Double Side) */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center justify-between">
+                                    <span className="flex items-center gap-1">
+                                        <Layers className="w-3 h-3 text-emerald-400" />
+                                        Print Sides
+                                    </span>
+                                    {order.doubleSided && (
+                                        <span className="text-[9px] font-black text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                                            🌱 Saves 50% Paper
+                                        </span>
+                                    )}
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => updatePrintOption("doubleSided", false)}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                                            !order.doubleSided
+                                                ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white border border-cyan-300 shadow-md"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        Single Side
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={order.printType === "COLOR"}
+                                        onClick={() => updatePrintOption("doubleSided", true)}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                                            order.doubleSided && order.printType !== "COLOR"
+                                                ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white border border-emerald-300 shadow-md shadow-emerald-500/30"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        } ${order.printType === "COLOR" ? "opacity-30 cursor-not-allowed" : ""}`}
+                                    >
+                                        Double Side
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 4. Page Range Selection */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
+                                    <Copy className="w-3 h-3 text-cyan-400" />
+                                    Pages To Print
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => updatePrintOption("selectedPages", "ALL")}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                                            (order.selectedPages || "ALL") === "ALL"
+                                                ? "bg-gradient-to-r from-sky-600 to-cyan-600 text-white border border-cyan-300 shadow-md"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        All Pages ({order.totalPages || 1})
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const start = pageRangeStart || 1;
+                                            const end = pageRangeEnd || order.totalPages || 1;
+                                            updatePrintOption("selectedPages", `${start}-${end}`);
+                                        }}
+                                        className={`py-2 rounded-lg font-black text-xs transition-all cursor-pointer ${
+                                            order.selectedPages && order.selectedPages !== "ALL"
+                                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-300 shadow-md"
+                                                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        Custom Range
+                                    </button>
+                                </div>
+
+                                {order.selectedPages && order.selectedPages !== "ALL" && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={order.totalPages || 1}
+                                            placeholder="From"
+                                            value={pageRangeStart}
+                                            onChange={(e) => {
+                                                setPageRangeStart(e.target.value);
+                                                updatePrintOption("selectedPages", `${e.target.value}-${pageRangeEnd || order.totalPages || 1}`);
+                                            }}
+                                            className="w-1/2 p-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-center text-xs font-black outline-none"
+                                        />
+                                        <span className="text-slate-500 font-bold">-</span>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={order.totalPages || 1}
+                                            placeholder="To"
+                                            value={pageRangeEnd}
+                                            onChange={(e) => {
+                                                setPageRangeEnd(e.target.value);
+                                                updatePrintOption("selectedPages", `${pageRangeStart || 1}-${e.target.value}`);
+                                            }}
+                                            className="w-1/2 p-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-center text-xs font-black outline-none"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 5. N-Up Layout (Pages Per Sheet) */}
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center justify-between">
+                                    <span className="flex items-center gap-1">
+                                        <Sliders className="w-3 h-3 text-purple-400" />
+                                        Pages Per Sheet (N-Up)
+                                    </span>
+                                    <span className="text-[10px] font-black uppercase text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/30">
+                                        {order.nupLayout || "1-up"}
+                                    </span>
+                                </label>
+                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                    {[
+                                        { id: "1-up", label: "1-Up", gradient: "from-amber-500 to-orange-600 border-amber-300" },
+                                        { id: "2-up", label: "2-Up", gradient: "from-sky-500 to-blue-600 border-sky-300" },
+                                        { id: "4-up", label: "4-Up", gradient: "from-purple-500 to-indigo-600 border-purple-300" },
+                                        { id: "6-up", label: "6-Up", gradient: "from-fuchsia-500 to-pink-600 border-pink-300" },
+                                        { id: "8-up", label: "8-Up", gradient: "from-emerald-500 to-teal-600 border-emerald-300" },
+                                        { id: "9-up", label: "9-Up", gradient: "from-rose-500 to-red-600 border-rose-300" }
+                                    ].map((layout) => (
+                                        <button
+                                            key={layout.id}
+                                            type="button"
+                                            onClick={() => updatePrintOption("nupLayout", layout.id)}
+                                            className={`py-2 px-1 rounded-lg text-center flex flex-col items-center justify-center transition-all cursor-pointer border ${
+                                                (order.nupLayout || "1-up") === layout.id
+                                                    ? `bg-gradient-to-r ${layout.gradient} text-white font-black scale-105 shadow-md`
+                                                    : "bg-slate-900/80 border-slate-700/60 text-slate-400 hover:border-slate-500 hover:text-white"
+                                            }`}
+                                        >
+                                            <span className="text-[11px] font-black">{layout.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 6. Number of Copies Stepper & Quick Pills */}
+                            <div className="space-y-1 pt-2 border-t border-slate-800 flex items-center justify-between">
+                                <label className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3 text-amber-400" />
+                                    Copies
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => updatePrintOption("copies", Math.max(1, (order.copies || 1) - 1))}
+                                            className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 hover:text-white font-black cursor-pointer text-xs flex items-center justify-center border border-slate-700"
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-8 text-center font-black text-amber-300 text-xs">{order.copies || 1}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => updatePrintOption("copies", (order.copies || 1) + 1)}
+                                            className="w-7 h-7 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black cursor-pointer text-xs flex items-center justify-center shadow-md shadow-orange-500/20"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        {[1, 2, 3, 5, 10].map((qty) => (
+                                            <button
+                                                key={qty}
+                                                type="button"
+                                                onClick={() => updatePrintOption("copies", qty)}
+                                                className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer border ${
+                                                    Number(order.copies || 1) === qty
+                                                        ? "bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-slate-950 border-amber-300 shadow-md shadow-orange-500/30 font-black"
+                                                        : "bg-slate-950 border-slate-800 text-slate-400 hover:border-amber-400/50 hover:text-white"
+                                                }`}
+                                            >
+                                                {qty}x
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </motion.section>
