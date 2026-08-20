@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import api, { RAZORPAY_KEY, loadRazorpayScript } from "../services/api";
@@ -40,10 +40,19 @@ import {
     Zap,
     RotateCw,
     Maximize2,
-    Ticket
+    Ticket,
+    Copy,
+    ExternalLink,
+    QrCode,
+    RefreshCw,
+    ChevronDown,
+    ChevronUp,
+    ArrowRight
 } from "lucide-react";
 
 function Dashboard() {
+    const [searchParams] = useSearchParams();
+    const urlBlock = searchParams.get("block");
     const [bwPrice, setBwPrice] = useState(2);
     const [colorPrice, setColorPrice] = useState(5);
     const navigate = useNavigate();
@@ -58,7 +67,12 @@ function Dashboard() {
     const [bwDuplexPrice, setBwDuplexPrice] = useState(1.5);
     const [colorDuplexPrice, setColorDuplexPrice] = useState(4.0);
     const [isCollegeSuspended, setIsCollegeSuspended] = useState(false);
-    const blockLocation = localStorage.getItem("selectedBlock") || "C Block";
+    const [blockLocation, setBlockLocation] = useState(
+        urlBlock || localStorage.getItem("selectedBlock") || "C Block"
+    );
+    const [completedOrder, setCompletedOrder] = useState(null);
+    const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+    const [copiedOtp, setCopiedOtp] = useState(false);
     
     // Multiple files support
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -699,7 +713,9 @@ function Dashboard() {
                 getWalletBalance(userId).then(setWalletBalance).catch(() => {});
             }
             localStorage.removeItem("order");
-            navigate(`/payment-success?orderId=${finalOrder.orderId}`);
+            const paidData = walletRes?.data?.order || finalOrder;
+            setCompletedOrder(paidData);
+            showAlert("Print Job Created!", `Your 4-digit OTP is ${paidData.otpCode || "ready"}. Collect at ${blockLocation}.`, "success");
         } catch (error) {
             console.error(error);
             showAlert("Error", error.response?.data?.message || "Wallet payment failed", "error");
@@ -798,7 +814,7 @@ function Dashboard() {
                             }).catch(err => console.error("Failed to mark coupon as used:", err));
                         }
 
-                        await api.post("/pdf/paymentSuccess", null, {
+                        const paidRes = await api.post("/pdf/paymentSuccess", null, {
                             params: {
                                 orderId: finalOrder.orderId,
                                 paymentId: response.razorpay_payment_id
@@ -806,7 +822,9 @@ function Dashboard() {
                         });
 
                         localStorage.removeItem("order");
-                        navigate(`/payment-success?orderId=${finalOrder.orderId}`);
+                        const paidData = paidRes.data || finalOrder;
+                        setCompletedOrder(paidData);
+                        showAlert("Payment Successful!", `Your 4-digit OTP is ${paidData.otpCode || "ready"}. Collect at ${blockLocation}.`, "success");
                     } catch (error) {
                         console.error("Failed to mark order as paid:", error);
                         showAlert("Error", "Unable to update payment status in our database.", "error");
@@ -846,6 +864,27 @@ function Dashboard() {
             console.error("Payment initiation error:", error);
             showAlert("Payment Error", "Unable to initiate payment transaction.", "error");
             setPaymentMethod("");
+        }
+    };
+
+    const handleResetPrint = () => {
+        setCompletedOrder(null);
+        setUploaded(false);
+        setSelectedFiles([]);
+        setOrderId("");
+        setTotalPages(0);
+        setCopies(1);
+        setPageOption("ALL");
+        setStartPage("");
+        setEndPage("");
+        setCouponApplied(false);
+        setCouponCode("");
+        setCouponDetails(null);
+        setReferralApplied(false);
+        setEnteredReferralCode("");
+        setShowAdvancedSettings(false);
+        if (userId) {
+            getWalletBalance(userId).then(setWalletBalance).catch(() => {});
         }
     };
 
@@ -1308,7 +1347,107 @@ function Dashboard() {
 
                 {/* TAB CONTENT: PRINT DASHBOARD */}
                 {activeTab === "print" && (
-                    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                    completedOrder ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="user-dash-card p-6 md:p-8 rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-slate-900/95 via-slate-950/95 to-slate-950 text-white shadow-2xl relative overflow-hidden"
+                        >
+                            {/* Top Success Badge */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                                        <CheckCircle2 className="w-7 h-7 animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Order Confirmed & Paid</span>
+                                        <h3 className="text-xl font-black text-white">Ready for Instant Print</h3>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 rounded-full">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                                    <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">{completedOrder.blockLocation || blockLocation} Kiosk</span>
+                                </div>
+                            </div>
+
+                            {/* Big OTP Reveal Box */}
+                            <div className="my-6 p-6 rounded-2xl bg-slate-950/90 border border-cyan-500/30 text-center relative overflow-hidden shadow-inner">
+                                <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Your 4-Digit Release OTP</p>
+                                <div className="mt-3 flex items-center justify-center gap-3">
+                                    {String(completedOrder.otpCode || "----").split("").map((digit, i) => (
+                                        <span
+                                            key={i}
+                                            className="w-12 h-14 sm:w-16 sm:h-18 flex items-center justify-center rounded-xl bg-slate-900 border-2 border-cyan-400 text-3xl sm:text-4xl font-black text-cyan-200 tracking-wider shadow-lg shadow-cyan-500/20"
+                                        >
+                                            {digit}
+                                        </span>
+                                    ))}
+                                </div>
+                                
+                                <div className="mt-4 flex items-center justify-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(completedOrder.otpCode || "");
+                                            setCopiedOtp(true);
+                                            setTimeout(() => setCopiedOtp(false), 2000);
+                                        }}
+                                        className="btn secondary text-xs py-1.5 px-4 flex items-center gap-2 cursor-pointer"
+                                    >
+                                        {copiedOtp ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                                        {copiedOtp ? "Copied to Clipboard!" : "Copy OTP"}
+                                    </button>
+                                </div>
+                                
+                                <p className="mt-3 text-xs text-slate-400 font-medium">
+                                    Walk up to <span className="font-bold text-white">{completedOrder.blockLocation || blockLocation}</span> machine and enter this 4-digit code on the touch screen.
+                                </p>
+                            </div>
+
+                            {/* Order Specs Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Order ID</span>
+                                    <p className="mt-0.5 text-xs font-black text-white truncate">{completedOrder.orderId || orderId}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Pages</span>
+                                    <p className="mt-0.5 text-xs font-black text-white">{completedOrder.totalPages || totalPages} Pages</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Print Mode</span>
+                                    <p className="mt-0.5 text-xs font-black text-white">{completedOrder.printType === "COLOR" ? "Color" : "Black & White"}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Paid Amount</span>
+                                    <p className="mt-0.5 text-xs font-black text-emerald-400">₹{(completedOrder.price || estimatedTotal).toFixed(2)}</p>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="mt-6 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <button
+                                    type="button"
+                                    onClick={handleResetPrint}
+                                    className="btn primary w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-6 text-sm font-black cursor-pointer"
+                                >
+                                    <UploadCloud className="w-4 h-4" />
+                                    Print Another Document
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab("orders")}
+                                    className="btn secondary w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-6 text-sm font-bold cursor-pointer"
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    View Order Status & Invoices
+                                </button>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                         <motion.section
                             className="user-dash-card p-6 rounded-3xl"
                             initial={{ opacity: 0, y: 18 }}
@@ -1363,48 +1502,128 @@ function Dashboard() {
 
                             <AnimatePresence>
                                 {uploaded && (
-                                    <motion.div
-                                        className="mt-6 grid gap-4 rounded-lg border border-green-200 bg-green-50 p-4 sm:grid-cols-2"
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                    >
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-green-700">
-                                                Order ID
-                                            </p>
-                                            <p className="mt-1 text-xl font-black text-green-950">
-                                                {orderId}
-                                            </p>
-                                        </div>
+                                    <>
+                                        <motion.div
+                                            className="mt-6 grid gap-4 rounded-lg border border-green-200 bg-green-50 p-4 sm:grid-cols-2"
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                        >
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-green-700">
+                                                    Order ID
+                                                </p>
+                                                <p className="mt-1 text-xl font-black text-green-950">
+                                                    {orderId}
+                                                </p>
+                                            </div>
 
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-green-700">
-                                                Customer
-                                            </p>
-                                            <p className="mt-1 text-xl font-black text-green-950">
-                                                {userName || "Customer"}
-                                            </p>
-                                        </div>
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-green-700">
+                                                    Customer
+                                                </p>
+                                                <p className="mt-1 text-xl font-black text-green-950">
+                                                    {userName || "Customer"}
+                                                </p>
+                                            </div>
 
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-green-700">
-                                                Total Pages
-                                            </p>
-                                            <p className="mt-1 text-xl font-black text-green-950">
-                                                {totalPages}
-                                            </p>
-                                        </div>
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-green-700">
+                                                    Total Pages
+                                                </p>
+                                                <p className="mt-1 text-xl font-black text-green-950">
+                                                    {totalPages}
+                                                </p>
+                                            </div>
 
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-green-700">
-                                                Location
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-green-700">
+                                                    Location
+                                                </p>
+                                                <p className="mt-1 text-xl font-black text-green-950">
+                                                    {blockLocation}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* 1-Tap Quick Print Box */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="mt-5 rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/40 p-4 sm:p-5 shadow-xl text-left"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-black uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+                                                    <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                                                    Fast 1-Tap Print
+                                                </span>
+                                                <span className="text-xs font-black text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
+                                                    ₹{estimatedTotal.toFixed(2)} Total
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-1 text-xs text-slate-300">
+                                                Preset: <strong className="text-white">B&W • 1 Copy • All Pages • {doubleSided ? "Duplex" : "Single Sided"}</strong>
                                             </p>
-                                            <p className="mt-1 text-xl font-black text-green-950">
-                                                {blockLocation}
-                                            </p>
-                                        </div>
-                                    </motion.div>
+
+                                            <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                                {walletBalance >= estimatedTotal ? (
+                                                    <button
+                                                        onClick={payWithWalletDirect}
+                                                        disabled={isPrintingDisabled || !!paymentMethod}
+                                                        className="btn primary flex-1 flex items-center justify-center gap-2 py-3.5 !bg-gradient-to-r !from-emerald-500 !to-teal-600 hover:!from-emerald-400 hover:!to-teal-500 text-white font-black text-sm shadow-lg shadow-emerald-500/20 cursor-pointer"
+                                                    >
+                                                        {paymentMethod === "wallet" ? (
+                                                            <>
+                                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                                                Creating Print Job...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Zap className="w-4 h-4 fill-current" />
+                                                                1-Tap Wallet Print (₹{estimatedTotal.toFixed(2)})
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={payNowDirect}
+                                                        disabled={isPrintingDisabled || !!paymentMethod}
+                                                        className="btn success flex-1 flex items-center justify-center gap-2 py-3.5 !bg-gradient-to-r !from-cyan-500 !to-blue-600 hover:!from-cyan-400 hover:!to-blue-500 text-white font-black text-sm shadow-lg shadow-cyan-500/20 cursor-pointer"
+                                                    >
+                                                        {paymentMethod === "razorpay" ? (
+                                                            <>
+                                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                                                Opening Payment...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Zap className="w-4 h-4" />
+                                                                Pay & Print Now (₹{estimatedTotal.toFixed(2)})
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setShowAdvancedSettings(!showAdvancedSettings);
+                                                        if (!showAdvancedSettings && printSettingsRef.current) {
+                                                            setTimeout(() => {
+                                                                printSettingsRef.current.scrollIntoView({ behavior: 'smooth' });
+                                                            }, 100);
+                                                        }
+                                                    }}
+                                                    className="btn secondary flex items-center justify-center gap-1.5 py-3 px-4 text-xs font-bold text-slate-300 border-white/20 hover:text-white cursor-pointer"
+                                                >
+                                                    <Sliders className="w-4 h-4 text-cyan-400" />
+                                                    {showAdvancedSettings ? "Hide Settings" : "Customize Settings"}
+                                                    {showAdvancedSettings ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    </>
                                 )}
                             </AnimatePresence>
                         </motion.section>
@@ -2044,7 +2263,8 @@ function Dashboard() {
                                 </div>
                             </motion.section>
                         )}
-                    </div>
+                        </div>
+                    )
                 )}
 
                 {/* TAB CONTENT: MY ORDERS */}
