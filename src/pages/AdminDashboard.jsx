@@ -3970,17 +3970,6 @@ function AdminDashboard() {
                                                             🗑️ Delete
                                                         </button>
                                                     </div>
-                                                    <button 
-                                                        onClick={() => {
-                                                            const existing = collegeConfigs.find(c => c.collegeName === col);
-                                                            setConfigKeyId(existing?.razorpayKeyId || "");
-                                                            setConfigKeySecret(existing?.razorpayKeySecret || "");
-                                                            setPaymentConfigModal(col);
-                                                        }}
-                                                        className="btn primary text-xs py-2 w-full font-bold"
-                                                    >
-                                                        💳 Configure Payment Gateway
-                                                    </button>
                                                 </div>
                                             </div>
                                         );
