@@ -1794,15 +1794,16 @@ function Dashboard() {
                         </motion.aside>
 
                         <AnimatePresence>
-                            {uploaded && (
+                            {uploaded && showAdvancedSettings && (
                                 <motion.section
                                     ref={printSettingsRef}
                                     className="user-dash-card mt-6 p-6 lg:col-span-2 rounded-3xl text-left shadow-2xl border border-white/10 relative overflow-hidden"
-                                    initial={{ opacity: 0, y: 18 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 18 }}
+                                    initial={{ opacity: 0, height: 0, y: 18 }}
+                                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                                    exit={{ opacity: 0, height: 0, y: 18 }}
+                                    transition={{ duration: 0.35 }}
                                 >
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4 mb-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 mb-6">
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
@@ -1811,14 +1812,24 @@ function Dashboard() {
                                                 <span className="text-xs text-slate-400 font-bold">• Instant Print Spooling</span>
                                             </div>
                                             <h2 className="text-2xl md:text-3xl font-black text-white mt-1">
-                                                Print & Layout Settings
+                                                Print &amp; Layout Settings
                                             </h2>
                                         </div>
-                                        <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
-                                            <span>Document:</span>
-                                            <span className="text-cyan-300 font-black px-2.5 py-1 bg-cyan-950/60 rounded-lg border border-cyan-800/40">
-                                                {totalPages} {totalPages === 1 ? "Page" : "Pages"}
-                                            </span>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
+                                                <span>Document:</span>
+                                                <span className="text-cyan-300 font-black px-2.5 py-1 bg-cyan-950/60 rounded-lg border border-cyan-800/40">
+                                                    {totalPages} {totalPages === 1 ? "Page" : "Pages"}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAdvancedSettings(false)}
+                                                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+                                            >
+                                                <span>Hide Settings</span>
+                                                <ChevronUp className="w-3.5 h-3.5" />
+                                            </button>
                                         </div>
                                     </div>
 
