@@ -13,15 +13,15 @@ function CustomModal({
     duration = 4500,
     children
 }) {
-    // Auto-dismiss non-confirm popup notifications after duration
+    // Auto-dismiss non-confirm toast alerts after duration (only if no children/custom form is embedded)
     useEffect(() => {
-        if (isOpen && type !== "confirm") {
+        if (isOpen && type !== "confirm" && !children && duration && duration > 0) {
             const timer = setTimeout(() => {
                 onClose();
             }, duration);
             return () => clearTimeout(timer);
         }
-    }, [isOpen, type, duration, onClose]);
+    }, [isOpen, type, duration, children, onClose]);
 
     // Handle Escape key to dismiss modal / popup
     useEffect(() => {

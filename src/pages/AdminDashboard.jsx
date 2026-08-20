@@ -3938,6 +3938,19 @@ function AdminDashboard() {
                                                             {colBlocks.length === 0 && <li className="text-slate-400">No blocks associated</li>}
                                                         </ul>
                                                     </div>
+                                                    <div className="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-slate-500 uppercase text-[10px]">Razorpay Gateway</span>
+                                                            {(() => {
+                                                                const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                                return (
+                                                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${existing?.razorpayKeyId ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}`}>
+                                                                        {existing?.razorpayKeyId ? '✅ Custom Merchant' : 'ℹ️ Default Gateway'}
+                                                                    </span>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 
                                                 <div className="w-full space-y-2 mt-auto">
@@ -3970,6 +3983,17 @@ function AdminDashboard() {
                                                             🗑️ Delete
                                                         </button>
                                                     </div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                            setConfigKeyId(existing?.razorpayKeyId || "");
+                                                            setConfigKeySecret(existing?.razorpayKeySecret || "");
+                                                            setPaymentConfigModal(col);
+                                                        }}
+                                                        className="btn primary text-xs py-2 w-full font-bold flex items-center justify-center gap-1.5"
+                                                    >
+                                                        💳 Configure Payment Gateway
+                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -6231,51 +6255,81 @@ function AdminDashboard() {
                     <CustomModal
                         isOpen={!!paymentConfigModal}
                         onClose={() => setPaymentConfigModal(null)}
-                        title={`Payment Gateway: ${paymentConfigModal}`}
+                        title={`💳 Payment Gateway: ${paymentConfigModal}`}
+                        duration={0}
                     >
                         <div className="space-y-4">
-                            <p className="text-sm text-slate-500 font-semibold mb-4">
-                                Route payments dynamically for this specific college. If left empty, payments will fall back to the system default Razorpay account.
+                            <p className="text-xs text-slate-500 font-semibold mb-2">
+                                Route online UPI & card payments for <strong>{paymentConfigModal}</strong> directly into its own Razorpay Merchant account. If left empty or reset, payments will fall back to the system default master account.
                             </p>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Razorpay Key ID</label>
+                                <label className="block text-xs font-black text-slate-700 mb-1">Razorpay Key ID</label>
                                 <input 
                                     type="text" 
                                     value={configKeyId}
                                     onChange={(e) => setConfigKeyId(e.target.value)}
-                                    className="input-field" 
-                                    placeholder="rzp_live_..."
+                                    className="field font-mono text-xs" 
+                                    placeholder="rzp_live_... or rzp_test_..."
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Razorpay Key Secret</label>
+                                <label className="block text-xs font-black text-slate-700 mb-1">Razorpay Key Secret</label>
                                 <input 
                                     type="password" 
                                     value={configKeySecret}
                                     onChange={(e) => setConfigKeySecret(e.target.value)}
-                                    className="input-field" 
-                                    placeholder="Secret Key"
+                                    className="field font-mono text-xs" 
+                                    placeholder="Razorpay Secret Key"
                                 />
                             </div>
-                            <button 
-                                onClick={async () => {
-                                    try {
-                                        await api.post("/college-config", {
-                                            collegeName: paymentConfigModal,
-                                            razorpayKeyId: configKeyId,
-                                            razorpayKeySecret: configKeySecret
-                                        });
-                                        showAlert("Success", "Keys saved for " + paymentConfigModal, "success");
-                                        setPaymentConfigModal(null);
-                                        fetchCollegeConfigs();
-                                    } catch (err) {
-                                        showAlert("Error", "Failed to save keys", "error");
+                            <div className="flex gap-2 pt-2">
+                                <button 
+                                    onClick={async () => {
+                                        try {
+                                            await api.post("/college-config", {
+                                                collegeName: paymentConfigModal,
+                                                razorpayKeyId: configKeyId.trim(),
+                                                razorpayKeySecret: configKeySecret.trim()
+                                            });
+                                            showAlert("Success", "Payment credentials saved for " + paymentConfigModal, "success");
+                                            setPaymentConfigModal(null);
+                                            fetchCollegeConfigs();
+                                        } catch (err) {
+                                            console.error("Save config error:", err);
+                                            showAlert("Error", "Failed to save keys. Please verify backend connection.", "error");
+                                        }
+                                    }}
+                                    className="btn primary flex-1 py-2.5 font-black text-xs"
+                                >
+                                    💾 Save Credentials
+                                </button>
+                                {(() => {
+                                    const existing = collegeConfigs.find(c => c.collegeName === paymentConfigModal);
+                                    if (existing && existing.id) {
+                                        return (
+                                            <button 
+                                                onClick={async () => {
+                                                    if (window.confirm(`Reset ${paymentConfigModal} back to system default Razorpay gateway?`)) {
+                                                        try {
+                                                            await api.delete(`/college-config/${existing.id}`);
+                                                            showAlert("Reset Complete", `Reset ${paymentConfigModal} to default gateway.`, "success");
+                                                            setPaymentConfigModal(null);
+                                                            fetchCollegeConfigs();
+                                                        } catch (err) {
+                                                            showAlert("Error", "Failed to reset config.", "error");
+                                                        }
+                                                    }
+                                                }}
+                                                className="btn danger text-xs py-2.5 px-3 font-bold"
+                                                title="Reset to Master Default Gateway"
+                                            >
+                                                🗑️ Reset Default
+                                            </button>
+                                        );
                                     }
-                                }}
-                                className="btn primary w-full mt-2"
-                            >
-                                Save Configuration
-                            </button>
+                                    return null;
+                                })()}
+                            </div>
                         </div>
                     </CustomModal>
                 )}
