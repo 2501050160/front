@@ -2063,41 +2063,142 @@ function Dashboard() {
 
                                     </div>
 
-                                    {/* Action Buttons: Pay With Wallet or Razorpay */}
-                                    <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row justify-end items-center gap-3">
-                                        <button
-                                            onClick={payWithWalletDirect}
-                                            className="btn secondary w-full sm:w-auto px-8 py-3.5 flex items-center justify-center gap-2 cursor-pointer"
-                                            disabled={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal}
-                                            style={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
-                                        >
-                                            {paymentMethod === "wallet" ? (
-                                                <>
-                                                    <svg className="animate-spin h-4 w-4 text-slate-700 inline-block mr-2" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                                    </svg>
-                                                    Processing Wallet Payment...
-                                                </>
-                                            ) : `Pay with Wallet (₹${estimatedTotal.toFixed(2)})`}
-                                        </button>
-                                        
-                                        <button
-                                            onClick={payNowDirect}
-                                            className="btn success w-full sm:w-auto px-8 py-3.5 flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-cyan-500/20"
-                                            disabled={isPrintingDisabled || !!paymentMethod}
-                                            style={isPrintingDisabled || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
-                                        >
-                                            {paymentMethod === "razorpay" ? (
-                                                <>
-                                                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                                    </svg>
-                                                    Proceeding to Payment...
-                                                </>
-                                            ) : "Proceed to Payment"}
-                                        </button>
+                                    {/* Coupon, Referral & Payment Action Section at bottom of Print & Layout Settings */}
+                                    <div className="mt-6 pt-5 border-t border-white/10 space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {/* Coupon Section */}
+                                            <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 flex flex-col justify-between">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !couponApplied && setHaveCoupon(!haveCoupon)}
+                                                    disabled={couponApplied}
+                                                    className={`w-full h-14 rounded-xl flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
+                                                        couponApplied 
+                                                        ? 'bg-gradient-to-r from-emerald-600 to-teal-700 border-emerald-400/50' 
+                                                        : 'bg-gradient-to-r from-cyan-900/60 via-blue-900/60 to-purple-900/60 border-cyan-500/30'
+                                                    }`}
+                                                >
+                                                    <div className="w-16 bg-white/10 flex items-center justify-center relative border-r border-dashed border-white/20">
+                                                        <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 translate-y-1/2" />
+                                                        <Ticket className="w-6 h-6 text-white" />
+                                                    </div>
+                                                    <div className="px-3.5 flex flex-col justify-center text-left text-white">
+                                                        <span className="text-[8px] font-black tracking-widest uppercase opacity-85">COUPON</span>
+                                                        <span className="text-xs font-black whitespace-nowrap mt-0.5">
+                                                            {couponApplied ? "COUPON APPLIED!" : "HAVE COUPON?"}
+                                                        </span>
+                                                    </div>
+                                                </button>
+
+                                                {(haveCoupon || couponApplied) && (
+                                                    <div className="mt-3 flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Coupon code"
+                                                            value={couponCode}
+                                                            onChange={(e) => setCouponCode(e.target.value)}
+                                                            className="field text-xs py-2 w-full !bg-slate-900 !border-slate-700 !text-white rounded-xl"
+                                                            disabled={couponApplied}
+                                                        />
+                                                        <button
+                                                            onClick={applyCoupon}
+                                                            disabled={couponApplied}
+                                                            className={couponApplied ? "btn secondary text-xs py-2 px-4 cursor-pointer" : "btn success text-xs py-2 px-4 cursor-pointer"}
+                                                        >
+                                                            {couponApplied ? "Applied" : "Apply"}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Referral Section */}
+                                            <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 flex flex-col justify-between">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !referralApplied && setHaveReferral(!haveReferral)}
+                                                    disabled={referralApplied}
+                                                    className={`w-full h-14 rounded-xl flex overflow-hidden border transition-all hover:scale-[1.01] relative cursor-pointer ${
+                                                        referralApplied 
+                                                        ? 'bg-gradient-to-r from-emerald-600 to-teal-700 border-emerald-400/50' 
+                                                        : 'bg-gradient-to-r from-amber-900/60 via-orange-900/60 to-rose-900/60 border-amber-500/30'
+                                                    }`}
+                                                >
+                                                    <div className="w-16 bg-white/10 flex items-center justify-center relative border-r border-dashed border-white/20">
+                                                        <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 -translate-y-1/2" />
+                                                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-950 rounded-full translate-x-1/2 translate-y-1/2" />
+                                                        <img
+                                                            src={referralIcon}
+                                                            alt="Referral"
+                                                            className="w-8 h-8 object-contain rounded-md"
+                                                        />
+                                                    </div>
+                                                    <div className="px-3.5 flex flex-col justify-center text-left text-white">
+                                                        <span className="text-[8px] font-black tracking-widest uppercase opacity-85">REFERRAL</span>
+                                                        <span className="text-xs font-black whitespace-nowrap mt-0.5">
+                                                            {referralApplied ? "REFERRAL APPLIED!" : "REFERRAL CODE?"}
+                                                        </span>
+                                                    </div>
+                                                </button>
+
+                                                {(haveReferral || referralApplied) && (
+                                                    <div className="mt-3 flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Referral code"
+                                                            value={enteredReferralCode}
+                                                            onChange={(e) => setEnteredReferralCode(e.target.value)}
+                                                            className="field text-xs py-2 w-full !bg-slate-900 !border-slate-700 !text-white rounded-xl"
+                                                            disabled={referralApplied}
+                                                        />
+                                                        <button
+                                                            onClick={applyReferral}
+                                                            disabled={referralApplied}
+                                                            className={referralApplied ? "btn secondary text-xs py-2 px-4 cursor-pointer" : "btn success text-xs py-2 px-4 cursor-pointer"}
+                                                        >
+                                                            {referralApplied ? "Applied" : "Apply"}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons: Pay With Wallet or Razorpay */}
+                                        <div className="flex flex-col sm:flex-row justify-end items-center gap-3 pt-2">
+                                            <button
+                                                onClick={payWithWalletDirect}
+                                                className="btn secondary w-full sm:w-auto px-8 py-3.5 flex items-center justify-center gap-2 cursor-pointer"
+                                                disabled={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal}
+                                                style={isPrintingDisabled || !!paymentMethod || walletBalance < estimatedTotal ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                            >
+                                                {paymentMethod === "wallet" ? (
+                                                    <>
+                                                        <svg className="animate-spin h-4 w-4 text-slate-700 inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                        </svg>
+                                                        Processing Wallet Payment...
+                                                    </>
+                                                ) : `Pay with Wallet (₹${estimatedTotal.toFixed(2)})`}
+                                            </button>
+                                            
+                                            <button
+                                                onClick={payNowDirect}
+                                                className="btn success w-full sm:w-auto px-8 py-3.5 flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-cyan-500/20"
+                                                disabled={isPrintingDisabled || !!paymentMethod}
+                                                style={isPrintingDisabled || !!paymentMethod ? { opacity: 0.5, cursor: "not-allowed", background: "#64748b" } : {}}
+                                            >
+                                                {paymentMethod === "razorpay" ? (
+                                                    <>
+                                                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                                        </svg>
+                                                        Proceeding to Payment...
+                                                    </>
+                                                ) : "Proceed to Payment"}
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.section>
                             )}
