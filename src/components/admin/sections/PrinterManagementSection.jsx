@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Printer, Plus, Activity, AlertTriangle, CheckCircle2, Sliders, Trash2, QrCode, KeyRound, Layers } from "lucide-react";
+import { Printer, Plus, Activity, AlertTriangle, CheckCircle2, Sliders, Trash2, QrCode, KeyRound, Layers, PhoneCall, Mail, Bell, RefreshCw } from "lucide-react";
+import api from "../../../services/api";
 
 export function PrinterManagementSection({
     printers = [],
@@ -23,6 +24,7 @@ export function PrinterManagementSection({
     const [isQrScan, setIsQrScan] = useState(false);
     const [isOtp, setIsOtp] = useState(true);
     const [adding, setAdding] = useState(false);
+    const [dispatchingAlert, setDispatchingAlert] = useState(false);
 
     const [paperInputs, setPaperInputs] = useState({});
 
@@ -63,10 +65,55 @@ export function PrinterManagementSection({
         }
     };
 
+    const handleTestEmergencyAlert = async () => {
+        setDispatchingAlert(true);
+        try {
+            const res = await api.post("/printer/report-issue", {
+                blockLocation: block || "C Block",
+                printerName: name || "Primary Kiosk Printer",
+                issueType: "TEST_ALERT",
+                details: "Admin manually triggered test alert to verify WhatsApp & Email delivery."
+            });
+            showAlert(
+                "Alert Dispatched 🚨",
+                `Alert sent to:\n• Admin Phone: +91 9494189664 (WhatsApp)\n• Print Agent: +91 8688500278 (WhatsApp)\n• Admin Email: saipraveendasari1@gmail.com`,
+                "success"
+            );
+        } catch (err) {
+            showAlert("Alert Failed", err.response?.data?.message || err.message, "error");
+        } finally {
+            setDispatchingAlert(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
-            {/* Top Grid: Add Printer & Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Emergency Hardware Alert Banner */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-950/60 via-slate-900 to-slate-900 border border-rose-500/30 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                        <Bell className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-black uppercase tracking-wider text-rose-400">🚨 Automated Alert System</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold">Email + WhatsApp Active</span>
+                        </div>
+                        <p className="text-xs text-slate-300 mt-0.5">
+                            Auto-notifies <strong className="text-white">Admin (+91 9494189664)</strong> &amp; <strong className="text-white">Print Agent (+91 8688500278)</strong> on Paper Out / Jams.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    onClick={handleTestEmergencyAlert}
+                    disabled={dispatchingAlert}
+                    className="py-2 px-4 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 border border-rose-500/40 text-rose-200 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                    {dispatchingAlert ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                    {dispatchingAlert ? "Sending Alert..." : "Test Dispatch Alert"}
+                </button>
+            </div>
                 {/* Add Printer Form */}
                 <form onSubmit={handleAddSubmit} className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
                     <div>
