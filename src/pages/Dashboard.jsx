@@ -812,7 +812,7 @@ function Dashboard() {
             const orderData = rzpRes.data;
 
             const options = {
-                key: RAZORPAY_KEY,
+                key: orderData.key_id || RAZORPAY_KEY,
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Cloud Print",
