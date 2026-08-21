@@ -29,11 +29,17 @@ function AdminDashboard() {
     const [blockPricesMap, setBlockPricesMap] = useState({});
 
     const [couponCode, setCouponCode] = useState("");
-    const [discountType, setDiscountType] = useState("PERCENTAGE"); // "PERCENTAGE" or "AMOUNT"
     const [discountPercentage, setDiscountPercentage] = useState("");
-    const [minOrderAmount, setMinOrderAmount] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
     const [maxUses, setMaxUses] = useState(1);
+
+    // Flat Coupon Generator states
+    const [flatCouponCode, setFlatCouponCode] = useState("");
+    const [flatDiscountAmount, setFlatDiscountAmount] = useState("");
+    const [flatMinOrderAmount, setFlatMinOrderAmount] = useState("");
+    const [flatExpiryDate, setFlatExpiryDate] = useState("");
+    const [flatMaxUses, setFlatMaxUses] = useState(1);
+
     const [couponUnlocked, setCouponUnlocked] = useState(false);
     const [managerCouponSecretInput, setManagerCouponSecretInput] = useState("");
 
@@ -1223,31 +1229,24 @@ function AdminDashboard() {
         }
     };
 
-    const createCoupon = async () => {
+    const createPercentageCoupon = async () => {
         const val = discountPercentage ? Number(discountPercentage) : 10;
-        if (discountType === "PERCENTAGE") {
-            if (val > 95) {
-                showAlert("Discount Constraint", "Maximum allowed coupon discount percentage is 95%.", "error");
-                return;
-            }
-            if (val <= 0) {
-                showAlert("Invalid Discount", "Please specify a discount percentage greater than 0%.", "warning");
-                return;
-            }
-        } else {
-            if (val <= 0) {
-                showAlert("Invalid Amount", "Please specify a discount amount greater than ₹0.", "warning");
-                return;
-            }
+        if (val > 95) {
+            showAlert("Discount Constraint", "Maximum allowed coupon discount percentage is 95%.", "error");
+            return;
+        }
+        if (val <= 0) {
+            showAlert("Invalid Discount", "Please specify a discount percentage greater than 0%.", "warning");
+            return;
         }
 
         const parsedMaxUses = maxUses && !isNaN(parseInt(maxUses, 10)) ? Math.max(1, parseInt(maxUses, 10)) : 100;
         try {
             const payload = {
                 couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
-                discountPercentage: discountType === "PERCENTAGE" ? val : 0.0,
-                discountAmount: discountType === "AMOUNT" ? val : null,
-                minOrderAmount: minOrderAmount ? Number(minOrderAmount) : null,
+                discountPercentage: val,
+                discountAmount: 0.0,
+                minOrderAmount: 0.0,
                 expiryDate: expiryDate && expiryDate.trim() ? expiryDate.trim() : null,
                 maxUses: parsedMaxUses,
                 active: true
@@ -1255,16 +1254,50 @@ function AdminDashboard() {
 
             await api.post("/coupon/create", payload);
 
-            showAlert("Success", "Coupon Created Successfully", "success");
+            showAlert("Success", "Percentage Coupon Created Successfully", "success");
             fetchCoupons();
             setCouponCode("");
             setDiscountPercentage("");
-            setMinOrderAmount("");
             setExpiryDate("");
-            setMaxUses("");
+            setMaxUses(1);
         } catch (error) {
             console.error("Failed to create coupon:", error);
             const errDetail = error.response?.data?.message || error.response?.data?.error || error.message || "Unable To Create Coupon";
+            showAlert("Error", errDetail, "error");
+        }
+    };
+
+    const createFlatCoupon = async () => {
+        const amt = flatDiscountAmount ? Number(flatDiscountAmount) : 10;
+        if (amt <= 0) {
+            showAlert("Invalid Amount", "Please specify a flat discount amount greater than ₹0.", "warning");
+            return;
+        }
+
+        const parsedMaxUses = flatMaxUses && !isNaN(parseInt(flatMaxUses, 10)) ? Math.max(1, parseInt(flatMaxUses, 10)) : 100;
+        try {
+            const payload = {
+                couponCode: flatCouponCode ? flatCouponCode.trim().toUpperCase() : null,
+                discountPercentage: 0.0,
+                discountAmount: amt,
+                minOrderAmount: flatMinOrderAmount ? Number(flatMinOrderAmount) : 0.0,
+                expiryDate: flatExpiryDate && flatExpiryDate.trim() ? flatExpiryDate.trim() : null,
+                maxUses: parsedMaxUses,
+                active: true
+            };
+
+            await api.post("/coupon/create", payload);
+
+            showAlert("Success", "Flat Amount Coupon Created Successfully", "success");
+            fetchCoupons();
+            setFlatCouponCode("");
+            setFlatDiscountAmount("");
+            setFlatMinOrderAmount("");
+            setFlatExpiryDate("");
+            setFlatMaxUses(1);
+        } catch (error) {
+            console.error("Failed to create flat coupon:", error);
+            const errDetail = error.response?.data?.message || error.response?.data?.error || error.message || "Unable To Create Flat Coupon";
             showAlert("Error", errDetail, "error");
         }
     };
@@ -2639,9 +2672,10 @@ function AdminDashboard() {
                             [
                                 { id: "pricing", label: "Price Settings", icon: "💵", desc: "Rate Configuration" },
                                 { id: "blocks", label: "Manage Blocks", icon: "🏛️", desc: "Campus Locations" },
-                                { id: "coupon-gen", label: "Coupon Generator", icon: "🎟️", desc: "Create Discounts" },
-                                { id: "active-coupons", label: "Active Coupons", icon: "🏷️", desc: `${coupons.length} Active` },
-                                { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Rewards Program" },
+                                { id: "coupon-gen", label: "% Discount Coupon", icon: "🎟️", desc: "% Percentage Off" },
+                                { id: "flat-coupon-gen", label: "₹ Flat Off Coupon", icon: "🏷️", desc: "Flat ₹ Discount" },
+                                { id: "active-coupons", label: "Active Coupons", icon: "📋", desc: `${coupons.length} Active` },
+                                { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Wallet Credits" },
                                 { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", desc: `${rewards.length} Active` },
                                 { id: "referrals", label: "Refer & Earn", icon: "👥", desc: "Referral Rules" }
                             ].map(sub => (
@@ -4039,7 +4073,7 @@ function AdminDashboard() {
                             </motion.div>
                         )}
 
-                        {/* SUBPAGE 3: Coupon Generator (Discounts) */}
+                        {/* SUBPAGE 3A: % Percentage Coupon Generator */}
                         {pricingSubTab === "coupon-gen" && (
                             <motion.div
                                 initial={{ opacity: 0, y: 14 }}
@@ -4051,11 +4085,11 @@ function AdminDashboard() {
                                         <section className="panel p-6">
                                             <div className="section-header mb-6">
                                                 <div>
-                                                    <p className="eyebrow">Discounts</p>
+                                                    <p className="eyebrow">Percentage Discounts</p>
                                                     <h2 className="text-2xl font-black text-slate-900">
-                                                        Coupon Generator
+                                                        % Coupon Generator
                                                     </h2>
-                                                    <p className="subtitle">Create promotional discount codes for users to redeem during checkout.</p>
+                                                    <p className="subtitle">Create percentage reduction codes (e.g. 50% OFF, 25% OFF).</p>
                                                 </div>
                                             </div>
 
@@ -4065,7 +4099,7 @@ function AdminDashboard() {
                                                     <div className="flex gap-2">
                                                         <input
                                                             type="text"
-                                                            placeholder="e.g. SEMEXAM50, WELCOME100"
+                                                            placeholder="e.g. SEMEXAM50, FESTIVE25"
                                                             value={couponCode}
                                                             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                                                             className="field uppercase font-mono font-black tracking-wider"
@@ -4082,73 +4116,31 @@ function AdminDashboard() {
 
                                                 <div>
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <span className="text-sm font-black text-slate-700">Discount Type</span>
-                                                        <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setDiscountType("PERCENTAGE")}
-                                                                className={`px-3 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
-                                                                    discountType === "PERCENTAGE"
-                                                                        ? "bg-emerald-600 text-white shadow-sm"
-                                                                        : "text-slate-600 hover:text-slate-900"
-                                                                }`}
-                                                            >
-                                                                % Percentage
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setDiscountType("AMOUNT")}
-                                                                className={`px-3 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
-                                                                    discountType === "AMOUNT"
-                                                                        ? "bg-emerald-600 text-white shadow-sm"
-                                                                        : "text-slate-600 hover:text-slate-900"
-                                                                }`}
-                                                            >
-                                                                ₹ Flat Amount Off
-                                                            </button>
-                                                        </div>
+                                                        <span className="text-sm font-black text-slate-700">Discount Percentage (%)</span>
+                                                        <span className="text-xs font-black text-emerald-600">{discountPercentage || 0}% OFF</span>
                                                     </div>
-
-                                                    <div className="flex justify-between items-center mb-1.5">
-                                                        <span className="text-xs font-bold text-slate-500">
-                                                            {discountType === "PERCENTAGE" ? "Discount Percentage (%)" : "Flat Amount Off (₹)"}
-                                                        </span>
-                                                        <span className="text-xs font-black text-emerald-600">
-                                                            {discountType === "PERCENTAGE"
-                                                                ? `${discountPercentage || 0}% OFF`
-                                                                : `₹${discountPercentage || 0} FLAT OFF`}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="relative">
-                                                        {discountType === "AMOUNT" && (
-                                                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
-                                                        )}
-                                                        <input
-                                                            type="number"
-                                                            placeholder={discountType === "PERCENTAGE" ? "Discount % (Max 95%)" : "Discount in ₹ (e.g. 20)"}
-                                                            value={discountPercentage}
-                                                            onChange={(e) => setDiscountPercentage(e.target.value)}
-                                                            className={`field ${discountType === "AMOUNT" ? "pl-8" : ""}`}
-                                                            max={discountType === "PERCENTAGE" ? "95" : undefined}
-                                                            min="1"
-                                                        />
-                                                    </div>
-
-                                                    {/* Quick Value Presets */}
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Discount % (Max 95%)"
+                                                        value={discountPercentage}
+                                                        onChange={(e) => setDiscountPercentage(e.target.value)}
+                                                        className="field"
+                                                        max="95"
+                                                        min="1"
+                                                    />
                                                     <div className="flex flex-wrap gap-1.5 mt-2">
-                                                        {(discountType === "PERCENTAGE" ? [10, 20, 25, 50, 75, 90] : [5, 10, 20, 30, 50, 100]).map(val => (
+                                                        {[10, 20, 25, 50, 75, 90].map(pct => (
                                                             <button
-                                                                key={val}
+                                                                key={pct}
                                                                 type="button"
-                                                                onClick={() => setDiscountPercentage(val.toString())}
+                                                                onClick={() => setDiscountPercentage(pct.toString())}
                                                                 className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
-                                                                    discountPercentage === val.toString()
+                                                                    discountPercentage === pct.toString()
                                                                         ? "bg-emerald-600 text-white border-emerald-600"
                                                                         : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                                                                 }`}
                                                             >
-                                                                {discountType === "PERCENTAGE" ? `${val}%` : `₹${val}`}
+                                                                {pct}%
                                                             </button>
                                                         ))}
                                                     </div>
@@ -4156,36 +4148,40 @@ function AdminDashboard() {
 
                                                 <div className="grid gap-4 sm:grid-cols-2">
                                                     <div>
-                                                        <div className="flex justify-between items-center mb-1">
-                                                            <span className="block text-sm font-black text-slate-700">Min Order Amount (₹)</span>
-                                                            <span className="text-[11px] font-bold text-slate-400">Optional</span>
-                                                        </div>
-                                                        <div className="relative">
-                                                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
-                                                            <input
-                                                                type="number"
-                                                                placeholder="e.g. 50 (0 for no min)"
-                                                                value={minOrderAmount}
-                                                                onChange={(e) => setMinOrderAmount(e.target.value)}
-                                                                className="field pl-8"
-                                                                min="0"
-                                                            />
-                                                        </div>
+                                                        <span className="mb-2 block text-sm font-black text-slate-700">Expiry Date</span>
+                                                        <input
+                                                            type="date"
+                                                            value={expiryDate}
+                                                            onChange={(e) => setExpiryDate(e.target.value)}
+                                                            className="field"
+                                                        />
                                                         <div className="flex flex-wrap gap-1.5 mt-2">
-                                                            {[0, 20, 50, 100, 200].map(val => (
-                                                                <button
-                                                                    key={val}
-                                                                    type="button"
-                                                                    onClick={() => setMinOrderAmount(val ? val.toString() : "")}
-                                                                    className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
-                                                                        (minOrderAmount === val.toString() || (!minOrderAmount && val === 0))
-                                                                            ? "bg-sky-600 text-white border-sky-600 shadow-sm"
-                                                                            : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
-                                                                    }`}
-                                                                >
-                                                                    {val === 0 ? "No Min" : `₹${val}+`}
-                                                                </button>
-                                                            ))}
+                                                            {[
+                                                                { label: "Today", days: 0 },
+                                                                { label: "Tomorrow", days: 1 },
+                                                                { label: "1 Week", days: 7 },
+                                                                { label: "1 Month", days: 30 },
+                                                                { label: "1 Year", days: 365 },
+                                                            ].map(preset => {
+                                                                const d = new Date();
+                                                                d.setDate(d.getDate() + preset.days);
+                                                                const dateStr = d.toISOString().split('T')[0];
+                                                                const isSelected = expiryDate === dateStr;
+                                                                return (
+                                                                    <button
+                                                                        key={preset.label}
+                                                                        type="button"
+                                                                        onClick={() => setExpiryDate(dateStr)}
+                                                                        className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                            isSelected
+                                                                                ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                                                                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                        }`}
+                                                                    >
+                                                                        {preset.label}
+                                                                    </button>
+                                                                );
+                                                            })}
                                                         </div>
                                                     </div>
 
@@ -4202,12 +4198,221 @@ function AdminDashboard() {
                                                     </div>
                                                 </div>
 
+                                                <button
+                                                    onClick={createPercentageCoupon}
+                                                    className="btn primary w-full mt-4"
+                                                >
+                                                    ✨ Create % Discount Coupon
+                                                </button>
+                                            </div>
+                                        </section>
+
+                                        {/* Coupon Live Preview Card */}
+                                        <section className="panel p-6 flex flex-col justify-between">
+                                            <div>
+                                                <div className="section-header mb-4">
+                                                    <div>
+                                                        <p className="eyebrow">Preview</p>
+                                                        <h3 className="text-xl font-black text-slate-900">Live Percentage Card</h3>
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-6 rounded-2xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-purple-600 text-white shadow-xl relative overflow-hidden">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">SPECIAL DISCOUNT</span>
+                                                            <h3 className="text-3xl font-black mt-3">
+                                                                {discountPercentage ? `${discountPercentage}% OFF` : "0% OFF"}
+                                                            </h3>
+                                                        </div>
+                                                        <span className="text-3xl">🎟️</span>
+                                                    </div>
+                                                    <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center">
+                                                        <div>
+                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">PROMO CODE</p>
+                                                            <p className="font-mono font-black text-lg tracking-wider">{couponCode || "ENTER-CODE"}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">EXPIRES</p>
+                                                            <p className="text-xs font-bold">{expiryDate || "No Expiry"}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* WhatsApp Share & Photo Download Buttons for Coupon */}
+                                            <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => shareCouponOnWhatsApp(couponCode, discountPercentage ? `${discountPercentage}% OFF` : "50% OFF", expiryDate)}
+                                                    className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
+                                                >
+                                                    <span>💬</span> Share Photo
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => downloadCouponImage(couponCode, discountPercentage ? `${discountPercentage}% OFF` : "50% OFF", expiryDate)}
+                                                    className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer"
+                                                >
+                                                    <span>🖼️</span> Download PNG
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-4 flex justify-between items-center text-xs font-bold text-slate-500">
+                                                <span>Total Active Coupons: <strong>{coupons.length}</strong></span>
+                                                <button onClick={() => setPricingSubTab("active-coupons")} className="text-sky-600 hover:text-sky-700 underline cursor-pointer">View all active coupons →</button>
+                                            </div>
+                                        </section>
+                                    </div>
+                                ) : (
+                                    <section className="panel p-8 flex flex-col items-center justify-center min-h-[350px]">
+                                        <span className="text-4xl mb-3">🔒</span>
+                                        <h2 className="text-2xl font-black text-slate-900 mb-2">Coupons & Discounts Locked</h2>
+                                        <p className="text-slate-500 mb-6 text-sm text-center max-w-sm">Please enter the security passkey provided by your Sub-Admin to access coupon configuration.</p>
+                                        <div className="flex gap-2 max-w-sm w-full">
+                                            <input
+                                                type="password"
+                                                className="field flex-1"
+                                                placeholder="Secret Key"
+                                                value={managerCouponSecretInput}
+                                                onChange={(e) => setManagerCouponSecretInput(e.target.value)}
+                                            />
+                                            <button onClick={unlockManagerCoupons} className="btn primary">Unlock</button>
+                                        </div>
+                                    </section>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {/* SUBPAGE 3B: ₹ Flat Amount Off Coupon Generator */}
+                        {pricingSubTab === "flat-coupon-gen" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 14 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25 }}
+                            >
+                                {(loggedInAdminRole !== "MANAGER" || couponUnlocked) ? (
+                                    <div className="grid gap-6 lg:grid-cols-2">
+                                        <section className="panel p-6">
+                                            <div className="section-header mb-6">
+                                                <div>
+                                                    <p className="eyebrow">Flat Rupee Deductions</p>
+                                                    <h2 className="text-2xl font-black text-slate-900">
+                                                        ₹ Flat Off Coupon Generator
+                                                    </h2>
+                                                    <p className="subtitle">Create fixed rupee discount codes with optional minimum order value.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <span className="mb-2 block text-sm font-black text-slate-700">Coupon Code</span>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="e.g. FLAT20, SAVE50"
+                                                            value={flatCouponCode}
+                                                            onChange={(e) => setFlatCouponCode(e.target.value.toUpperCase())}
+                                                            className="field uppercase font-mono font-black tracking-wider"
+                                                        />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setFlatCouponCode(`SAVE${Math.floor(1000 + Math.random() * 9000)}`)}
+                                                            className="btn secondary shrink-0 text-xs px-3"
+                                                        >
+                                                            🎲 Random
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs font-bold text-slate-700">Flat Discount (₹)</span>
+                                                        <span className="text-xs font-black text-emerald-600">₹{flatDiscountAmount || 0} FLAT OFF</span>
+                                                    </div>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Discount in ₹ (e.g. 20)"
+                                                            value={flatDiscountAmount}
+                                                            onChange={(e) => setFlatDiscountAmount(e.target.value)}
+                                                            className="field pl-8"
+                                                            min="1"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                                        {[5, 10, 20, 30, 50, 100].map(val => (
+                                                            <button
+                                                                key={val}
+                                                                type="button"
+                                                                onClick={() => setFlatDiscountAmount(val.toString())}
+                                                                className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                    flatDiscountAmount === val.toString()
+                                                                        ? "bg-emerald-600 text-white border-emerald-600"
+                                                                        : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                }`}
+                                                            >
+                                                                ₹{val}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid gap-4 sm:grid-cols-2">
+                                                    <div>
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="block text-sm font-black text-slate-700">Min Order Value (₹)</span>
+                                                            <span className="text-[11px] font-bold text-slate-400">Optional</span>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="e.g. 50 (0 for no min)"
+                                                                value={flatMinOrderAmount}
+                                                                onChange={(e) => setFlatMinOrderAmount(e.target.value)}
+                                                                className="field pl-8"
+                                                                min="0"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                                            {[0, 20, 50, 100, 200].map(val => (
+                                                                <button
+                                                                    key={val}
+                                                                    type="button"
+                                                                    onClick={() => setFlatMinOrderAmount(val ? val.toString() : "")}
+                                                                    className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                        (flatMinOrderAmount === val.toString() || (!flatMinOrderAmount && val === 0))
+                                                                            ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                                                                            : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                    }`}
+                                                                >
+                                                                    {val === 0 ? "No Min" : `₹${val}+`}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <span className="mb-2 block text-sm font-black text-slate-700">Max Uses</span>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Max Uses"
+                                                            value={flatMaxUses}
+                                                            onChange={(e) => setFlatMaxUses(e.target.value)}
+                                                            className="field"
+                                                            min="1"
+                                                        />
+                                                    </div>
+                                                </div>
+
                                                 <div>
                                                     <span className="mb-2 block text-sm font-black text-slate-700">Expiry Date</span>
                                                     <input
                                                         type="date"
-                                                        value={expiryDate}
-                                                        onChange={(e) => setExpiryDate(e.target.value)}
+                                                        value={flatExpiryDate}
+                                                        onChange={(e) => setFlatExpiryDate(e.target.value)}
                                                         className="field"
                                                     />
                                                     <div className="flex flex-wrap gap-1.5 mt-2">
@@ -4221,12 +4426,12 @@ function AdminDashboard() {
                                                             const d = new Date();
                                                             d.setDate(d.getDate() + preset.days);
                                                             const dateStr = d.toISOString().split('T')[0];
-                                                            const isSelected = expiryDate === dateStr;
+                                                            const isSelected = flatExpiryDate === dateStr;
                                                             return (
                                                                 <button
                                                                     key={preset.label}
                                                                     type="button"
-                                                                    onClick={() => setExpiryDate(dateStr)}
+                                                                    onClick={() => setFlatExpiryDate(dateStr)}
                                                                     className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
                                                                         isSelected
                                                                             ? "bg-sky-600 text-white border-sky-600 shadow-sm"
@@ -4241,63 +4446,61 @@ function AdminDashboard() {
                                                 </div>
 
                                                 <button
-                                                    onClick={createCoupon}
+                                                    onClick={createFlatCoupon}
                                                     className="btn primary w-full mt-4"
                                                 >
-                                                    ✨ Create Discount Coupon
+                                                    ✨ Create ₹ Flat Off Coupon
                                                 </button>
                                             </div>
                                         </section>
 
-                                        {/* Coupon Live Preview Card */}
+                                        {/* Flat Coupon Live Preview Card */}
                                         <section className="panel p-6 flex flex-col justify-between">
                                             <div>
                                                 <div className="section-header mb-4">
                                                     <div>
                                                         <p className="eyebrow">Preview</p>
-                                                        <h3 className="text-xl font-black text-slate-900">Live Coupon Card</h3>
+                                                        <h3 className="text-xl font-black text-slate-900">Live Flat Off Card</h3>
                                                     </div>
                                                 </div>
 
-                                                <div className="p-6 rounded-2xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-purple-600 text-white shadow-xl relative overflow-hidden">
+                                                <div className="p-6 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-xl relative overflow-hidden">
                                                     <div className="flex justify-between items-start">
                                                         <div>
-                                                            <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">SPECIAL DISCOUNT</span>
+                                                            <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">FLAT DISCOUNT</span>
                                                             <h3 className="text-3xl font-black mt-3">
-                                                                {discountType === "PERCENTAGE"
-                                                                    ? (discountPercentage ? `${discountPercentage}% OFF` : "0% OFF")
-                                                                    : (discountPercentage ? `₹${Number(discountPercentage).toFixed(0)} FLAT OFF` : "₹0 OFF")}
+                                                                {flatDiscountAmount ? `₹${Number(flatDiscountAmount).toFixed(0)} FLAT OFF` : "₹0 OFF"}
                                                             </h3>
                                                         </div>
-                                                        <span className="text-3xl">🎟️</span>
+                                                        <span className="text-3xl">🏷️</span>
                                                     </div>
                                                     <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center">
                                                         <div>
-                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">PROMO CODE</p>
-                                                            <p className="font-mono font-black text-lg tracking-wider">{couponCode || "ENTER-CODE"}</p>
+                                                            <p className="text-[10px] text-teal-100 uppercase font-bold">PROMO CODE</p>
+                                                            <p className="font-mono font-black text-lg tracking-wider">{flatCouponCode || "ENTER-CODE"}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">
-                                                                {minOrderAmount && Number(minOrderAmount) > 0 ? `MIN: ₹${minOrderAmount}` : "EXPIRES"}
+                                                            <p className="text-[10px] text-teal-100 uppercase font-bold">
+                                                                {flatMinOrderAmount && Number(flatMinOrderAmount) > 0 ? `MIN: ₹${flatMinOrderAmount}` : "EXPIRES"}
                                                             </p>
-                                                            <p className="text-xs font-bold">{expiryDate || "No Expiry"}</p>
+                                                            <p className="text-xs font-bold">{flatExpiryDate || "No Expiry"}</p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* WhatsApp Share & Photo Download Buttons for Coupon */}
+                                            {/* WhatsApp Share & Photo Download Buttons for Flat Coupon */}
                                             <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
                                                 <button
                                                     type="button"
-                                                    onClick={() => shareCouponOnWhatsApp(couponCode, discountPercentage, expiryDate)}
+                                                    onClick={() => shareCouponOnWhatsApp(flatCouponCode, `₹${flatDiscountAmount || 20} FLAT OFF`, flatExpiryDate, flatMinOrderAmount)}
                                                     className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
                                                 >
                                                     <span>💬</span> Share Photo
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => downloadCouponImage(couponCode, discountPercentage, expiryDate)}
+                                                    onClick={() => downloadCouponImage(flatCouponCode, `₹${flatDiscountAmount || 20} FLAT OFF`, flatExpiryDate, flatMinOrderAmount)}
                                                     className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer"
                                                 >
                                                     <span>🖼️</span> Download PNG
@@ -4306,7 +4509,7 @@ function AdminDashboard() {
 
                                             <div className="mt-4 flex justify-between items-center text-xs font-bold text-slate-500">
                                                 <span>Total Active Coupons: <strong>{coupons.length}</strong></span>
-                                                <button onClick={() => setPricingSubTab("active-coupons")} className="text-sky-600 hover:text-sky-700 underline cursor-pointer">View all active coupons →</button>
+                                                <button onClick={() => setPricingSubTab("active-coupons")} className="text-teal-600 hover:text-teal-700 underline cursor-pointer">View all active coupons →</button>
                                             </div>
                                         </section>
                                     </div>
