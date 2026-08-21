@@ -99,6 +99,7 @@ function AdminDashboard() {
 
     const [thesisCollege, setThesisCollege] = useState("KLU");
     const [collegeThesisSettings, setCollegeThesisSettings] = useState({
+        thesisEnabled: true,
         thesisDiscountPages: 500,
         thesisDiscountPercent: 15.0
     });
@@ -6033,10 +6034,29 @@ function AdminDashboard() {
                                         )}
                                     </div>
                                     <form onSubmit={saveCollegeThesisSettings} className="space-y-4">
-                                        <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-900">
-                                            <span>🏫 Configuring Rules For:</span>
-                                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-200/80 text-indigo-950 font-black">{thesisCollege}</span>
+                                        {/* Enable / Disable Toggle Switch */}
+                                        <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                                            collegeThesisSettings?.thesisEnabled
+                                                ? "border-emerald-400 bg-emerald-50"
+                                                : "border-slate-200 bg-slate-50"
+                                        }`}>
+                                            <div>
+                                                <p className="font-black text-slate-900 text-sm">Bulk Discount Program ({thesisCollege})</p>
+                                                <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                                                    {collegeThesisSettings?.thesisEnabled ? "✅ Currently Active — discounts are being applied" : "⏸️ Currently Disabled — no discount applied"}
+                                                </p>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={Boolean(collegeThesisSettings?.thesisEnabled)}
+                                                    onChange={(e) => setCollegeThesisSettings({...collegeThesisSettings, thesisEnabled: e.target.checked})}
+                                                />
+                                                <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                                            </label>
                                         </div>
+
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <label className="block">
                                                 <span className="block text-xs font-black text-slate-700 mb-1.5">Threshold (Pages)</span>
