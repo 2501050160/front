@@ -586,6 +586,10 @@ function Dashboard() {
             });
 
             const coupon = response.data;
+            if (coupon.minOrderAmount && coupon.minOrderAmount > 0 && basePrice < coupon.minOrderAmount) {
+                showAlert("Minimum Order Required", `This coupon requires a minimum order total of ₹${Number(coupon.minOrderAmount).toFixed(2)}. Current total is ₹${Number(basePrice).toFixed(2)}.`, "warning");
+                return;
+            }
             setCouponDetails(coupon);
             setCouponApplied(true);
 

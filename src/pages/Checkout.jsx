@@ -478,9 +478,13 @@ function Checkout() {
             });
 
             const coupon = response.data;
+            if (coupon.minOrderAmount && coupon.minOrderAmount > 0 && order.price < coupon.minOrderAmount) {
+                showAlert("Minimum Order Required", `This coupon requires a minimum order total of ₹${Number(coupon.minOrderAmount).toFixed(2)}. Current total is ₹${Number(order.price).toFixed(2)}.`, "warning");
+                return;
+            }
             const discountAmount = (coupon.discountPercentage && coupon.discountPercentage > 0)
                 ? (order.price * coupon.discountPercentage) / 100
-                : (coupon.discountAmount ? Math.min(order.price, coupon.discountAmount) : order.price);
+                : (coupon.discountAmount ? Math.min(order.price, coupon.discountAmount) : 0);
             const finalPrice = Math.max(0, order.price - discountAmount);
 
             setDiscount(discountAmount);

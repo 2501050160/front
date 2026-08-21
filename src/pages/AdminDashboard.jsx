@@ -31,6 +31,7 @@ function AdminDashboard() {
     const [couponCode, setCouponCode] = useState("");
     const [discountType, setDiscountType] = useState("PERCENTAGE"); // "PERCENTAGE" or "AMOUNT"
     const [discountPercentage, setDiscountPercentage] = useState("");
+    const [minOrderAmount, setMinOrderAmount] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
     const [maxUses, setMaxUses] = useState(1);
     const [couponUnlocked, setCouponUnlocked] = useState(false);
@@ -737,7 +738,7 @@ function AdminDashboard() {
         }
     };
 
-    const createCouponCanvasBlob = (code, discount, expiry) => {
+    const createCouponCanvasBlob = (code, discount, expiry, minOrder) => {
         return new Promise((resolve) => {
             const canvas = document.createElement("canvas");
             canvas.width = 1200;
@@ -803,7 +804,7 @@ function AdminDashboard() {
             // Main Discount Big Text
             ctx.font = "900 84px sans-serif";
             ctx.fillStyle = "#ffffff";
-            ctx.fillText(`${discount || "50"}% OFF`, 130, 240);
+            ctx.fillText(`${discount || "50% OFF"}`, 130, 240);
 
             // Subtitle
             ctx.font = "700 24px sans-serif";
@@ -843,14 +844,20 @@ function AdminDashboard() {
             // Right side info
             ctx.font = "800 16px sans-serif";
             ctx.fillStyle = "#94a3b8";
-            ctx.fillText("EXPIRES ON", 660, 405);
-            ctx.font = "900 28px sans-serif";
+            ctx.fillText("EXPIRES ON", 660, 395);
+            ctx.font = "900 26px sans-serif";
             ctx.fillStyle = "#f8fafc";
-            ctx.fillText(expiry || "Valid for Limited Time", 660, 445);
+            ctx.fillText(expiry || "Valid for Limited Time", 660, 430);
 
-            ctx.font = "700 16px sans-serif";
+            if (minOrder && Number(minOrder) > 0) {
+                ctx.font = "800 16px sans-serif";
+                ctx.fillStyle = "#38bdf8";
+                ctx.fillText(`⚡ Min Order: ₹${Number(minOrder).toFixed(0)}`, 660, 465);
+            }
+
+            ctx.font = "700 15px sans-serif";
             ctx.fillStyle = "#38bdf8";
-            ctx.fillText("👉 https://cloudprint.website", 660, 480);
+            ctx.fillText("👉 https://cloudprint.website", 660, 490);
 
             canvas.toBlob((blob) => resolve(blob), "image/png");
         });
@@ -1240,6 +1247,7 @@ function AdminDashboard() {
                 couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
                 discountPercentage: discountType === "PERCENTAGE" ? val : 0.0,
                 discountAmount: discountType === "AMOUNT" ? val : null,
+                minOrderAmount: minOrderAmount ? Number(minOrderAmount) : null,
                 expiryDate: expiryDate && expiryDate.trim() ? expiryDate.trim() : null,
                 maxUses: parsedMaxUses,
                 active: true
@@ -1251,6 +1259,7 @@ function AdminDashboard() {
             fetchCoupons();
             setCouponCode("");
             setDiscountPercentage("");
+            setMinOrderAmount("");
             setExpiryDate("");
             setMaxUses("");
         } catch (error) {
@@ -4147,40 +4156,36 @@ function AdminDashboard() {
 
                                                 <div className="grid gap-4 sm:grid-cols-2">
                                                     <div>
-                                                        <span className="mb-2 block text-sm font-black text-slate-700">Expiry Date</span>
-                                                        <input
-                                                            type="date"
-                                                            value={expiryDate}
-                                                            onChange={(e) => setExpiryDate(e.target.value)}
-                                                            className="field"
-                                                        />
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="block text-sm font-black text-slate-700">Min Order Amount (₹)</span>
+                                                            <span className="text-[11px] font-bold text-slate-400">Optional</span>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="e.g. 50 (0 for no min)"
+                                                                value={minOrderAmount}
+                                                                onChange={(e) => setMinOrderAmount(e.target.value)}
+                                                                className="field pl-8"
+                                                                min="0"
+                                                            />
+                                                        </div>
                                                         <div className="flex flex-wrap gap-1.5 mt-2">
-                                                            {[
-                                                                { label: "Today", days: 0 },
-                                                                { label: "Tomorrow", days: 1 },
-                                                                { label: "1 Week", days: 7 },
-                                                                { label: "1 Month", days: 30 },
-                                                                { label: "1 Year", days: 365 },
-                                                            ].map(preset => {
-                                                                const d = new Date();
-                                                                d.setDate(d.getDate() + preset.days);
-                                                                const dateStr = d.toISOString().split('T')[0];
-                                                                const isSelected = expiryDate === dateStr;
-                                                                return (
-                                                                    <button
-                                                                        key={preset.label}
-                                                                        type="button"
-                                                                        onClick={() => setExpiryDate(dateStr)}
-                                                                        className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
-                                                                            isSelected
-                                                                                ? "bg-sky-600 text-white border-sky-600 shadow-sm"
-                                                                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
-                                                                        }`}
-                                                                    >
-                                                                        {preset.label}
-                                                                    </button>
-                                                                );
-                                                            })}
+                                                            {[0, 20, 50, 100, 200].map(val => (
+                                                                <button
+                                                                    key={val}
+                                                                    type="button"
+                                                                    onClick={() => setMinOrderAmount(val ? val.toString() : "")}
+                                                                    className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                        (minOrderAmount === val.toString() || (!minOrderAmount && val === 0))
+                                                                            ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                                                                            : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                    }`}
+                                                                >
+                                                                    {val === 0 ? "No Min" : `₹${val}+`}
+                                                                </button>
+                                                            ))}
                                                         </div>
                                                     </div>
 
@@ -4194,6 +4199,44 @@ function AdminDashboard() {
                                                             className="field"
                                                             min="1"
                                                         />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <span className="mb-2 block text-sm font-black text-slate-700">Expiry Date</span>
+                                                    <input
+                                                        type="date"
+                                                        value={expiryDate}
+                                                        onChange={(e) => setExpiryDate(e.target.value)}
+                                                        className="field"
+                                                    />
+                                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                                        {[
+                                                            { label: "Today", days: 0 },
+                                                            { label: "Tomorrow", days: 1 },
+                                                            { label: "1 Week", days: 7 },
+                                                            { label: "1 Month", days: 30 },
+                                                            { label: "1 Year", days: 365 },
+                                                        ].map(preset => {
+                                                            const d = new Date();
+                                                            d.setDate(d.getDate() + preset.days);
+                                                            const dateStr = d.toISOString().split('T')[0];
+                                                            const isSelected = expiryDate === dateStr;
+                                                            return (
+                                                                <button
+                                                                    key={preset.label}
+                                                                    type="button"
+                                                                    onClick={() => setExpiryDate(dateStr)}
+                                                                    className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                        isSelected
+                                                                            ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                                                                            : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                                    }`}
+                                                                >
+                                                                    {preset.label}
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
 
@@ -4234,7 +4277,9 @@ function AdminDashboard() {
                                                             <p className="font-mono font-black text-lg tracking-wider">{couponCode || "ENTER-CODE"}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">EXPIRES</p>
+                                                            <p className="text-[10px] text-sky-200 uppercase font-bold">
+                                                                {minOrderAmount && Number(minOrderAmount) > 0 ? `MIN: ₹${minOrderAmount}` : "EXPIRES"}
+                                                            </p>
                                                             <p className="text-xs font-bold">{expiryDate || "No Expiry"}</p>
                                                         </div>
                                                     </div>
@@ -4384,9 +4429,18 @@ function AdminDashboard() {
                                                             {coupon.couponCode}
                                                         </td>
                                                         <td className="font-bold text-emerald-600">
-                                                            {coupon.discountPercentage && coupon.discountPercentage > 0 
-                                                                ? `${coupon.discountPercentage}% OFF` 
-                                                                : `₹${Number(coupon.discountAmount || 0).toFixed(0)} FLAT OFF`}
+                                                            <div>
+                                                                <span>
+                                                                    {coupon.discountPercentage && coupon.discountPercentage > 0 
+                                                                        ? `${coupon.discountPercentage}% OFF` 
+                                                                        : `₹${Number(coupon.discountAmount || 0).toFixed(0)} FLAT OFF`}
+                                                                </span>
+                                                                {coupon.minOrderAmount && Number(coupon.minOrderAmount) > 0 && (
+                                                                    <span className="block text-[10px] font-bold text-sky-600">
+                                                                        Min: ₹{Number(coupon.minOrderAmount).toFixed(0)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                         <td className="text-slate-600 text-xs font-semibold">
                                                             {coupon.expiryDate || "No Expiry"}
