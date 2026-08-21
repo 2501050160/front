@@ -493,12 +493,12 @@ function DisplayPanel() {
                                                 {formatStudentDisplayName(activePickup.customerName)}
                                             </p>
                                             {isWhatsAppOrder(activePickup) ? (
-                                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm">
-                                                    💬 WhatsApp
+                                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-sm font-black bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/50 shadow-md animate-pulse">
+                                                    💬 WhatsApp Payment (₹{(activePickup.price != null ? activePickup.price : 0).toFixed(2)})
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
-                                                    🌐 Web App
+                                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-sm font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/50 shadow-md">
+                                                    🌐 Web App Payment (₹{(activePickup.price != null ? activePickup.price : 0).toFixed(2)})
                                                 </span>
                                             )}
                                         </div>
@@ -596,31 +596,32 @@ function DisplayPanel() {
                                                             {formatStudentDisplayName(currentOrder.customerName)}
                                                         </p>
                                                         {isWhatsAppOrder(currentOrder) ? (
-                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm">
-                                                                💬 WhatsApp
+                                                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/50 shadow-sm">
+                                                                💬 WhatsApp Payment • ₹{(currentOrder.price != null ? currentOrder.price : 0).toFixed(2)}
                                                             </span>
                                                         ) : (
-                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
-                                                                🌐 Web App
+                                                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
+                                                                🌐 Web App Payment • ₹{(currentOrder.price != null ? currentOrder.price : 0).toFixed(2)}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <div className="grid gap-3">
+                                                <div className="grid grid-cols-2 gap-3">
                                                     {[
                                                         ["Pages", currentOrder.selectedPages || "ALL"],
                                                         ["Copies", currentOrder.copies || 1],
-                                                        ["Print Type", currentOrder.printType || "BW"]
+                                                        ["Print Type", currentOrder.printType || "BW"],
+                                                        ["Payment", isWhatsAppOrder(currentOrder) ? `💬 WA Pay • ₹${(currentOrder.price || 0).toFixed(2)}` : `🌐 Web • ₹${(currentOrder.price || 0).toFixed(2)}`]
                                                     ].map(([label, value]) => (
                                                         <div
                                                             key={label}
-                                                            className="rounded-2xl border border-white/12 bg-slate-950/28 p-4 backdrop-blur"
+                                                            className="rounded-2xl border border-white/12 bg-slate-950/28 p-3.5 backdrop-blur"
                                                         >
-                                                            <p className="text-xs font-black uppercase tracking-widest text-cyan-50/58">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-50/58">
                                                                 {label}
                                                             </p>
-                                                            <p className="mt-1 text-2xl font-black text-white">
+                                                            <p className="mt-0.5 text-xl font-black text-white truncate">
                                                                 {value}
                                                             </p>
                                                         </div>
@@ -750,9 +751,17 @@ function DisplayPanel() {
                                                                     <p className="truncate text-xl font-black leading-none text-white">
                                                                         {order.orderId}
                                                                     </p>
-                                                                    <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-white/50">
-                                                                        Waiting
-                                                                    </p>
+                                                                    <div className="flex items-center gap-1 mt-1">
+                                                                        {isWhatsAppOrder(order) ? (
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm">
+                                                                                💬 WA Pay • ₹{(order.price != null ? order.price : 0).toFixed(2)}
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
+                                                                                🌐 Web • ₹{(order.price != null ? order.price : 0).toFixed(2)}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                                 <div className="relative min-w-0 pr-2">
                                                                     <div className="flex items-center gap-2 flex-wrap">
