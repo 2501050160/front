@@ -736,26 +736,352 @@ function AdminDashboard() {
         }
     };
 
-    const shareCouponOnWhatsApp = (code, discount, expiry) => {
-        const text = encodeURIComponent(
-            `🎉 *Special CloudPrint Discount Coupon!*\n\n` +
+    const createCouponCanvasBlob = (code, discount, expiry) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 1200;
+            canvas.height = 630;
+            const ctx = canvas.getContext("2d");
+
+            // Background
+            const bgGrad = ctx.createLinearGradient(0, 0, 1200, 630);
+            bgGrad.addColorStop(0, "#090d16");
+            bgGrad.addColorStop(0.5, "#0f172a");
+            bgGrad.addColorStop(1, "#020617");
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Ambient Glows
+            const orb1 = ctx.createRadialGradient(250, 150, 10, 250, 150, 400);
+            orb1.addColorStop(0, "rgba(99, 102, 241, 0.45)");
+            orb1.addColorStop(1, "rgba(99, 102, 241, 0)");
+            ctx.fillStyle = orb1;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            const orb2 = ctx.createRadialGradient(950, 450, 10, 950, 450, 400);
+            orb2.addColorStop(0, "rgba(168, 85, 247, 0.4)");
+            orb2.addColorStop(1, "rgba(168, 85, 247, 0)");
+            ctx.fillStyle = orb2;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Main Ticket Card Container
+            const cardX = 80, cardY = 60, cardW = 1040, cardH = 510, cardR = 32;
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(cardX, cardY, cardW, cardH, cardR);
+            const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+            cardGrad.addColorStop(0, "rgba(30, 41, 59, 0.85)");
+            cardGrad.addColorStop(1, "rgba(15, 23, 42, 0.95)");
+            ctx.fillStyle = cardGrad;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+            ctx.stroke();
+            ctx.restore();
+
+            // Brand Tag
+            ctx.font = "900 24px sans-serif";
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillText("☁️ CLOUDPRINT PROMO", 130, 130);
+
+            // Special Discount Pill
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(840, 100, 230, 42, 21);
+            ctx.fillStyle = "rgba(56, 189, 248, 0.2)";
+            ctx.fill();
+            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.font = "900 16px sans-serif";
+            ctx.fillStyle = "#e0f2fe";
+            ctx.textAlign = "center";
+            ctx.fillText("SPECIAL DISCOUNT 🎟️", 955, 127);
+            ctx.restore();
+
+            // Main Discount Big Text
+            ctx.font = "900 84px sans-serif";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(`${discount || "50"}% OFF`, 130, 240);
+
+            // Subtitle
+            ctx.font = "700 24px sans-serif";
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillText("Valid on all Document & Thesis Print Orders", 130, 285);
+
+            // Perforation dashed line
+            ctx.save();
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(130, 330);
+            ctx.lineTo(1070, 330);
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+
+            // Promo Code Box
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(130, 365, 480, 130, 20);
+            ctx.fillStyle = "rgba(2, 6, 23, 0.85)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.font = "800 16px sans-serif";
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillText("USE PROMO CODE AT CHECKOUT", 155, 400);
+
+            ctx.font = "900 48px monospace";
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillText(code || "PRINT8222", 155, 465);
+            ctx.restore();
+
+            // Right side info
+            ctx.font = "800 16px sans-serif";
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillText("EXPIRES ON", 660, 405);
+            ctx.font = "900 28px sans-serif";
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillText(expiry || "Valid for Limited Time", 660, 445);
+
+            ctx.font = "700 16px sans-serif";
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillText("👉 https://cloudprint.website", 660, 480);
+
+            canvas.toBlob((blob) => resolve(blob), "image/png");
+        });
+    };
+
+    const createVoucherCanvasBlob = (code, amount, title, maxClaims) => {
+        return new Promise((resolve) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 1200;
+            canvas.height = 630;
+            const ctx = canvas.getContext("2d");
+
+            // Background
+            const bgGrad = ctx.createLinearGradient(0, 0, 1200, 630);
+            bgGrad.addColorStop(0, "#042f2e");
+            bgGrad.addColorStop(0.5, "#064e3b");
+            bgGrad.addColorStop(1, "#022c22");
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Ambient Glows
+            const orb1 = ctx.createRadialGradient(250, 150, 10, 250, 150, 400);
+            orb1.addColorStop(0, "rgba(52, 211, 153, 0.45)");
+            orb1.addColorStop(1, "rgba(52, 211, 153, 0)");
+            ctx.fillStyle = orb1;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            const orb2 = ctx.createRadialGradient(950, 450, 10, 950, 450, 400);
+            orb2.addColorStop(0, "rgba(20, 184, 166, 0.4)");
+            orb2.addColorStop(1, "rgba(20, 184, 166, 0)");
+            ctx.fillStyle = orb2;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Main Ticket Card Container
+            const cardX = 80, cardY = 60, cardW = 1040, cardH = 510, cardR = 32;
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(cardX, cardY, cardW, cardH, cardR);
+            const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+            cardGrad.addColorStop(0, "rgba(6, 78, 59, 0.85)");
+            cardGrad.addColorStop(1, "rgba(2, 44, 34, 0.95)");
+            ctx.fillStyle = cardGrad;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(52, 211, 153, 0.45)";
+            ctx.stroke();
+            ctx.restore();
+
+            // Brand Tag
+            ctx.font = "900 24px sans-serif";
+            ctx.fillStyle = "#34d399";
+            ctx.fillText("🎁 CLOUDPRINT REWARD VOUCHER", 130, 130);
+
+            // Special Pill
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(840, 100, 230, 42, 21);
+            ctx.fillStyle = "rgba(52, 211, 153, 0.2)";
+            ctx.fill();
+            ctx.strokeStyle = "#34d399";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.font = "900 16px sans-serif";
+            ctx.fillStyle = "#ecfdf5";
+            ctx.textAlign = "center";
+            ctx.fillText("WALLET BONUS 💰", 955, 127);
+            ctx.restore();
+
+            // Main Reward Amount Text
+            ctx.font = "900 80px sans-serif";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(`₹${Number(amount || 50).toFixed(2)} FREE`, 130, 240);
+
+            // Title
+            ctx.font = "700 24px sans-serif";
+            ctx.fillStyle = "#a7f3d0";
+            ctx.fillText(title || "Instant Wallet Credit Voucher", 130, 285);
+
+            // Perforation dashed line
+            ctx.save();
+            ctx.setLineDash([8, 8]);
+            ctx.beginPath();
+            ctx.moveTo(130, 330);
+            ctx.lineTo(1070, 330);
+            ctx.strokeStyle = "rgba(52, 211, 153, 0.4)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+
+            // Promo Code Box
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(130, 365, 480, 130, 20);
+            ctx.fillStyle = "rgba(2, 44, 34, 0.85)";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(52, 211, 153, 0.7)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.font = "800 16px sans-serif";
+            ctx.fillStyle = "#6ee7b7";
+            ctx.fillText("REDEEM CLAIM CODE IN WALLET", 155, 400);
+
+            ctx.font = "900 48px monospace";
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillText(code || "BONUS50", 155, 465);
+            ctx.restore();
+
+            // Right side info
+            ctx.font = "800 16px sans-serif";
+            ctx.fillStyle = "#a7f3d0";
+            ctx.fillText("LIMITED AVAILABILITY", 660, 405);
+            ctx.font = "900 28px sans-serif";
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillText(`${maxClaims || 100} Claims Allowed`, 660, 445);
+
+            ctx.font = "700 16px sans-serif";
+            ctx.fillStyle = "#34d399";
+            ctx.fillText("👉 https://cloudprint.website", 660, 480);
+
+            canvas.toBlob((blob) => resolve(blob), "image/png");
+        });
+    };
+
+    const shareCouponOnWhatsApp = async (code, discount, expiry) => {
+        const text = `🎉 *Special CloudPrint Discount Coupon!*\n\n` +
             `🎟️ *Coupon Code*: *${code || "SPECIAL"}*\n` +
             `💰 *Discount*: *${discount || "10"}% OFF*\n` +
             (expiry ? `⏱️ *Expires*: ${expiry}\n` : ``) +
-            `\n👉 Upload & Print now: https://cloudprint.website`
-        );
-        window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+            `\n👉 Upload & Print now: https://cloudprint.website`;
+
+        try {
+            const blob = await createCouponCanvasBlob(code, discount, expiry);
+            const file = new File([blob], `coupon_${code || "card"}.png`, { type: "image/png" });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: `CloudPrint Coupon: ${code}`,
+                    text: text,
+                    files: [file]
+                });
+                return;
+            }
+
+            // Fallback: download photo & open WhatsApp
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `CloudPrint_Coupon_${code || "promo"}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+            showAlert("Photo Downloaded!", `The coupon card image has been saved to your downloads and WhatsApp is open to share it!`, "success");
+        } catch (err) {
+            console.error("Error sharing coupon photo:", err);
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+        }
     };
 
-    const shareVoucherOnWhatsApp = (code, amount, title) => {
-        const text = encodeURIComponent(
-            `🎁 *Free Wallet Credit Voucher!*\n\n` +
+    const downloadCouponImage = async (code, discount, expiry) => {
+        try {
+            const blob = await createCouponCanvasBlob(code, discount, expiry);
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `CloudPrint_Coupon_${code || "promo"}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+            showAlert("Downloaded", "Coupon photo saved to your device!", "success");
+        } catch (err) {
+            showAlert("Error", "Failed to generate image", "error");
+        }
+    };
+
+    const shareVoucherOnWhatsApp = async (code, amount, title, maxClaims) => {
+        const text = `🎁 *Free Wallet Credit Voucher!*\n\n` +
             `🏷️ *Title*: ${title || "Wallet Reward"}\n` +
             `💰 *Reward Amount*: *₹${amount || "50"} Instant Wallet Credits*\n` +
             `🔑 *Claim Code*: *${code || "BONUS"}*\n\n` +
-            `👉 Redeem & Print now: https://cloudprint.website`
-        );
-        window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+            `👉 Redeem & Print now: https://cloudprint.website`;
+
+        try {
+            const blob = await createVoucherCanvasBlob(code, amount, title, maxClaims);
+            const file = new File([blob], `voucher_${code || "card"}.png`, { type: "image/png" });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: `CloudPrint Voucher: ${code}`,
+                    text: text,
+                    files: [file]
+                });
+                return;
+            }
+
+            // Fallback: download photo & open WhatsApp
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `CloudPrint_Voucher_${code || "bonus"}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+            showAlert("Photo Downloaded!", `The voucher card image has been saved to your downloads and WhatsApp is open to share it!`, "success");
+        } catch (err) {
+            console.error("Error sharing voucher photo:", err);
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+        }
+    };
+
+    const downloadVoucherImage = async (code, amount, title, maxClaims) => {
+        try {
+            const blob = await createVoucherCanvasBlob(code, amount, title, maxClaims);
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `CloudPrint_Voucher_${code || "bonus"}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+            showAlert("Downloaded", "Voucher photo saved to your device!", "success");
+        } catch (err) {
+            showAlert("Error", "Failed to generate image", "error");
+        }
     };
 
     const fetchSupportTickets = async () => {
@@ -3859,14 +4185,21 @@ function AdminDashboard() {
                                                 </div>
                                             </div>
 
-                                            {/* WhatsApp Share Button for Coupon */}
-                                            <div className="mt-4 pt-3 border-t border-slate-100">
+                                            {/* WhatsApp Share & Photo Download Buttons for Coupon */}
+                                            <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
                                                 <button
                                                     type="button"
                                                     onClick={() => shareCouponOnWhatsApp(couponCode, discountPercentage, expiryDate)}
-                                                    className="w-full flex items-center justify-center gap-2 text-xs font-black py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
+                                                    className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
                                                 >
-                                                    <span>💬</span> Share Coupon via WhatsApp
+                                                    <span>💬</span> Share Photo
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => downloadCouponImage(couponCode, discountPercentage, expiryDate)}
+                                                    className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer"
+                                                >
+                                                    <span>🖼️</span> Download PNG
                                                 </button>
                                             </div>
 
@@ -4119,14 +4452,21 @@ function AdminDashboard() {
                                         </div>
                                     </div>
 
-                                    {/* WhatsApp Share Button for Voucher */}
-                                    <div className="mt-4 pt-3 border-t border-slate-100">
+                                    {/* WhatsApp Share & Photo Download Buttons for Voucher */}
+                                    <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => shareVoucherOnWhatsApp(rewardCode, rewardAmt, rewardTitle)}
-                                            className="w-full flex items-center justify-center gap-2 text-xs font-black py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
+                                            onClick={() => shareVoucherOnWhatsApp(rewardCode, rewardAmt, rewardTitle, rewardMaxClaims)}
+                                            className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
                                         >
-                                            <span>💬</span> Share Voucher via WhatsApp
+                                            <span>💬</span> Share Photo
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => downloadVoucherImage(rewardCode, rewardAmt, rewardTitle, rewardMaxClaims)}
+                                            className="flex items-center justify-center gap-1.5 text-xs font-black py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer"
+                                        >
+                                            <span>🖼️</span> Download PNG
                                         </button>
                                     </div>
 
