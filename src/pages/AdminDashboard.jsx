@@ -204,6 +204,8 @@ function AdminDashboard() {
     const [notifType, setNotifType] = useState("INFO");
 
     // Custom Modal configs
+    const [collegeModalUser, setCollegeModalUser] = useState(null);
+    const [selectedUserCollegeTarget, setSelectedUserCollegeTarget] = useState("");
     const [modalConfig, setModalConfig] = useState({
         isOpen: false,
         title: "",
@@ -708,21 +710,25 @@ function AdminDashboard() {
         }
     };
 
-    const handleChangeUserCollege = async (user) => {
+    const handleChangeUserCollege = (user) => {
         const isMainAdmin = loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin";
         if (!isMainAdmin) {
             showAlert("Permission Denied", "Only the Main Admin is authorized to change user colleges.", "error");
             return;
         }
-        const currentCol = user.college || "KLU";
-        const newCol = window.prompt(`Change campus/college for ${user.name || user.email}.\nCurrent College: ${currentCol}\nEnter new college code (e.g. KLU, VNR, CBIT):`, currentCol);
-        if (!newCol || !newCol.trim()) return;
-        const target = newCol.trim().toUpperCase();
+        setCollegeModalUser(user);
+        setSelectedUserCollegeTarget(user.college || (allColleges && allColleges[0]) || "KLU");
+    };
+
+    const handleConfirmUserCollegeChange = async () => {
+        if (!collegeModalUser || !selectedUserCollegeTarget) return;
+        const target = selectedUserCollegeTarget.trim().toUpperCase();
         try {
             await api.post("/admin/users/update-college", null, {
-                params: { id: user.id, college: target, adminUsername: loggedInAdminUser }
+                params: { id: collegeModalUser.id, college: target, adminUsername: loggedInAdminUser }
             });
-            showAlert("Success", `College for ${user.name || user.email} updated to ${target}!`, "success");
+            showAlert("Success", `College for ${collegeModalUser.name || collegeModalUser.email} updated to ${target}!`, "success");
+            setCollegeModalUser(null);
             fetchUsers();
         } catch (error) {
             console.error("Error updating user college:", error);
@@ -6726,6 +6732,72 @@ function AdminDashboard() {
                     </CustomModal>
                 )}
             </AnimatePresence>
+
+            {/* Change User College Modal */}
+            {collegeModalUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 text-left animate-fadeIn">
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-sky-50 text-sky-600 rounded-2xl">
+                                    <span className="text-2xl">🏫</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-900">Change Campus College</h3>
+                                    <p className="text-xs font-semibold text-slate-500">{collegeModalUser.name || collegeModalUser.email}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setCollegeModalUser(null)}
+                                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
+                                    Select from Available Campuses:
+                                </label>
+                                <select
+                                    value={selectedUserCollegeTarget}
+                                    onChange={(e) => setSelectedUserCollegeTarget(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none cursor-pointer"
+                                >
+                                    {allColleges.map((c) => (
+                                        <option key={c} value={c}>
+                                            🏫 {c} Campus
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="bg-sky-50/70 border border-sky-100 rounded-2xl p-3.5 text-xs text-sky-900 font-medium flex items-start gap-2.5">
+                                <span className="text-base shrink-0">ℹ️</span>
+                                <span>Changing the student's campus immediately updates their pricing rates, active kiosks, and off-peak discount windows.</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setCollegeModalUser(null)}
+                                className="px-5 py-2.5 rounded-xl font-bold text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmUserCollegeChange}
+                                className="px-6 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-md transition-all cursor-pointer"
+                            >
+                                Confirm & Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Custom Premium Modal */}
             <CustomModal
