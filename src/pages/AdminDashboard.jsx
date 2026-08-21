@@ -97,6 +97,12 @@ function AdminDashboard() {
         offpeakMorningEnd: 9.0
     });
 
+    const [thesisCollege, setThesisCollege] = useState("KLU");
+    const [collegeThesisSettings, setCollegeThesisSettings] = useState({
+        thesisDiscountPages: 500,
+        thesisDiscountPercent: 15.0
+    });
+
     const [userCollegeFilter, setUserCollegeFilter] = useState("ALL");
     const [userSearchQuery, setUserSearchQuery] = useState("");
     const [blockCollegeFilter, setBlockCollegeFilter] = useState("ALL");
@@ -383,6 +389,10 @@ function AdminDashboard() {
             const initialOffpeakCollege = isSubAdmin ? currentCollege : "KLU";
             setOffpeakCollege(initialOffpeakCollege);
             fetchCollegeOffpeakSettings(initialOffpeakCollege);
+
+            const initialThesisCollege = isSubAdmin ? currentCollege : "KLU";
+            setThesisCollege(initialThesisCollege);
+            fetchCollegeThesisSettings(initialThesisCollege);
             
             fetchBlocks();
             fetchPrinters();
@@ -1621,6 +1631,28 @@ function AdminDashboard() {
         } catch (error) {
             console.error("Error updating offpeak settings:", error);
             showAlert("Error", "Failed to update offpeak settings", "error");
+        }
+    };
+
+    const fetchCollegeThesisSettings = async (college) => {
+        try {
+            const response = await api.get(`/admin/settings/thesis?college=${college}`);
+            if (response.data) {
+                setCollegeThesisSettings(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching thesis settings:", error);
+        }
+    };
+
+    const saveCollegeThesisSettings = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post(`/admin/settings/thesis/update?college=${thesisCollege}`, collegeThesisSettings);
+            showAlert("Success", `Thesis & Bulk Print Settings for ${thesisCollege} Updated Successfully`, "success");
+        } catch (error) {
+            console.error("Error updating thesis settings:", error);
+            showAlert("Error", "Failed to update bulk print settings", "error");
         }
     };
 
@@ -5967,22 +5999,53 @@ function AdminDashboard() {
                                 animate={{ opacity: 1, y: 0 }}
                             >
                                 <section className="panel p-6">
-                                    <div className="section-header mb-6">
+                                    <div className="section-header mb-6 flex flex-wrap justify-between items-center gap-4">
                                         <div>
                                             <p className="eyebrow">Thesis & Bulk Prints</p>
                                             <h2 className="text-2xl font-black text-slate-900">Bulk Discount Rules</h2>
                                             <p className="subtitle">Automatically give automatic bulk discount percentages on large document orders.</p>
                                         </div>
+
+                                        {(loggedInAdminRole !== "SUB_ADMIN" || loggedInAdminUser === "admin") ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-500">Configure College:</span>
+                                                <select
+                                                    value={thesisCollege}
+                                                    onChange={(e) => {
+                                                        setThesisCollege(e.target.value);
+                                                        fetchCollegeThesisSettings(e.target.value);
+                                                    }}
+                                                    className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                                >
+                                                    <option value="ALL" disabled>Select a College</option>
+                                                    {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                        <option key={col} value={col}>{col} College</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-500">College:</span>
+                                                <span className="text-xs font-black px-3 py-1 rounded-lg bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                                    {thesisCollege}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <form onSubmit={saveSystemSettings} className="space-y-4">
+                                    <form onSubmit={saveCollegeThesisSettings} className="space-y-4">
+                                        <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-900">
+                                            <span>🏫 Configuring Rules For:</span>
+                                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-200/80 text-indigo-950 font-black">{thesisCollege}</span>
+                                        </div>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <label className="block">
                                                 <span className="block text-xs font-black text-slate-700 mb-1.5">Threshold (Pages)</span>
                                                 <input 
                                                     type="number" 
                                                     className="field" 
-                                                    value={systemSettings.thesisDiscountPages || 50}
-                                                    onChange={(e) => setSystemSettings({...systemSettings, thesisDiscountPages: Number(e.target.value)})}
+                                                    value={collegeThesisSettings?.thesisDiscountPages !== undefined ? collegeThesisSettings.thesisDiscountPages : 500}
+                                                    onChange={(e) => setCollegeThesisSettings({...collegeThesisSettings, thesisDiscountPages: Number(e.target.value)})}
+                                                    min="1"
                                                 />
                                             </label>
                                             <label className="block">
@@ -5990,13 +6053,15 @@ function AdminDashboard() {
                                                 <input 
                                                     type="number" 
                                                     className="field" 
-                                                    value={systemSettings.thesisDiscountPercent || 15}
-                                                    onChange={(e) => setSystemSettings({...systemSettings, thesisDiscountPercent: Number(e.target.value)})}
+                                                    value={collegeThesisSettings?.thesisDiscountPercent !== undefined ? collegeThesisSettings.thesisDiscountPercent : 15}
+                                                    onChange={(e) => setCollegeThesisSettings({...collegeThesisSettings, thesisDiscountPercent: Number(e.target.value)})}
                                                     step="0.5"
+                                                    min="0"
+                                                    max="100"
                                                 />
                                             </label>
                                         </div>
-                                        <button type="submit" className="btn success w-full mt-4">💾 Save Bulk Print Settings</button>
+                                        <button type="submit" className="btn success w-full mt-4">💾 Save Bulk Print Settings ({thesisCollege})</button>
                                     </form>
                                 </section>
 
@@ -6007,7 +6072,8 @@ function AdminDashboard() {
                                             <h3 className="text-xl font-black text-slate-900">Thesis Submissions</h3>
                                         </div>
                                         <div className="p-4 rounded-xl bg-sky-50 border border-sky-100 text-xs text-sky-800 space-y-2">
-                                            <p>When an uploaded PDF exceeds the page threshold, the system automatically marks it with a bulk discount tag during checkout.</p>
+                                            <p>When an uploaded PDF exceeds the page threshold ({collegeThesisSettings?.thesisDiscountPages || 500} pages), the system automatically applies a {collegeThesisSettings?.thesisDiscountPercent || 15}% bulk discount during checkout.</p>
+                                            <p className="font-semibold text-sky-900 mt-2">Campus rules operate independently per college so specific discounts can be tailored for student thesis printing.</p>
                                         </div>
                                     </div>
                                 </section>
