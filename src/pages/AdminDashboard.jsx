@@ -6544,26 +6544,28 @@ function AdminDashboard() {
                                             <span className="block text-xs font-black text-slate-500 uppercase tracking-wider">⚡ Quick Table Presets (Click table to populate SELECT query):</span>
                                             <div className="flex flex-wrap gap-2">
                                                 {[
-                                                    "users",
-                                                    "print_orders",
-                                                    "wallets",
-                                                    "colleges",
-                                                    "blocks",
-                                                    "printers",
-                                                    "coupons",
-                                                    "support_tickets",
-                                                    "manager_logs",
-                                                    "system_settings",
-                                                    "whatsapp_orders"
-                                                ].map((tableName) => (
+                                                    { label: "users", query: "SELECT * FROM users LIMIT 50;" },
+                                                    { label: "print_orders (pdf_files)", query: "SELECT * FROM pdf_files ORDER BY id DESC LIMIT 50;" },
+                                                    { label: "wallets (users)", query: "SELECT id, name, email, wallet_balance, college FROM users WHERE wallet_balance > 0 ORDER BY wallet_balance DESC LIMIT 50;" },
+                                                    { label: "colleges (college_configs)", query: "SELECT * FROM college_configs LIMIT 50;" },
+                                                    { label: "blocks (campus_blocks)", query: "SELECT * FROM campus_blocks LIMIT 50;" },
+                                                    { label: "printers (printer_config)", query: "SELECT * FROM printer_config LIMIT 50;" },
+                                                    { label: "coupons", query: "SELECT * FROM coupons LIMIT 50;" },
+                                                    { label: "support_tickets", query: "SELECT * FROM support_tickets ORDER BY id DESC LIMIT 50;" },
+                                                    { label: "manager_logs", query: "SELECT * FROM manager_logs ORDER BY id DESC LIMIT 50;" },
+                                                    { label: "system_settings", query: "SELECT * FROM system_settings LIMIT 50;" },
+                                                    { label: "whatsapp_orders", query: "SELECT * FROM pdf_files WHERE order_channel = 'WHATSAPP' OR user_email LIKE 'wa_%' ORDER BY id DESC LIMIT 50;" },
+                                                    { label: "pricing", query: "SELECT * FROM pricing LIMIT 50;" },
+                                                    { label: "admin_accounts", query: "SELECT id, username, role, college FROM admin LIMIT 50;" }
+                                                ].map((item) => (
                                                     <button
-                                                        key={tableName}
+                                                        key={item.label}
                                                         type="button"
-                                                        onClick={() => setSqlQuery(`SELECT * FROM ${tableName} LIMIT 50;`)}
+                                                        onClick={() => setSqlQuery(item.query)}
                                                         className="px-3 py-1.5 rounded-xl bg-slate-100/90 hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-600 text-slate-800 hover:text-white font-mono text-xs font-bold transition-all border border-slate-200 hover:border-cyan-400 shadow-sm hover:shadow-md cursor-pointer flex items-center gap-1.5 shrink-0"
                                                     >
                                                         <span>📊</span>
-                                                        <span>{tableName}</span>
+                                                        <span>{item.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
