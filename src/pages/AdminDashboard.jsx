@@ -126,17 +126,23 @@ function AdminDashboard() {
     }, []);
 
     const allColleges = useMemo(() => {
-        const list = new Set(["KLU", "VIT", "SRM", "VNR", "CBIT", "GITAM", "AMRITA", "MANIPAL", "VIGNAN", "IIT", "NIT"]);
-        if (Array.isArray(fetchedColleges)) {
-            fetchedColleges.forEach(c => list.add(c.trim().toUpperCase()));
-        }
-        if (Array.isArray(blocks)) {
-            blocks.forEach(b => {
-                if (b.college) list.add(b.college.trim().toUpperCase());
+        const list = new Set();
+        if (Array.isArray(fetchedColleges) && fetchedColleges.length > 0) {
+            fetchedColleges.forEach(c => {
+                if (c) list.add(c.trim().toUpperCase());
             });
         }
-        return Array.from(list).filter(Boolean).sort();
-    }, [fetchedColleges, blocks]);
+        if (Array.isArray(blocks) && blocks.length > 0) {
+            blocks.forEach(b => {
+                if (b?.college) list.add(b.college.trim().toUpperCase());
+            });
+        }
+        // If database is currently empty, ensure at least KLU or loggedInAdminCollege is present
+        if (list.size === 0) {
+            list.add(loggedInAdminCollege || "KLU");
+        }
+        return Array.from(list).sort();
+    }, [fetchedColleges, blocks, loggedInAdminCollege]);
 
     // Rewards & Voucher creator states
     const [rewards, setRewards] = useState([]);
