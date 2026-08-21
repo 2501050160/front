@@ -6106,21 +6106,21 @@ function AdminDashboard() {
                                 <form onSubmit={saveCollegeOffpeakSettings} className="space-y-5">
                                     {/* Enable / Disable toggle */}
                                     <div className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                                        collegeOffpeakSettings.offpeakEnabled
+                                        collegeOffpeakSettings?.offpeakEnabled
                                             ? "border-emerald-400 bg-emerald-50"
                                             : "border-slate-200 bg-slate-50"
                                     }`}>
                                         <div>
                                             <p className="font-black text-slate-900 text-sm">Off-Peak Discount Program ({offpeakCollege})</p>
                                             <p className="text-xs text-slate-500 font-semibold mt-0.5">
-                                                {collegeOffpeakSettings.offpeakEnabled ? "✅ Currently Active — discounts are being applied" : "⏸️ Currently Disabled — no discount applied"}
+                                                {collegeOffpeakSettings?.offpeakEnabled ? "✅ Currently Active — discounts are being applied" : "⏸️ Currently Disabled — no discount applied"}
                                             </p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 className="sr-only peer"
-                                                checked={collegeOffpeakSettings.offpeakEnabled || false}
+                                                checked={Boolean(collegeOffpeakSettings?.offpeakEnabled)}
                                                 onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakEnabled: e.target.checked})}
                                             />
                                             <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
@@ -6128,22 +6128,22 @@ function AdminDashboard() {
                                     </div>
 
                                     {/* Live time preview */}
-                                    {collegeOffpeakSettings.offpeakEnabled && (
+                                    {collegeOffpeakSettings?.offpeakEnabled && (
                                         <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-100 space-y-1">
                                             <p className="text-xs font-black text-indigo-700 uppercase tracking-wider mb-2">⏰ Active Discount Windows</p>
                                             <div className="flex flex-wrap gap-3">
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-100 text-indigo-800 text-xs font-bold">
-                                                    🌙 Night: {(() => { const h = collegeOffpeakSettings.offpeakStartHour ?? 21; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                    🌙 Night: {(() => { const h = collegeOffpeakSettings?.offpeakStartHour ?? 21; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                                     {" → "}
-                                                    {(() => { const h = collegeOffpeakSettings.offpeakEndHour ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                    {(() => { const h = collegeOffpeakSettings?.offpeakEndHour ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                                 </span>
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 text-xs font-bold">
-                                                    🌅 Morning: {(() => { const h = collegeOffpeakSettings.offpeakMorningStart ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                    🌅 Morning: {(() => { const h = collegeOffpeakSettings?.offpeakMorningStart ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                                     {" → "}
-                                                    {(() => { const h = collegeOffpeakSettings.offpeakMorningEnd ?? 9; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                    {(() => { const h = collegeOffpeakSettings?.offpeakMorningEnd ?? 9; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                                 </span>
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">
-                                                    🏷️ Discount: {collegeOffpeakSettings.offpeakDiscountPercent ?? 15}% OFF
+                                                    🏷️ Discount: {collegeOffpeakSettings?.offpeakDiscountPercent ?? 15}% OFF
                                                 </span>
                                             </div>
                                         </div>
@@ -6155,12 +6155,12 @@ function AdminDashboard() {
                                             <input 
                                                 type="number" 
                                                 className="field" 
-                                                value={collegeOffpeakSettings.offpeakStartHour !== undefined ? collegeOffpeakSettings.offpeakStartHour : 21}
+                                                value={collegeOffpeakSettings?.offpeakStartHour !== undefined ? collegeOffpeakSettings.offpeakStartHour : 21}
                                                 onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakStartHour: Number(e.target.value)})}
                                                 min="0" max="23"
                                             />
                                             <span className="text-[11px] text-slate-400 font-semibold mt-1 block">
-                                                = {(() => { const h = collegeOffpeakSettings.offpeakStartHour ?? 21; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                = {(() => { const h = collegeOffpeakSettings?.offpeakStartHour ?? 21; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                             </span>
                                         </label>
                                         <label className="block">
@@ -6168,12 +6168,12 @@ function AdminDashboard() {
                                             <input 
                                                 type="number" 
                                                 className="field" 
-                                                value={collegeOffpeakSettings.offpeakEndHour !== undefined ? collegeOffpeakSettings.offpeakEndHour : 7}
+                                                value={collegeOffpeakSettings?.offpeakEndHour !== undefined ? collegeOffpeakSettings.offpeakEndHour : 7}
                                                 onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakEndHour: Number(e.target.value)})}
                                                 min="0" max="23"
                                             />
                                             <span className="text-[11px] text-slate-400 font-semibold mt-1 block">
-                                                = {(() => { const h = collegeOffpeakSettings.offpeakEndHour ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                = {(() => { const h = collegeOffpeakSettings?.offpeakEndHour ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                             </span>
                                         </label>
                                     </div>
@@ -6183,12 +6183,12 @@ function AdminDashboard() {
                                             <input 
                                                 type="number" 
                                                 className="field" 
-                                                value={collegeOffpeakMorningStart !== undefined ? collegeOffpeakMorningStart : 7}
+                                                value={collegeOffpeakSettings?.offpeakMorningStart !== undefined ? collegeOffpeakSettings.offpeakMorningStart : 7}
                                                 onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakMorningStart: Number(e.target.value)})}
                                                 min="0" max="23"
                                             />
                                             <span className="text-[11px] text-slate-400 font-semibold mt-1 block">
-                                                = {(() => { const h = collegeOffpeakSettings.offpeakMorningStart ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                = {(() => { const h = collegeOffpeakSettings?.offpeakMorningStart ?? 7; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                             </span>
                                         </label>
                                         <label className="block">
@@ -6196,12 +6196,12 @@ function AdminDashboard() {
                                             <input 
                                                 type="number" 
                                                 className="field" 
-                                                value={collegeOffpeakSettings.offpeakMorningEnd !== undefined ? collegeOffpeakSettings.offpeakMorningEnd : 9}
+                                                value={collegeOffpeakSettings?.offpeakMorningEnd !== undefined ? collegeOffpeakSettings.offpeakMorningEnd : 9}
                                                 onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakMorningEnd: Number(e.target.value)})}
                                                 min="0" max="23"
                                             />
                                             <span className="text-[11px] text-slate-400 font-semibold mt-1 block">
-                                                = {(() => { const h = collegeOffpeakSettings.offpeakMorningEnd ?? 9; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
+                                                = {(() => { const h = collegeOffpeakSettings?.offpeakMorningEnd ?? 9; return `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`; })()}
                                             </span>
                                         </label>
                                     </div>
@@ -6210,7 +6210,7 @@ function AdminDashboard() {
                                         <input 
                                             type="number" 
                                             className="field" 
-                                            value={collegeOffpeakSettings.offpeakDiscountPercent !== undefined ? collegeOffpeakSettings.offpeakDiscountPercent : 15}
+                                            value={collegeOffpeakSettings?.offpeakDiscountPercent !== undefined ? collegeOffpeakSettings.offpeakDiscountPercent : 15}
                                             onChange={(e) => setCollegeOffpeakSettings({...collegeOffpeakSettings, offpeakDiscountPercent: Number(e.target.value)})}
                                             step="0.5"
                                         />
