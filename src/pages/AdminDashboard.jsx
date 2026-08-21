@@ -1200,7 +1200,24 @@ function AdminDashboard() {
                 const email = (o.userEmail || o.email || "").toLowerCase();
                 const name = (o.customerName || "").toLowerCase();
                 const channel = (o.orderChannel || "").toUpperCase();
-                const isWA = channel === "WHATSAPP" || email.includes("@c.us") || email.includes("whatsapp") || /^\+?[0-9]{10,13}$/.test(name.trim());
+                const referral = (o.appliedReferralCode || "").toUpperCase();
+                const orderIdStr = (o.orderId || "").toUpperCase();
+
+                const isWA = channel === "WHATSAPP" ||
+                    channel === "BOT" ||
+                    channel === "WA" ||
+                    email.includes("@c.us") ||
+                    email.includes("whatsapp") ||
+                    email.startsWith("wa_") ||
+                    referral.startsWith("WA_") ||
+                    orderIdStr.startsWith("WA_") ||
+                    name.includes("+91") ||
+                    name.includes("(+91") ||
+                    name.includes("whatsapp") ||
+                    name.includes("wa_") ||
+                    /\+?91[\s-]*[0-9]{10}/.test(name) ||
+                    /\b[6-9][0-9]{9}\b/.test(name) ||
+                    /[0-9]{10}/.test(name.replace(/[^0-9]/g, ""));
 
                 if (isWA) {
                     whatsappGrossRevenue += original || 0;
@@ -2037,7 +2054,14 @@ function AdminDashboard() {
                         {(activeTab === "queue" || activeTab === "order-queue") && (
                             [
                                 { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
-                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: `${orders.filter(o => { const e=(o.userEmail||o.email||'').toLowerCase(); const c=(o.orderChannel||'').toUpperCase(); return c==='WHATSAPP'||e.includes('@c.us')||e.includes('whatsapp'); }).length} Bot Orders` },
+                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: `${orders.filter(o => {
+                                    const e = (o.userEmail || o.email || "").toLowerCase();
+                                    const c = (o.orderChannel || "").toUpperCase();
+                                    const n = (o.customerName || "").toLowerCase();
+                                    const r = (o.appliedReferralCode || "").toUpperCase();
+                                    const oid = (o.orderId || "").toUpperCase();
+                                    return c === "WHATSAPP" || c === "BOT" || c === "WA" || e.includes("@c.us") || e.includes("whatsapp") || e.startsWith("wa_") || r.startsWith("WA_") || oid.startsWith("WA_") || n.includes("+91") || n.includes("(+91") || n.includes("whatsapp") || n.includes("wa_") || /[0-9]{10}/.test(n.replace(/[^0-9]/g, ""));
+                                }).length} Bot Orders` },
                                 { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
                                 { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
                                 { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },

@@ -41,7 +41,26 @@ export function WhatsAppOrdersSection({
         const name = (o.customerName || "").toLowerCase();
         const email = (o.userEmail || o.email || "").toLowerCase();
         const channel = (o.orderChannel || "").toUpperCase();
-        return channel === "WHATSAPP" || email.includes("@c.us") || email.includes("whatsapp") || /^\+?[0-9]{10,13}$/.test(name.trim());
+        const referral = (o.appliedReferralCode || "").toUpperCase();
+        const orderIdStr = (o.orderId || "").toUpperCase();
+
+        return (
+            channel === "WHATSAPP" ||
+            channel === "BOT" ||
+            channel === "WA" ||
+            email.includes("@c.us") ||
+            email.includes("whatsapp") ||
+            email.startsWith("wa_") ||
+            referral.startsWith("WA_") ||
+            orderIdStr.startsWith("WA_") ||
+            name.includes("+91") ||
+            name.includes("(+91") ||
+            name.includes("whatsapp") ||
+            name.includes("wa_") ||
+            /\+?91[\s-]*[0-9]{10}/.test(name) ||
+            /\b[6-9][0-9]{9}\b/.test(name) ||
+            /[0-9]{10}/.test(name.replace(/[^0-9]/g, ""))
+        );
     };
 
     const waOrders = orders.filter(isWhatsAppOrder);
