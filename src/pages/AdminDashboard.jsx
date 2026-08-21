@@ -4401,14 +4401,47 @@ function AdminDashboard() {
                                             <input type="text" className="field" placeholder="e.g. Earn Rs. 50 wallet credits instantly" value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} required />
                                         </label>
                                         <div className="grid gap-4 sm:grid-cols-2">
-                                            <label className="block">
+                                            <div>
                                                 <span className="block text-xs font-black text-slate-700 mb-1">Reward Amount (₹)</span>
-                                                <input type="number" className="field" placeholder="e.g. 50" value={rewardAmt} onChange={(e) => setRewardAmt(e.target.value)} required />
-                                            </label>
-                                            <label className="block">
+                                                <input type="number" className="field" placeholder="e.g. 50" value={rewardAmt} onChange={(e) => setRewardAmt(e.target.value)} required min="1" />
+                                                <div className="flex gap-1.5 mt-2">
+                                                    {[20, 50, 100, 200, 500].map(val => (
+                                                        <button
+                                                            key={val}
+                                                            type="button"
+                                                            onClick={() => setRewardAmt(val.toString())}
+                                                            className={`px-2 py-0.5 rounded text-[11px] font-black border transition-all cursor-pointer ${
+                                                                rewardAmt === val.toString()
+                                                                    ? "bg-emerald-600 text-white border-emerald-600"
+                                                                    : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                            }`}
+                                                        >
+                                                            ₹{val}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
                                                 <span className="block text-xs font-black text-slate-700 mb-1">Voucher Code (uppercase)</span>
-                                                <input type="text" className="field uppercase tracking-wider font-mono font-black" placeholder="e.g. BONUS50" value={rewardCode} onChange={(e) => setRewardCode(e.target.value.toUpperCase())} required />
-                                            </label>
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        className="field uppercase tracking-wider font-mono font-black" 
+                                                        placeholder="e.g. BONUS50" 
+                                                        value={rewardCode} 
+                                                        onChange={(e) => setRewardCode(e.target.value.toUpperCase())} 
+                                                        required 
+                                                    />
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setRewardCode(`BONUS${Math.floor(1000 + Math.random() * 9000)}`)}
+                                                        className="btn secondary shrink-0 text-xs px-3 cursor-pointer"
+                                                        title="Generate Random Voucher Code"
+                                                    >
+                                                        🎲 Random
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                         <label className="block">
                                             <span className="block text-xs font-black text-slate-700 mb-1">Max Claims allowed</span>

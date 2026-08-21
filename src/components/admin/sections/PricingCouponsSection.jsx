@@ -377,14 +377,33 @@ export function PricingCouponsSection({
                                 />
                             </div>
                             <div>
-                                <label className="text-[11px] font-bold text-slate-400 uppercase">Secret Code</label>
-                                <input
-                                    type="text"
-                                    placeholder="WELCOME50"
-                                    value={rewardCode}
-                                    onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
-                                    className="w-full mt-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono uppercase font-black outline-none focus:border-purple-500"
-                                />
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[11px] font-bold text-slate-400 uppercase">Secret Code</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRewardCode(`BONUS${Math.floor(1000 + Math.random() * 9000)}`)}
+                                        className="text-[10px] text-purple-400 hover:text-purple-300 font-bold cursor-pointer"
+                                    >
+                                        🎲 Random
+                                    </button>
+                                </div>
+                                <div className="flex gap-1.5 mt-1">
+                                    <input
+                                        type="text"
+                                        placeholder="WELCOME50"
+                                        value={rewardCode}
+                                        onChange={(e) => setRewardCode(e.target.value.toUpperCase())}
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-mono uppercase font-black outline-none focus:border-purple-500"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setRewardCode(`BONUS${Math.floor(1000 + Math.random() * 9000)}`)}
+                                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-bold rounded-xl border border-slate-700 shrink-0 cursor-pointer"
+                                        title="Generate Random Code"
+                                    >
+                                        🎲
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
