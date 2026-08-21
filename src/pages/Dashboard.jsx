@@ -687,8 +687,10 @@ function Dashboard() {
             // Apply coupon updates and validate before wallet payment
             let walletRes;
             if (couponApplied && couponDetails) {
-                const discount = (finalOrder.price * couponDetails.discountPercentage) / 100;
-                const discountedPrice = finalOrder.price - discount;
+                const discount = (couponDetails.discountPercentage && couponDetails.discountPercentage > 0)
+                    ? (finalOrder.price * couponDetails.discountPercentage) / 100
+                    : (couponDetails.discountAmount ? Math.min(finalOrder.price, couponDetails.discountAmount) : 0);
+                const discountedPrice = Math.max(0, finalOrder.price - discount);
                 
                 await api.post("/pdf/updatePrice", null, {
                     params: {
@@ -788,8 +790,10 @@ function Dashboard() {
 
             let paymentAmount = finalOrder.price;
             if (couponApplied && couponDetails) {
-                const discount = (finalOrder.price * couponDetails.discountPercentage) / 100;
-                paymentAmount = finalOrder.price - discount;
+                const discount = (couponDetails.discountPercentage && couponDetails.discountPercentage > 0)
+                    ? (finalOrder.price * couponDetails.discountPercentage) / 100
+                    : (couponDetails.discountAmount ? Math.min(finalOrder.price, couponDetails.discountAmount) : 0);
+                paymentAmount = Math.max(0, finalOrder.price - discount);
 
                 await api.post("/pdf/updatePrice", null, {
                     params: {
@@ -1105,7 +1109,12 @@ function Dashboard() {
     const estimatedTotalPages = sheetsToPrint * Number(copies || 1);
     const isLowPaper = uploaded && estimatedTotalPages > paperCount;
     const basePrice = sheetsToPrint * Number(copies || 1) * rate;
-    const estimatedTotal = couponApplied && couponDetails ? Math.max(0, basePrice - (basePrice * couponDetails.discountPercentage) / 100) : basePrice;
+    const estimatedDiscount = couponApplied && couponDetails
+        ? ((couponDetails.discountPercentage && couponDetails.discountPercentage > 0)
+            ? (basePrice * couponDetails.discountPercentage) / 100
+            : (couponDetails.discountAmount ? Math.min(basePrice, couponDetails.discountAmount) : 0))
+        : 0;
+    const estimatedTotal = Math.max(0, basePrice - estimatedDiscount);
     const isPrintingDisabled = !systemStatus.databaseConnected || (systemStatus.available === false) || !systemStatus.printerConfigured || isLowPaper || systemStatus.maintenance || systemStatus.paused || (systemStatus.active === false);
 
     const displayAdText = settings.adEnabled && settings.adText ? settings.adText.replace("{referralCode}", referralCode) : "";

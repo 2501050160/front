@@ -29,6 +29,7 @@ function AdminDashboard() {
     const [blockPricesMap, setBlockPricesMap] = useState({});
 
     const [couponCode, setCouponCode] = useState("");
+    const [discountType, setDiscountType] = useState("PERCENTAGE"); // "PERCENTAGE" or "AMOUNT"
     const [discountPercentage, setDiscountPercentage] = useState("");
     const [expiryDate, setExpiryDate] = useState("");
     const [maxUses, setMaxUses] = useState(1);
@@ -1216,20 +1217,29 @@ function AdminDashboard() {
     };
 
     const createCoupon = async () => {
-        const pct = discountPercentage ? Number(discountPercentage) : 10;
-        if (pct > 95) {
-            showAlert("Discount Constraint", "Maximum allowed coupon discount limit is 95%.", "error");
-            return;
+        const val = discountPercentage ? Number(discountPercentage) : 10;
+        if (discountType === "PERCENTAGE") {
+            if (val > 95) {
+                showAlert("Discount Constraint", "Maximum allowed coupon discount percentage is 95%.", "error");
+                return;
+            }
+            if (val <= 0) {
+                showAlert("Invalid Discount", "Please specify a discount percentage greater than 0%.", "warning");
+                return;
+            }
+        } else {
+            if (val <= 0) {
+                showAlert("Invalid Amount", "Please specify a discount amount greater than ₹0.", "warning");
+                return;
+            }
         }
-        if (pct <= 0) {
-            showAlert("Invalid Discount", "Please specify a discount percentage greater than 0%.", "warning");
-            return;
-        }
+
         const parsedMaxUses = maxUses && !isNaN(parseInt(maxUses, 10)) ? Math.max(1, parseInt(maxUses, 10)) : 100;
         try {
             const payload = {
                 couponCode: couponCode ? couponCode.trim().toUpperCase() : null,
-                discountPercentage: pct,
+                discountPercentage: discountType === "PERCENTAGE" ? val : 0.0,
+                discountAmount: discountType === "AMOUNT" ? val : null,
                 expiryDate: expiryDate && expiryDate.trim() ? expiryDate.trim() : null,
                 maxUses: parsedMaxUses,
                 active: true
@@ -4063,31 +4073,73 @@ function AdminDashboard() {
 
                                                 <div>
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <span className="text-sm font-black text-slate-700">Discount Percentage (%)</span>
-                                                        <span className="text-xs font-black text-emerald-600">{discountPercentage || 0}% OFF</span>
-                                                    </div>
-                                                    <input
-                                                        type="number"
-                                                        placeholder="Discount % (Max 95%)"
-                                                        value={discountPercentage}
-                                                        onChange={(e) => setDiscountPercentage(e.target.value)}
-                                                        className="field"
-                                                        max="95"
-                                                        min="1"
-                                                    />
-                                                    <div className="flex gap-2 mt-2">
-                                                        {[10, 20, 25, 50, 75, 90].map(pct => (
+                                                        <span className="text-sm font-black text-slate-700">Discount Type</span>
+                                                        <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
                                                             <button
-                                                                key={pct}
                                                                 type="button"
-                                                                onClick={() => setDiscountPercentage(pct.toString())}
-                                                                className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
-                                                                    discountPercentage === pct.toString()
+                                                                onClick={() => setDiscountType("PERCENTAGE")}
+                                                                className={`px-3 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
+                                                                    discountType === "PERCENTAGE"
+                                                                        ? "bg-emerald-600 text-white shadow-sm"
+                                                                        : "text-slate-600 hover:text-slate-900"
+                                                                }`}
+                                                            >
+                                                                % Percentage
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setDiscountType("AMOUNT")}
+                                                                className={`px-3 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
+                                                                    discountType === "AMOUNT"
+                                                                        ? "bg-emerald-600 text-white shadow-sm"
+                                                                        : "text-slate-600 hover:text-slate-900"
+                                                                }`}
+                                                            >
+                                                                ₹ Flat Amount Off
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs font-bold text-slate-500">
+                                                            {discountType === "PERCENTAGE" ? "Discount Percentage (%)" : "Flat Amount Off (₹)"}
+                                                        </span>
+                                                        <span className="text-xs font-black text-emerald-600">
+                                                            {discountType === "PERCENTAGE"
+                                                                ? `${discountPercentage || 0}% OFF`
+                                                                : `₹${discountPercentage || 0} FLAT OFF`}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="relative">
+                                                        {discountType === "AMOUNT" && (
+                                                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                                        )}
+                                                        <input
+                                                            type="number"
+                                                            placeholder={discountType === "PERCENTAGE" ? "Discount % (Max 95%)" : "Discount in ₹ (e.g. 20)"}
+                                                            value={discountPercentage}
+                                                            onChange={(e) => setDiscountPercentage(e.target.value)}
+                                                            className={`field ${discountType === "AMOUNT" ? "pl-8" : ""}`}
+                                                            max={discountType === "PERCENTAGE" ? "95" : undefined}
+                                                            min="1"
+                                                        />
+                                                    </div>
+
+                                                    {/* Quick Value Presets */}
+                                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                                        {(discountType === "PERCENTAGE" ? [10, 20, 25, 50, 75, 90] : [5, 10, 20, 30, 50, 100]).map(val => (
+                                                            <button
+                                                                key={val}
+                                                                type="button"
+                                                                onClick={() => setDiscountPercentage(val.toString())}
+                                                                className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                                    discountPercentage === val.toString()
                                                                         ? "bg-emerald-600 text-white border-emerald-600"
                                                                         : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                                                                 }`}
                                                             >
-                                                                {pct}%
+                                                                {discountType === "PERCENTAGE" ? `${val}%` : `₹${val}`}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -4168,7 +4220,11 @@ function AdminDashboard() {
                                                     <div className="flex justify-between items-start">
                                                         <div>
                                                             <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">SPECIAL DISCOUNT</span>
-                                                            <h3 className="text-3xl font-black mt-3">{discountPercentage ? `${discountPercentage}% OFF` : "0% OFF"}</h3>
+                                                            <h3 className="text-3xl font-black mt-3">
+                                                                {discountType === "PERCENTAGE"
+                                                                    ? (discountPercentage ? `${discountPercentage}% OFF` : "0% OFF")
+                                                                    : (discountPercentage ? `₹${Number(discountPercentage).toFixed(0)} FLAT OFF` : "₹0 OFF")}
+                                                            </h3>
                                                         </div>
                                                         <span className="text-3xl">🎟️</span>
                                                     </div>
@@ -4328,7 +4384,9 @@ function AdminDashboard() {
                                                             {coupon.couponCode}
                                                         </td>
                                                         <td className="font-bold text-emerald-600">
-                                                            {coupon.discountPercentage}% OFF
+                                                            {coupon.discountPercentage && coupon.discountPercentage > 0 
+                                                                ? `${coupon.discountPercentage}% OFF` 
+                                                                : `₹${Number(coupon.discountAmount || 0).toFixed(0)} FLAT OFF`}
                                                         </td>
                                                         <td className="text-slate-600 text-xs font-semibold">
                                                             {coupon.expiryDate || "No Expiry"}
