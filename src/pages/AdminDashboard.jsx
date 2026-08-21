@@ -104,6 +104,13 @@ function AdminDashboard() {
         thesisDiscountPercent: 15.0
     });
 
+    const [platformCollege, setPlatformCollege] = useState("KLU");
+    const [collegePlatformSettings, setCollegePlatformSettings] = useState({
+        razorpayChargePercentage: 2.36,
+        managerMaxBwPrinters: 1,
+        managerMaxColorPrinters: 1
+    });
+
     const [userCollegeFilter, setUserCollegeFilter] = useState("ALL");
     const [userSearchQuery, setUserSearchQuery] = useState("");
     const [blockCollegeFilter, setBlockCollegeFilter] = useState("ALL");
@@ -394,6 +401,10 @@ function AdminDashboard() {
             const initialThesisCollege = isSubAdmin ? currentCollege : "KLU";
             setThesisCollege(initialThesisCollege);
             fetchCollegeThesisSettings(initialThesisCollege);
+
+            const initialPlatformCollege = isSubAdmin ? currentCollege : "KLU";
+            setPlatformCollege(initialPlatformCollege);
+            fetchCollegePlatformSettings(initialPlatformCollege);
             
             fetchBlocks();
             fetchPrinters();
@@ -1654,6 +1665,28 @@ function AdminDashboard() {
         } catch (error) {
             console.error("Error updating thesis settings:", error);
             showAlert("Error", "Failed to update bulk print settings", "error");
+        }
+    };
+
+    const fetchCollegePlatformSettings = async (college) => {
+        try {
+            const response = await api.get(`/admin/settings/platform?college=${college}`);
+            if (response.data) {
+                setCollegePlatformSettings(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching platform settings:", error);
+        }
+    };
+
+    const saveCollegePlatformSettings = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post(`/admin/settings/platform/update?college=${platformCollege}`, collegePlatformSettings);
+            showAlert("Success", `Platform Settings for ${platformCollege} Updated Successfully`, "success");
+        } catch (error) {
+            console.error("Error updating platform settings:", error);
+            showAlert("Error", "Failed to update platform settings", "error");
         }
     };
 
@@ -6107,44 +6140,96 @@ function AdminDashboard() {
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <div className="section-header mb-6 pb-4 border-b border-slate-100">
+                                <div className="section-header mb-6 pb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                     <div>
                                         <p className="eyebrow">Platform Settings</p>
-                                        <h2 className="text-2xl font-black text-slate-900">Global System Config</h2>
+                                        <h2 className="text-2xl font-black text-slate-900">Campus Platform Config</h2>
+                                        <p className="subtitle">Set gateway transaction charges and device allowances per campus.</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-bold text-slate-500">Configure College:</span>
+                                        <select
+                                            value={platformCollege}
+                                            onChange={(e) => {
+                                                setPlatformCollege(e.target.value);
+                                                fetchCollegePlatformSettings(e.target.value);
+                                            }}
+                                            className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
+                                        >
+                                            <option value="ALL" disabled>Select a College</option>
+                                            {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                <option key={col} value={col}>{col} College</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
-                                <form onSubmit={saveSystemSettings} className="space-y-4">
+                                <form onSubmit={saveCollegePlatformSettings} className="space-y-4">
+                                    <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-900">
+                                        <span>🏫 Campus Configuration:</span>
+                                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-200/80 text-indigo-950 font-black">{platformCollege}</span>
+                                    </div>
+
                                     <div className="grid gap-4 sm:grid-cols-3">
                                         <label className="block">
                                             <span className="block text-xs font-black text-slate-700 mb-1.5">Razorpay/UPI Charge (%)</span>
                                             <input 
                                                 type="number" 
-                                                className="field" 
-                                                value={systemSettings.razorpayChargePercentage || 2.36}
-                                                onChange={(e) => setSystemSettings({...systemSettings, razorpayChargePercentage: Number(e.target.value)})}
+                                                className="field font-bold" 
+                                                value={collegePlatformSettings?.razorpayChargePercentage !== undefined ? collegePlatformSettings.razorpayChargePercentage : 2.36}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value);
+                                                    const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100, val));
+                                                    setCollegePlatformSettings({...collegePlatformSettings, razorpayChargePercentage: clamped});
+                                                }}
+                                                min="0"
+                                                max="100"
                                                 step="0.01"
                                             />
+                                            <span className="text-[10px] text-slate-400 font-semibold mt-1 block">
+                                                Allowed: 0.00% – 100.00%
+                                            </span>
                                         </label>
                                         <label className="block">
                                             <span className="block text-xs font-black text-slate-700 mb-1.5">Manager Max B&W Printers</span>
                                             <input 
                                                 type="number" 
-                                                className="field" 
-                                                value={systemSettings.managerMaxBwPrinters || 1}
-                                                onChange={(e) => setSystemSettings({...systemSettings, managerMaxBwPrinters: Number(e.target.value)})}
+                                                className="field font-bold" 
+                                                value={collegePlatformSettings?.managerMaxBwPrinters !== undefined ? collegePlatformSettings.managerMaxBwPrinters : 1}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value, 10);
+                                                    const clamped = isNaN(val) ? 1 : Math.max(1, Math.min(50, val));
+                                                    setCollegePlatformSettings({...collegePlatformSettings, managerMaxBwPrinters: clamped});
+                                                }}
+                                                min="1"
+                                                max="50"
+                                                step="1"
                                             />
+                                            <span className="text-[10px] text-slate-400 font-semibold mt-1 block">
+                                                Allowed: 1 – 50 units
+                                            </span>
                                         </label>
                                         <label className="block">
                                             <span className="block text-xs font-black text-slate-700 mb-1.5">Manager Max Color Printers</span>
                                             <input 
                                                 type="number" 
-                                                className="field" 
-                                                value={systemSettings.managerMaxColorPrinters || 1}
-                                                onChange={(e) => setSystemSettings({...systemSettings, managerMaxColorPrinters: Number(e.target.value)})}
+                                                className="field font-bold" 
+                                                value={collegePlatformSettings?.managerMaxColorPrinters !== undefined ? collegePlatformSettings.managerMaxColorPrinters : 1}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value, 10);
+                                                    const clamped = isNaN(val) ? 1 : Math.max(1, Math.min(50, val));
+                                                    setCollegePlatformSettings({...collegePlatformSettings, managerMaxColorPrinters: clamped});
+                                                }}
+                                                min="1"
+                                                max="50"
+                                                step="1"
                                             />
+                                            <span className="text-[10px] text-slate-400 font-semibold mt-1 block">
+                                                Allowed: 1 – 50 units
+                                            </span>
                                         </label>
                                     </div>
-                                    <button type="submit" className="btn success w-full mt-4">💾 Save Platform Settings</button>
+                                    <button type="submit" className="btn success w-full mt-4">💾 Save Platform Settings ({platformCollege})</button>
                                 </form>
                             </motion.section>
                         )}
