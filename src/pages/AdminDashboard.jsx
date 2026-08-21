@@ -1054,8 +1054,52 @@ function AdminDashboard() {
         return "status-pill status-created";
     };
 
-    const paymentClass = (status) =>
-        status === "PAID" ? "status-pill status-paid" : "status-pill status-unpaid";
+    const formatStudentDisplayName = (rawName) => {
+        if (!rawName) return "Student";
+        let str = String(rawName).trim();
+        const phoneMatch = str.match(/\b(?:\+?91[\s-]*)?([0-9]{6})([0-9]{4})\b/) || str.match(/\b([0-9]{6})([0-9]{4})\b/);
+        if (phoneMatch) {
+            const last4 = phoneMatch[2];
+            let cleanName = str
+                .replace(/\(?\+?91[\s-]*[0-9]{10}\)?/g, "")
+                .replace(/\([0-9]{10}\)/g, "")
+                .replace(/\b[0-9]{10}\b/g, "")
+                .replace(/\(\s*\)/g, "")
+                .trim();
+            if (!cleanName || cleanName.toLowerCase() === "student") {
+                cleanName = "Student";
+            }
+            return `${cleanName} (•••• ${last4})`;
+        }
+        return str || "Student";
+    };
+
+    const isWhatsAppOrder = (o) => {
+        if (!o) return false;
+        const name = (o.customerName || "").toLowerCase();
+        const email = (o.userEmail || o.email || "").toLowerCase();
+        const channel = (o.orderChannel || "").toUpperCase();
+        const referral = (o.appliedReferralCode || "").toUpperCase();
+        const orderIdStr = (o.orderId || "").toUpperCase();
+
+        return (
+            channel === "WHATSAPP" ||
+            channel === "BOT" ||
+            channel === "WA" ||
+            email.includes("@c.us") ||
+            email.includes("whatsapp") ||
+            email.startsWith("wa_") ||
+            referral.startsWith("WA_") ||
+            orderIdStr.startsWith("WA_") ||
+            name.includes("+91") ||
+            name.includes("(+91") ||
+            name.includes("whatsapp") ||
+            name.includes("wa_") ||
+            /\+?91[\s-]*[0-9]{10}/.test(name) ||
+            /\b[6-9][0-9]{9}\b/.test(name) ||
+            /[0-9]{10}/.test(name.replace(/[^0-9]/g, ""))
+        );
+    };
 
     const revenueFilters = [
         ["all", "All Time"],
@@ -2404,7 +2448,20 @@ function AdminDashboard() {
                                                     <span>{order.orderId}</span>
                                                 </td>
                                                 <td className="font-bold">{order.blockLocation || "—"}</td>
-                                                <td className="font-bold text-slate-900">{order.customerName || "Customer"}</td>
+                                                <td className="font-bold text-slate-900">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span>{formatStudentDisplayName(order.customerName)}</span>
+                                                        {isWhatsAppOrder(order) ? (
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#25D366]/15 text-[#128C7E] border border-green-300 shadow-xs shrink-0">
+                                                                💬 WA
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-200 shadow-xs shrink-0">
+                                                                🌐 Web
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     <button
                                                         onClick={() => showPagesDetails(order)}

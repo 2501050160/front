@@ -27,30 +27,84 @@ function DisplayPanel() {
         return () => clearInterval(timer);
     }, []);
 
+    const formatStudentDisplayName = (rawName) => {
+        if (!rawName) return "Student";
+        let str = String(rawName).trim();
+        const phoneMatch = str.match(/\b(?:\+?91[\s-]*)?([0-9]{6})([0-9]{4})\b/) || str.match(/\b([0-9]{6})([0-9]{4})\b/);
+        if (phoneMatch) {
+            const last4 = phoneMatch[2];
+            let cleanName = str
+                .replace(/\(?\+?91[\s-]*[0-9]{10}\)?/g, "")
+                .replace(/\([0-9]{10}\)/g, "")
+                .replace(/\b[0-9]{10}\b/g, "")
+                .replace(/\(\s*\)/g, "")
+                .trim();
+            if (!cleanName || cleanName.toLowerCase() === "student") {
+                cleanName = "Student";
+            }
+            return `${cleanName} (•••• ${last4})`;
+        }
+        return str || "Student";
+    };
+
+    const isWhatsAppOrder = (o) => {
+        if (!o) return false;
+        const name = (o.customerName || "").toLowerCase();
+        const email = (o.userEmail || o.email || "").toLowerCase();
+        const channel = (o.orderChannel || "").toUpperCase();
+        const referral = (o.appliedReferralCode || "").toUpperCase();
+        const orderIdStr = (o.orderId || "").toUpperCase();
+
+        return (
+            channel === "WHATSAPP" ||
+            channel === "BOT" ||
+            channel === "WA" ||
+            email.includes("@c.us") ||
+            email.includes("whatsapp") ||
+            email.startsWith("wa_") ||
+            referral.startsWith("WA_") ||
+            orderIdStr.startsWith("WA_") ||
+            name.includes("+91") ||
+            name.includes("(+91") ||
+            name.includes("whatsapp") ||
+            name.includes("wa_") ||
+            /\+?91[\s-]*[0-9]{10}/.test(name) ||
+            /\b[6-9][0-9]{9}\b/.test(name) ||
+            /[0-9]{10}/.test(name.replace(/[^0-9]/g, ""))
+        );
+    };
+
     const getOtpExpiryFormatted = (order) => {
         let expireTimestamp;
-        if (order.cancelWindowEndsAt) {
-            const dateObj = new Date(order.cancelWindowEndsAt);
+        if (order.fileExpiryTime) {
+            const dateObj = new Date(order.fileExpiryTime);
             if (!isNaN(dateObj.getTime())) {
-                expireTimestamp = dateObj.getTime() + 10 * 60 * 1000;
-            }
-        } else if (order.uploadTime) {
-            const dateObj = new Date(order.uploadTime);
-            if (!isNaN(dateObj.getTime())) {
-                expireTimestamp = dateObj.getTime() + 10 * 60 * 1000;
+                expireTimestamp = dateObj.getTime();
             }
         }
-        
         if (!expireTimestamp) {
-            return "10:00";
+            const baseDate = order.cancelWindowEndsAt || order.uploadTime || order.queuedAt;
+            if (baseDate) {
+                const dateObj = new Date(baseDate);
+                if (!isNaN(dateObj.getTime())) {
+                    expireTimestamp = dateObj.getTime() + 24 * 60 * 60 * 1000;
+                }
+            }
+        }
+        if (!expireTimestamp) {
+            expireTimestamp = Date.now() + 24 * 60 * 60 * 1000;
         }
 
         const leftSeconds = Math.max(0, Math.floor((expireTimestamp - currentTime) / 1000));
         if (leftSeconds <= 0) {
             return "Expired";
         }
-        const mins = Math.floor(leftSeconds / 60);
+        const hours = Math.floor(leftSeconds / 3600);
+        const mins = Math.floor((leftSeconds % 3600) / 60);
         const secs = leftSeconds % 60;
+        if (hours > 0) {
+            return `${hours}h ${mins < 10 ? "0" : ""}${mins}m`;
+        }
         return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
     };
 
@@ -446,9 +500,20 @@ function DisplayPanel() {
                                         <h2 className="mt-3 text-4xl font-black md:text-6xl">
                                             {activePickup.orderId}
                                         </h2>
-                                        <p className="mt-2 text-2xl font-black text-cyan-100 md:text-4xl">
-                                            {activePickup.customerName || "Customer"}
-                                        </p>
+                                        <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
+                                            <p className="text-2xl font-black text-cyan-100 md:text-4xl">
+                                                {formatStudentDisplayName(activePickup.customerName)}
+                                            </p>
+                                            {isWhatsAppOrder(activePickup) ? (
+                                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm">
+                                                    💬 WhatsApp
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
+                                                    🌐 Web App
+                                                </span>
+                                            )}
+                                        </div>
                                         <motion.div
                                             className={`mx-auto mt-6 max-w-xl rounded-2xl border overflow-hidden ${isReleasing ? "border-amber-400/40 bg-amber-400/10" : "border-green-300/40 bg-green-400/15"}`}
                                             animate={{
@@ -478,22 +543,29 @@ function DisplayPanel() {
                                                     />
                                                 </div>
                                             )}
-                                            <div className="p-5">
-                                                <p className="text-base font-bold text-slate-100">
-                                                    {isReleasing 
-                                                        ? "Printing document pages... Please wait."
-                                                        : "Your printing is completed! Please collect your papers from the printer tray."}
-                                                </p>
-                                                <div className={`mt-2 flex flex-col items-center justify-center gap-1.5 text-xs font-bold ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
-                                                    <span>{isReleasing ? "🖨️ Hardware releasing prints..." : "🖨️ Counter Release successful"}</span>
-                                                    {isReleasing && (
-                                                        <span className="text-lg font-black text-white mt-3 bg-white/5 border border-white/10 px-4 py-1.5 rounded-xl">
-                                                            {currentPagePrinted === 0 
-                                                                ? "Preparing printer..." 
-                                                                : `📄 Printing Page ${currentPagePrinted} of ${totalPagesToPrint}`}
-                                                        </span>
-                                                    )}
+                                            {!isReleasing && (
+                                                <div className="w-full h-48 relative border-b border-white/10 bg-slate-950/40">
+                                                    <video 
+                                                        src={collectVideo} 
+                                                        autoPlay 
+                                                        loop 
+                                                        muted 
+                                                        playsInline 
+                                                        className="w-full h-full object-cover"
+                                                    />
                                                 </div>
+                                            )}
+                                            <div className="p-6">
+                                                <p className={`text-base font-black ${isReleasing ? "text-amber-200" : "text-green-100"}`}>
+                                                    {isReleasing 
+                                                        ? `Printing ${currentPagePrinted}/${totalPagesToPrint} pages... Please wait by the tray`
+                                                        : "Your print job is ready! Please collect your sheets from the output tray."}
+                                                </p>
+                                                <p className="mt-2 text-xs font-bold text-white/60">
+                                                    {isReleasing
+                                                        ? "Terminal hardware is actively handling your document."
+                                                        : "This screen will return to the live queue shortly."}
+                                                </p>
                                             </div>
                                         </motion.div>
                                     </div>
@@ -531,9 +603,20 @@ function DisplayPanel() {
                                                         {currentOrder.orderId}
                                                     </motion.h2>
 
-                                                    <p className="mt-3 text-3xl font-black text-cyan-50">
-                                                        {currentOrder.customerName || "Customer"}
-                                                    </p>
+                                                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                                                        <p className="text-3xl font-black text-cyan-50">
+                                                            {formatStudentDisplayName(currentOrder.customerName)}
+                                                        </p>
+                                                        {isWhatsAppOrder(currentOrder) ? (
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm">
+                                                                💬 WhatsApp
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
+                                                                🌐 Web App
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 <div className="grid gap-3">
@@ -602,7 +685,7 @@ function DisplayPanel() {
 
                                         <div className="p-5">
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
-                                                <div className="grid grid-cols-[60px_1fr_1fr_220px_140px_70px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
+                                                <div className="grid grid-cols-[60px_1.1fr_1.3fr_180px_130px_60px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
                                                     <span>Order</span>
                                                     <span>Student</span>
@@ -663,7 +746,7 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[60px_1fr_1fr_220px_140px_70px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-4 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[60px_1.1fr_1.3fr_180px_130px_60px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-4 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
@@ -675,7 +758,7 @@ function DisplayPanel() {
                                                                         {queuePosition}
                                                                     </span>
                                                                 </div>
-                                                                <div className="relative min-w-0">
+                                                                <div className="relative min-w-0 pr-2">
                                                                     <p className="truncate text-xl font-black leading-none text-white">
                                                                         {order.orderId}
                                                                     </p>
@@ -683,10 +766,21 @@ function DisplayPanel() {
                                                                         Waiting
                                                                     </p>
                                                                 </div>
-                                                                <div className="relative min-w-0">
-                                                                    <p className="truncate text-lg font-black text-white">
-                                                                        {order.customerName || "Customer"}
-                                                                    </p>
+                                                                <div className="relative min-w-0 pr-2">
+                                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                                        <p className="truncate text-lg font-black text-white">
+                                                                            {formatStudentDisplayName(order.customerName)}
+                                                                        </p>
+                                                                        {isWhatsAppOrder(order) ? (
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm shrink-0">
+                                                                                💬 WhatsApp
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm shrink-0">
+                                                                                🌐 Web App
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                     <p className="mt-1 text-[10px] font-bold text-white/50">
                                                                         {order.printType || "BW"}
                                                                     </p>
