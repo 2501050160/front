@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { 
     Printer, 
@@ -20,6 +20,20 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
     const location = useLocation();
     const { user, walletBalance, logout, refreshWallet } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const profileMenuRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+                setShowProfileMenu(false);
+            }
+        };
+        if (showProfileMenu) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showProfileMenu]);
     
     const userId = user?.id || localStorage.getItem("userId");
     const userName = user?.name || localStorage.getItem("userName") || "Student User";
@@ -132,7 +146,7 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
 
                     {/* User Profile / Logout Dropdown */}
                     {userId && (
-                        <div className="relative ml-1">
+                        <div className="relative ml-1" ref={profileMenuRef}>
                             <button
                                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-extrabold transition-all cursor-pointer"
@@ -145,26 +159,52 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
                             </button>
 
                             {showProfileMenu && (
-                                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-slate-900 border border-white/15 shadow-2xl p-2 z-50">
-                                    <div className="px-3 py-2 border-b border-white/10">
-                                        <p className="text-xs font-black text-white truncate">{userName}</p>
-                                        <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
+                                <div className="absolute right-0 top-[calc(100%+8px)] w-60 rounded-2xl bg-slate-950 border border-white/15 shadow-2xl overflow-hidden z-[9999]">
+                                    {/* User info header */}
+                                    <div className="px-4 py-3 bg-gradient-to-br from-slate-800 to-slate-900 border-b border-white/10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-sm font-black text-white shrink-0">
+                                                {userName.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-black text-white truncate">{userName}</p>
+                                                <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
+                                                <p className="text-[10px] text-cyan-400 font-bold">{userCollege}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <Link
-                                        to="/blocks"
-                                        onClick={() => setShowProfileMenu(false)}
-                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all mt-1"
-                                    >
-                                        <Building2 className="w-4 h-4 text-cyan-400" />
-                                        <span>Change Campus Block</span>
-                                    </Link>
-                                    <button
-                                        onClick={() => { setShowProfileMenu(false); handleLogout(); }}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-                                    >
-                                        <LogOut className="w-4 h-4" />
-                                        <span>Sign Out</span>
-                                    </button>
+                                    {/* Wallet balance */}
+                                    <div className="px-4 py-2.5 bg-emerald-500/5 border-b border-white/5 flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-slate-400">Wallet Balance</span>
+                                        <span className="text-sm font-black text-emerald-400">₹{Number(walletBalance || 0).toFixed(2)}</span>
+                                    </div>
+                                    {/* Menu items */}
+                                    <div className="p-1.5">
+                                        <Link
+                                            to="/blocks"
+                                            onClick={() => setShowProfileMenu(false)}
+                                            className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                                        >
+                                            <Building2 className="w-4 h-4 text-cyan-400" />
+                                            <span>Change Campus Block</span>
+                                        </Link>
+                                        <Link
+                                            to="/my-orders"
+                                            onClick={() => setShowProfileMenu(false)}
+                                            className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                                        >
+                                            <Package className="w-4 h-4 text-indigo-400" />
+                                            <span>My Orders</span>
+                                        </Link>
+                                        <div className="my-1 border-t border-white/10" />
+                                        <button
+                                            onClick={() => { setShowProfileMenu(false); handleLogout(); }}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/15 hover:text-rose-300 rounded-xl transition-all cursor-pointer"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            <span>Sign Out</span>
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
