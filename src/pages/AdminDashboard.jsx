@@ -1742,7 +1742,7 @@ function AdminDashboard() {
         });
 
         // Razorpay charges only apply to UPI revenue
-        const chargePercent = systemSettings.razorpayChargePercentage != null ? systemSettings.razorpayChargePercentage : 2.36;
+        const chargePercent = (collegePlatformSettings && collegePlatformSettings.razorpayChargePercentage !== undefined) ? Number(collegePlatformSettings.razorpayChargePercentage) : 2.36;
         razorpayCharges = upiRevenue * (chargePercent / 100);
 
         const todayOrders = getPeriodFilteredOrders(collegeFilteredOrders, "today");
@@ -1791,7 +1791,7 @@ function AdminDashboard() {
     const revenueCards = [
         ["Gross Revenue", localStats.grossRevenue || 0, "linear-gradient(135deg, #2563eb, #1d4ed8)"],
         ["Coupon Discounts", localStats.totalDiscounts || 0, "linear-gradient(135deg, #b45309, #c2410c)"],
-        ["Razorpay Charges", localStats.razorpayCharges || 0, "linear-gradient(135deg, #7c3aed, #4c1d95)", `${systemSettings.razorpayChargePercentage || 2.36}% per UPI TXN`],
+        ["Razorpay Charges", localStats.razorpayCharges || 0, "linear-gradient(135deg, #7c3aed, #4c1d95)", `${(collegePlatformSettings && collegePlatformSettings.razorpayChargePercentage !== undefined) ? collegePlatformSettings.razorpayChargePercentage : 2.36}% per UPI TXN`],
         ["Net Revenue", localStats.netRevenue - (localStats.razorpayCharges || 0), "linear-gradient(135deg, #16865b, #0f766e)"],
         ["Wallet Cash", localStats.walletRevenue || 0, "linear-gradient(135deg, #0f766e, #065f46)"],
         ["UPI Cash", localStats.upiRevenue || 0, "linear-gradient(135deg, #7c3aed, #6d28d9)"]
@@ -3148,7 +3148,7 @@ function AdminDashboard() {
                                                 Gross vs Net Revenue
                                             </h2>
                                             <p className="text-sm font-semibold text-slate-500 mt-1 max-w-2xl">
-                                                Net revenue = gross revenue − coupon discounts − Razorpay charges ({systemSettings.razorpayChargePercentage || 2.36}%)
+                                                Net revenue = gross revenue − coupon discounts − Razorpay charges ({(collegePlatformSettings && collegePlatformSettings.razorpayChargePercentage !== undefined) ? collegePlatformSettings.razorpayChargePercentage : 2.36}%)
                                             </p>
                                         </div>
 
@@ -3268,7 +3268,7 @@ function AdminDashboard() {
                                                     ₹{(localStats.razorpayCharges || 0).toFixed(2)}
                                                 </p>
                                                 <span className="text-[10px] text-purple-300/80 font-semibold mt-0.5">
-                                                    {systemSettings.razorpayChargePercentage || 2.36}% on UPI transactions
+                                                    {(collegePlatformSettings && collegePlatformSettings.razorpayChargePercentage !== undefined) ? collegePlatformSettings.razorpayChargePercentage : 2.36}% on UPI transactions
                                                 </span>
                                             </div>
 
@@ -3332,7 +3332,7 @@ function AdminDashboard() {
                                             </div>
                                             <p className="text-xl font-black text-purple-700">₹{(localStats.razorpayCharges || 0).toFixed(2)}</p>
                                             <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-100">
-                                                {systemSettings.razorpayChargePercentage || 2.36}% on UPI
+                                                {(collegePlatformSettings && collegePlatformSettings.razorpayChargePercentage !== undefined) ? collegePlatformSettings.razorpayChargePercentage : 2.36}% on UPI
                                             </span>
                                         </div>
 
