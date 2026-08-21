@@ -596,12 +596,12 @@ function DisplayPanel() {
                                                             {formatStudentDisplayName(currentOrder.customerName)}
                                                         </p>
                                                         {isWhatsAppOrder(currentOrder) ? (
-                                                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/50 shadow-sm">
-                                                                💬 WhatsApp Payment • ₹{(currentOrder.price != null ? currentOrder.price : 0).toFixed(2)}
+                                                            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-black bg-[#25D366] text-slate-950 border border-[#25D366] shadow-lg">
+                                                                💬 WHATSAPP ORDER • ₹{(currentOrder.price != null ? currentOrder.price : 0).toFixed(2)}
                                                             </span>
                                                         ) : (
                                                             <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
-                                                                🌐 Web App Payment • ₹{(currentOrder.price != null ? currentOrder.price : 0).toFixed(2)}
+                                                                🌐 WEB APP ORDER • ₹{(currentOrder.price != null ? currentOrder.price : 0).toFixed(2)}
                                                             </span>
                                                         )}
                                                     </div>
@@ -612,16 +612,16 @@ function DisplayPanel() {
                                                         ["Pages", currentOrder.selectedPages || "ALL"],
                                                         ["Copies", currentOrder.copies || 1],
                                                         ["Print Type", currentOrder.printType || "BW"],
-                                                        ["Payment", isWhatsAppOrder(currentOrder) ? `💬 WA Pay • ₹${(currentOrder.price || 0).toFixed(2)}` : `🌐 Web • ₹${(currentOrder.price || 0).toFixed(2)}`]
+                                                        ["Channel", isWhatsAppOrder(currentOrder) ? "💬 WhatsApp" : "🌐 Web Portal"]
                                                     ].map(([label, value]) => (
                                                         <div
                                                             key={label}
-                                                            className="rounded-2xl border border-white/12 bg-slate-950/28 p-3.5 backdrop-blur"
+                                                            className={`rounded-2xl border ${isWhatsAppOrder(currentOrder) && label === "Channel" ? "border-[#25D366]/50 bg-[#25D366]/15" : "border-white/12 bg-slate-950/28"} p-3.5 backdrop-blur`}
                                                         >
                                                             <p className="text-[10px] font-black uppercase tracking-widest text-cyan-50/58">
                                                                 {label}
                                                             </p>
-                                                            <p className="mt-0.5 text-xl font-black text-white truncate">
+                                                            <p className={`mt-0.5 text-xl font-black ${isWhatsAppOrder(currentOrder) && label === "Channel" ? "text-[#25D366]" : "text-white"} truncate`}>
                                                                 {value}
                                                             </p>
                                                         </div>
@@ -632,7 +632,7 @@ function DisplayPanel() {
                                             <div className="relative z-10 mt-7 h-3 overflow-hidden rounded-full bg-white/10">
                                                 <motion.div
                                                     className="h-full rounded-full"
-                                                    style={{ background: theme.accent }}
+                                                    style={{ background: isWhatsAppOrder(currentOrder) ? "#25D366" : theme.accent }}
                                                     animate={{ x: ["-100%", "120%"] }}
                                                     transition={{
                                                         duration: 1.6,
@@ -657,7 +657,7 @@ function DisplayPanel() {
                                                     Orders Waiting
                                                 </h3>
                                                 <p className="mt-1 text-sm font-bold text-cyan-50/60">
-                                                    Students can find their OTP and queue position here.
+                                                    Students can find their OTP, channel, and queue position here.
                                                 </p>
                                             </div>
                                             <div className="flex gap-3 px-6 pt-5 pb-0">
@@ -676,7 +676,7 @@ function DisplayPanel() {
                                             <div className="overflow-hidden rounded-3xl border border-white/12 bg-slate-950/26">
                                                 <div className="grid grid-cols-[60px_1.1fr_1.3fr_180px_130px_60px] gap-0 border-b border-white/10 bg-white/10 px-5 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-50/62">
                                                     <span>Pos</span>
-                                                    <span>Order</span>
+                                                    <span>Order & Channel</span>
                                                     <span>Student</span>
                                                     <span className="text-center">OTP / Status</span>
                                                     <span className="text-center">OTP Expiry</span>
@@ -686,6 +686,7 @@ function DisplayPanel() {
                                                 <div className="space-y-3 p-3">
                                                     {waitingOrders.slice(queuePageIndex * 4, (queuePageIndex + 1) * 4).map((order, index) => {
                                                         const isPendingScan = order.status === "PENDING_SCAN";
+                                                        const isWA = isWhatsAppOrder(order);
                                                         const queuePalettes = [
                                                             {
                                                                 rail: "from-cyan-300 to-blue-500",
@@ -735,15 +736,15 @@ function DisplayPanel() {
                                                         return (
                                                             <motion.div
                                                                 key={order.id}
-                                                                className={`relative grid grid-cols-[60px_1.1fr_1.3fr_180px_130px_60px] items-center gap-0 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-r ${palette.row} px-5 py-4 shadow-xl ${palette.glow} transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
+                                                                className={`relative grid grid-cols-[60px_1.1fr_1.3fr_180px_130px_60px] items-center gap-0 overflow-hidden rounded-2xl border ${isWA ? "border-[#25D366]/50 bg-gradient-to-r from-[#25D366]/20 via-emerald-950/40 to-slate-950/20 shadow-[#25D366]/20 ring-1 ring-[#25D366]/30" : `border-white/12 bg-gradient-to-r ${palette.row} ${palette.glow}`} px-5 py-4 shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/22 hover:shadow-2xl`}
                                                                 initial={{ opacity: 0, x: -18 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ delay: index * 0.04 }}
                                                             >
-                                                                <div className={`absolute inset-y-0 left-0 w-2 bg-gradient-to-b ${palette.rail}`} />
+                                                                <div className={`absolute inset-y-0 left-0 w-2.5 bg-gradient-to-b ${isWA ? "from-[#25D366] via-emerald-400 to-green-500" : palette.rail}`} />
                                                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(90deg,rgba(255,255,255,0.08),transparent_45%)]" />
                                                                 <div>
-                                                                    <span className={`relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border text-xl font-black shadow-lg ${palette.badge}`}>
+                                                                    <span className={`relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border text-xl font-black shadow-lg ${isWA ? "border-[#25D366]/60 bg-[#25D366]/30 text-emerald-200" : palette.badge}`}>
                                                                         {queuePosition}
                                                                     </span>
                                                                 </div>
@@ -751,14 +752,14 @@ function DisplayPanel() {
                                                                     <p className="truncate text-xl font-black leading-none text-white">
                                                                         {order.orderId}
                                                                     </p>
-                                                                    <div className="flex items-center gap-1 mt-1">
-                                                                        {isWhatsAppOrder(order) ? (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm">
-                                                                                💬 WA Pay • ₹{(order.price != null ? order.price : 0).toFixed(2)}
+                                                                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                                                        {isWA ? (
+                                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-black bg-[#25D366] text-slate-950 shadow-md">
+                                                                                💬 WHATSAPP • ₹{(order.price != null ? order.price : 0).toFixed(2)}
                                                                             </span>
                                                                         ) : (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm">
-                                                                                🌐 Web • ₹{(order.price != null ? order.price : 0).toFixed(2)}
+                                                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/40 shadow-sm">
+                                                                                🌐 WEB APP • ₹{(order.price != null ? order.price : 0).toFixed(2)}
                                                                             </span>
                                                                         )}
                                                                     </div>
@@ -768,24 +769,15 @@ function DisplayPanel() {
                                                                         <p className="truncate text-lg font-black text-white">
                                                                             {formatStudentDisplayName(order.customerName)}
                                                                         </p>
-                                                                        {isWhatsAppOrder(order) ? (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/40 shadow-sm shrink-0">
-                                                                                💬 WhatsApp
-                                                                            </span>
-                                                                        ) : (
-                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm shrink-0">
-                                                                                🌐 Web App
-                                                                            </span>
-                                                                        )}
                                                                     </div>
                                                                     <p className="mt-1 text-[10px] font-bold text-white/50">
-                                                                        {order.printType || "BW"}
+                                                                        {order.printType || "BW"} • {order.copies || 1} copies
                                                                     </p>
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-4 py-2.5 shadow-lg ${palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
-                                                                            <p className="text-[9px] font-black uppercase tracking-widest text-cyan-200/80 leading-none">RELEASE OTP</p>
+                                                                        <div className={`rounded-2xl border px-4 py-2.5 shadow-lg ${isWA ? "border-[#25D366]/50 bg-[#25D366]/20" : palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
+                                                                            <p className={`text-[9px] font-black uppercase tracking-widest ${isWA ? "text-[#25D366]" : "text-cyan-200/80"} leading-none`}>RELEASE OTP</p>
                                                                             <p className="font-mono text-2xl font-black tracking-widest text-white mt-1 leading-none">
                                                                                 {order.otpCode}
                                                                             </p>
