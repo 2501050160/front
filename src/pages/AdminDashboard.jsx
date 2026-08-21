@@ -1229,8 +1229,17 @@ function AdminDashboard() {
         let webNetRevenue = 0;
         let webOrdersCount = 0;
 
+        let refundedRevenue = 0;
+        let refundedOrdersCount = 0;
+
         revenuePeriodOrders.forEach(o => {
-            if (o.paymentStatus === "PAID" && o.status !== "CANCELLED") {
+            const isRefunded = o.status === "CANCELLED" || o.paymentStatus === "REFUNDED";
+            if (isRefunded) {
+                refundedRevenue += (o.price || 0);
+                refundedOrdersCount++;
+            }
+
+            if ((o.paymentStatus === "PAID" || o.status === "COMPLETED" || o.status === "PRINTING" || o.status === "QUEUE") && o.status !== "CANCELLED") {
                 const original = o.originalPrice != null ? o.originalPrice : o.price;
                 grossRevenue += original || 0;
                 totalDiscounts += o.discountAmount || 0;
@@ -1282,7 +1291,7 @@ function AdminDashboard() {
         const todayOrders = getPeriodFilteredOrders(collegeFilteredOrders, "today");
         let todayRevenue = 0;
         todayOrders.forEach(o => {
-            if (o.paymentStatus === "PAID" && o.status !== "CANCELLED") {
+            if ((o.paymentStatus === "PAID" || o.status === "COMPLETED" || o.status === "PRINTING" || o.status === "QUEUE") && o.status !== "CANCELLED") {
                 todayRevenue += o.price || 0;
             }
         });
