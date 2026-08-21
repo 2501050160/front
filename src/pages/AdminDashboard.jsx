@@ -2219,14 +2219,63 @@ function AdminDashboard() {
                             <span className="hidden sm:inline">Display Panel</span>
                         </button>
 
-                        <button
-                            onClick={logout}
-                            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-black text-xs transition-all shadow-md shadow-rose-500/25 hover:shadow-lg hover:shadow-rose-500/35 border border-rose-400 flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
-                            title="Sign Out / Exit Session"
-                        >
-                            <span className="text-sm">🚪</span>
-                            <span>Exit</span>
-                        </button>
+                        {/* Profile Pill with Logout Dropdown */}
+                        <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setIsProfileMenuOpen(false); }}>
+                            <button
+                                onClick={() => setIsProfileMenuOpen(prev => !prev)}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition-all cursor-pointer shadow-md border border-slate-700 hover:border-slate-600 active:scale-95"
+                                title="Profile & Sign Out"
+                            >
+                                {/* Avatar circle */}
+                                <span className="w-6 h-6 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-[11px] font-black text-white shrink-0">
+                                    {(loggedInAdminUser || "A").charAt(0).toUpperCase()}
+                                </span>
+                                <span className="hidden sm:inline max-w-[80px] truncate">{loggedInAdminUser}</span>
+                                {/* Chevron */}
+                                <svg
+                                    className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`}
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {isProfileMenuOpen && (
+                                <div className="absolute right-0 top-[calc(100%+8px)] w-52 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-[fadeIn_0.15s_ease]">
+                                    {/* User Info Header */}
+                                    <div className="px-4 py-3 bg-gradient-to-br from-slate-900 to-slate-800 border-b border-slate-700">
+                                        <div className="flex items-center gap-3">
+                                            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-sm font-black text-white shrink-0">
+                                                {(loggedInAdminUser || "A").charAt(0).toUpperCase()}
+                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-black text-white truncate">{loggedInAdminUser}</p>
+                                                <p className="text-[10px] text-slate-400 font-semibold uppercase truncate">{loggedInAdminRole} · {loggedInAdminCollege}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Menu Items */}
+                                    <div className="p-1.5">
+                                        <button
+                                            onClick={() => { setIsProfileMenuOpen(false); navigate("/display-panel"); }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-700 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">📺</span>
+                                            <span>Open Display Panel</span>
+                                        </button>
+                                        <div className="my-1 border-t border-slate-100" />
+                                        <button
+                                            onClick={() => { setIsProfileMenuOpen(false); logout(); }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all cursor-pointer text-left"
+                                        >
+                                            <span className="text-base">🚪</span>
+                                            <span>Sign Out</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 
