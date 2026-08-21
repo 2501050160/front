@@ -76,35 +76,23 @@ function DisplayPanel() {
 
     const getOtpExpiryFormatted = (order) => {
         let expireTimestamp;
-        if (order.fileExpiryTime) {
-            const dateObj = new Date(order.fileExpiryTime);
+        const baseDate = order.cancelWindowEndsAt || order.uploadTime || order.queuedAt || order.paidAt;
+        if (baseDate) {
+            const dateObj = new Date(baseDate);
             if (!isNaN(dateObj.getTime())) {
-                expireTimestamp = dateObj.getTime();
+                expireTimestamp = dateObj.getTime() + 10 * 60 * 1000; // 10-minute OTP expiration window
             }
         }
         if (!expireTimestamp) {
-            const baseDate = order.cancelWindowEndsAt || order.uploadTime || order.queuedAt;
-            if (baseDate) {
-                const dateObj = new Date(baseDate);
-                if (!isNaN(dateObj.getTime())) {
-                    expireTimestamp = dateObj.getTime() + 24 * 60 * 60 * 1000;
-                }
-            }
-        }
-        if (!expireTimestamp) {
-            expireTimestamp = Date.now() + 24 * 60 * 60 * 1000;
+            expireTimestamp = Date.now() + 10 * 60 * 1000;
         }
 
         const leftSeconds = Math.max(0, Math.floor((expireTimestamp - currentTime) / 1000));
         if (leftSeconds <= 0) {
             return "Expired";
         }
-        const hours = Math.floor(leftSeconds / 3600);
-        const mins = Math.floor((leftSeconds % 3600) / 60);
+        const mins = Math.floor(leftSeconds / 60);
         const secs = leftSeconds % 60;
-        if (hours > 0) {
-            return `${hours}h ${mins < 10 ? "0" : ""}${mins}m`;
-        }
         return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
     };
 
