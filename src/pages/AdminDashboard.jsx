@@ -2730,8 +2730,8 @@ function AdminDashboard() {
                                         </div>
                                     </div>
 
-                                    {/* 6 Key Financial Metric Cards */}
-                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mt-6">
+                                    {/* Key Financial Metric Cards (Includes WhatsApp Revenue) */}
+                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 mt-6">
                                         {/* Card 1: Gross Revenue */}
                                         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
@@ -2780,7 +2780,19 @@ function AdminDashboard() {
                                             </span>
                                         </div>
 
-                                        {/* Card 5: Wallet Cash */}
+                                        {/* Card 5: WhatsApp Revenue (Dedicated Box after Net Revenue) */}
+                                        <div className="p-4 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400/80 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-black text-green-900">WhatsApp Revenue</span>
+                                                <div className="w-8 h-8 rounded-xl bg-[#25D366] text-white flex items-center justify-center font-bold text-sm shadow-sm shadow-green-500/30">💬</div>
+                                            </div>
+                                            <p className="text-xl font-black text-green-900">₹{(localStats.whatsappNetRevenue || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-black bg-green-600/15 text-green-800 border border-green-300">
+                                                Bot Inflow ({localStats.whatsappOrdersCount || 0} ord)
+                                            </span>
+                                        </div>
+
+                                        {/* Card 6: Wallet Cash */}
                                         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-xs font-bold text-slate-500">Wallet Cash</span>
@@ -2792,7 +2804,7 @@ function AdminDashboard() {
                                             </span>
                                         </div>
 
-                                        {/* Card 6: UPI Cash */}
+                                        {/* Card 7: UPI Cash */}
                                         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-xs font-bold text-slate-500">Direct UPI Cash</span>
