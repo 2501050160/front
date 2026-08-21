@@ -4985,15 +4985,6 @@ function AdminDashboard() {
                                                 </td>
                                                 <td>
                                                     <div className="flex items-center gap-2">
-                                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
-                                                            <button
-                                                                onClick={() => handleChangeUserCollege(user)}
-                                                                className="btn secondary min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                                                title="Main Admin: Change User College"
-                                                            >
-                                                                <span>🏫</span> College
-                                                            </button>
-                                                        )}
                                                         <button
                                                             onClick={() => handleAddWalletMoney(user)}
                                                             className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
