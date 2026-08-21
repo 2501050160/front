@@ -144,70 +144,16 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
                         <span>Direct Print Release</span>
                     </button>
 
-                    {/* User Profile / Logout Dropdown */}
+                    {/* Logout Button */}
                     {userId && (
-                        <div className="relative ml-1" ref={profileMenuRef}>
-                            <button
-                                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-extrabold transition-all cursor-pointer"
-                            >
-                                <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-300 text-xs font-black">
-                                    {userName.charAt(0).toUpperCase()}
-                                </div>
-                                <span className="hidden md:inline max-w-[100px] truncate">{userName}</span>
-                                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                            </button>
-
-                            {showProfileMenu && (
-                                <div className="absolute right-0 top-[calc(100%+8px)] w-60 rounded-2xl bg-slate-950 border border-white/15 shadow-2xl overflow-hidden z-[9999]">
-                                    {/* User info header */}
-                                    <div className="px-4 py-3 bg-gradient-to-br from-slate-800 to-slate-900 border-b border-white/10">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-sm font-black text-white shrink-0">
-                                                {userName.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-black text-white truncate">{userName}</p>
-                                                <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
-                                                <p className="text-[10px] text-cyan-400 font-bold">{userCollege}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Wallet balance */}
-                                    <div className="px-4 py-2.5 bg-emerald-500/5 border-b border-white/5 flex items-center justify-between">
-                                        <span className="text-[11px] font-bold text-slate-400">Wallet Balance</span>
-                                        <span className="text-sm font-black text-emerald-400">₹{Number(walletBalance || 0).toFixed(2)}</span>
-                                    </div>
-                                    {/* Menu items */}
-                                    <div className="p-1.5">
-                                        <Link
-                                            to="/blocks"
-                                            onClick={() => setShowProfileMenu(false)}
-                                            className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-                                        >
-                                            <Building2 className="w-4 h-4 text-cyan-400" />
-                                            <span>Change Campus Block</span>
-                                        </Link>
-                                        <Link
-                                            to="/my-orders"
-                                            onClick={() => setShowProfileMenu(false)}
-                                            className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-                                        >
-                                            <Package className="w-4 h-4 text-indigo-400" />
-                                            <span>My Orders</span>
-                                        </Link>
-                                        <div className="my-1 border-t border-white/10" />
-                                        <button
-                                            onClick={() => { setShowProfileMenu(false); handleLogout(); }}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-500/15 hover:text-rose-300 rounded-xl transition-all cursor-pointer"
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            <span>Sign Out</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500 border border-rose-500/30 hover:border-rose-400 text-rose-400 hover:text-white text-xs font-black transition-all cursor-pointer shrink-0 active:scale-95 ml-1"
+                            title="Sign Out"
+                        >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Logout</span>
+                        </button>
                     )}
                 </nav>
             </div>
