@@ -143,6 +143,9 @@ export function PrinterManagementSection({
                     </button>
                 </div>
             </div>
+
+            {/* Grid for Form and Paper Levels */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Add Printer Form */}
                 <form onSubmit={handleAddSubmit} className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
                     <div>
