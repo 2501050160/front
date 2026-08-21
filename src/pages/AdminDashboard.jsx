@@ -114,6 +114,29 @@ function AdminDashboard() {
     const [userCollegeFilter, setUserCollegeFilter] = useState("ALL");
     const [userSearchQuery, setUserSearchQuery] = useState("");
     const [blockCollegeFilter, setBlockCollegeFilter] = useState("ALL");
+    const [fetchedColleges, setFetchedColleges] = useState([]);
+
+    useEffect(() => {
+        api.get("/college-config").then(res => {
+            if (Array.isArray(res.data)) {
+                const names = res.data.map(c => c.collegeName).filter(Boolean);
+                setFetchedColleges(names);
+            }
+        }).catch(() => {});
+    }, []);
+
+    const allColleges = useMemo(() => {
+        const list = new Set(["KLU", "VIT", "SRM", "VNR", "CBIT", "GITAM", "AMRITA", "MANIPAL", "VIGNAN", "IIT", "NIT"]);
+        if (Array.isArray(fetchedColleges)) {
+            fetchedColleges.forEach(c => list.add(c.trim().toUpperCase()));
+        }
+        if (Array.isArray(blocks)) {
+            blocks.forEach(b => {
+                if (b.college) list.add(b.college.trim().toUpperCase());
+            });
+        }
+        return Array.from(list).filter(Boolean).sort();
+    }, [fetchedColleges, blocks]);
 
     // Rewards & Voucher creator states
     const [rewards, setRewards] = useState([]);
@@ -6051,9 +6074,8 @@ function AdminDashboard() {
                                                     }}
                                                     className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
                                                 >
-                                                    <option value="ALL" disabled>Select a College</option>
-                                                    {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                        <option key={col} value={col}>{col} College</option>
+                                                    {allColleges.map(col => (
+                                                        <option key={col} value={col}>🏫 {col} College</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -6157,9 +6179,8 @@ function AdminDashboard() {
                                             }}
                                             className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
                                         >
-                                            <option value="ALL" disabled>Select a College</option>
-                                            {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                <option key={col} value={col}>{col} College</option>
+                                            {allColleges.map(col => (
+                                                <option key={col} value={col}>🏫 {col} College</option>
                                             ))}
                                         </select>
                                     </div>
@@ -6259,9 +6280,8 @@ function AdminDashboard() {
                                                 }}
                                                 className="field !w-auto text-xs py-2 px-3 font-black bg-slate-100 border border-slate-200 rounded-lg text-slate-800 focus:outline-none cursor-pointer"
                                             >
-                                                <option value="ALL" disabled>Select a College</option>
-                                                {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
-                                                    <option key={col} value={col}>{col} College</option>
+                                                {allColleges.map(col => (
+                                                    <option key={col} value={col}>🏫 {col} College</option>
                                                 ))}
                                             </select>
                                         </div>
