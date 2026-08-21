@@ -88,13 +88,42 @@ export function WhatsAppOrdersSection({
         }
     };
 
-    const waRevenue = waOrders.filter(o => o.paymentStatus === "PAID" && o.status !== "CANCELLED").reduce((sum, o) => {
+    const isPaidOrder = (o) => {
+        if (!o) return false;
+        if (o.status === "CANCELLED") return false;
+        const pStatus = (o.paymentStatus || "").toUpperCase();
+        const oStatus = (o.status || "").toUpperCase();
+        return (
+            pStatus === "PAID" ||
+            pStatus === "SUCCESS" ||
+            pStatus === "COMPLETED" ||
+            oStatus === "PAID" ||
+            oStatus === "COMPLETED" ||
+            oStatus === "PRINTING" ||
+            oStatus === "PRINTED" ||
+            oStatus === "QUEUE" ||
+            oStatus === "CANCEL_WINDOW" ||
+            oStatus === "PENDING_SCAN" ||
+            Boolean(o.razorpayPaymentId) ||
+            Boolean(o.paid)
+        );
+    };
+
+    const paidWaOrders = waOrders.filter(isPaidOrder);
+
+    const waRevenue = paidWaOrders.reduce((sum, o) => {
         const orig = o.originalPrice != null ? o.originalPrice : o.price;
         return { gross: sum.gross + (orig || 0), net: sum.net + (o.price || 0) };
     }, { gross: 0, net: 0 });
-    const waWallet = waOrders.filter(o => o.paymentStatus === "PAID" && o.status !== "CANCELLED" && o.razorpayPaymentId === "WALLET").reduce((s, o) => s + (o.price || 0), 0);
-    const waUpi = waRevenue.net - waWallet;
-    const avgOrderVal = waOrders.filter(o => o.paymentStatus === "PAID").length > 0 ? waRevenue.net / waOrders.filter(o => o.paymentStatus === "PAID").length : 0;
+
+    const waWallet = paidWaOrders.filter(o => {
+        const payId = (o.razorpayPaymentId || "").toUpperCase();
+        const pMethod = (o.paymentMethod || "").toUpperCase();
+        return payId === "WALLET" || pMethod === "WALLET";
+    }).reduce((s, o) => s + (o.price || 0), 0);
+
+    const waUpi = Math.max(0, waRevenue.net - waWallet);
+    const avgOrderVal = paidWaOrders.length > 0 ? waRevenue.net / paidWaOrders.length : 0;
 
     return (
         <div className="space-y-6">
