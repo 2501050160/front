@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import api, { getPdfDownloadUrl } from "../services/api";
@@ -11,6 +11,10 @@ function AdminDashboard() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const tabFromUrl = searchParams.get("tab");
+
+    const loggedInAdminUser = localStorage.getItem("adminUser") || "admin";
+    const loggedInAdminRole = localStorage.getItem("adminRole") || "SUB_ADMIN";
+    const loggedInAdminCollege = localStorage.getItem("adminCollege") || "KLU";
 
     const [coupons, setCoupons] = useState([]);
     const [allOrders, setOrders] = useState([]);
@@ -132,8 +136,8 @@ function AdminDashboard() {
                 if (c) list.add(c.trim().toUpperCase());
             });
         }
-        if (Array.isArray(blocks) && blocks.length > 0) {
-            blocks.forEach(b => {
+        if (Array.isArray(allBlocks) && allBlocks.length > 0) {
+            allBlocks.forEach(b => {
                 if (b?.college) list.add(b.college.trim().toUpperCase());
             });
         }
@@ -142,7 +146,7 @@ function AdminDashboard() {
             list.add(loggedInAdminCollege || "KLU");
         }
         return Array.from(list).sort();
-    }, [fetchedColleges, blocks, loggedInAdminCollege]);
+    }, [fetchedColleges, allBlocks, loggedInAdminCollege]);
 
     // Rewards & Voucher creator states
     const [rewards, setRewards] = useState([]);
@@ -1158,10 +1162,6 @@ function AdminDashboard() {
         ["week", "This Week"],
         ["month", "This Month"]
     ];
-
-    const loggedInAdminUser = localStorage.getItem("adminUser") || "admin";
-    const loggedInAdminRole = localStorage.getItem("adminRole") || "SUB_ADMIN";
-    const loggedInAdminCollege = localStorage.getItem("adminCollege") || "KLU";
 
     const getRoleFilteredBlocks = () => {
         let filteredBlocks = allBlocks;
