@@ -69,10 +69,46 @@ export function WhatsAppOrdersSection({
         }
     };
 
+    const waRevenue = waOrders.filter(o => o.paymentStatus === "PAID" && o.status !== "CANCELLED").reduce((sum, o) => {
+        const orig = o.originalPrice != null ? o.originalPrice : o.price;
+        return { gross: sum.gross + (orig || 0), net: sum.net + (o.price || 0) };
+    }, { gross: 0, net: 0 });
+    const waWallet = waOrders.filter(o => o.paymentStatus === "PAID" && o.status !== "CANCELLED" && o.razorpayPaymentId === "WALLET").reduce((s, o) => s + (o.price || 0), 0);
+    const waUpi = waRevenue.net - waWallet;
+    const avgOrderVal = waOrders.filter(o => o.paymentStatus === "PAID").length > 0 ? waRevenue.net / waOrders.filter(o => o.paymentStatus === "PAID").length : 0;
+
     return (
         <div className="space-y-6">
+            {/* Revenue Header Banner */}
+            <div className="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-[#075e54] via-[#128c7e] to-[#25d366] shadow-2xl">
+                <div className="absolute inset-0 opacity-10 pointer-events-none"
+                    style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 0%, transparent 60%)" }} />
+                <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-2xl">💬</span>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider uppercase bg-white/20 text-white border border-white/30">
+                                WhatsApp Bot Channel
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-black text-white tracking-tight">WhatsApp Orders</h2>
+                        <p className="text-sm text-green-100/80 font-semibold mt-0.5">Revenue & order metrics for WhatsApp bot-placed print jobs</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                        <div className="bg-white/15 border border-white/25 rounded-2xl px-4 py-3">
+                            <p className="text-2xl font-black text-white">₹{waRevenue.gross.toFixed(2)}</p>
+                            <p className="text-[10px] font-bold text-green-100 uppercase tracking-wider mt-0.5">Gross Revenue</p>
+                        </div>
+                        <div className="bg-white/15 border border-white/25 rounded-2xl px-4 py-3">
+                            <p className="text-2xl font-black text-white">₹{waRevenue.net.toFixed(2)}</p>
+                            <p className="text-[10px] font-bold text-green-100 uppercase tracking-wider mt-0.5">Net Collected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <MetricCard
                     title="WhatsApp Orders"
                     value={waOrders.length}
@@ -94,6 +130,64 @@ export function WhatsAppOrdersSection({
                     color="cyan"
                     subtitle="Released successfully"
                 />
+                <MetricCard
+                    title="Avg Order Value"
+                    value={`₹${avgOrderVal.toFixed(2)}`}
+                    icon={Download}
+                    color="purple"
+                    subtitle="Per paid WA order"
+                />
+            </div>
+
+            {/* Payment Method Breakdown */}
+            <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-700">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">💳 Payment Method Split</p>
+                    <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex mb-3">
+                        <div
+                            className="bg-cyan-500 h-full transition-all"
+                            style={{ width: `${waRevenue.net > 0 ? (waWallet / waRevenue.net) * 100 : 50}%` }}
+                        />
+                        <div
+                            className="bg-indigo-500 h-full transition-all"
+                            style={{ width: `${waRevenue.net > 0 ? (waUpi / waRevenue.net) * 100 : 50}%` }}
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1.5 text-xs font-bold">
+                        <div className="flex items-center justify-between text-cyan-300">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span>
+                                <span>Wallet</span>
+                            </div>
+                            <span>₹{waWallet.toFixed(2)} ({waRevenue.net > 0 ? ((waWallet / waRevenue.net) * 100).toFixed(1) : 0}%)</span>
+                        </div>
+                        <div className="flex items-center justify-between text-indigo-300">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+                                <span>Direct UPI / Razorpay</span>
+                            </div>
+                            <span>₹{waUpi.toFixed(2)} ({waRevenue.net > 0 ? ((waUpi / waRevenue.net) * 100).toFixed(1) : 0}%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-700">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">📊 Order Status Breakdown</p>
+                    {["QUEUE", "PRINTING", "COMPLETED", "CANCELLED"].map(s => {
+                        const count = waOrders.filter(o => o.status === s).length;
+                        const pct = waOrders.length > 0 ? (count / waOrders.length) * 100 : 0;
+                        const colors = { QUEUE: "bg-amber-400", PRINTING: "bg-sky-400", COMPLETED: "bg-emerald-400", CANCELLED: "bg-rose-400" };
+                        return (
+                            <div key={s} className="flex items-center gap-2 mb-2">
+                                <span className={`w-2 h-2 rounded-full ${colors[s] || "bg-slate-400"} shrink-0`}></span>
+                                <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+                                    <div className={`${colors[s] || "bg-slate-400"} h-full transition-all`} style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="text-xs font-bold text-slate-300 min-w-[24px] text-right">{count}</span>
+                                <span className="text-[10px] text-slate-500 font-bold min-w-[32px]">{pct.toFixed(0)}%</span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Controls Bar */}

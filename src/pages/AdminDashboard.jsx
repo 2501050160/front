@@ -1178,6 +1178,12 @@ function AdminDashboard() {
         let razorpayCharges = 0;
         let walletRevenue = 0;
         let upiRevenue = 0;
+        let whatsappGrossRevenue = 0;
+        let whatsappNetRevenue = 0;
+        let whatsappOrdersCount = 0;
+        let webGrossRevenue = 0;
+        let webNetRevenue = 0;
+        let webOrdersCount = 0;
 
         revenuePeriodOrders.forEach(o => {
             if (o.paymentStatus === "PAID" && o.status !== "CANCELLED") {
@@ -1189,6 +1195,21 @@ function AdminDashboard() {
                     walletRevenue += o.price || 0;
                 } else {
                     upiRevenue += o.price || 0;
+                }
+
+                const email = (o.userEmail || o.email || "").toLowerCase();
+                const name = (o.customerName || "").toLowerCase();
+                const channel = (o.orderChannel || "").toUpperCase();
+                const isWA = channel === "WHATSAPP" || email.includes("@c.us") || email.includes("whatsapp") || /^\+?[0-9]{10,13}$/.test(name.trim());
+
+                if (isWA) {
+                    whatsappGrossRevenue += original || 0;
+                    whatsappNetRevenue += o.price || 0;
+                    whatsappOrdersCount++;
+                } else {
+                    webGrossRevenue += original || 0;
+                    webNetRevenue += o.price || 0;
+                    webOrdersCount++;
                 }
             }
         });
@@ -1223,6 +1244,12 @@ function AdminDashboard() {
             razorpayCharges,
             walletRevenue,
             upiRevenue,
+            whatsappGrossRevenue,
+            whatsappNetRevenue,
+            whatsappOrdersCount,
+            webGrossRevenue,
+            webNetRevenue,
+            webOrdersCount,
             todayRevenue,
             completedOrders,
             printingOrders,
@@ -2010,6 +2037,7 @@ function AdminDashboard() {
                         {(activeTab === "queue" || activeTab === "order-queue") && (
                             [
                                 { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
+                                { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: `${orders.filter(o => { const e=(o.userEmail||o.email||'').toLowerCase(); const c=(o.orderChannel||'').toUpperCase(); return c==='WHATSAPP'||e.includes('@c.us')||e.includes('whatsapp'); }).length} Bot Orders` },
                                 { id: "display-panel", label: "Display Panel", icon: "📺", desc: "Kiosk Live TV" },
                                 { id: "kiosks", label: "Printer Kiosks", icon: "🖨️", desc: "Hardware Map" },
                                 { id: "revenue", label: "Revenue Analytics", icon: "💵", desc: "Financial Metrics" },
@@ -2559,6 +2587,10 @@ function AdminDashboard() {
                                                     ₹{(localStats.grossRevenue || 0).toFixed(2)}
                                                 </p>
                                                 <span className="text-[10px] text-slate-300 font-semibold mt-0.5">Total Invoiced Spend</span>
+                                                <div className="mt-2 pt-1.5 border-t border-white/10 flex flex-col gap-1 text-[9px] font-bold text-sky-200">
+                                                    <div>💬 WhatsApp: ₹{(localStats.whatsappGrossRevenue || 0).toFixed(2)} ({localStats.whatsappOrdersCount || 0} ord)</div>
+                                                    <div>🌐 Web Portal: ₹{(localStats.webGrossRevenue || 0).toFixed(2)} ({localStats.webOrdersCount || 0} ord)</div>
+                                                </div>
                                             </div>
 
                                             {/* Minus Operator Pill */}
@@ -2605,7 +2637,7 @@ function AdminDashboard() {
                                             </div>
 
                                             {/* 4. Realized Net Revenue (Hero Result) */}
-                                            <div className="flex-[1.2] p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 border border-emerald-300/50 shadow-lg shadow-emerald-950/40 flex flex-col justify-between">
+                                            <div className="flex-[1.2] p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-700 border border-emerald-300/50 shadow-lg shadow-emerald-950/40 flex flex-col justify-between">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-[10px] font-black uppercase tracking-wider text-emerald-100">4. Realized Net Revenue</span>
                                                     <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-white/20 text-white">Actual Inflow</span>
@@ -2616,6 +2648,10 @@ function AdminDashboard() {
                                                 <span className="text-[10px] text-emerald-100 font-bold mt-0.5">
                                                     {localStats.grossRevenue > 0 ? ((((localStats.netRevenue || 0) - (localStats.razorpayCharges || 0)) / localStats.grossRevenue) * 100).toFixed(1) : 100}% retention rate
                                                 </span>
+                                                <div className="mt-2 pt-1.5 border-t border-white/20 flex flex-col gap-1 text-[9px] font-bold text-emerald-100">
+                                                    <div>💬 WhatsApp Net: ₹{((localStats.whatsappNetRevenue || 0) - ((localStats.whatsappNetRevenue / Math.max(1, localStats.netRevenue || 1)) * (localStats.razorpayCharges || 0))).toFixed(2)}</div>
+                                                    <div>🌐 Web Portal Net: ₹{((localStats.webNetRevenue || 0) - ((localStats.webNetRevenue / Math.max(1, localStats.netRevenue || 1)) * (localStats.razorpayCharges || 0))).toFixed(2)}</div>
+                                                </div>
                                             </div>
 
                                         </div>
@@ -2698,33 +2734,39 @@ function AdminDashboard() {
 
                                     {/* Payment Channels & Retention Distribution Bars */}
                                     <div className="grid gap-6 md:grid-cols-2 mt-6 pt-6 border-t border-slate-100">
-                                        {/* Channel 1: Payment Method Breakdown */}
+                                        {/* Channel 1: WhatsApp vs Web Revenue Breakdown */}
                                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Payment Method Distribution</span>
-                                                <span className="text-xs font-bold text-slate-500">Total: ₹{(localStats.netRevenue || 0).toFixed(2)}</span>
+                                                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">📱 Order Channel Revenue</span>
+                                                <span className="text-xs font-bold text-slate-500">Total: ₹{(localStats.grossRevenue || 0).toFixed(2)}</span>
                                             </div>
                                             {/* Progress Bar */}
                                             <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden flex my-2">
-                                                <div 
-                                                    className="bg-cyan-500 h-full transition-all" 
-                                                    style={{ width: `${localStats.netRevenue > 0 ? ((localStats.walletRevenue / localStats.netRevenue) * 100) : 50}%` }}
-                                                    title={`Wallet: ${localStats.netRevenue > 0 ? ((localStats.walletRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%`}
+                                                <div
+                                                    className="bg-green-500 h-full transition-all"
+                                                    style={{ width: `${localStats.grossRevenue > 0 ? ((localStats.whatsappGrossRevenue / localStats.grossRevenue) * 100) : 50}%` }}
+                                                    title={`WhatsApp: ${localStats.grossRevenue > 0 ? ((localStats.whatsappGrossRevenue / localStats.grossRevenue) * 100).toFixed(1) : 0}%`}
                                                 />
-                                                <div 
-                                                    className="bg-indigo-500 h-full transition-all" 
-                                                    style={{ width: `${localStats.netRevenue > 0 ? ((localStats.upiRevenue / localStats.netRevenue) * 100) : 50}%` }}
-                                                    title={`UPI: ${localStats.netRevenue > 0 ? ((localStats.upiRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%`}
+                                                <div
+                                                    className="bg-blue-500 h-full transition-all"
+                                                    style={{ width: `${localStats.grossRevenue > 0 ? ((localStats.webGrossRevenue / localStats.grossRevenue) * 100) : 50}%` }}
+                                                    title={`Web: ${localStats.grossRevenue > 0 ? ((localStats.webGrossRevenue / localStats.grossRevenue) * 100).toFixed(1) : 0}%`}
                                                 />
                                             </div>
-                                            <div className="flex items-center justify-between text-xs font-bold pt-1">
-                                                <div className="flex items-center gap-1.5 text-cyan-800">
-                                                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span>
-                                                    <span>Wallet: ₹{(localStats.walletRevenue || 0).toFixed(2)} ({localStats.netRevenue > 0 ? ((localStats.walletRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%)</span>
+                                            <div className="flex flex-col gap-1.5 text-xs font-bold pt-1">
+                                                <div className="flex items-center justify-between text-green-800">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                                                        <span>💬 WhatsApp ({localStats.whatsappOrdersCount || 0} orders)</span>
+                                                    </div>
+                                                    <span>₹{(localStats.whatsappGrossRevenue || 0).toFixed(2)} ({localStats.grossRevenue > 0 ? ((localStats.whatsappGrossRevenue / localStats.grossRevenue) * 100).toFixed(1) : 0}%)</span>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-indigo-800">
-                                                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
-                                                    <span>Direct UPI: ₹{(localStats.upiRevenue || 0).toFixed(2)} ({localStats.netRevenue > 0 ? ((localStats.upiRevenue / localStats.netRevenue) * 100).toFixed(1) : 0}%)</span>
+                                                <div className="flex items-center justify-between text-blue-800">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                                                        <span>🌐 Web Portal ({localStats.webOrdersCount || 0} orders)</span>
+                                                    </div>
+                                                    <span>₹{(localStats.webGrossRevenue || 0).toFixed(2)} ({localStats.grossRevenue > 0 ? ((localStats.webGrossRevenue / localStats.grossRevenue) * 100).toFixed(1) : 0}%)</span>
                                                 </div>
                                             </div>
                                         </div>
