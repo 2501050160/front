@@ -736,6 +736,28 @@ function AdminDashboard() {
         }
     };
 
+    const shareCouponOnWhatsApp = (code, discount, expiry) => {
+        const text = encodeURIComponent(
+            `🎉 *Special CloudPrint Discount Coupon!*\n\n` +
+            `🎟️ *Coupon Code*: *${code || "SPECIAL"}*\n` +
+            `💰 *Discount*: *${discount || "10"}% OFF*\n` +
+            (expiry ? `⏱️ *Expires*: ${expiry}\n` : ``) +
+            `\n👉 Upload & Print now: https://cloudprint.website`
+        );
+        window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+    };
+
+    const shareVoucherOnWhatsApp = (code, amount, title) => {
+        const text = encodeURIComponent(
+            `🎁 *Free Wallet Credit Voucher!*\n\n` +
+            `🏷️ *Title*: ${title || "Wallet Reward"}\n` +
+            `💰 *Reward Amount*: *₹${amount || "50"} Instant Wallet Credits*\n` +
+            `🔑 *Claim Code*: *${code || "BONUS"}*\n\n` +
+            `👉 Redeem & Print now: https://cloudprint.website`
+        );
+        window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+    };
+
     const fetchSupportTickets = async () => {
         try {
             const response = await api.get("/support/all");
@@ -3837,9 +3859,20 @@ function AdminDashboard() {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-6 flex justify-between items-center text-xs font-bold text-slate-500">
+                                            {/* WhatsApp Share Button for Coupon */}
+                                            <div className="mt-4 pt-3 border-t border-slate-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => shareCouponOnWhatsApp(couponCode, discountPercentage, expiryDate)}
+                                                    className="w-full flex items-center justify-center gap-2 text-xs font-black py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
+                                                >
+                                                    <span>💬</span> Share Coupon via WhatsApp
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-4 flex justify-between items-center text-xs font-bold text-slate-500">
                                                 <span>Total Active Coupons: <strong>{coupons.length}</strong></span>
-                                                <button onClick={() => setPricingSubTab("active-coupons")} className="text-sky-600 hover:text-sky-700 underline">View all active coupons →</button>
+                                                <button onClick={() => setPricingSubTab("active-coupons")} className="text-sky-600 hover:text-sky-700 underline cursor-pointer">View all active coupons →</button>
                                             </div>
                                         </section>
                                     </div>
@@ -3971,12 +4004,21 @@ function AdminDashboard() {
                                                             {coupon.usedCount} / {coupon.maxUses}
                                                         </td>
                                                         <td>
-                                                            <button
-                                                                onClick={() => deleteCoupon(coupon.id)}
-                                                                className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold"
-                                                            >
-                                                                Delete
-                                                            </button>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => shareCouponOnWhatsApp(coupon.couponCode, coupon.discountPercentage, coupon.expiryDate)}
+                                                                    className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950"
+                                                                    title="Share coupon via WhatsApp"
+                                                                >
+                                                                    <span>💬</span> Share
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => deleteCoupon(coupon.id)}
+                                                                    className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -4003,11 +4045,12 @@ function AdminDashboard() {
                         {/* SUBPAGE 5: Voucher Generator (Rewards Program) */}
                         {pricingSubTab === "voucher-gen" && (
                             <motion.div
+                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
                                 initial={{ opacity: 0, y: 14 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.25 }}
                             >
-                                <section className="panel p-6 max-w-2xl mx-auto">
+                                <section className="panel p-6">
                                     <div className="section-header mb-6">
                                         <div>
                                             <p className="eyebrow">Rewards Program</p>
@@ -4043,6 +4086,55 @@ function AdminDashboard() {
                                         </button>
                                     </form>
                                 </section>
+
+                                {/* Voucher Live Preview Card */}
+                                <section className="panel p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="section-header mb-4">
+                                            <div>
+                                                <p className="eyebrow">Preview</p>
+                                                <h3 className="text-xl font-black text-slate-900">Live Voucher Card</h3>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-xl relative overflow-hidden">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2.5 py-1 rounded-full">WALLET REWARD</span>
+                                                    <h3 className="text-3xl font-black mt-3">₹{rewardAmt ? Number(rewardAmt).toFixed(2) : "50.00"} FREE</h3>
+                                                    <p className="text-xs font-semibold text-emerald-100 mt-1">{rewardTitle || "Welcome Bonus"}</p>
+                                                </div>
+                                                <span className="text-3xl">🎁</span>
+                                            </div>
+                                            <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center">
+                                                <div>
+                                                    <p className="text-[10px] text-emerald-200 uppercase font-bold">VOUCHER CODE</p>
+                                                    <p className="font-mono font-black text-lg tracking-wider">{rewardCode || "BONUS50"}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[10px] text-emerald-200 uppercase font-bold">MAX CLAIMS</p>
+                                                    <p className="text-xs font-bold">{rewardMaxClaims || "100"} Users</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* WhatsApp Share Button for Voucher */}
+                                    <div className="mt-4 pt-3 border-t border-slate-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => shareVoucherOnWhatsApp(rewardCode, rewardAmt, rewardTitle)}
+                                            className="w-full flex items-center justify-center gap-2 text-xs font-black py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950 shadow-md transition-all cursor-pointer"
+                                        >
+                                            <span>💬</span> Share Voucher via WhatsApp
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-4 flex justify-between items-center text-xs font-bold text-slate-500">
+                                        <span>Total Active Vouchers: <strong>{rewards.length}</strong></span>
+                                        <button onClick={() => setPricingSubTab("active-vouchers")} className="text-emerald-600 hover:text-emerald-700 underline cursor-pointer">View all active vouchers →</button>
+                                    </div>
+                                </section>
                             </motion.div>
                         )}
 
@@ -4077,7 +4169,18 @@ function AdminDashboard() {
                                                             {rew.active ? "ACTIVE" : "INACTIVE"}
                                                         </button>
                                                     </td>
-                                                    <td><button onClick={() => deleteReward(rew.id)} className="btn danger min-h-0 px-3 py-1.5 text-xs font-bold">Delete</button></td>
+                                                    <td>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => shareVoucherOnWhatsApp(rew.claimCode, rew.rewardAmount, rew.title)}
+                                                                className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950"
+                                                                title="Share voucher via WhatsApp"
+                                                            >
+                                                                <span>💬</span> Share
+                                                            </button>
+                                                            <button onClick={() => deleteReward(rew.id)} className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold">Delete</button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                             {rewards.length === 0 && (<tr><td colSpan="6" className="text-center font-bold text-slate-500 py-10">No reward vouchers created yet.</td></tr>)}
