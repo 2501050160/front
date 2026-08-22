@@ -510,8 +510,16 @@ function DisplayPanel() {
                                                 <p className="text-base font-black text-green-100">
                                                     Your print job is ready! Please collect your sheets from the output tray.
                                                 </p>
-                                                <p className="mt-2 text-xs font-bold text-white/60">
-                                                    This screen will return to the live queue shortly.
+                                                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-4">
+                                                    <motion.div
+                                                        className="h-full bg-green-400"
+                                                        initial={{ width: "100%" }}
+                                                        animate={{ width: "0%" }}
+                                                        transition={{ duration: 5, ease: "linear" }}
+                                                    />
+                                                </div>
+                                                <p className="mt-2 text-xs font-bold text-green-300/80">
+                                                    ⏳ Returning to live queue in 5 seconds...
                                                 </p>
                                             </div>
                                         </motion.div>
