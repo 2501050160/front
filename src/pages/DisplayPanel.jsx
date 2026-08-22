@@ -348,13 +348,32 @@ function DisplayPanel() {
 
     const normalizeLoc = (loc) => (loc || "").toLowerCase().replace(/[\s-_]/g, "");
 
+    const isOrderExpired = (order) => {
+        let expireTimestamp;
+        const baseDate = order.fileExpiryTime || order.cancelWindowEndsAt || order.paidAt || order.queuedAt || order.uploadTime || order.createdAt;
+        if (baseDate) {
+            const dateObj = parseBackendDate(baseDate);
+            if (dateObj && !isNaN(dateObj.getTime())) {
+                if (order.fileExpiryTime && baseDate === order.fileExpiryTime) {
+                    expireTimestamp = dateObj.getTime();
+                } else {
+                    expireTimestamp = dateObj.getTime() + 15 * 60 * 1000; // 15-minute validity window
+                }
+            }
+        }
+        if (!expireTimestamp) {
+            expireTimestamp = Date.now() + 15 * 60 * 1000;
+        }
+        return expireTimestamp <= currentTime;
+    };
+
     const queueOrders = orders
         .filter(
             (order) =>
                 (order.paymentStatus === "PAID" || order.razorpayPaymentId) &&
-                ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE", "PRINTING"].includes(
-                    order.status
-                ) &&
+                ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE", "PRINTING"].includes(order.status) &&
+                !["COMPLETED", "CANCELLED", "EXPIRED", "REFUNDED"].includes(order.status) &&
+                (order.status !== "PENDING_SCAN" || !isOrderExpired(order)) &&
                 (!displayBlock || 
                  normalizeLoc(order.blockLocation) === normalizeLoc(displayBlock) || 
                  (order.blockLocation || "").toLowerCase().includes((displayBlock || "").toLowerCase()))
