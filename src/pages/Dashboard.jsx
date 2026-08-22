@@ -204,8 +204,10 @@ function Dashboard() {
         if (userId) {
             getWalletBalance(userId).then(setWalletBalance).catch(() => {});
             const walletInterval = setInterval(() => {
-                getWalletBalance(userId).then(setWalletBalance).catch(() => {});
-            }, 5000);
+                if (document.visibilityState === "visible") {
+                    getWalletBalance(userId).then(setWalletBalance).catch(() => {});
+                }
+            }, 30000);
 
             const handleWalletUpdate = (e) => {
                 if (e.detail != null) {

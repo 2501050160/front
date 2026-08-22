@@ -32,7 +32,11 @@ export function WebOrdersSection({
 
     useEffect(() => {
         fetchOrders();
-        const interval = setInterval(fetchOrders, 4000);
+        const interval = setInterval(() => {
+            if (document.visibilityState === "visible") {
+                fetchOrders();
+            }
+        }, 15000);
         return () => clearInterval(interval);
     }, []);
 

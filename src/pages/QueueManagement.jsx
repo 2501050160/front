@@ -50,7 +50,11 @@ function QueueManagement() {
   useEffect(() => {
     fetchOrders();
     fetchBlocks();
-    const interval = setInterval(fetchOrders, 4000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchOrders();
+      }
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
