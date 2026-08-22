@@ -51,7 +51,7 @@ function AdminDashboard() {
     const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [pricingSubTab, setPricingSubTab] = useState(searchParams.get("subtab") || "pricing");
-    const [queueSubTab, setQueueSubTab] = useState(searchParams.get("subtab") || "revenue");
+    const [queueSubTab, setQueueSubTab] = useState(searchParams.get("subtab") || "live-queue");
     const [blocksSubTab, setBlocksSubTab] = useState("all-blocks");
     const [printersSubTab, setPrintersSubTab] = useState("printers-list");
     const [collegesSubTab, setCollegesSubTab] = useState("colleges-list");
@@ -2353,7 +2353,7 @@ function AdminDashboard() {
         }
     };
 
-    const handleTabChange = (tabId) => {
+    const handleTabChange = (tabId, subtabId) => {
         if (tabId === "analytics") {
             setActiveTab("queue");
             setQueueSubTab("revenue");
@@ -2363,8 +2363,47 @@ function AdminDashboard() {
             if (window.innerWidth < 768) setIsSidebarCollapsed(true);
             return;
         }
+        if (tabId === "live-queue") {
+            setActiveTab("queue");
+            setQueueSubTab("live-queue");
+            setSearchParams({ tab: "queue", subtab: "live-queue" });
+            fetchOrders();
+            fetchStats();
+            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+            return;
+        }
+        if (tabId === "history") {
+            setActiveTab("queue");
+            setQueueSubTab("history");
+            setSearchParams({ tab: "queue", subtab: "history" });
+            fetchOrders();
+            fetchStats();
+            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+            return;
+        }
+        if (tabId === "whatsapp") {
+            setActiveTab("queue");
+            setQueueSubTab("whatsapp");
+            setSearchParams({ tab: "queue", subtab: "whatsapp" });
+            fetchOrders();
+            fetchStats();
+            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+            return;
+        }
+        if (tabId === "queue" || tabId === "order-queue") {
+            setActiveTab("queue");
+            const targetSub = subtabId || "live-queue";
+            setQueueSubTab(targetSub);
+            setSearchParams({ tab: "queue", subtab: targetSub });
+            fetchOrders();
+            fetchStats();
+            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+            return;
+        }
         setActiveTab(tabId);
-        setSearchParams({ tab: tabId });
+        const params = { tab: tabId };
+        if (subtabId) params.subtab = subtabId;
+        setSearchParams(params);
         if (window.innerWidth < 768) {
             setIsSidebarCollapsed(true);
         }
@@ -2408,8 +2447,37 @@ function AdminDashboard() {
 
     useEffect(() => {
         const tab = searchParams.get("tab");
-        if (tab && tab !== activeTab) {
-            handleTabChange(tab);
+        const subtab = searchParams.get("subtab");
+        if (tab) {
+            if (tab === "queue" || tab === "order-queue") {
+                setActiveTab("queue");
+                if (subtab) setQueueSubTab(subtab);
+                else setQueueSubTab("live-queue");
+            } else if (tab === "live-queue") {
+                setActiveTab("queue");
+                setQueueSubTab("live-queue");
+            } else if (tab === "history") {
+                setActiveTab("queue");
+                setQueueSubTab("history");
+            } else if (tab === "whatsapp") {
+                setActiveTab("queue");
+                setQueueSubTab("whatsapp");
+            } else if (tab === "analytics") {
+                setActiveTab("queue");
+                setQueueSubTab("revenue");
+            } else {
+                setActiveTab(tab);
+                if (subtab) {
+                    if (tab === "settings") setPricingSubTab(subtab);
+                    else if (tab === "users") setUsersSubTab(subtab);
+                    else if (tab === "blocks") setBlocksSubTab(subtab);
+                    else if (tab === "printers") setPrintersSubTab(subtab);
+                    else if (tab === "colleges") setCollegesSubTab(subtab);
+                    else if (tab === "support") setSupportSubTab(subtab);
+                    else if (tab === "frontend") setFrontendSubTab(subtab);
+                    else if (tab === "system") setSystemSubTab(subtab);
+                }
+            }
         }
     }, [searchParams]);
 
@@ -2631,7 +2699,10 @@ function AdminDashboard() {
                                     key={sub.id}
                                     onClick={() => {
                                         if (sub.id === "display-panel") navigate("/display-panel");
-                                        else setQueueSubTab(sub.id);
+                                        else {
+                                            setQueueSubTab(sub.id);
+                                            setSearchParams({ tab: "queue", subtab: sub.id });
+                                        }
                                     }}
                                     className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                         queueSubTab === sub.id
