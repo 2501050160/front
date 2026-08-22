@@ -1,16 +1,42 @@
 import React, { useState } from "react";
-import { FileText, KeyRound, Receipt, ExternalLink, Search, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { FileText, KeyRound, Receipt, ExternalLink, Search, Clock, CheckCircle2, XCircle, AlertTriangle, Printer } from "lucide-react";
 import StatusBadge from "../../common/StatusBadge";
-import { getPdfDownloadUrl } from "../../../services/api";
+import api, { getPdfDownloadUrl } from "../../../services/api";
 
 export function OrdersSection({
     orders = [],
     isLoading = false,
-    onCancelOrder
+    onCancelOrder,
+    onRefresh
 }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedOtpOrder, setSelectedOtpOrder] = useState(null);
     const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
+    const [isReleasing, setIsReleasing] = useState(false);
+    const [releaseSuccess, setReleaseSuccess] = useState(false);
+
+    const handleReleasePrint = async (order) => {
+        if (!order || !order.otpCode) return;
+        setIsReleasing(true);
+        try {
+            await api.post("/pdf/releasePrint", null, {
+                params: {
+                    orderId: order.orderId || order.id,
+                    otp: order.otpCode.trim()
+                }
+            });
+            setReleaseSuccess(true);
+            setTimeout(() => {
+                setSelectedOtpOrder(null);
+                setReleaseSuccess(false);
+                if (onRefresh) onRefresh();
+            }, 1500);
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to release print. Please enter OTP at the kiosk.");
+        } finally {
+            setIsReleasing(false);
+        }
+    };
 
     const filteredOrders = orders.filter(o => {
         if (!searchTerm.trim()) return true;
@@ -161,19 +187,31 @@ export function OrdersSection({
                         </div>
                         <div>
                             <h3 className="text-lg font-black text-white">Your Pickup OTP</h3>
-                            <p className="text-xs text-slate-400 mt-1">Enter this PIN on the physical kiosk touchscreen</p>
+                            <p className="text-xs text-slate-400 mt-1">Enter this PIN on kiosk display or release directly below</p>
                         </div>
                         <div className="p-4 rounded-2xl bg-slate-950 border border-cyan-500/30">
                             <span className="font-mono text-4xl font-black text-cyan-300 tracking-widest">
                                 {selectedOtpOrder.otpCode || "N/A"}
                             </span>
                         </div>
-                        <button
-                            onClick={() => setSelectedOtpOrder(null)}
-                            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer"
-                        >
-                            Done
-                        </button>
+                        <div className="space-y-2">
+                            {selectedOtpOrder.status === "PENDING_SCAN" && (
+                                <button
+                                    onClick={() => handleReleasePrint(selectedOtpOrder)}
+                                    disabled={isReleasing || releaseSuccess}
+                                    className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs cursor-pointer shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                                >
+                                    <Printer className="w-4 h-4" />
+                                    {isReleasing ? "Releasing..." : releaseSuccess ? "✅ Released to Printer!" : "🚀 Release Print to Kiosk"}
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setSelectedOtpOrder(null)}
+                                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer"
+                            >
+                                Done
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -29,6 +29,9 @@ function PaymentSuccess() {
     const blockLocationRef = useRef("");
     const autoProceedStartedRef = useRef(false);
 
+    const [isReleasingPrint, setIsReleasingPrint] = useState(false);
+    const [printReleased, setPrintReleased] = useState(false);
+
     useEffect(() => {
         if (!orderId) return;
         const fetchOrderDetails = async () => {
@@ -36,13 +39,47 @@ function PaymentSuccess() {
                 const response = await api.get("/pdf/details", {
                     params: { orderId }
                 });
-                setOrderDetails(response.data);
+                if (response.data) {
+                    setOrderDetails(response.data);
+                    if (response.data.otpCode) {
+                        setOtpCode(response.data.otpCode);
+                        otpRef.current = response.data.otpCode;
+                    }
+                    if (response.data.fileName) {
+                        setFileName(response.data.fileName);
+                        fileNameRef.current = response.data.fileName;
+                    }
+                    if (response.data.blockLocation) {
+                        setBlockLocation(response.data.blockLocation);
+                        blockLocationRef.current = response.data.blockLocation;
+                    }
+                }
             } catch (err) {
                 console.error("Failed to fetch order details for invoice:", err);
             }
         };
         fetchOrderDetails();
     }, [orderId]);
+
+    const handleDirectReleasePrint = async () => {
+        const code = otpCode || otpRef.current;
+        if (!orderId || !code) return;
+        setIsReleasingPrint(true);
+        try {
+            await api.post("/pdf/releasePrint", null, {
+                params: { orderId, otp: code.trim() }
+            });
+            setPrintReleased(true);
+            setStatus("QUEUE");
+            alert("🚀 Document released to printer! Your print job is now in the printing queue.");
+            navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}&otp=${encodeURIComponent(code)}`);
+        } catch (err) {
+            console.error("Failed to release print:", err);
+            alert(err.response?.data?.message || "Failed to release print. Please enter OTP at the kiosk.");
+        } finally {
+            setIsReleasingPrint(false);
+        }
+    };
 
     const proceedOrder = async () => {
         if (proceeding) return;
@@ -51,10 +88,10 @@ function PaymentSuccess() {
             await api.post("/queue/proceed", null, {
                 params: { orderId }
             });
-            navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`);
+            navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}&otp=${encodeURIComponent(otpRef.current || otpCode || '')}`);
         } catch (error) {
             console.error("Failed to proceed order:", error);
-            navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`);
+            navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}&otp=${encodeURIComponent(otpRef.current || otpCode || '')}`);
         } finally {
             setProceeding(false);
         }
@@ -77,7 +114,7 @@ function PaymentSuccess() {
             setSecondsLeft((current) => {
                 if (current <= 1) {
                     clearInterval(interval);
-                    navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`);
+                    navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}&otp=${encodeURIComponent(otpRef.current || otpCode || '')}`);
                     return 0;
                 }
                 return current - 1;
@@ -123,7 +160,7 @@ function PaymentSuccess() {
                 }
 
                 if (response.data.status !== "CANCEL_WINDOW") {
-                    navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`);
+                    navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}&otp=${encodeURIComponent(otpRef.current || response.data.otpCode || '')}`);
                 } else {
                     // Check if it is a wallet payment to trigger auto-proceed
                     const isWallet = searchParams.get("paymentMethod") === "wallet";
@@ -210,14 +247,29 @@ function PaymentSuccess() {
                         Order <strong>{orderId}</strong> has been successfully placed and routed to your print queue.
                     </p>
 
+                    {/* 4-Digit Release OTP Card */}
+                    {(otpCode || otpRef.current) && (
+                        <div className="w-full max-w-sm p-4 rounded-2xl bg-cyan-500/15 border-2 border-cyan-400/50 text-center mb-4 shadow-xl shadow-cyan-500/20 backdrop-blur-md">
+                            <p className="text-[11px] font-black text-cyan-300 uppercase tracking-widest flex items-center justify-center gap-1.5">
+                                <span>🔐</span> YOUR RELEASE OTP
+                            </p>
+                            <p className="font-mono text-4xl font-black text-white tracking-[0.25em] my-1.5">
+                                {otpCode || otpRef.current}
+                            </p>
+                            <p className="text-[11px] font-bold text-cyan-200/80">
+                                Enter on {blockLocation || 'designated kiosk'} display or release directly below
+                            </p>
+                        </div>
+                    )}
+
                     {/* Kiosk Display Screen Instructions */}
                     <div className="w-full max-w-sm p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-left mb-6 backdrop-blur-md">
                         <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-base">📺</span>
-                            <h4 className="text-xs font-black text-sky-300 uppercase tracking-wider">Release OTP & Queue Position</h4>
+                            <h4 className="text-xs font-black text-sky-300 uppercase tracking-wider">Kiosk Queue & Status</h4>
                         </div>
                         <p className="text-xs text-slate-200 font-medium leading-relaxed">
-                            Please check your <strong>{blockLocation || 'designated kiosk'}</strong> display screen to find your 4-digit Release OTP, then enter it on the display keypad to print.
+                            Your order is active at <strong>{blockLocation || 'designated kiosk'}</strong>. You can enter your 4-digit OTP at the kiosk or release the print instantly.
                         </p>
                         <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] font-bold text-slate-300">
                             <span>Target Kiosk:</span>
@@ -227,7 +279,21 @@ function PaymentSuccess() {
 
                     <div className="grid gap-3 w-full max-w-sm">
                         <button
-                            onClick={() => navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}`)}
+                            onClick={handleDirectReleasePrint}
+                            disabled={isReleasingPrint || printReleased}
+                            className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all border border-cyan-400/50 shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                            {isReleasingPrint ? (
+                                <span>Releasing Print...</span>
+                            ) : printReleased ? (
+                                <span>✅ Print Released to Spooler</span>
+                            ) : (
+                                <span>🚀 Release Print to Kiosk Spooler</span>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => navigate(`/blocks?orderId=${orderId}&fileName=${encodeURIComponent(fileNameRef.current)}&block=${encodeURIComponent(blockLocationRef.current)}&otp=${encodeURIComponent(otpCode || otpRef.current || '')}`)}
                             className="w-full py-3.5 rounded-xl font-bold text-sm tracking-wide text-white bg-emerald-500/90 hover:bg-emerald-500 transition-all border border-emerald-400/50 shadow-lg shadow-emerald-500/20"
                         >
                             📺 View Live Queue on Kiosk Screen

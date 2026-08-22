@@ -74,12 +74,27 @@ function DisplayPanel() {
         );
     };
 
+    const parseBackendDate = (dateVal) => {
+        if (!dateVal) return null;
+        if (Array.isArray(dateVal)) {
+            const [y, m, d, hr, min, sec] = dateVal;
+            return new Date(Date.UTC(y, m - 1, d, hr || 0, min || 0, sec || 0));
+        }
+        if (typeof dateVal === "string") {
+            const cleanStr = dateVal.replace(" ", "T");
+            const hasOffset = /([+-]\d{2}:?\d{2}|Z)$/.test(cleanStr);
+            const isoStr = hasOffset ? cleanStr : cleanStr + "Z";
+            return new Date(isoStr);
+        }
+        return new Date(dateVal);
+    };
+
     const getOtpExpiryFormatted = (order) => {
         let expireTimestamp;
-        const baseDate = order.cancelWindowEndsAt || order.uploadTime || order.queuedAt || order.paidAt;
+        const baseDate = order.cancelWindowEndsAt || order.paidAt || order.queuedAt || order.uploadTime || order.createdAt;
         if (baseDate) {
-            const dateObj = new Date(baseDate);
-            if (!isNaN(dateObj.getTime())) {
+            const dateObj = parseBackendDate(baseDate);
+            if (dateObj && !isNaN(dateObj.getTime())) {
                 expireTimestamp = dateObj.getTime() + 10 * 60 * 1000; // 10-minute OTP expiration window
             }
         }
