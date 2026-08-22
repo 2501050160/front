@@ -223,9 +223,23 @@ export function QueueSection({
 
                                         {/* Timestamp */}
                                         <td className="p-4 text-slate-300">
-                                            {order.uploadTime ? new Date(order.uploadTime).toLocaleString("en-IN", {
-                                                day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
-                                            }) : "—"}
+                                            {(() => {
+                                                const rawTime = order.uploadTime || order.createdAt;
+                                                if (!rawTime) return "—";
+                                                try {
+                                                    let str = String(rawTime).trim();
+                                                    if (!str.endsWith('Z') && !str.includes('+') && !str.includes('GMT') && !str.includes('Z')) {
+                                                        str = str.replace(' ', 'T') + 'Z';
+                                                    }
+                                                    const d = new Date(str);
+                                                    return isNaN(d.getTime()) ? String(rawTime) : d.toLocaleString("en-IN", {
+                                                        timeZone: "Asia/Kolkata",
+                                                        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: true
+                                                    });
+                                                } catch (e) {
+                                                    return String(rawTime);
+                                                }
+                                            })()}
                                         </td>
 
                                         {/* Customer */}

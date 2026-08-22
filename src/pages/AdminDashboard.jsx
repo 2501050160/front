@@ -267,12 +267,7 @@ function AdminDashboard() {
                 // For Orders
                 else if (header === "Order ID") val = row.orderId != null ? row.orderId : "";
                 else if (header === "Date & Time") {
-                    val = row.uploadTime
-                        ? new Date(row.uploadTime).toLocaleString('en-IN', {
-                            day: '2-digit', month: 'short', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit', hour12: true
-                          })
-                        : "—";
+                    val = formatOrderDateTime(row.uploadTime || row.createdAt);
                 }
                 else if (header === "Location") val = row.blockLocation != null ? row.blockLocation : "";
                 else if (header === "Customer") val = row.customerName != null ? row.customerName : "";
@@ -1523,6 +1518,25 @@ function AdminDashboard() {
         if (s === "PENDING" || s === "PROCESSING") return "status-pill status-printing";
         if (s === "FAILED" || s === "REFUNDED" || s === "CANCELLED") return "status-pill status-unpaid";
         return "status-pill status-created";
+    };
+
+    const formatOrderDateTime = (rawTime) => {
+        if (!rawTime) return '—';
+        try {
+            let str = String(rawTime).trim();
+            if (!str.endsWith('Z') && !str.includes('+') && !str.includes('GMT') && !str.includes('Z')) {
+                str = str.replace(' ', 'T') + 'Z';
+            }
+            const d = new Date(str);
+            if (isNaN(d.getTime())) return String(rawTime);
+            return d.toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        } catch (e) {
+            return String(rawTime);
+        }
     };
 
     const formatStudentDisplayName = (rawName) => {
@@ -3845,18 +3859,7 @@ function AdminDashboard() {
                                                     <span>{order.orderId}</span>
                                                 </td>
                                                 <td className="whitespace-nowrap text-slate-500 text-sm">
-                                                    {(() => {
-                                                        if (!order.uploadTime) return '—';
-                                                        try {
-                                                            const d = new Date(order.uploadTime);
-                                                            return isNaN(d.getTime()) ? String(order.uploadTime) : d.toLocaleString('en-IN', {
-                                                                day: '2-digit', month: 'short', year: 'numeric',
-                                                                hour: '2-digit', minute: '2-digit', hour12: true
-                                                            });
-                                                        } catch (e) {
-                                                            return String(order.uploadTime);
-                                                        }
-                                                    })()}
+                                                    {formatOrderDateTime(order.uploadTime || order.createdAt)}
                                                 </td>
                                                 <td className="font-bold">
                                                     {order.blockLocation || "C Block"}
