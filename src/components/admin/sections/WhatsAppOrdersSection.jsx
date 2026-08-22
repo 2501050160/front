@@ -210,9 +210,9 @@ export function WhatsAppOrdersSection({
 
             {/* Payment Method Breakdown */}
             <div className="grid sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-700">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">💳 Payment Method Split</p>
-                    <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex mb-3">
+                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700/80 shadow-lg">
+                    <p className="text-xs font-black text-slate-200 uppercase tracking-wider mb-3">💳 Payment Method Split</p>
+                    <div className="w-full h-3.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden flex mb-3.5">
                         <div
                             className="bg-cyan-500 h-full transition-all"
                             style={{ width: `${waRevenue.net > 0 ? (waWallet / waRevenue.net) * 100 : 50}%` }}
@@ -222,37 +222,38 @@ export function WhatsAppOrdersSection({
                             style={{ width: `${waRevenue.net > 0 ? (waUpi / waRevenue.net) * 100 : 50}%` }}
                         />
                     </div>
-                    <div className="flex flex-col gap-1.5 text-xs font-bold">
+                    <div className="flex flex-col gap-2 text-xs font-bold">
                         <div className="flex items-center justify-between text-cyan-300">
                             <div className="flex items-center gap-1.5">
-                                <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 inline-block"></span>
-                                <span>Wallet</span>
+                                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block shadow-sm shadow-cyan-400/50"></span>
+                                <span className="text-slate-200">Wallet</span>
                             </div>
-                            <span>₹{waWallet.toFixed(2)} ({waRevenue.net > 0 ? ((waWallet / waRevenue.net) * 100).toFixed(1) : 0}%)</span>
+                            <span className="font-black font-mono">₹{waWallet.toFixed(2)} ({waRevenue.net > 0 ? ((waWallet / waRevenue.net) * 100).toFixed(1) : 0}%)</span>
                         </div>
                         <div className="flex items-center justify-between text-indigo-300">
                             <div className="flex items-center gap-1.5">
-                                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
-                                <span>Direct UPI / Razorpay</span>
+                                <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 inline-block shadow-sm shadow-indigo-400/50"></span>
+                                <span className="text-slate-200">Direct UPI / Razorpay</span>
                             </div>
-                            <span>₹{waUpi.toFixed(2)} ({waRevenue.net > 0 ? ((waUpi / waRevenue.net) * 100).toFixed(1) : 0}%)</span>
+                            <span className="font-black font-mono">₹{waUpi.toFixed(2)} ({waRevenue.net > 0 ? ((waUpi / waRevenue.net) * 100).toFixed(1) : 0}%)</span>
                         </div>
                     </div>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-700">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">📊 Order Status Breakdown</p>
+                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700/80 shadow-lg">
+                    <p className="text-xs font-black text-slate-200 uppercase tracking-wider mb-3">📊 Order Status Breakdown</p>
                     {["QUEUE", "PRINTING", "COMPLETED", "CANCELLED"].map(s => {
                         const count = waOrders.filter(o => o.status === s).length;
                         const pct = waOrders.length > 0 ? (count / waOrders.length) * 100 : 0;
                         const colors = { QUEUE: "bg-amber-400", PRINTING: "bg-sky-400", COMPLETED: "bg-emerald-400", CANCELLED: "bg-rose-400" };
                         return (
-                            <div key={s} className="flex items-center gap-2 mb-2">
-                                <span className={`w-2 h-2 rounded-full ${colors[s] || "bg-slate-400"} shrink-0`}></span>
-                                <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+                            <div key={s} className="flex items-center gap-2 mb-2.5">
+                                <span className={`w-2.5 h-2.5 rounded-full ${colors[s] || "bg-slate-400"} shrink-0`}></span>
+                                <span className="text-[11px] font-bold text-slate-300 min-w-[75px]">{s}</span>
+                                <div className="flex-1 bg-slate-950 border border-slate-800 rounded-full h-2.5 overflow-hidden">
                                     <div className={`${colors[s] || "bg-slate-400"} h-full transition-all`} style={{ width: `${pct}%` }} />
                                 </div>
-                                <span className="text-xs font-bold text-slate-300 min-w-[24px] text-right">{count}</span>
-                                <span className="text-[10px] text-slate-500 font-bold min-w-[32px]">{pct.toFixed(0)}%</span>
+                                <span className="text-xs font-black text-white min-w-[24px] text-right">{count}</span>
+                                <span className="text-xs text-slate-300 font-bold min-w-[36px] text-right font-mono">{pct.toFixed(0)}%</span>
                             </div>
                         );
                     })}
@@ -260,7 +261,7 @@ export function WhatsAppOrdersSection({
             </div>
 
             {/* Controls Bar */}
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-700/80 shadow-lg flex flex-col sm:flex-row gap-3 items-center justify-between">
                 <div className="relative flex-1 w-full">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
@@ -268,14 +269,14 @@ export function WhatsAppOrdersSection({
                         placeholder="Search by WhatsApp Phone Number, Order ID, or OTP..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 font-medium outline-none focus:border-emerald-500 transition-colors"
                     />
                 </div>
 
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full sm:w-auto px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white outline-none cursor-pointer font-bold"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white outline-none cursor-pointer font-bold focus:border-emerald-500 transition-colors"
                 >
                     <option value="ALL">All Statuses</option>
                     <option value="QUEUE">In Queue</option>
@@ -285,11 +286,11 @@ export function WhatsAppOrdersSection({
             </div>
 
             {/* Orders Table */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-2xl">
+            <div className="rounded-2xl border border-slate-700/80 bg-slate-900 shadow-2xl overflow-hidden">
                 <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-black uppercase text-[10px]">
+                            <tr className="border-b border-slate-700 bg-slate-950 text-slate-200 font-black uppercase text-[11px] tracking-wider">
                                 <th className="p-4">WhatsApp Phone</th>
                                 <th className="p-4">Order ID & OTP</th>
                                 <th className="p-4">Location</th>
@@ -299,35 +300,35 @@ export function WhatsAppOrdersSection({
                                 <th className="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60">
+                        <tbody className="divide-y divide-slate-800">
                             {filteredOrders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="p-12 text-center text-slate-500">
+                                    <td colSpan={7} className="p-12 text-center text-slate-400 font-bold text-sm">
                                         No WhatsApp Bot orders found.
                                     </td>
                                 </tr>
                             ) : (
                                 filteredOrders.map(order => (
-                                    <tr key={order.id || order.orderId} className="hover:bg-slate-800/30 transition-colors">
+                                    <tr key={order.id || order.orderId} className="hover:bg-slate-800/60 transition-colors">
                                         <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0">
                                                     <Phone className="w-4 h-4" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-mono font-black text-white">{order.customerName || order.userEmail || "WhatsApp User"}</p>
-                                                    <span className="text-[10px] text-emerald-400 font-bold">WhatsApp Agent</span>
+                                                    <p className="font-mono font-black text-white text-sm">{order.customerName || order.userEmail || "WhatsApp User"}</p>
+                                                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">💬 WhatsApp Agent</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="p-4 font-mono">
-                                            <p className="font-bold text-white">#{order.orderId || order.id}</p>
-                                            <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-bold text-[10px]">
+                                            <p className="font-black text-white text-sm">#{order.orderId || order.id}</p>
+                                            <span className="inline-block mt-1 px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-black text-[11px]">
                                                 OTP: {order.otpCode || "—"}
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 text-[11px] font-bold">
+                                            <span className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 text-xs font-bold inline-flex items-center gap-1">
                                                 📍 {order.blockLocation || "Default Block"}
                                             </span>
                                         </td>
@@ -337,50 +338,50 @@ export function WhatsAppOrdersSection({
                                                 const copies = order.copies || 1;
                                                 const totalPrinted = pages * copies;
                                                 return (
-                                                    <div className="space-y-1">
+                                                    <div className="space-y-1.5">
                                                         <div className="flex items-center gap-1.5 flex-wrap">
-                                                            <span className="font-bold text-cyan-300">{order.printType || "BW"}</span>
+                                                            <span className="font-black text-cyan-300 text-xs uppercase">{order.printType || "BW"}</span>
                                                             <span className="text-slate-500">•</span>
-                                                            <span className="font-semibold text-slate-200">{copies} {copies > 1 ? "copies" : "copy"}</span>
+                                                            <span className="font-bold text-white text-xs">{copies} {copies > 1 ? "copies" : "copy"}</span>
                                                             {order.doubleSided && (
-                                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-950 text-indigo-300 border border-indigo-500/40 uppercase">
                                                                     Duplex
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 font-black text-[10px] border border-sky-500/20">
+                                                            <span className="px-2 py-0.5 rounded bg-sky-950 border border-sky-500/40 text-sky-300 font-black text-[11px]">
                                                                 📄 {pages} {pages > 1 ? "pages" : "page"}
                                                             </span>
-                                                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-black text-[10px] border border-emerald-500/20">
+                                                            <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-black text-[11px]">
                                                                 🖨️ {totalPrinted} {totalPrinted > 1 ? "sheets" : "sheet"} printed
                                                             </span>
                                                         </div>
-                                                        <p className="text-[10px] text-slate-400 font-mono">Pages: {order.selectedPages || "ALL"}</p>
+                                                        <p className="text-[11px] text-slate-300 font-mono font-semibold">Pages: {order.selectedPages || "ALL"}</p>
                                                     </div>
                                                 );
                                             })()}
                                         </td>
-                                        <td className="p-4 font-black text-white text-sm">
+                                        <td className="p-4 font-black text-emerald-400 text-base font-mono">
                                             ₹{Number(order.price || 0).toFixed(2)}
                                         </td>
                                         <td className="p-4">
                                             <StatusBadge status={order.status} />
                                         </td>
                                         <td className="p-4 text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
+                                            <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => window.open(getPdfDownloadUrl(order.orderId || order.id), "_blank")}
-                                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 transition-all cursor-pointer"
+                                                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-cyan-300 border border-slate-700 transition-all cursor-pointer"
                                                     title="View PDF"
                                                 >
-                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    <ExternalLink className="w-4 h-4" />
                                                 </button>
 
                                                 {order.status === "QUEUE" && (
                                                     <button
                                                         onClick={() => handleUpdateStatus(order.orderId || order.id, "PRINTING")}
-                                                        className="px-2.5 py-1 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 text-[11px] font-bold transition-all cursor-pointer"
+                                                        className="px-3 py-1.5 rounded-lg bg-cyan-600/30 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition-all cursor-pointer"
                                                     >
                                                         Print
                                                     </button>
@@ -389,7 +390,7 @@ export function WhatsAppOrdersSection({
                                                 {order.status === "PRINTING" && (
                                                     <button
                                                         onClick={() => handleUpdateStatus(order.orderId || order.id, "COMPLETED")}
-                                                        className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-[11px] font-bold transition-all cursor-pointer"
+                                                        className="px-3 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer"
                                                     >
                                                         Done
                                                     </button>
