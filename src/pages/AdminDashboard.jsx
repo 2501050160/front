@@ -388,7 +388,7 @@ function AdminDashboard() {
         fetchPrices(selectedPricingBlock);
         fetchBlocks();
         fetchPrinters();
-        fetchCollegePlatformSettings(selectedCollege || loggedInAdminCollege || "KLU");
+        fetchCollegePlatformSettings(selectedCollegeFilter || loggedInAdminCollege || "KLU");
 
         const interval = setInterval(() => {
             if (document.visibilityState === "visible") {
@@ -404,8 +404,8 @@ function AdminDashboard() {
 
     useEffect(() => {
         fetchStats();
-        fetchCollegePlatformSettings(selectedCollege || loggedInAdminCollege || "KLU");
-    }, [revenuePeriod, selectedCollege]);
+        fetchCollegePlatformSettings(selectedCollegeFilter || loggedInAdminCollege || "KLU");
+    }, [revenuePeriod, selectedCollegeFilter]);
 
     useEffect(() => {
         if (activeTab === "users") {
