@@ -735,10 +735,10 @@ function DisplayPanel() {
                                                                     {isPendingScan ? (
                                                                         <div className={`rounded-2xl border px-3 py-2 shadow-lg ${isWA ? "border-[#25D366]/50 bg-[#25D366]/20" : palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
                                                                             <p className={`text-[9px] font-black uppercase tracking-widest ${isWA ? "text-[#25D366]" : "text-cyan-200/80"} leading-none`}>
-                                                                                {isWA ? "REPLY IN WA" : "RELEASE OTP"}
+                                                                                RELEASE OTP
                                                                             </p>
-                                                                            <p className={`font-mono ${isWA ? "text-sm tracking-normal text-emerald-300" : "text-2xl tracking-widest text-white"} font-black mt-1 leading-none`}>
-                                                                                {isWA ? "💬 Enter in WA" : order.otpCode}
+                                                                            <p className="font-mono text-2xl tracking-widest text-white font-black mt-1 leading-none">
+                                                                                {order.otpCode || "—"}
                                                                             </p>
                                                                         </div>
                                                                     ) : (
