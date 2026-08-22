@@ -46,6 +46,7 @@ function AdminDashboard() {
     const [allUsers, setUsers] = useState([]);
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [selectedCoupons, setSelectedCoupons] = useState([]);
+    const [selectedAdminOrderIds, setSelectedAdminOrderIds] = useState([]);
     const [allSupportTickets, setSupportTickets] = useState([]);
     const [selectedPricingBlock, setSelectedPricingBlock] = useState("C Block");
     const [activeTab, setActiveTab] = useState(tabFromUrl || "queue");
@@ -1145,7 +1146,6 @@ function AdminDashboard() {
 
     const [resetScope, setResetScope] = useState("GLOBAL");
     const [resetTargetName, setResetTargetName] = useState("");
-    const [selectedAdminOrderIds, setSelectedAdminOrderIds] = useState([]);
 
     const resetStats = async () => {
         if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
@@ -3837,18 +3837,35 @@ function AdminDashboard() {
                                                     <span>{order.orderId}</span>
                                                 </td>
                                                 <td className="whitespace-nowrap text-slate-500 text-sm">
-                                                    {order.uploadTime
-                                                        ? new Date(order.uploadTime).toLocaleString('en-IN', {
-                                                            day: '2-digit', month: 'short', year: 'numeric',
-                                                            hour: '2-digit', minute: '2-digit', hour12: true
-                                                          })
-                                                        : '—'}
+                                                    {(() => {
+                                                        if (!order.uploadTime) return '—';
+                                                        try {
+                                                            const d = new Date(order.uploadTime);
+                                                            return isNaN(d.getTime()) ? String(order.uploadTime) : d.toLocaleString('en-IN', {
+                                                                day: '2-digit', month: 'short', year: 'numeric',
+                                                                hour: '2-digit', minute: '2-digit', hour12: true
+                                                            });
+                                                        } catch (e) {
+                                                            return String(order.uploadTime);
+                                                        }
+                                                    })()}
                                                 </td>
                                                 <td className="font-bold">
                                                     {order.blockLocation || "C Block"}
                                                 </td>
                                                 <td className="font-bold text-slate-900">
-                                                    {order.customerName || "Customer"}
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span>{formatStudentDisplayName(order.customerName)}</span>
+                                                        {isWhatsAppOrder(order) ? (
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#25D366]/15 text-[#128C7E] border border-green-300 shadow-xs shrink-0">
+                                                                💬 WA
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-200 shadow-xs shrink-0">
+                                                                🌐 Web
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <button
