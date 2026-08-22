@@ -247,29 +247,14 @@ function PaymentSuccess() {
                         Order <strong>{orderId}</strong> has been successfully placed and routed to your print queue.
                     </p>
 
-                    {/* 4-Digit Release OTP Card */}
-                    {(otpCode || otpRef.current) && (
-                        <div className="w-full max-w-sm p-4 rounded-2xl bg-cyan-500/15 border-2 border-cyan-400/50 text-center mb-4 shadow-xl shadow-cyan-500/20 backdrop-blur-md">
-                            <p className="text-[11px] font-black text-cyan-300 uppercase tracking-widest flex items-center justify-center gap-1.5">
-                                <span>🔐</span> YOUR RELEASE OTP
-                            </p>
-                            <p className="font-mono text-4xl font-black text-white tracking-[0.25em] my-1.5">
-                                {otpCode || otpRef.current}
-                            </p>
-                            <p className="text-[11px] font-bold text-cyan-200/80">
-                                Enter on {blockLocation || 'designated kiosk'} display or release directly below
-                            </p>
-                        </div>
-                    )}
-
                     {/* Kiosk Display Screen Instructions */}
                     <div className="w-full max-w-sm p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-left mb-6 backdrop-blur-md">
                         <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-base">📺</span>
-                            <h4 className="text-xs font-black text-sky-300 uppercase tracking-wider">Kiosk Queue & Status</h4>
+                            <h4 className="text-xs font-black text-sky-300 uppercase tracking-wider">Check Kiosk Display Panel</h4>
                         </div>
                         <p className="text-xs text-slate-200 font-medium leading-relaxed">
-                            Your order is active at <strong>{blockLocation || 'designated kiosk'}</strong>. You can enter your 4-digit OTP at the kiosk or release the print instantly.
+                            Your order is active at <strong>{blockLocation || 'designated kiosk'}</strong>. Please check your 4-digit Release OTP on the <strong>{blockLocation || 'Campus'} Kiosk Display Panel</strong>.
                         </p>
                         <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[11px] font-bold text-slate-300">
                             <span>Target Kiosk:</span>

@@ -738,7 +738,7 @@ function Dashboard() {
             localStorage.removeItem("order");
             const paidData = walletRes?.data?.order || finalOrder;
             setCompletedOrder(paidData);
-            showAlert("Print Job Created!", `Your 4-digit OTP is ${paidData.otpCode || "ready"}. Collect at ${blockLocation}.`, "success");
+            showAlert("Print Job Created!", `Order placed successfully. Please check your Release OTP on the ${blockLocation || "Campus Kiosk"} display panel.`, "success");
         } catch (error) {
             console.error(error);
             showAlert("Error", error.response?.data?.message || "Wallet payment failed", "error");
@@ -857,7 +857,7 @@ function Dashboard() {
                         localStorage.removeItem("order");
                         const paidData = paidRes.data || finalOrder;
                         setCompletedOrder(paidData);
-                        showAlert("Payment Successful!", `Your 4-digit OTP is ${paidData.otpCode || "ready"}. Collect at ${blockLocation}.`, "success");
+                        showAlert("Payment Successful!", `Payment received. Please check your Release OTP on the ${blockLocation || "Campus Kiosk"} display panel.`, "success");
                     } catch (error) {
                         console.error("Failed to mark order as paid:", error);
                         showAlert("Error", "Unable to update payment status in our database.", "error");
@@ -1527,24 +1527,8 @@ function Dashboard() {
                                         Enter the 4-digit OTP shown on the TV Screen
                                     </h4>
                                     <p className="mt-1 text-xs text-slate-400 max-w-md mx-auto">
-                                        Find your order on the display panel at <strong className="text-cyan-300">{completedOrder.blockLocation || blockLocation}</strong> and enter the 4-digit release code:
+                                        Find your order on the display panel at <strong className="text-cyan-300">{completedOrder.blockLocation || blockLocation}</strong> and enter the 4-digit release code shown on the screen:
                                     </p>
-
-                                    {completedOrder.otpCode && (
-                                        <div className="my-4 p-4 rounded-2xl bg-cyan-500/15 border-2 border-cyan-400/50 max-w-xs mx-auto text-center shadow-lg shadow-cyan-500/20">
-                                            <p className="text-[10px] font-black text-cyan-300 uppercase tracking-widest">🔐 Assigned Release OTP</p>
-                                            <p className="font-mono text-3xl font-black text-white tracking-[0.25em] my-1">{completedOrder.otpCode}</p>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleReleasePrint(completedOrder.otpCode)}
-                                                disabled={isReleasingPrint}
-                                                className="mt-1.5 w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs cursor-pointer shadow-md flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
-                                            >
-                                                <Zap className="w-4 h-4 fill-current" />
-                                                {isReleasingPrint ? "Releasing Print..." : "🚀 1-Tap Send to Printer"}
-                                            </button>
-                                        </div>
-                                    )}
 
                                     {/* 4-Box Visual Display */}
                                     <div className="mt-4 flex items-center justify-center gap-3">
