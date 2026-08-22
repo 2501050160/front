@@ -23,7 +23,8 @@ function DisplayPanel() {
     const [currentTime, setCurrentTime] = useState(Date.now());
 
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+        // Local clock check every 30s purely in browser memory (0 HTTP requests, 0 network bandwidth)
+        const timer = setInterval(() => setCurrentTime(Date.now()), 30000);
         return () => clearInterval(timer);
     }, []);
 
