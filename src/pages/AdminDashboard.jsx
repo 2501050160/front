@@ -1517,6 +1517,14 @@ function AdminDashboard() {
         return "status-pill status-created";
     };
 
+    const paymentClass = (paymentStatus) => {
+        const s = (paymentStatus || "").toUpperCase();
+        if (s === "PAID" || s === "SUCCESS" || s === "COMPLETED") return "status-pill status-completed";
+        if (s === "PENDING" || s === "PROCESSING") return "status-pill status-printing";
+        if (s === "FAILED" || s === "REFUNDED" || s === "CANCELLED") return "status-pill status-unpaid";
+        return "status-pill status-created";
+    };
+
     const formatStudentDisplayName = (rawName) => {
         if (!rawName) return "Student";
         let str = String(rawName).trim();
