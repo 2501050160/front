@@ -266,6 +266,7 @@ function DisplayPanel() {
         return () => clearInterval(interval);
     }, [welcomeSlides.length]);
 
+    // 1. Process pickupQueue: when activePickup is null and there are items in queue, set activePickup
     useEffect(() => {
         if (activePickup || pickupQueue.length === 0) {
             return;
@@ -274,15 +275,19 @@ function DisplayPanel() {
         const [nextPickup, ...remaining] = pickupQueue;
         setActivePickup(nextPickup);
         setPickupQueue(remaining);
+    }, [pickupQueue, activePickup]);
 
-        // Display "Your print job is ready!" for 6 seconds, then cleanly return to live queue
+    // 2. Dedicated auto-dismiss timer for activePickup (runs for 5 seconds then returns cleanly to live queue)
+    useEffect(() => {
+        if (!activePickup) return;
+
         const timer = setTimeout(() => {
             setActivePickup(null);
             fetchOrders();
-        }, 6000);
+        }, 5000);
 
         return () => clearTimeout(timer);
-    }, [pickupQueue, activePickup]);
+    }, [activePickup]);
 
     const fetchOrders = async () => {
         try {
@@ -453,7 +458,8 @@ function DisplayPanel() {
                             {activePickup ? (
                                 <motion.div
                                     key={`pickup-${activePickup.id}`}
-                                    className="display-glass w-full max-w-none p-10 text-center mx-auto"
+                                    className="display-glass w-full max-w-none p-10 text-center mx-auto cursor-pointer"
+                                    onClick={() => { setActivePickup(null); fetchOrders(); }}
                                     initial={{ opacity: 0, scale: 0.92 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.96 }}
