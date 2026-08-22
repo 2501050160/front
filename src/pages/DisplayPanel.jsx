@@ -608,7 +608,7 @@ function DisplayPanel() {
                                                     Orders Waiting
                                                 </h3>
                                                 <p className="mt-1 text-sm font-bold text-cyan-50/60">
-                                                    Students can find their OTP, channel, and queue position here.
+                                                    Students can find their queue position here. For WhatsApp orders, reply with your 4-digit OTP directly in WhatsApp to release prints!
                                                 </p>
                                             </div>
                                             <div className="flex gap-3 px-6 pt-5 pb-0">
@@ -727,10 +727,12 @@ function DisplayPanel() {
                                                                 </div>
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
-                                                                        <div className={`rounded-2xl border px-4 py-2.5 shadow-lg ${isWA ? "border-[#25D366]/50 bg-[#25D366]/20" : palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
-                                                                            <p className={`text-[9px] font-black uppercase tracking-widest ${isWA ? "text-[#25D366]" : "text-cyan-200/80"} leading-none`}>RELEASE OTP</p>
-                                                                            <p className="font-mono text-2xl font-black tracking-widest text-white mt-1 leading-none">
-                                                                                {order.otpCode}
+                                                                        <div className={`rounded-2xl border px-3 py-2 shadow-lg ${isWA ? "border-[#25D366]/50 bg-[#25D366]/20" : palette.chip} ${palette.glow} flex flex-col items-center justify-center`}>
+                                                                            <p className={`text-[9px] font-black uppercase tracking-widest ${isWA ? "text-[#25D366]" : "text-cyan-200/80"} leading-none`}>
+                                                                                {isWA ? "REPLY IN WA" : "RELEASE OTP"}
+                                                                            </p>
+                                                                            <p className={`font-mono ${isWA ? "text-sm tracking-normal text-emerald-300" : "text-2xl tracking-widest text-white"} font-black mt-1 leading-none`}>
+                                                                                {isWA ? "💬 Enter in WA" : order.otpCode}
                                                                             </p>
                                                                         </div>
                                                                     ) : (
