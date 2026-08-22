@@ -388,6 +388,7 @@ function AdminDashboard() {
         fetchPrices(selectedPricingBlock);
         fetchBlocks();
         fetchPrinters();
+        fetchCollegePlatformSettings(selectedCollege || loggedInAdminCollege || "KLU");
 
         const interval = setInterval(() => {
             if (document.visibilityState === "visible") {
@@ -403,7 +404,8 @@ function AdminDashboard() {
 
     useEffect(() => {
         fetchStats();
-    }, [revenuePeriod]);
+        fetchCollegePlatformSettings(selectedCollege || loggedInAdminCollege || "KLU");
+    }, [revenuePeriod, selectedCollege]);
 
     useEffect(() => {
         if (activeTab === "users") {
@@ -2119,6 +2121,8 @@ function AdminDashboard() {
         try {
             await api.post(`/admin/settings/platform/update?college=${platformCollege}`, collegePlatformSettings);
             showAlert("Success", `Platform Settings for ${platformCollege} Updated Successfully`, "success");
+            fetchCollegePlatformSettings(platformCollege);
+            fetchStats();
         } catch (error) {
             console.error("Error updating platform settings:", error);
             showAlert("Error", "Failed to update platform settings", "error");
@@ -3298,8 +3302,8 @@ function AdminDashboard() {
                                         </div>
                                     </div>
 
-                                    {/* Key Financial Metric Cards (Includes WhatsApp Revenue) */}
-                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 mt-6">
+                                    {/* Key Financial Metric Cards (Includes WhatsApp & Web Revenue) */}
+                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8 mt-6">
                                         {/* Card 1: Gross Revenue */}
                                         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
@@ -3348,7 +3352,7 @@ function AdminDashboard() {
                                             </span>
                                         </div>
 
-                                        {/* Card 5: WhatsApp Revenue (Dedicated Box after Net Revenue) */}
+                                        {/* Card 5: WhatsApp Revenue */}
                                         <div className="p-4 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400/80 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-xs font-black text-green-900">WhatsApp Revenue</span>
@@ -3360,7 +3364,19 @@ function AdminDashboard() {
                                             </span>
                                         </div>
 
-                                        {/* Card 6: Wallet Cash */}
+                                        {/* Card 6: Web Portal Revenue */}
+                                        <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-400/80 shadow-sm hover:shadow-md transition-all">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs font-black text-blue-900">Web Portal Revenue</span>
+                                                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shadow-blue-500/30">🌐</div>
+                                            </div>
+                                            <p className="text-xl font-black text-blue-900">₹{(localStats.webNetRevenue || 0).toFixed(2)}</p>
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-black bg-blue-600/15 text-blue-800 border border-blue-300">
+                                                Web Inflow ({localStats.webOrdersCount || 0} ord)
+                                            </span>
+                                        </div>
+
+                                        {/* Card 7: Wallet Cash */}
                                         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-xs font-bold text-slate-500">Wallet Cash</span>
@@ -3372,7 +3388,7 @@ function AdminDashboard() {
                                             </span>
                                         </div>
 
-                                        {/* Card 7: UPI Cash */}
+                                        {/* Card 8: Direct UPI Cash */}
                                         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-xs font-bold text-slate-500">Direct UPI Cash</span>
