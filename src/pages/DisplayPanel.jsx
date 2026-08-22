@@ -271,62 +271,16 @@ function DisplayPanel() {
 
         const [nextPickup, ...remaining] = pickupQueue;
         setActivePickup(nextPickup);
-        setTotalPagesToPrint(nextPickup.totalPages || 1);
-        setCurrentPagePrinted(0);
-        setIsReleasing(true);
         setPickupQueue(remaining);
-    }, [pickupQueue, activePickup]);
 
-    useEffect(() => {
-        if (!activePickup || !isReleasing) return;
-
-        let timerId;
-
-        // Step 1: Warmup delay of 5 seconds
-        timerId = setTimeout(() => {
-            setCurrentPagePrinted(1);
-
-            if (totalPagesToPrint === 1) {
-                // If only 1 page, wait 5.0s for the page to print before completing
-                timerId = setTimeout(() => {
-                    setIsReleasing(false);
-                }, 5000);
-            } else {
-                // If multiple pages, start the 5.0s interval
-                let current = 1;
-                const intervalId = setInterval(() => {
-                    current += 1;
-                    setCurrentPagePrinted(current);
-
-                    if (current >= totalPagesToPrint) {
-                        clearInterval(intervalId);
-                        // Wait one final 5.0s for the last page to finish printing
-                        timerId = setTimeout(() => {
-                            setIsReleasing(false);
-                        }, 5000);
-                    }
-                }, 5000);
-
-                timerId = intervalId;
-            }
-        }, 5000);
-
-        return () => {
-            clearTimeout(timerId);
-            clearInterval(timerId);
-        };
-    }, [activePickup, isReleasing, totalPagesToPrint]);
-
-    useEffect(() => {
-        if (!activePickup || isReleasing) return;
-
+        // Display "Your print job is ready!" for 6 seconds, then cleanly return to live queue
         const timer = setTimeout(() => {
             setActivePickup(null);
-            window.location.reload();
-        }, 10000);
+            fetchOrders();
+        }, 6000);
 
         return () => clearTimeout(timer);
-    }, [activePickup, isReleasing]);
+    }, [pickupQueue, activePickup]);
 
     const fetchOrders = async () => {
         try {
@@ -497,10 +451,10 @@ function DisplayPanel() {
                                     exit={{ opacity: 0, scale: 0.96 }}
                                 >
                                     <div className="relative z-10 w-full">
-                                        <p className={`text-sm font-black uppercase tracking-[0.25em] ${isReleasing ? "text-amber-400" : "text-green-300"}`}>
-                                            {isReleasing ? "Printing in progress" : "Ready for collection"}
+                                        <p className="text-sm font-black uppercase tracking-[0.25em] text-green-300">
+                                            Ready for collection
                                         </p>
-                                        <h2 className="mt-3 text-4xl font-black md:text-6xl">
+                                        <h2 className="mt-3 text-4xl font-black md:text-6xl text-white">
                                             {activePickup.orderId}
                                         </h2>
                                         <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
@@ -508,7 +462,7 @@ function DisplayPanel() {
                                                 {formatStudentDisplayName(activePickup.customerName)}
                                             </p>
                                             {isWhatsAppOrder(activePickup) ? (
-                                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-sm font-black bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/50 shadow-md animate-pulse">
+                                                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-sm font-black bg-[#25D366]/25 text-[#25D366] border border-[#25D366]/50 shadow-md">
                                                     💬 WhatsApp Payment (₹{(activePickup.price != null ? activePickup.price : 0).toFixed(2)})
                                                 </span>
                                             ) : (
@@ -518,56 +472,32 @@ function DisplayPanel() {
                                             )}
                                         </div>
                                         <motion.div
-                                            className={`mx-auto mt-6 max-w-xl rounded-2xl border overflow-hidden ${isReleasing ? "border-amber-400/40 bg-amber-400/10" : "border-green-300/40 bg-green-400/15"}`}
+                                            className="mx-auto mt-6 max-w-xl rounded-2xl border overflow-hidden border-green-300/40 bg-green-400/15"
                                             animate={{
-                                                boxShadow: isReleasing 
-                                                    ? [
-                                                        "0 0 0 rgba(245,158,11,0)",
-                                                        "0 0 24px rgba(245,158,11,0.2)",
-                                                        "0 0 0 rgba(245,158,11,0)"
-                                                      ]
-                                                    : [
-                                                        "0 0 0 rgba(74,222,128,0)",
-                                                        "0 0 24px rgba(74,222,128,0.2)",
-                                                        "0 0 0 rgba(74,222,128,0)"
-                                                      ]
+                                                boxShadow: [
+                                                    "0 0 0 rgba(74,222,128,0)",
+                                                    "0 0 24px rgba(74,222,128,0.25)",
+                                                    "0 0 0 rgba(74,222,128,0)"
+                                                ]
                                             }}
                                             transition={{ duration: 1.8, repeat: Infinity }}
                                         >
-                                            {isReleasing && (
-                                                <div className="w-full h-48 relative border-b border-white/10 bg-slate-950/40">
-                                                    <video 
-                                                        src={inVideo} 
-                                                        autoPlay 
-                                                        loop 
-                                                        muted 
-                                                        playsInline 
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                            )}
-                                            {!isReleasing && (
-                                                <div className="w-full h-48 relative border-b border-white/10 bg-slate-950/40">
-                                                    <video 
-                                                        src={collectVideo} 
-                                                        autoPlay 
-                                                        loop 
-                                                        muted 
-                                                        playsInline 
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                            )}
+                                            <div className="w-full h-48 relative border-b border-white/10 bg-slate-950/40">
+                                                <video 
+                                                    src={collectVideo} 
+                                                    autoPlay 
+                                                    loop 
+                                                    muted 
+                                                    playsInline 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
                                             <div className="p-6">
-                                                <p className={`text-base font-black ${isReleasing ? "text-amber-200" : "text-green-100"}`}>
-                                                    {isReleasing 
-                                                        ? `Printing ${currentPagePrinted}/${totalPagesToPrint} pages... Please wait by the tray`
-                                                        : "Your print job is ready! Please collect your sheets from the output tray."}
+                                                <p className="text-base font-black text-green-100">
+                                                    Your print job is ready! Please collect your sheets from the output tray.
                                                 </p>
                                                 <p className="mt-2 text-xs font-bold text-white/60">
-                                                    {isReleasing
-                                                        ? "Terminal hardware is actively handling your document."
-                                                        : "This screen will return to the live queue shortly."}
+                                                    This screen will return to the live queue shortly.
                                                 </p>
                                             </div>
                                         </motion.div>
