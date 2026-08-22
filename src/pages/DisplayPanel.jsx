@@ -88,23 +88,20 @@ function DisplayPanel() {
         return new Date(dateVal);
     };
 
-    const getOtpExpiryFormatted = (order) => {
-        let expireTimestamp;
-        const baseDate = order.fileExpiryTime || order.cancelWindowEndsAt || order.paidAt || order.queuedAt || order.uploadTime || order.createdAt;
-        if (baseDate) {
-            const dateObj = parseBackendDate(baseDate);
+    const getOrderExpiryTimestamp = (order) => {
+        if (!order) return Date.now() + 10 * 60 * 1000;
+        const placedDateRaw = order.paidAt || order.uploadTime || order.createdAt || order.cancelWindowEndsAt || order.queuedAt;
+        if (placedDateRaw) {
+            const dateObj = parseBackendDate(placedDateRaw);
             if (dateObj && !isNaN(dateObj.getTime())) {
-                if (order.fileExpiryTime && baseDate === order.fileExpiryTime) {
-                    expireTimestamp = dateObj.getTime();
-                } else {
-                    expireTimestamp = dateObj.getTime() + 15 * 60 * 1000; // 15-minute validity window
-                }
+                return dateObj.getTime() + 10 * 60 * 1000; // Exact 10 minutes after order is placed
             }
         }
-        if (!expireTimestamp) {
-            expireTimestamp = Date.now() + 15 * 60 * 1000;
-        }
+        return Date.now() + 10 * 60 * 1000;
+    };
 
+    const getOtpExpiryFormatted = (order) => {
+        const expireTimestamp = getOrderExpiryTimestamp(order);
         if (expireTimestamp <= currentTime) {
             return "Expired";
         }
@@ -349,22 +346,7 @@ function DisplayPanel() {
     const normalizeLoc = (loc) => (loc || "").toLowerCase().replace(/[\s-_]/g, "");
 
     const isOrderExpired = (order) => {
-        let expireTimestamp;
-        const baseDate = order.fileExpiryTime || order.cancelWindowEndsAt || order.paidAt || order.queuedAt || order.uploadTime || order.createdAt;
-        if (baseDate) {
-            const dateObj = parseBackendDate(baseDate);
-            if (dateObj && !isNaN(dateObj.getTime())) {
-                if (order.fileExpiryTime && baseDate === order.fileExpiryTime) {
-                    expireTimestamp = dateObj.getTime();
-                } else {
-                    expireTimestamp = dateObj.getTime() + 15 * 60 * 1000; // 15-minute validity window
-                }
-            }
-        }
-        if (!expireTimestamp) {
-            expireTimestamp = Date.now() + 15 * 60 * 1000;
-        }
-        return expireTimestamp <= currentTime;
+        return getOrderExpiryTimestamp(order) <= currentTime;
     };
 
     const queueOrders = orders
