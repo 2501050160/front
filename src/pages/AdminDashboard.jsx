@@ -2107,7 +2107,8 @@ function AdminDashboard() {
 
     const fetchCollegePlatformSettings = async (college) => {
         try {
-            const response = await api.get(`/admin/settings/platform?college=${college}`);
+            const target = (college && college !== "ALL") ? college : (loggedInAdminCollege || "KLU");
+            const response = await api.get(`/admin/settings/platform?college=${target}`);
             if (response.data) {
                 setCollegePlatformSettings(response.data);
             }
