@@ -315,7 +315,9 @@ function DisplayPanel() {
         incomingOrders.forEach((order) => {
             const location = order.blockLocation;
 
-            if (location !== displayBlock) {
+            if (displayBlock && 
+                normalizeLoc(location) !== normalizeLoc(displayBlock) && 
+                !(location || "").toLowerCase().includes(displayBlock.toLowerCase())) {
                 return;
             }
 
@@ -343,14 +345,18 @@ function DisplayPanel() {
 
 
 
+    const normalizeLoc = (loc) => (loc || "").toLowerCase().replace(/[\s-_]/g, "");
+
     const queueOrders = orders
         .filter(
             (order) =>
-                order.paymentStatus === "PAID" &&
+                (order.paymentStatus === "PAID" || order.razorpayPaymentId) &&
                 ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE", "PRINTING"].includes(
                     order.status
                 ) &&
-                order.blockLocation === displayBlock
+                (!displayBlock || 
+                 normalizeLoc(order.blockLocation) === normalizeLoc(displayBlock) || 
+                 (order.blockLocation || "").toLowerCase().includes((displayBlock || "").toLowerCase()))
         )
         .sort((a, b) => a.id - b.id);
 
