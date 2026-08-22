@@ -841,14 +841,15 @@ function DisplayPanel() {
                     {(!hasActiveOrPendingOrders || activePickup) && (
                         <div className="hidden lg:block relative overflow-hidden h-[calc(100vh-210px)] w-full rounded-3xl">
                             <video
-                                key={activePickup ? "collect" : "ambient"}
+                                key={activePickup ? "collect" : "dis"}
                                 autoPlay
                                 loop
                                 muted
                                 playsInline
                                 className="w-full h-full object-cover opacity-80"
                             >
-                                <source src={activePickup ? collectVideo : "/assets/printer_rollers.mp4"} type="video/mp4" />
+                                <source src={activePickup ? collectVideo : "/dis.mp4"} type="video/mp4" />
+                                <source src={activePickup ? collectVideo : "/assets/dis.mp4"} type="video/mp4" />
                             </video>
                             {/* Smooth horizontal gradient overlay that blends into the background on the left side */}
                             <div 
