@@ -102,13 +102,11 @@ function BlockSelection() {
         if (!dateVal) return null;
         if (Array.isArray(dateVal)) {
             const [y, m, d, hr, min, sec] = dateVal;
-            return new Date(Date.UTC(y, m - 1, d, hr || 0, min || 0, sec || 0));
+            return new Date(y, m - 1, d, hr || 0, min || 0, sec || 0);
         }
         if (typeof dateVal === "string") {
             const cleanStr = dateVal.replace(" ", "T");
-            const hasOffset = /([+-]\d{2}:?\d{2}|Z)$/.test(cleanStr);
-            const isoStr = hasOffset ? cleanStr : cleanStr + "Z";
-            return new Date(isoStr);
+            return new Date(cleanStr);
         }
         return new Date(dateVal);
     };
@@ -126,18 +124,22 @@ function BlockSelection() {
         if (!selectedOrder) return;
 
         const updateTimer = () => {
-            if (!selectedOrder.cancelWindowEndsAt) {
+            const baseDate = selectedOrder.fileExpiryTime || selectedOrder.cancelWindowEndsAt || selectedOrder.paidAt || selectedOrder.uploadTime;
+            if (!baseDate) {
                 setOtpTimeLeft(600);
                 return;
             }
-            const dateObj = parseBackendDate(selectedOrder.cancelWindowEndsAt);
+            const dateObj = parseBackendDate(baseDate);
             if (!dateObj || isNaN(dateObj.getTime())) {
                 setOtpTimeLeft(600);
                 return;
             }
-            const expireTime = dateObj.getTime() + 10 * 60 * 1000;
-            const left = Math.max(0, Math.floor((expireTime - Date.now()) / 1000));
-            setOtpTimeLeft(left);
+            const expireTime = selectedOrder.fileExpiryTime && baseDate === selectedOrder.fileExpiryTime
+                ? dateObj.getTime()
+                : dateObj.getTime() + 10 * 60 * 1000;
+            let left = Math.floor((expireTime - Date.now()) / 1000);
+            if (left > 600) left = 600;
+            setOtpTimeLeft(Math.max(0, left));
         };
 
         updateTimer();

@@ -78,31 +78,37 @@ function DisplayPanel() {
         if (!dateVal) return null;
         if (Array.isArray(dateVal)) {
             const [y, m, d, hr, min, sec] = dateVal;
-            return new Date(Date.UTC(y, m - 1, d, hr || 0, min || 0, sec || 0));
+            return new Date(y, m - 1, d, hr || 0, min || 0, sec || 0);
         }
         if (typeof dateVal === "string") {
             const cleanStr = dateVal.replace(" ", "T");
-            const hasOffset = /([+-]\d{2}:?\d{2}|Z)$/.test(cleanStr);
-            const isoStr = hasOffset ? cleanStr : cleanStr + "Z";
-            return new Date(isoStr);
+            return new Date(cleanStr);
         }
         return new Date(dateVal);
     };
 
     const getOtpExpiryFormatted = (order) => {
         let expireTimestamp;
-        const baseDate = order.cancelWindowEndsAt || order.paidAt || order.queuedAt || order.uploadTime || order.createdAt;
+        const baseDate = order.fileExpiryTime || order.cancelWindowEndsAt || order.paidAt || order.queuedAt || order.uploadTime || order.createdAt;
         if (baseDate) {
             const dateObj = parseBackendDate(baseDate);
             if (dateObj && !isNaN(dateObj.getTime())) {
-                expireTimestamp = dateObj.getTime() + 10 * 60 * 1000; // 10-minute OTP expiration window
+                if (order.fileExpiryTime && baseDate === order.fileExpiryTime) {
+                    expireTimestamp = dateObj.getTime();
+                } else {
+                    expireTimestamp = dateObj.getTime() + 10 * 60 * 1000; // 10-minute OTP expiration window
+                }
             }
         }
         if (!expireTimestamp) {
             expireTimestamp = Date.now() + 10 * 60 * 1000;
         }
 
-        const leftSeconds = Math.max(0, Math.floor((expireTimestamp - currentTime) / 1000));
+        let leftSeconds = Math.floor((expireTimestamp - currentTime) / 1000);
+        // Safety guard: OTP window is maximum 10 minutes (600s). Clamp clock drift.
+        if (leftSeconds > 600) {
+            leftSeconds = 600;
+        }
         if (leftSeconds <= 0) {
             return "Expired";
         }
