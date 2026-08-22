@@ -77,6 +77,27 @@ export function WhatsAppOrdersSection({
         return true;
     });
 
+    const getPagesCount = (order) => {
+        if (!order.selectedPages || order.selectedPages.toUpperCase() === "ALL") {
+            return order.totalPages || 1;
+        }
+        const cleaned = order.selectedPages.split(',').map(x => x.trim()).filter(Boolean);
+        if (cleaned.length > 0) {
+            let total = 0;
+            cleaned.forEach(part => {
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-').map(Number);
+                    if (!isNaN(start) && !isNaN(end)) total += Math.max(0, end - start + 1);
+                    else total += 1;
+                } else {
+                    total += 1;
+                }
+            });
+            return total || order.totalPages || 1;
+        }
+        return order.totalPages || 1;
+    };
+
     const handleUpdateStatus = async (orderId, newStatus) => {
         try {
             await api.post(`/pdf/updateStatus?id=${orderId}&status=${newStatus}`);
@@ -311,8 +332,34 @@ export function WhatsAppOrdersSection({
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <p className="font-bold text-cyan-300">{order.printType || "BW"} • {order.copies || 1} copies</p>
-                                            <p className="text-[10px] text-slate-400">Pages: {order.selectedPages || "ALL"}</p>
+                                            {(() => {
+                                                const pages = getPagesCount(order);
+                                                const copies = order.copies || 1;
+                                                const totalPrinted = pages * copies;
+                                                return (
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <span className="font-bold text-cyan-300">{order.printType || "BW"}</span>
+                                                            <span className="text-slate-500">•</span>
+                                                            <span className="font-semibold text-slate-200">{copies} {copies > 1 ? "copies" : "copy"}</span>
+                                                            {order.doubleSided && (
+                                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                                                    Duplex
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 font-black text-[10px] border border-sky-500/20">
+                                                                📄 {pages} {pages > 1 ? "pages" : "page"}
+                                                            </span>
+                                                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-black text-[10px] border border-emerald-500/20">
+                                                                🖨️ {totalPrinted} {totalPrinted > 1 ? "sheets" : "sheet"} printed
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-400 font-mono">Pages: {order.selectedPages || "ALL"}</p>
+                                                    </div>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="p-4 font-black text-white text-sm">
                                             ₹{Number(order.price || 0).toFixed(2)}
