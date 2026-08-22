@@ -96,25 +96,20 @@ function DisplayPanel() {
                 if (order.fileExpiryTime && baseDate === order.fileExpiryTime) {
                     expireTimestamp = dateObj.getTime();
                 } else {
-                    expireTimestamp = dateObj.getTime() + 10 * 60 * 1000; // 10-minute OTP expiration window
+                    expireTimestamp = dateObj.getTime() + 15 * 60 * 1000; // 15-minute validity window
                 }
             }
         }
         if (!expireTimestamp) {
-            expireTimestamp = Date.now() + 10 * 60 * 1000;
+            expireTimestamp = Date.now() + 15 * 60 * 1000;
         }
 
-        let leftSeconds = Math.floor((expireTimestamp - currentTime) / 1000);
-        // Safety guard: OTP window is maximum 10 minutes (600s). Clamp clock drift.
-        if (leftSeconds > 600) {
-            leftSeconds = 600;
-        }
-        if (leftSeconds <= 0) {
+        if (expireTimestamp <= currentTime) {
             return "Expired";
         }
-        const mins = Math.floor(leftSeconds / 60);
-        const secs = leftSeconds % 60;
-        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+
+        const expireDate = new Date(expireTimestamp);
+        return expireDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
     };
 
     const toggleFullscreen = () => {
@@ -636,7 +631,7 @@ function DisplayPanel() {
                                                     <span>Order & Channel</span>
                                                     <span>Student</span>
                                                     <span className="text-center">OTP / Status</span>
-                                                    <span className="text-center">OTP Expiry</span>
+                                                    <span className="text-center">Expires By</span>
                                                     <span className="text-right">Pages</span>
                                                 </div>
 
@@ -752,9 +747,9 @@ function DisplayPanel() {
                                                                 <div className="relative text-center">
                                                                     {isPendingScan ? (
                                                                         <div className="flex flex-col items-center justify-center">
-                                                                            <span className="text-[9px] font-black uppercase tracking-wider text-amber-300/80">Expires In</span>
+                                                                            <span className="text-[9px] font-black uppercase tracking-wider text-amber-300/80">Expires By</span>
                                                                             <span className="font-mono text-base font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg mt-0.5 shadow-sm">
-                                                                                ⏱️ {getOtpExpiryFormatted(order)}
+                                                                                ⏰ {getOtpExpiryFormatted(order)}
                                                                             </span>
                                                                         </div>
                                                                     ) : (
