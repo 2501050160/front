@@ -30,6 +30,7 @@ const UserManagement = lazy(() => import("./pages/UserManagement"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
 const WhatsAppOrders = lazy(() => import("./pages/WhatsAppOrders"));
+const WebOrders = lazy(() => import("./pages/WebOrders"));
 
 const Chatbot = lazy(() => import("./pages/Chatbot"));
 
@@ -188,7 +189,15 @@ function App() {
               path="/admin/whatsapp" 
               element={
                 <ProtectedRoute adminOnly>
-                  <Navigate to="/admin?tab=whatsapp" replace />
+                  <Navigate to="/admin?tab=queue&subtab=whatsapp" replace />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/web-orders" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <Navigate to="/admin?tab=queue&subtab=web-orders" replace />
                 </ProtectedRoute>
               } 
             />

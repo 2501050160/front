@@ -5,6 +5,7 @@ import api, { getPdfDownloadUrl } from "../services/api";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
 import WhatsAppOrdersSection from "../components/admin/sections/WhatsAppOrdersSection";
+import WebOrdersSection from "../components/admin/sections/WebOrdersSection";
 import cloudprintLogo from "../assets/cloudprint_logo.png";
 
 function AdminDashboard() {
@@ -2703,6 +2704,15 @@ function AdminDashboard() {
                         {(activeTab === "queue" || activeTab === "order-queue") && (
                             [
                                 { id: "live-queue", label: "Live Queue", icon: "📋", desc: "Active Orders" },
+                                { id: "web-orders", label: "Web Orders", icon: "🌐", desc: `${orders.filter(o => {
+                                    const e = (o.userEmail || o.email || "").toLowerCase();
+                                    const c = (o.orderChannel || "").toUpperCase();
+                                    const n = (o.customerName || "").toLowerCase();
+                                    const r = (o.appliedReferralCode || "").toUpperCase();
+                                    const oid = (o.orderId || "").toUpperCase();
+                                    const isWA = c === "WHATSAPP" || c === "BOT" || c === "WA" || e.includes("@c.us") || e.includes("whatsapp") || e.startsWith("wa_") || r.startsWith("WA_") || oid.startsWith("WA_") || n.includes("+91") || n.includes("(+91") || n.includes("whatsapp") || n.includes("wa_") || /[0-9]{10}/.test(n.replace(/[^0-9]/g, ""));
+                                    return !isWA;
+                                }).length} Web Orders` },
                                 { id: "whatsapp", label: "WhatsApp Orders", icon: "💬", desc: `${orders.filter(o => {
                                     const e = (o.userEmail || o.email || "").toLowerCase();
                                     const c = (o.orderChannel || "").toUpperCase();
@@ -3141,6 +3151,19 @@ function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </motion.section>
+                        )}
+
+                        {/* Subpage: Web Orders Directory */}
+                        {queueSubTab === "web-orders" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <WebOrdersSection
+                                    showAlert={(msg, type) => setModalState({ isOpen: true, title: type === "error" ? "Error" : "Success", message: msg, type: type === "error" ? "danger" : "info", showConfirmButton: false })}
+                                    showConfirm={(msg, onConfirm) => setModalState({ isOpen: true, title: "Confirm Action", message: msg, type: "confirm", showConfirmButton: true, onConfirm })}
+                                />
+                            </motion.div>
                         )}
 
                         {/* Subpage 2: WhatsApp Orders Directory */}
