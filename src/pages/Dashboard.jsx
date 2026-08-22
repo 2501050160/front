@@ -6,6 +6,7 @@ import api, { RAZORPAY_KEY, loadRazorpayScript } from "../services/api";
 import Navbar from "../components/Navbar";
 import { getWalletBalance, clearUserSession } from "../services/auth";
 import CustomModal from "../components/CustomModal";
+import { WalletModal } from "../components/user/sections/WalletModal";
 import fileUploading from "../assets/file_uploading.mp4";
 import howToUpload from "../assets/how_to_upload.mp4";
 import walletVideo from "../assets/wallet_video.mp4";
@@ -205,7 +206,20 @@ function Dashboard() {
             const walletInterval = setInterval(() => {
                 getWalletBalance(userId).then(setWalletBalance).catch(() => {});
             }, 5000);
-            return () => clearInterval(walletInterval);
+
+            const handleWalletUpdate = (e) => {
+                if (e.detail != null) {
+                    setWalletBalance(Number(e.detail) || 0);
+                } else {
+                    getWalletBalance(userId).then(setWalletBalance).catch(() => {});
+                }
+            };
+            window.addEventListener("walletUpdated", handleWalletUpdate);
+
+            return () => {
+                clearInterval(walletInterval);
+                window.removeEventListener("walletUpdated", handleWalletUpdate);
+            };
         }
     }, [userId]);
 
@@ -1451,13 +1465,17 @@ function Dashboard() {
                                 Selected printer counter: <strong className="text-white">{blockLocation}</strong>
                             </p>
                         </div>
-                        <div className="relative z-10 flex items-center gap-4 bg-white/10 border border-white/15 px-5 py-3 rounded-2xl shadow-inner">
+                        <div 
+                            onClick={() => setShowWalletModal(true)}
+                            className="relative z-10 flex items-center gap-4 bg-white/10 hover:bg-white/20 border border-white/15 px-5 py-3 rounded-2xl shadow-inner cursor-pointer transition-all hover:scale-105"
+                            title="Click to recharge wallet balance"
+                        >
                             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/20 flex items-center justify-center text-cyan-300">
                                 <Wallet className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col text-right">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-cyan-200">Wallet Balance</span>
-                                <span className="text-2xl font-black mt-0.5 text-white">₹{walletBalance}</span>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-cyan-200">Wallet Balance ➕</span>
+                                <span className="text-2xl font-black mt-0.5 text-white">₹{Number(walletBalance || 0).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
@@ -1475,13 +1493,17 @@ function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="user-dash-card p-4.5 rounded-2xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl flex items-center gap-3 border border-white/10 min-h-[100px]">
+                        <div 
+                            onClick={() => setShowWalletModal(true)}
+                            className="user-dash-card p-4.5 rounded-2xl bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-900 text-white shadow-2xl flex items-center gap-3 border border-white/10 min-h-[100px] cursor-pointer active:scale-95 transition-all"
+                            title="Click to recharge wallet balance"
+                        >
                             <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
                                 <Wallet className="w-4 h-4 text-cyan-300" />
                             </div>
                             <div className="flex flex-col min-w-0">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-cyan-100">Wallet Balance</span>
-                                <h3 className="text-lg font-black mt-0.5 truncate">₹{walletBalance}</h3>
+                                <span className="text-[9px] font-black uppercase tracking-wider text-cyan-100">Wallet ➕</span>
+                                <h3 className="text-lg font-black mt-0.5 truncate">₹{Number(walletBalance || 0).toFixed(2)}</h3>
                             </div>
                         </div>
                     </div>
@@ -3432,6 +3454,19 @@ function Dashboard() {
                     }
                 }
             `}</style>
+
+            {/* Wallet Recharge Modal */}
+            {showWalletModal && (
+                <WalletModal
+                    userId={userId}
+                    currentBalance={walletBalance}
+                    onClose={() => setShowWalletModal(false)}
+                    onSuccess={(newBal) => {
+                        setWalletBalance(newBal);
+                        setShowWalletModal(false);
+                    }}
+                />
+            )}
         </main>
     );
 }

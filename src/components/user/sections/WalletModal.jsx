@@ -55,7 +55,11 @@ export function WalletModal({
                         });
 
                         const newBal = topupRes.data?.walletBalance ?? (currentBalance + numAmt);
+                        localStorage.setItem("walletBalance", String(newBal));
+                        window.dispatchEvent(new CustomEvent("walletUpdated", { detail: newBal }));
                         if (onSuccess) onSuccess(newBal);
+                        setProcessing(false);
+                        if (onClose) onClose();
                     } catch (err) {
                         console.error("Failed to credit wallet:", err);
                         setErrorMsg("Payment succeeded but wallet credit failed. Please contact support.");

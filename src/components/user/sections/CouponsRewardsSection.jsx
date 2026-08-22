@@ -41,8 +41,11 @@ export function CouponsRewardsSection({
 
             showAlert("Voucher Redeemed!", `₹${res.data?.amount || 50} added to your print wallet!`, "success");
             setVoucherCode("");
-            if (onWalletUpdated && res.data?.newBalance) {
-                onWalletUpdated(res.data.newBalance);
+            const newBal = res.data?.newBalance ?? res.data?.walletBalance;
+            if (newBal != null) {
+                localStorage.setItem("walletBalance", String(newBal));
+                window.dispatchEvent(new CustomEvent("walletUpdated", { detail: newBal }));
+                if (onWalletUpdated) onWalletUpdated(newBal);
             }
         } catch (error) {
             console.error(error);

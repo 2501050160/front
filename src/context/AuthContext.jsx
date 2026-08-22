@@ -35,6 +35,15 @@ export const AuthProvider = ({ children }) => {
         if (user?.id) {
             refreshWallet();
         }
+        const handleWalletUpdated = (e) => {
+            if (e.detail != null) {
+                setWalletBalance(Number(e.detail) || 0);
+            } else if (user?.id) {
+                refreshWallet();
+            }
+        };
+        window.addEventListener("walletUpdated", handleWalletUpdated);
+        return () => window.removeEventListener("walletUpdated", handleWalletUpdated);
     }, [user?.id, refreshWallet]);
 
     const login = useCallback((userData) => {

@@ -10,16 +10,19 @@ import {
     Wallet,
     Building2,
     ChevronDown,
-    KeyRound
+    KeyRound,
+    Plus
 } from "lucide-react";
 import cloudprintLogo from "../assets/cloudprint_logo.png";
 import { useAuth } from "../context/AuthContext";
+import { WalletModal } from "./user/sections/WalletModal";
 
 function Navbar({ searchQuery, setSearchQuery, badge }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, walletBalance, logout, refreshWallet } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [showWalletModal, setShowWalletModal] = useState(false);
     const profileMenuRef = useRef(null);
 
     // Close dropdown when clicking outside
@@ -122,10 +125,16 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
 
                     {/* Wallet Balance Badge */}
                     {userId && (
-                        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black ml-1">
-                            <Wallet className="w-4 h-4" />
+                        <button
+                            type="button"
+                            onClick={() => setShowWalletModal(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-black ml-1 transition-all cursor-pointer shadow-sm hover:scale-105"
+                            title="Click to add wallet money or view balance"
+                        >
+                            <Wallet className="w-4 h-4 text-emerald-400" />
                             <span>₹{Number(walletBalance || 0).toFixed(2)}</span>
-                        </div>
+                            <Plus className="w-3.5 h-3.5 text-emerald-400 font-black" />
+                        </button>
                     )}
 
                     {/* Direct Print Release Trigger Button */}
@@ -157,6 +166,19 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
                     )}
                 </nav>
             </div>
+
+            {/* Wallet Top-up Modal */}
+            {showWalletModal && (
+                <WalletModal
+                    userId={userId}
+                    currentBalance={walletBalance}
+                    onClose={() => setShowWalletModal(false)}
+                    onSuccess={(newBal) => {
+                        refreshWallet();
+                        setShowWalletModal(false);
+                    }}
+                />
+            )}
         </header>
     );
 }
