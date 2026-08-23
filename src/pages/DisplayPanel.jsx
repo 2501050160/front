@@ -345,8 +345,19 @@ function DisplayPanel() {
 
     const normalizeLoc = (loc) => (loc || "").toLowerCase().replace(/[\s-_]/g, "");
 
-    const isOrderExpired = (order) => {
-        return getOrderExpiryTimestamp(order) <= currentTime;
+    const isOrderStale = (order) => {
+        if (!order) return true;
+        const timeRef = order.printingStartedAt || order.queuedAt || order.paidAt || order.uploadTime;
+        if (timeRef) {
+            const dateObj = parseBackendDate(timeRef);
+            if (dateObj && !isNaN(dateObj.getTime())) {
+                const elapsedMs = currentTime - dateObj.getTime();
+                if (order.status === "PRINTING" && elapsedMs > 7 * 60 * 1000) return true; // max 7 mins for PRINTING
+                if (order.status === "QUEUE" && elapsedMs > 20 * 60 * 1000) return true;   // max 20 mins for QUEUE
+                if (order.status === "PENDING_SCAN" && elapsedMs > 10 * 60 * 1000) return true; // max 10 mins for OTP
+            }
+        }
+        return false;
     };
 
     const queueOrders = orders
@@ -355,7 +366,7 @@ function DisplayPanel() {
                 (order.paymentStatus === "PAID" || order.razorpayPaymentId) &&
                 ["PENDING_SCAN", "CANCEL_WINDOW", "QUEUE", "PRINTING"].includes(order.status) &&
                 !["COMPLETED", "CANCELLED", "EXPIRED", "REFUNDED"].includes(order.status) &&
-                (order.status !== "PENDING_SCAN" || !isOrderExpired(order)) &&
+                !isOrderStale(order) &&
                 (!displayBlock || 
                  normalizeLoc(order.blockLocation) === normalizeLoc(displayBlock) || 
                  (order.blockLocation || "").toLowerCase().includes((displayBlock || "").toLowerCase()))
