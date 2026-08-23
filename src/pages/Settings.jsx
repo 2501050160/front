@@ -9,7 +9,10 @@ import {
   Megaphone, 
   Coins,
   FileText,
-  Shield
+  Shield,
+  KeyRound,
+  Globe,
+  Smartphone
 } from "lucide-react";
 import api from "../services/api";
 
@@ -29,12 +32,19 @@ function Settings() {
     cancelWindowEnabled: true,
     displayAdPhotoEnabled: true,
     testerModeEnabled: false,
-    testerUsernames: ""
+    testerUsernames: "",
+    webOtpRequired: true,
+    whatsappOtpRequired: true
   });
 
   const [pricing, setPricing] = useState({
     bwRate: 2.0,
     colorRate: 10.0
+  });
+
+  const [otpRules, setOtpRules] = useState({
+    collegeRules: {},
+    blockRules: {}
   });
 
   const [loading, setLoading] = useState(true);
@@ -51,6 +61,18 @@ function Settings() {
           colorRate: pricingRes.data.colorRate || 10.0
         });
       }
+
+      try {
+        const otpRes = await api.get("/admin/settings/otp-rules");
+        if (otpRes.data) {
+          setOtpRules({
+            collegeRules: otpRes.data.collegeRules || {},
+            blockRules: otpRes.data.blockRules || {}
+          });
+        }
+      } catch (err) {
+        console.warn("Could not fetch OTP rules:", err);
+      }
     } catch (err) {
       console.error("Failed to load settings:", err);
     } finally {
@@ -66,7 +88,13 @@ function Settings() {
     try {
       await api.post("/admin/settings/update", settings);
       await api.post(`/pricing/rates/update?bwRate=${pricing.bwRate}&colorRate=${pricing.colorRate}`);
-      alert("System configuration saved successfully!");
+      await api.post("/admin/settings/otp-rules/update", {
+        webOtpRequired: settings.webOtpRequired,
+        whatsappOtpRequired: settings.whatsappOtpRequired,
+        collegeOverrides: otpRules.collegeRules,
+        blockOverrides: otpRules.blockRules
+      });
+      alert("System configuration and OTP security rules saved successfully!");
     } catch (err) {
       console.error(err);
       alert("Error saving settings configuration");
@@ -228,6 +256,149 @@ function Settings() {
                   className="w-5 h-5 accent-blue-600 cursor-pointer"
                 />
               </div>
+            </div>
+
+            {/* Panel: OTP Verification & Print Release Governance */}
+            <div className="panel p-8 bg-white rounded-3xl border border-slate-200/80 flex flex-col gap-6 lg:col-span-2 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <KeyRound className="w-5 h-5 text-indigo-600" /> OTP Verification & Print Release Governance
+                  </h3>
+                  <p className="text-xs text-slate-500 font-bold mt-0.5">
+                    Control whether students must enter/reply with a 4-digit OTP at kiosks or WhatsApp vs bypass for instant direct printing.
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-[11px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  🔐 Granular Security Rules
+                </span>
+              </div>
+
+              {/* Master Global Channels */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* 1. Web / Normal Orders OTP */}
+                <div className={`p-5 rounded-2xl border-2 transition-all ${
+                  settings.webOtpRequired !== false
+                    ? "border-indigo-400 bg-indigo-50/40"
+                    : "border-slate-200 bg-slate-50"
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-indigo-600" />
+                      <h4 className="text-sm font-black text-slate-900">Normal / Web Orders OTP</h4>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={settings.webOtpRequired !== false}
+                        onChange={(e) => setSettings({ ...settings, webOtpRequired: e.target.checked })}
+                      />
+                      <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-relaxed">
+                    {settings.webOtpRequired !== false
+                      ? "✅ Active (Default) — Web orders go to PENDING_SCAN and require 4-digit OTP or QR code to release at kiosk."
+                      : "⚡ Bypassed — Web orders immediately spool directly to printer hardware upon checkout."}
+                  </p>
+                </div>
+
+                {/* 2. WhatsApp Orders OTP */}
+                <div className={`p-5 rounded-2xl border-2 transition-all ${
+                  settings.whatsappOtpRequired !== false
+                    ? "border-emerald-400 bg-emerald-50/40"
+                    : "border-slate-200 bg-slate-50"
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="w-5 h-5 text-emerald-600" />
+                      <h4 className="text-sm font-black text-slate-900">WhatsApp Orders OTP</h4>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={settings.whatsappOtpRequired !== false}
+                        onChange={(e) => setSettings({ ...settings, whatsappOtpRequired: e.target.checked })}
+                      />
+                      <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold leading-relaxed">
+                    {settings.whatsappOtpRequired !== false
+                      ? "✅ Active (Default) — WhatsApp orders require student to enter 4-digit OTP shown on TV display before paper is printed."
+                      : "⚡ Bypassed — WhatsApp orders print directly upon payment/wallet deduction without requiring OTP release."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Block & College Specific Overrides */}
+              {Object.keys(otpRules.blockRules).length > 0 && (
+                <div className="mt-2 space-y-3">
+                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                    🏛️ Location / Block-Level Security Overrides ({Object.keys(otpRules.blockRules).length} Blocks)
+                  </h4>
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase">
+                        <tr>
+                          <th className="py-3 px-4">Block Location</th>
+                          <th className="py-3 px-4">Web Orders OTP</th>
+                          <th className="py-3 px-4">WhatsApp Orders OTP</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-bold text-slate-800">
+                        {Object.entries(otpRules.blockRules).map(([blk, val]) => (
+                          <tr key={blk} className="hover:bg-slate-50/80">
+                            <td className="py-3 px-4 font-black">{blk}</td>
+                            <td className="py-3 px-4">
+                              <select
+                                value={val?.webOtp === null || val?.webOtp === undefined ? "INHERIT" : (val.webOtp ? "REQUIRED" : "BYPASS")}
+                                onChange={(e) => {
+                                  const newVal = e.target.value === "INHERIT" ? null : e.target.value === "REQUIRED";
+                                  setOtpRules(prev => ({
+                                    ...prev,
+                                    blockRules: {
+                                      ...prev.blockRules,
+                                      [blk]: { ...(prev.blockRules[blk] || {}), webOtp: newVal }
+                                    }
+                                  }));
+                                }}
+                                className="field py-1 px-2.5 text-xs font-bold w-auto cursor-pointer"
+                              >
+                                <option value="INHERIT">🌐 Inherit Global ({settings.webOtpRequired !== false ? 'Required' : 'Bypass'})</option>
+                                <option value="REQUIRED">🔒 Force OTP Required</option>
+                                <option value="BYPASS">⚡ Force Direct Print (Bypass)</option>
+                              </select>
+                            </td>
+                            <td className="py-3 px-4">
+                              <select
+                                value={val?.whatsappOtp === null || val?.whatsappOtp === undefined ? "INHERIT" : (val.whatsappOtp ? "REQUIRED" : "BYPASS")}
+                                onChange={(e) => {
+                                  const newVal = e.target.value === "INHERIT" ? null : e.target.value === "REQUIRED";
+                                  setOtpRules(prev => ({
+                                    ...prev,
+                                    blockRules: {
+                                      ...prev.blockRules,
+                                      [blk]: { ...(prev.blockRules[blk] || {}), whatsappOtp: newVal }
+                                    }
+                                  }));
+                                }}
+                                className="field py-1 px-2.5 text-xs font-bold w-auto cursor-pointer"
+                              >
+                                <option value="INHERIT">💬 Inherit Global ({settings.whatsappOtpRequired !== false ? 'Required' : 'Bypass'})</option>
+                                <option value="REQUIRED">🔒 Force OTP Required</option>
+                                <option value="BYPASS">⚡ Force Direct Print (Bypass)</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Panel 3: Global Announcements & Popups */}
