@@ -70,7 +70,8 @@ function Checkout() {
                     printType: order.printType,
                     blockLocation: order.blockLocation,
                     nupLayout: newNup,
-                    doubleSided: order.doubleSided
+                    doubleSided: order.doubleSided,
+                    orientation: order.orientation || "portrait"
                 }
             });
             const updated = response.data;

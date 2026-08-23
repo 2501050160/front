@@ -573,7 +573,8 @@ function Dashboard() {
                                 ? "ALL"
                                 : `${startPage}-${endPage}`,
                         nupLayout,
-                        doubleSided
+                        doubleSided,
+                        orientation: orientation || "portrait"
                     }
                 }
             );
@@ -702,7 +703,8 @@ function Dashboard() {
                                 ? "ALL"
                                 : `${startPage}-${endPage}`,
                         nupLayout,
-                        doubleSided
+                        doubleSided,
+                        orientation: orientation || "portrait"
                     }
                 }
             );
@@ -806,7 +808,8 @@ function Dashboard() {
                                 ? "ALL"
                                 : `${startPage}-${endPage}`,
                         nupLayout,
-                        doubleSided
+                        doubleSided,
+                        orientation: orientation || "portrait"
                     }
                 }
             );
