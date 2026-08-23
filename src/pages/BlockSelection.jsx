@@ -971,7 +971,7 @@ function BlockSelection() {
 
                                 <div className="border-b border-white/5 pb-3 pr-14">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🔑 Secure Release</span>
-                                    <h3 className="text-lg font-black text-white mt-2 tracking-tight">Direct Print Release</h3>
+                                    <h3 className="text-lg font-black text-white mt-2 tracking-tight">Kiosk OTP Release</h3>
                                 </div>
 
                                 <div className="mt-4 space-y-3">
@@ -1308,7 +1308,7 @@ function BlockSelection() {
                         >
                             <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[#F8B84E] to-[#9F6BFF]" />
                             <p className="text-[10px] font-black uppercase tracking-widest text-[#4F9DFF]">
-                                Direct Print Release
+                                Kiosk OTP Release
                             </p>
                             <h3 className="mt-2 text-xl font-extrabold text-white">
                                 Enter Order & OTP
