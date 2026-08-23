@@ -1310,12 +1310,22 @@ function AdminDashboard() {
     };
 
     // Rewards & Voucher API calls
-    const fetchRewards = async () => {
+    const [rewardsLoading, setRewardsLoading] = useState(false);
+    const prevRewardsHashRef = useRef("");
+    const fetchRewards = async (showSpinner = false) => {
+        if (showSpinner) setRewardsLoading(true);
         try {
             const response = await api.get("/rewards/all");
-            setRewards(response.data || []);
+            const data = response.data || [];
+            const hash = JSON.stringify(data.map(r => ({ id: r.id, claimed: r.claimedCount, max: r.maxClaims, active: r.active })));
+            if (hash !== prevRewardsHashRef.current || showSpinner) {
+                prevRewardsHashRef.current = hash;
+                setRewards(data);
+            }
         } catch (err) {
             console.error("Failed to fetch rewards", err);
+        } finally {
+            if (showSpinner) setRewardsLoading(false);
         }
     };
 
@@ -2554,6 +2564,23 @@ function AdminDashboard() {
             }
         }
     }, [searchParams]);
+
+    // Live auto-refresh polling for vouchers, rewards, and pricing/coupons in real-time
+    useEffect(() => {
+        fetchRewards();
+        if (activeTab === "settings") {
+            fetchCoupons();
+        }
+
+        const interval = setInterval(() => {
+            fetchRewards();
+            if (activeTab === "settings") {
+                fetchCoupons();
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [activeTab, pricingSubTab]);
 
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-row min-h-screen w-full relative">
@@ -5027,41 +5054,76 @@ function AdminDashboard() {
                                 <section className="panel p-6 overflow-x-auto">
                                     <div className="section-header mb-6 pb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                         <div>
-                                            <p className="eyebrow">Active Vouchers</p>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <p className="eyebrow !mb-0">Active Vouchers</p>
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                                    Live Sync (2s)
+                                                </span>
+                                            </div>
                                             <h2 className="text-2xl font-black text-slate-900">Vouchers Directory ({rewards.length})</h2>
                                         </div>
-                                        <button onClick={() => setPricingSubTab("voucher-gen")} className="btn primary text-xs px-3 py-1.5">
-                                            ➕ New Voucher
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => fetchRewards(true)}
+                                                className="btn secondary text-xs px-3 py-1.5 flex items-center gap-1.5 cursor-pointer"
+                                                title="Refresh vouchers list"
+                                            >
+                                                <span className={rewardsLoading ? "animate-spin inline-block" : ""}>🔄</span>
+                                                <span>Refresh</span>
+                                            </button>
+                                            <button onClick={() => setPricingSubTab("voucher-gen")} className="btn primary text-xs px-3 py-1.5">
+                                                ➕ New Voucher
+                                            </button>
+                                        </div>
                                     </div>
                                     <table className="data-table w-full">
                                         <thead><tr><th>Code</th><th>Title</th><th>Reward Value</th><th>Claims Progress</th><th>Status</th><th>Action</th></tr></thead>
                                         <tbody>
-                                            {rewards.map(rew => (
-                                                <tr key={rew.id}>
-                                                    <td className="font-mono font-black text-slate-900 tracking-wide uppercase">{rew.claimCode}</td>
-                                                    <td className="font-bold text-slate-700">{rew.title || rew.claimCode}</td>
-                                                    <td className="font-black text-emerald-600">₹{rew.rewardAmount ? rew.rewardAmount.toFixed(2) : "0.00"}</td>
-                                                    <td className="text-xs font-bold text-slate-600">{rew.claimedCount} / {rew.maxClaims}</td>
-                                                    <td>
-                                                        <button onClick={() => toggleRewardActive(rew.id, rew.active)} className={`status-pill ${rew.active ? 'status-paid' : 'status-unpaid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
-                                                            {rew.active ? "ACTIVE" : "INACTIVE"}
-                                                        </button>
-                                                    </td>
-                                                    <td>
-                                                        <div className="flex items-center gap-2">
-                                                            <button
-                                                                onClick={() => shareVoucherOnWhatsApp(rew.claimCode, rew.rewardAmount, rew.title)}
-                                                                className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950"
-                                                                title="Share voucher via WhatsApp"
-                                                            >
-                                                                <span>💬</span> Share
+                                            {rewards.map(rew => {
+                                                const claimed = rew.claimedCount || 0;
+                                                const max = rew.maxClaims || 1;
+                                                const pct = Math.min(100, Math.round((claimed / max) * 100));
+                                                const isFull = claimed >= max;
+
+                                                return (
+                                                    <tr key={rew.id}>
+                                                        <td className="font-mono font-black text-slate-900 tracking-wide uppercase">{rew.claimCode}</td>
+                                                        <td className="font-bold text-slate-700">{rew.title || rew.claimCode}</td>
+                                                        <td className="font-black text-emerald-600">₹{rew.rewardAmount ? rew.rewardAmount.toFixed(2) : "0.00"}</td>
+                                                        <td className="text-xs font-bold text-slate-600 min-w-[140px]">
+                                                            <div className="flex items-center justify-between text-xs font-black">
+                                                                <span className={isFull ? "text-rose-600 font-black" : "text-slate-900"}>{claimed} / {max}</span>
+                                                                <span className="text-[10px] text-slate-400 font-bold">{pct}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden mt-1.5 border border-slate-200">
+                                                                <div
+                                                                    className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                                                                    style={{ width: `${pct}%` }}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <button onClick={() => toggleRewardActive(rew.id, rew.active)} className={`status-pill ${rew.active ? 'status-paid' : 'status-unpaid'}`} style={{ fontSize: '10px', minHeight: '22px' }}>
+                                                                {rew.active ? "ACTIVE" : "INACTIVE"}
                                                             </button>
-                                                            <button onClick={() => deleteReward(rew.id)} className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold">Delete</button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                        </td>
+                                                        <td>
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => shareVoucherOnWhatsApp(rew.claimCode, rew.rewardAmount, rew.title)}
+                                                                    className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 bg-[#25D366] hover:bg-[#1ebd5a] text-slate-950"
+                                                                    title="Share voucher via WhatsApp"
+                                                                >
+                                                                    <span>💬</span> Share
+                                                                </button>
+                                                                <button onClick={() => deleteReward(rew.id)} className="btn danger min-h-0 px-2.5 py-1 text-xs font-bold">Delete</button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                             {rewards.length === 0 && (<tr><td colSpan="6" className="text-center font-bold text-slate-500 py-10">No reward vouchers created yet.</td></tr>)}
                                         </tbody>
                                     </table>
