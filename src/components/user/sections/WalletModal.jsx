@@ -84,7 +84,9 @@ export function WalletModal({
                 } catch (err) {
                     lastErr = err;
                     if (i < 4) {
-                        const delay = i === 1 ? 3000 : i === 2 ? 6000 : 10000;
+                        // Render free-tier wakes in ~50s. Give it time:
+                        // attempt 1 → wait 15s, attempt 2 → wait 25s, attempt 3 → wait 40s
+                        const delay = i === 1 ? 15000 : i === 2 ? 25000 : 40000;
                         console.warn(`Wallet credit attempt ${i} failed (${err?.message}). Retrying in ${delay / 1000}s…`);
                         await sleep(delay);
                     }
@@ -246,7 +248,7 @@ export function WalletModal({
                 {retrying && (
                     <p className="text-xs text-amber-400 font-bold flex items-center gap-1.5 animate-pulse">
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        Attempt {retryAttempt}/4 — server may be waking up, please wait…
+                        Attempt {retryAttempt}/4 — server is waking up (~50s), please wait and do NOT close this window…
                     </p>
                 )}
 
