@@ -1906,35 +1906,113 @@ function Dashboard() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1, duration: 0.4 }}
                         >
-                            <p className="eyebrow">Live Pricing</p>
-                            <h2 className="mt-2 text-2xl font-black text-white">
-                                Estimate
-                            </h2>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="eyebrow">Live Pricing</p>
+                                    <h2 className="mt-1 text-2xl font-black text-white">
+                                        Estimate
+                                    </h2>
+                                </div>
+                                <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                    {blockLocation}
+                                </span>
+                            </div>
 
-                            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {/* Sleek Black & White Single Sided Box */}
-                                <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
+                                <div className="rounded-xl border border-white/10 bg-slate-950/40 p-3.5 flex flex-col justify-between relative overflow-hidden min-h-[75px]">
                                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">B&W (Single Side)</span>
-                                    <p className="mt-1 text-xl font-black text-white">Rs. {bwPrice} / pg</p>
+                                    <p className="mt-1 text-lg font-black text-white">₹{bwPrice} / pg</p>
                                 </div>
 
                                 {/* Sleek Black & White Duplex Box */}
-                                <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-4 flex flex-col justify-between relative overflow-hidden min-h-[85px]">
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-300">B&W (Duplex / Both Sides)</span>
-                                    <p className="mt-1 text-xl font-black text-blue-100">Rs. {bwDuplexPrice} / pg</p>
+                                <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-3.5 flex flex-col justify-between relative overflow-hidden min-h-[75px]">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-300">B&W (Duplex)</span>
+                                    <p className="mt-1 text-lg font-black text-blue-100">₹{bwDuplexPrice} / pg</p>
                                 </div>
                             </div>
 
-                            <div className="mt-5 rounded-2xl bg-slate-900/90 border border-white/10 p-5 text-white shadow-xl">
-                                <p className="text-sm font-bold text-slate-300">Estimated Total</p>
-                                <motion.p
-                                    key={estimatedTotal}
-                                    className="mt-2 text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-300 to-emerald-400"
-                                    initial={{ scale: 0.96, opacity: 0.5 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                >
-                                    Rs. {estimatedTotal || 0}
-                                </motion.p>
+                            {/* Detailed Price & Coupon Breakdown Box */}
+                            <div className="mt-4 rounded-2xl bg-slate-900/90 border border-white/10 p-4 text-white shadow-xl space-y-2.5">
+                                {uploaded && (
+                                    <>
+                                        <div className="flex items-center justify-between text-xs text-slate-300">
+                                            <span>Base Print Price ({estimatedTotalPages} sheets × {copies || 1} copies)</span>
+                                            <span className="font-bold text-white">₹{basePrice.toFixed(2)}</span>
+                                        </div>
+
+                                        {couponApplied && estimatedDiscount > 0 && (
+                                            <div className="flex items-center justify-between text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
+                                                <span className="flex items-center gap-1.5">
+                                                    <span>🎟️</span>
+                                                    <span>Coupon ({couponCode.toUpperCase()})</span>
+                                                </span>
+                                                <span>- ₹{estimatedDiscount.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-300">Payable Amount</p>
+                                        <p className="text-[10px] text-slate-400">{couponApplied ? "Discount applied" : "Estimated total"}</p>
+                                    </div>
+                                    <motion.p
+                                        key={estimatedTotal}
+                                        className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-300 to-emerald-400"
+                                        initial={{ scale: 0.96, opacity: 0.5 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                    >
+                                        ₹{estimatedTotal.toFixed(2)}
+                                    </motion.p>
+                                </div>
+                            </div>
+
+                            {/* Paper Level Display Just Below the Estimation Price */}
+                            <div className="mt-3.5 p-4 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-2.5 shadow-inner">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black ${
+                                            paperCount <= 0 
+                                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                                                : paperCount <= 30 
+                                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                        }`}>
+                                            📄
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Paper Level ({blockLocation})</span>
+                                            <p className="text-xs font-black text-white">
+                                                {paperCount > 0 ? `${paperCount} Sheets Available` : 'Out of Paper (0 Sheets)'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                                        paperCount <= 0 
+                                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' 
+                                            : paperCount <= 30 
+                                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
+                                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                    }`}>
+                                        {paperCount <= 0 ? 'Empty' : paperCount <= 30 ? 'Low' : 'Ready'}
+                                    </span>
+                                </div>
+
+                                {/* Live Progress bar for paper tray */}
+                                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                            paperCount <= 0 
+                                                ? 'bg-rose-500' 
+                                                : paperCount <= 30 
+                                                ? 'bg-amber-400' 
+                                                : 'bg-gradient-to-r from-emerald-400 to-teal-400'
+                                        }`}
+                                        style={{ width: `${Math.min(100, Math.max(5, Math.round((paperCount / 500) * 100)))}%` }}
+                                    />
+                                </div>
                             </div>
                         </motion.aside>
 

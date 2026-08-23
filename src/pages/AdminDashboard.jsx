@@ -6993,7 +6993,7 @@ function AdminDashboard() {
                                         </span>
                                         <h3 className="text-2xl font-black text-slate-900">OTP Verification & Print Release Governance</h3>
                                         <p className="text-sm text-slate-500 font-semibold max-w-2xl leading-relaxed">
-                                            Configure whether students must authenticate with a 4-digit OTP at kiosks/WhatsApp or bypass OTP for instant zero-wait hardware printing. Rules can be tailored globally, per college campus, or per physical block location.
+                                            Configure whether students must authenticate with a 4-digit OTP at kiosks/WhatsApp or bypass OTP for instant zero-wait.
                                         </p>
                                     </div>
                                     <button
@@ -7020,8 +7020,8 @@ function AdminDashboard() {
                                                     🌐
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-base font-black text-slate-900">Normal / Web Orders OTP</h4>
-                                                    <p className="text-xs text-slate-500 font-bold">Web portal document uploads</p>
+                                                    <h4 className="text-base font-black text-slate-900">Global Web Orders OTP</h4>
+                                                    <p className="text-xs text-slate-500 font-bold">Default fallback for new web uploads</p>
                                                 </div>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
@@ -7036,7 +7036,7 @@ function AdminDashboard() {
                                         </div>
                                         <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 font-medium space-y-1.5">
                                             <p className="font-bold flex items-center gap-1.5">
-                                                <span>Status:</span>
+                                                <span>Global Status:</span>
                                                 <span className={`px-2 py-0.5 rounded text-[11px] font-black ${
                                                     otpRules.webOtpRequired ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"
                                                 }`}>
@@ -7045,8 +7045,8 @@ function AdminDashboard() {
                                             </p>
                                             <p className="text-slate-500 text-[11px]">
                                                 {otpRules.webOtpRequired
-                                                    ? "When active, web orders stay in PENDING_SCAN until the student scans the kiosk QR or enters the 4-digit OTP shown on the TV panel."
-                                                    : "When bypassed, paid web orders move immediately into QUEUE and print instantly at the chosen block."}
+                                                    ? "Default policy: Web orders stay in PENDING_SCAN until student scans QR or enters 4-digit OTP at the TV panel."
+                                                    : "Default policy: Paid web orders move immediately into QUEUE and print instantly."}
                                             </p>
                                         </div>
                                     </div>
@@ -7063,8 +7063,8 @@ function AdminDashboard() {
                                                     💬
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-base font-black text-slate-900">WhatsApp Bot Orders OTP</h4>
-                                                    <p className="text-xs text-slate-500 font-bold">Direct WhatsApp document printing</p>
+                                                    <h4 className="text-base font-black text-slate-900">Global WhatsApp Orders OTP</h4>
+                                                    <p className="text-xs text-slate-500 font-bold">Default fallback for WhatsApp bot orders</p>
                                                 </div>
                                             </div>
                                             <label className="relative inline-flex items-center cursor-pointer">
@@ -7079,7 +7079,7 @@ function AdminDashboard() {
                                         </div>
                                         <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 font-medium space-y-1.5">
                                             <p className="font-bold flex items-center gap-1.5">
-                                                <span>Status:</span>
+                                                <span>Global Status:</span>
                                                 <span className={`px-2 py-0.5 rounded text-[11px] font-black ${
                                                     otpRules.whatsappOtpRequired ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
                                                 }`}>
@@ -7088,8 +7088,8 @@ function AdminDashboard() {
                                             </p>
                                             <p className="text-slate-500 text-[11px]">
                                                 {otpRules.whatsappOtpRequired
-                                                    ? "When active, WhatsApp orders display the release code on the kiosk TV screen; the student can release either by replying with the 4 digits in WhatsApp or at the terminal."
-                                                    : "When bypassed, WhatsApp orders spool immediately to the hardware printer as soon as wallet balance or online payment is verified."}
+                                                    ? "Default policy: WhatsApp orders display 4-digit code on TV screen and wait for user release."
+                                                    : "Default policy: WhatsApp orders spool immediately to printer upon payment."}
                                             </p>
                                         </div>
                                     </div>
@@ -7100,8 +7100,8 @@ function AdminDashboard() {
                                     <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
                                         <div>
                                             <p className="eyebrow">Campus & Location Hierarchy</p>
-                                            <h3 className="text-xl font-black text-slate-900">Per-Block & Per-College Custom Overrides</h3>
-                                            <p className="subtitle">Override the global default for specific high-security or fast-track printing zones.</p>
+                                            <h3 className="text-xl font-black text-slate-900">Per-Block Custom Overrides (Independent)</h3>
+                                            <p className="subtitle">Each block operates independently. By default, every block requires OTP unless you change it to Direct Print.</p>
                                         </div>
 
                                         <div className="flex items-center gap-2">
@@ -7140,8 +7140,9 @@ function AdminDashboard() {
                                                         const webVal = bRule.webOtp;
                                                         const waVal = bRule.whatsappOtp;
 
-                                                        const effectiveWeb = webVal !== null && webVal !== undefined ? webVal : otpRules.webOtpRequired;
-                                                        const effectiveWa = waVal !== null && waVal !== undefined ? waVal : otpRules.whatsappOtpRequired;
+                                                        // Default to true (OTP Required) if undefined
+                                                        const isWebOtpReq = webVal !== false;
+                                                        const isWaOtpReq = waVal !== false;
 
                                                         return (
                                                             <tr key={blk.id || blkName}>
@@ -7155,51 +7156,55 @@ function AdminDashboard() {
                                                                 </td>
                                                                 <td>
                                                                     <select
-                                                                        value={webVal === null || webVal === undefined ? "INHERIT" : (webVal ? "REQUIRED" : "BYPASS")}
+                                                                        value={isWebOtpReq ? "REQUIRED" : "BYPASS"}
                                                                         onChange={(e) => {
-                                                                            const v = e.target.value === "INHERIT" ? null : e.target.value === "REQUIRED";
+                                                                            const isReq = e.target.value === "REQUIRED";
                                                                             setOtpRules(prev => ({
                                                                                 ...prev,
                                                                                 blockRules: {
                                                                                     ...prev.blockRules,
-                                                                                    [blkName]: { ...(prev.blockRules[blkName] || {}), webOtp: v }
+                                                                                    [blkName]: {
+                                                                                        ...(prev.blockRules?.[blkName] || { webOtp: true, whatsappOtp: true }),
+                                                                                        webOtp: isReq
+                                                                                    }
                                                                                 }
                                                                             }));
                                                                         }}
-                                                                        className="field !w-auto text-xs py-1.5 px-3 font-bold bg-white border border-slate-300 rounded-lg text-slate-800 cursor-pointer"
+                                                                        className="field !w-auto text-xs py-1.5 px-3 font-bold bg-white border border-slate-300 rounded-lg text-slate-800 cursor-pointer shadow-xs"
                                                                     >
-                                                                        <option value="INHERIT">🌐 Inherit Global ({otpRules.webOtpRequired ? "Required" : "Bypass"})</option>
-                                                                        <option value="REQUIRED">🔒 Force OTP Required</option>
-                                                                        <option value="BYPASS">⚡ Force Direct Print (Bypass)</option>
+                                                                        <option value="REQUIRED">🔒 OTP Required (Default)</option>
+                                                                        <option value="BYPASS">⚡ Direct Print (Instant Spool)</option>
                                                                     </select>
                                                                 </td>
                                                                 <td>
                                                                     <select
-                                                                        value={waVal === null || waVal === undefined ? "INHERIT" : (waVal ? "REQUIRED" : "BYPASS")}
+                                                                        value={isWaOtpReq ? "REQUIRED" : "BYPASS"}
                                                                         onChange={(e) => {
-                                                                            const v = e.target.value === "INHERIT" ? null : e.target.value === "REQUIRED";
+                                                                            const isReq = e.target.value === "REQUIRED";
                                                                             setOtpRules(prev => ({
                                                                                 ...prev,
                                                                                 blockRules: {
                                                                                     ...prev.blockRules,
-                                                                                    [blkName]: { ...(prev.blockRules[blkName] || {}), whatsappOtp: v }
+                                                                                    [blkName]: {
+                                                                                        ...(prev.blockRules?.[blkName] || { webOtp: true, whatsappOtp: true }),
+                                                                                        whatsappOtp: isReq
+                                                                                    }
                                                                                 }
                                                                             }));
                                                                         }}
-                                                                        className="field !w-auto text-xs py-1.5 px-3 font-bold bg-white border border-slate-300 rounded-lg text-slate-800 cursor-pointer"
+                                                                        className="field !w-auto text-xs py-1.5 px-3 font-bold bg-white border border-slate-300 rounded-lg text-slate-800 cursor-pointer shadow-xs"
                                                                     >
-                                                                        <option value="INHERIT">💬 Inherit Global ({otpRules.whatsappOtpRequired ? "Required" : "Bypass"})</option>
-                                                                        <option value="REQUIRED">🔒 Force OTP Required</option>
-                                                                        <option value="BYPASS">⚡ Force Direct Print (Bypass)</option>
+                                                                        <option value="REQUIRED">🔒 OTP Required (Default)</option>
+                                                                        <option value="BYPASS">⚡ Direct Print (Instant Spool)</option>
                                                                     </select>
                                                                 </td>
                                                                 <td>
                                                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black ${effectiveWeb ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"}`}>
-                                                                            Web: {effectiveWeb ? "OTP" : "DIRECT"}
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${isWebOtpReq ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
+                                                                            Web: {isWebOtpReq ? "🔒 OTP" : "⚡ DIRECT"}
                                                                         </span>
-                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black ${effectiveWa ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                                                                            WA: {effectiveWa ? "OTP" : "DIRECT"}
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${isWaOtpReq ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
+                                                                            WA: {isWaOtpReq ? "🔒 OTP" : "⚡ DIRECT"}
                                                                         </span>
                                                                     </div>
                                                                 </td>

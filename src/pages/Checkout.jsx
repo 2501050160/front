@@ -30,6 +30,19 @@ function Checkout() {
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduledTime, setScheduledTime] = useState("");
     const [nupLayout, setNupLayout] = useState(order?.nupLayout || "1-up");
+    const [paperCount, setPaperCount] = useState(500);
+
+    useEffect(() => {
+        if (order?.blockLocation) {
+            api.get(`/printer/paper?blockLocation=${encodeURIComponent(order.blockLocation)}`)
+                .then(res => {
+                    if (res.data !== undefined && res.data !== null) {
+                        setPaperCount(Number(res.data));
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [order?.blockLocation]);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
@@ -158,8 +171,6 @@ function Checkout() {
             showAlert("Error", error.response?.data?.message || "Failed to apply referral code", "error");
         }
     };
-
-    const [paperCount, setPaperCount] = useState(9999);
 
     const [autoPayTriggered, setAutoPayTriggered] = useState(false);
 
@@ -587,41 +598,93 @@ function Checkout() {
                     >
                         <p className="eyebrow">Payment</p>
 
-                        <div className="mt-5 rounded-lg bg-slate-900 p-6 text-white">
-                            <div className="flex items-center justify-between">
+                        <div className="mt-5 rounded-2xl bg-slate-900/90 border border-white/10 p-6 text-white shadow-xl space-y-3">
+                            <div className="flex items-center justify-between pb-3 border-b border-white/10">
                                 <span className="font-bold text-slate-300">Wallet Balance</span>
-                                <span className="text-xl font-black text-cyan-300">Rs. {walletBalance}</span>
+                                <span className="text-xl font-black text-cyan-300">₹{Number(walletBalance || 0).toFixed(2)}</span>
                             </div>
 
-                            <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center justify-between text-sm">
                                 <span className="font-bold text-slate-300">Base Price</span>
-                                <span className="text-xl font-bold">Rs. {Number(order.originalPrice || order.price).toFixed(2)}</span>
+                                <span className="font-extrabold text-white">₹{Number(order.originalPrice || order.price).toFixed(2)}</span>
                             </div>
 
                             {order.discountAmount > 0 && (
-                                <div className="mt-2 flex items-center justify-between text-green-400 text-sm">
-                                    <span className="font-bold">Special Discount (Off-Peak/Bulk)</span>
-                                    <span className="font-black">- Rs. {Number(order.discountAmount).toFixed(2)}</span>
+                                <div className="flex items-center justify-between text-emerald-400 text-sm font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                                    <span>Special Discount (Off-Peak/Bulk)</span>
+                                    <span>- ₹{Number(order.discountAmount).toFixed(2)}</span>
                                 </div>
                             )}
 
                             {couponApplied && (
-                                <div className="mt-2 flex items-center justify-between text-green-400 text-sm">
-                                    <span className="font-bold">Coupon Discount</span>
-                                    <span className="font-black">- Rs. {Number(discount).toFixed(2)}</span>
+                                <div className="flex items-center justify-between text-emerald-400 text-sm font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                                    <span className="flex items-center gap-1.5">
+                                        <span>🎟️</span>
+                                        <span>Coupon Discount ({couponCode.toUpperCase()})</span>
+                                    </span>
+                                    <span>- ₹{Number(discount).toFixed(2)}</span>
                                 </div>
                             )}
 
-                            <div className="mt-6 border-t border-white/15 pt-5">
-                                <p className="text-sm font-bold text-slate-300">Final Amount</p>
+                            <div className="pt-3 border-t border-white/15 flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs font-bold text-slate-300">Payable Amount</p>
+                                    <p className="text-[10px] text-slate-400">{couponApplied ? "Discount applied" : "Total"}</p>
+                                </div>
                                 <motion.p
                                     key={finalAmount}
-                                    className="mt-1 text-5xl font-black"
+                                    className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-300 to-emerald-400"
                                     initial={{ scale: 0.96, opacity: 0.6 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                 >
-                                    Rs. {finalAmount}
+                                    ₹{Number(finalAmount).toFixed(2)}
                                 </motion.p>
+                            </div>
+                        </div>
+
+                        {/* Paper Level Display Just Below the Estimation Price */}
+                        <div className="mt-3.5 p-4 rounded-2xl bg-slate-950/70 border border-white/10 flex flex-col gap-2.5 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black ${
+                                        paperCount <= 0 
+                                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                                            : paperCount <= 30 
+                                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                    }`}>
+                                        📄
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Paper Tray ({order?.blockLocation || 'Kiosk'})</span>
+                                        <p className="text-xs font-black text-white">
+                                            {paperCount > 0 ? `${paperCount} Sheets Available` : 'Out of Paper (0 Sheets)'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                                    paperCount <= 0 
+                                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' 
+                                        : paperCount <= 30 
+                                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
+                                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                }`}>
+                                    {paperCount <= 0 ? 'Empty' : paperCount <= 30 ? 'Low' : 'Ready'}
+                                </span>
+                            </div>
+
+                            {/* Live Progress bar for paper tray */}
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                        paperCount <= 0 
+                                            ? 'bg-rose-500' 
+                                            : paperCount <= 30 
+                                            ? 'bg-amber-400' 
+                                            : 'bg-gradient-to-r from-emerald-400 to-teal-400'
+                                    }`}
+                                    style={{ width: `${Math.min(100, Math.max(5, Math.round((paperCount / 500) * 100)))}%` }}
+                                />
                             </div>
                         </div>
 
