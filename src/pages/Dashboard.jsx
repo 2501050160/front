@@ -116,7 +116,7 @@ function Dashboard() {
 
     // Additional States
     const [uploading, setUploading] = useState(false);
-    const [walletBalance, setWalletBalance] = useState(0);
+    const [walletBalance, setWalletBalance] = useState(() => Number(localStorage.getItem("walletBalance") || 0));
     const [showWalletModal, setShowWalletModal] = useState(false);
     
     // Support Desk
