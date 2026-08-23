@@ -1341,6 +1341,26 @@ function Dashboard() {
                                     </button>
                                 );
                             })}
+
+                            {/* Change Block Navigation Button */}
+                            <button
+                                type="button"
+                                onClick={() => navigate("/blocks")}
+                                className={`font-black text-sm rounded-xl transition-all flex items-center justify-center cursor-pointer text-cyan-300 hover:bg-cyan-500/15 border border-cyan-500/25 mt-2 shadow-sm ${
+                                    isSidebarExpanded 
+                                        ? "w-full text-left justify-start px-4 py-2.5 gap-3" 
+                                        : "w-10 h-10 sm:w-12 sm:h-12 justify-center px-0 py-0"
+                                }`}
+                                title={`Current Block: ${blockLocation || "Select Block"} - Click to Change`}
+                            >
+                                <MapPin className="w-5 h-5 shrink-0 text-cyan-400" />
+                                {isSidebarExpanded && (
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-[9px] text-slate-400 uppercase tracking-wider font-bold">Campus Block</span>
+                                        <span className="truncate text-white font-black text-xs">{blockLocation || "Select Block"} ⇄</span>
+                                    </div>
+                                )}
+                            </button>
                         </div>
                     </div>
 
@@ -3170,23 +3190,49 @@ function Dashboard() {
                                 )}
 
                                 <div className="pt-2">
-                                    <button
-                                        type="submit"
-                                        disabled={isReleasingFromModal || !releaseModalOrderId || releaseModalOtp.length !== 4}
-                                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isReleasingFromModal ? (
-                                            <>
-                                                <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                                                Verifying &amp; Releasing...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Zap className="w-4 h-4 fill-slate-950" />
-                                                Verify &amp; Release Print
-                                            </>
-                                        )}
-                                    </button>
+                                    {pendingOrdersForRelease.length === 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowDirectReleaseModal(false);
+                                                navigate("/blocks");
+                                            }}
+                                            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-sm shadow-lg shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                        >
+                                            <ArrowRight className="w-4 h-4 rotate-180" />
+                                            Back to Selection
+                                        </button>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <button
+                                                type="submit"
+                                                disabled={isReleasingFromModal || !releaseModalOrderId || releaseModalOtp.length !== 4}
+                                                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            >
+                                                {isReleasingFromModal ? (
+                                                    <>
+                                                        <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                                                        Verifying &amp; Releasing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Zap className="w-4 h-4 fill-slate-950" />
+                                                        Verify &amp; Release Print
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowDirectReleaseModal(false);
+                                                    navigate("/blocks");
+                                                }}
+                                                className="w-full py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                                            >
+                                                ← Back to Selection
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </form>
                         </motion.div>

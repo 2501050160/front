@@ -11,13 +11,14 @@ import {
     Building2,
     ChevronDown,
     KeyRound,
-    Plus
+    Plus,
+    MapPin
 } from "lucide-react";
 import cloudprintLogo from "../assets/cloudprint_logo.png";
 import { useAuth } from "../context/AuthContext";
 import { WalletModal } from "./user/sections/WalletModal";
 
-function Navbar({ searchQuery, setSearchQuery, badge }) {
+function Navbar({ searchQuery, setSearchQuery, badge, badgeAction }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, walletBalance, logout, refreshWallet } = useAuth();
@@ -42,6 +43,7 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
     const userName = user?.name || localStorage.getItem("userName") || "Student User";
     const userEmail = user?.email || localStorage.getItem("userEmail") || "";
     const userCollege = user?.college || localStorage.getItem("userCollege") || "KLU";
+    const selectedBlock = localStorage.getItem("selectedBlock") || "";
 
     useEffect(() => {
         if (userId) {
@@ -75,17 +77,25 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
         <header className="w-full bg-slate-950/85 backdrop-blur-2xl border-b border-white/10 sticky top-0 z-50 px-4 py-3 shadow-xl">
             <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
                 
-                {/* Left: Brand / Active Campus */}
+                {/* Left: Brand / Active Campus & Block Selector */}
                 <div className="flex items-center gap-3">
-                    <Link to="/blocks" className="flex items-center gap-2 group cursor-pointer">
+                    <Link to="/blocks" className="flex items-center gap-2 group cursor-pointer" title="Go to Campus Block Selection">
                         <img src={cloudprintLogo} alt="CloudPrint" className="h-9 w-auto object-contain transition-transform group-hover:scale-105" />
                     </Link>
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#37E67D]">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#37E67D] animate-pulse"></span>
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider">
-                            {badge || `Active Campus • ${userCollege}`}
+                    <Link
+                        to="/blocks"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-400/40 text-[#37E67D] transition-all cursor-pointer group shadow-sm"
+                        title="Click to Change Block / Location"
+                    >
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#37E67D] animate-pulse shrink-0"></span>
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                            {badge || `${selectedBlock ? selectedBlock : "Select Block"} • ${userCollege}`}
                         </span>
-                    </div>
+                        <span className="text-[10px] font-black text-cyan-300 group-hover:underline ml-1">
+                            ⇄ Change
+                        </span>
+                    </Link>
                 </div>
 
                 {/* Center: Search Bar */}
@@ -104,6 +114,17 @@ function Navbar({ searchQuery, setSearchQuery, badge }) {
 
                 {/* Right: Navbar Links (Print Dashboard, My Orders, Coupons & Rewards, Support Desk) */}
                 <nav className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto custom-scrollbar">
+                    {/* Change Block Quick Button */}
+                    <Link
+                        to="/blocks"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-all cursor-pointer shrink-0 shadow-sm"
+                        title="Change Campus Block"
+                    >
+                        <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="hidden sm:inline">Change Block</span>
+                        <span className="sm:hidden">Block</span>
+                    </Link>
+
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isPathActive(item.path);
