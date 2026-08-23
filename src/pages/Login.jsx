@@ -51,6 +51,13 @@ function Login() {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const oauthSuccess = params.get("oauth_success");
+        const oauthError = params.get("error");
+
+        if (oauthError) {
+            setError(decodeURIComponent(oauthError));
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         if (oauthSuccess === "true") {
             const isNew = params.get("is_new_user") === "true";
             const user = {
