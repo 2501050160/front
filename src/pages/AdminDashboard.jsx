@@ -60,7 +60,7 @@ function AdminDashboard() {
     const [usersSubTab, setUsersSubTab] = useState("users-list");
     const [supportSubTab, setSupportSubTab] = useState("all-tickets");
     const [frontendSubTab, setFrontendSubTab] = useState("marketing");
-    const [systemSubTab, setSystemSubTab] = useState("gateway");
+    const [systemSubTab, setSystemSubTab] = useState("otp-control");
     const [subadminsSubTab, setSubadminsSubTab] = useState("staff-list");
     const [notificationsSubTab, setNotificationsSubTab] = useState("all-notifs");
     const [sqlSubTab, setSqlSubTab] = useState("console");
