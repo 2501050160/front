@@ -1,36 +1,9 @@
 import React, { useState } from "react";
-import { Wallet, X, Plus, ShieldCheck, Sparkles, RefreshCw } from "lucide-react";
+import { Wallet, X, Plus, ShieldCheck, Sparkles, RefreshCw, Ticket, CheckCircle2, AlertCircle } from "lucide-react";
 import api, { RAZORPAY_KEY, loadRazorpayScript } from "../../../services/api";
 import { getWalletBalance } from "../../../services/auth";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Attempts to credit the wallet up to maxAttempts times.
- * Useful when Render's free-tier server is waking up (502 transient errors).
- */
-async function tryCreditWallet({ userId, email, amount, paymentId, maxAttempts = 4 }) {
-    let lastErr = null;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            const params = { amount, paymentId };
-            if (userId) params.userId = userId;
-            if (email) params.email = email;
-
-            const res = await api.post("/wallet/add", null, { params });
-            return res;
-        } catch (err) {
-            lastErr = err;
-            if (attempt < maxAttempts) {
-                // Exponential back-off: 3s, 6s, 10s
-                const delay = attempt === 1 ? 3000 : attempt === 2 ? 6000 : 10000;
-                console.warn(`Wallet credit attempt ${attempt} failed. Retrying in ${delay / 1000}s…`, err?.message);
-                await sleep(delay);
-            }
-        }
-    }
-    throw lastErr;
-}
 
 export function WalletModal({
     userId,
@@ -39,12 +12,19 @@ export function WalletModal({
     onClose,
     onSuccess
 }) {
+    const [mode, setMode] = useState("recharge"); // "recharge" | "voucher"
     const [amount, setAmount] = useState("50");
     const [processing, setProcessing] = useState(false);
     const [retrying, setRetrying] = useState(false);
     const [retryAttempt, setRetryAttempt] = useState(0);
     const [errorMsg, setErrorMsg] = useState("");
     const [failedPaymentId, setFailedPaymentId] = useState(null);
+
+    // Voucher state
+    const [voucherCode, setVoucherCode] = useState("");
+    const [redeemingVoucher, setRedeemingVoucher] = useState(false);
+    const [voucherSuccessMsg, setVoucherSuccessMsg] = useState("");
+    const [voucherErrorMsg, setVoucherErrorMsg] = useState("");
 
     // Resolve email fallback from localStorage when not passed as prop
     const resolvedEmail = email || localStorage.getItem("userEmail") || "";
@@ -62,7 +42,6 @@ export function WalletModal({
         setErrorMsg("");
 
         try {
-            // Wire up a progress indicator per attempt
             let attempt = 0;
             const wrappedCredit = async () => {
                 attempt++;
@@ -73,19 +52,16 @@ export function WalletModal({
                 return api.post("/wallet/add", null, { params });
             };
 
-            // Try up to 4 times
             let lastErr = null;
             let topupRes = null;
             for (let i = 1; i <= 4; i++) {
                 setRetryAttempt(i);
                 try {
                     topupRes = await wrappedCredit();
-                    break; // success
+                    break;
                 } catch (err) {
                     lastErr = err;
                     if (i < 4) {
-                        // Render free-tier wakes in ~50s. Give it time:
-                        // attempt 1 → wait 15s, attempt 2 → wait 25s, attempt 3 → wait 40s
                         const delay = i === 1 ? 15000 : i === 2 ? 25000 : 40000;
                         console.warn(`Wallet credit attempt ${i} failed (${err?.message}). Retrying in ${delay / 1000}s…`);
                         await sleep(delay);
@@ -127,7 +103,6 @@ export function WalletModal({
         setFailedPaymentId(null);
 
         try {
-            // 1. Create Razorpay order on backend
             const orderParams = {
                 amount: numAmt,
                 appOrderId: `WALLET_${resolvedUserId || "anon"}_${Date.now()}`
@@ -179,13 +154,51 @@ export function WalletModal({
         await creditWalletWithRetry(failedPaymentId, numAmt);
     };
 
+    const handleRedeemVoucher = async (e) => {
+        if (e) e.preventDefault();
+        if (!voucherCode.trim()) {
+            setVoucherErrorMsg("Please enter a voucher or coupon code.");
+            return;
+        }
+
+        setRedeemingVoucher(true);
+        setVoucherErrorMsg("");
+        setVoucherSuccessMsg("");
+
+        try {
+            const params = {
+                voucherCode: voucherCode.trim()
+            };
+            if (resolvedUserId) params.userId = resolvedUserId;
+            if (resolvedEmail) params.email = resolvedEmail;
+
+            const res = await api.post("/wallet/redeem-voucher", null, { params });
+            const data = res.data || {};
+            if (data.success) {
+                const newBal = data.newBalance ?? (Number(currentBalance) + Number(data.creditedAmount || 0));
+                localStorage.setItem("walletBalance", String(newBal));
+                window.dispatchEvent(new CustomEvent("walletUpdated", { detail: newBal }));
+                setVoucherSuccessMsg(data.message || `🎉 ₹${Number(data.creditedAmount || 0).toFixed(2)} added directly to your wallet!`);
+                setVoucherCode("");
+                if (onSuccess) onSuccess(newBal);
+            } else {
+                setVoucherErrorMsg(data.message || "Invalid, expired, or already claimed voucher code.");
+            }
+        } catch (err) {
+            console.error("Voucher redemption error:", err);
+            setVoucherErrorMsg(err.response?.data?.message || "Failed to redeem voucher. Please check the code.");
+        } finally {
+            setRedeemingVoucher(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
             <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-md w-full space-y-5 shadow-2xl relative">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute right-5 top-5 p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white cursor-pointer"
+                    className="absolute right-5 top-5 p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white cursor-pointer transition-colors"
                 >
                     <X className="w-4 h-4" />
                 </button>
@@ -196,99 +209,191 @@ export function WalletModal({
                         <Wallet className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-black text-white">Recharge Print Wallet</h3>
+                        <h3 className="text-lg font-black text-white">Student Print Wallet</h3>
                         <p className="text-xs text-slate-400">Instant 1-tap print releases at any kiosk</p>
                     </div>
                 </div>
 
                 {/* Current Balance Display */}
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-400">Current Balance</span>
-                    <span className="text-xl font-black text-emerald-400">₹{Number(currentBalance).toFixed(2)}</span>
-                </div>
-
-                {/* Preset Chips */}
-                <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-400 uppercase">Select Quick Amount</label>
-                    <div className="grid grid-cols-5 gap-2">
-                        {presetAmounts.map(p => (
-                            <button
-                                key={p}
-                                type="button"
-                                onClick={() => setAmount(p)}
-                                className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
-                                    amount === p
-                                        ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
-                                        : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700"
-                                }`}
-                            >
-                                ₹{p}
-                            </button>
-                        ))}
+                    <div>
+                        <span className="text-xs font-bold text-slate-400">Available Wallet Balance</span>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Usable across all campus kiosks</p>
                     </div>
+                    <span className="text-2xl font-black text-emerald-400">₹{Number(currentBalance).toFixed(2)}</span>
                 </div>
 
-                {/* Custom Amount Input */}
-                <div className="space-y-1">
-                    <label className="text-[11px] font-black text-slate-400 uppercase">Or Enter Custom Amount</label>
-                    <div className="relative">
-                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-base">₹</span>
-                        <input
-                            type="number"
-                            min="1"
-                            placeholder="Enter amount"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="w-full pl-8 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-emerald-500"
-                        />
-                    </div>
+                {/* Mode Selector Tabs */}
+                <div className="grid grid-cols-2 p-1 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-black">
+                    <button
+                        type="button"
+                        onClick={() => { setMode("recharge"); setErrorMsg(""); }}
+                        className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            mode === "recharge"
+                                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                                : "text-slate-400 hover:text-white"
+                        }`}
+                    >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Add Money (UPI)</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => { setMode("voucher"); setVoucherErrorMsg(""); setVoucherSuccessMsg(""); }}
+                        className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            mode === "voucher"
+                                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                                : "text-slate-400 hover:text-white"
+                        }`}
+                    >
+                        <Ticket className="w-3.5 h-3.5" />
+                        <span>Have a Voucher?</span>
+                    </button>
                 </div>
 
-                {/* Retry status */}
-                {retrying && (
-                    <p className="text-xs text-amber-400 font-bold flex items-center gap-1.5 animate-pulse">
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        Attempt {retryAttempt}/4 — server is waking up (~50s), please wait and do NOT close this window…
-                    </p>
-                )}
+                {/* MODE 1: Top-up via Razorpay */}
+                {mode === "recharge" && (
+                    <div className="space-y-4">
+                        {/* Preset Chips */}
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-black text-slate-400 uppercase">Select Quick Amount</label>
+                            <div className="grid grid-cols-5 gap-2">
+                                {presetAmounts.map(p => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => setAmount(p)}
+                                        className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                                            amount === p
+                                                ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20"
+                                                : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700"
+                                        }`}
+                                    >
+                                        ₹{p}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                {errorMsg && (
-                    <div className="rounded-xl bg-rose-950/40 border border-rose-800/50 p-3 space-y-2">
-                        <p className="text-xs text-rose-400 font-bold">{errorMsg}</p>
-                        {failedPaymentId && (
-                            <button
-                                onClick={handleRetryCredit}
-                                disabled={retrying}
-                                className="flex items-center gap-1.5 text-xs font-black text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50"
-                            >
-                                <RefreshCw className="w-3.5 h-3.5" />
-                                Retry Credit
-                            </button>
+                        {/* Custom Amount Input */}
+                        <div className="space-y-1">
+                            <label className="text-[11px] font-black text-slate-400 uppercase">Or Enter Custom Amount</label>
+                            <div className="relative">
+                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-base">₹</span>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="Enter amount"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="w-full pl-8 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-black text-base outline-none focus:border-emerald-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Retry status */}
+                        {retrying && (
+                            <p className="text-xs text-amber-400 font-bold flex items-center gap-1.5 animate-pulse">
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                Attempt {retryAttempt}/4 — server is waking up (~50s), please wait and do NOT close this window…
+                            </p>
                         )}
+
+                        {errorMsg && (
+                            <div className="rounded-xl bg-rose-950/40 border border-rose-800/50 p-3 space-y-2">
+                                <p className="text-xs text-rose-400 font-bold">{errorMsg}</p>
+                                {failedPaymentId && (
+                                    <button
+                                        onClick={handleRetryCredit}
+                                        disabled={retrying}
+                                        className="flex items-center gap-1.5 text-xs font-black text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50"
+                                    >
+                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        Retry Credit
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Top Up Button */}
+                        <button
+                            onClick={handleRecharge}
+                            disabled={processing || retrying}
+                            className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            {retrying
+                                ? `Crediting wallet (attempt ${retryAttempt}/4)…`
+                                : processing
+                                ? "Connecting Gateway..."
+                                : `Proceed to Pay ₹${amount || 0}`}
+                        </button>
+
+                        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>256-bit Encrypted Payments via Razorpay UPI / Cards</span>
+                        </div>
                     </div>
                 )}
 
-                {/* Top Up Button */}
-                <button
-                    onClick={handleRecharge}
-                    disabled={processing || retrying}
-                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                    <Sparkles className="w-4 h-4" />
-                    {retrying
-                        ? `Crediting wallet (attempt ${retryAttempt}/4)…`
-                        : processing
-                        ? "Connecting Gateway..."
-                        : `Proceed to Pay ₹${amount || 0}`}
-                </button>
+                {/* MODE 2: Redeem Voucher / Coupon Code */}
+                {mode === "voucher" && (
+                    <form onSubmit={handleRedeemVoucher} className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-black text-slate-400 uppercase">
+                                Enter Gift Voucher or Promo Code
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="e.g. BONUS1208, SAVE1302, 192313"
+                                    value={voucherCode}
+                                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                                    className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-black text-sm uppercase tracking-wider outline-none focus:border-indigo-500 transition-colors"
+                                />
+                            </div>
+                            <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                                Enter campus gift vouchers, refund promo codes, or event reward coupons to add direct cash credits into your wallet.
+                            </p>
+                        </div>
 
-                <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>256-bit Encrypted Payments via Razorpay UPI / Cards</span>
-                </div>
+                        {voucherSuccessMsg && (
+                            <div className="rounded-2xl bg-emerald-950/50 border border-emerald-500/50 p-3.5 flex items-start gap-2.5">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                                <p className="text-xs text-emerald-200 font-bold leading-relaxed">{voucherSuccessMsg}</p>
+                            </div>
+                        )}
+
+                        {voucherErrorMsg && (
+                            <div className="rounded-2xl bg-rose-950/50 border border-rose-500/50 p-3.5 flex items-start gap-2.5">
+                                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                                <p className="text-xs text-rose-300 font-bold leading-relaxed">{voucherErrorMsg}</p>
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={redeemingVoucher || !voucherCode.trim()}
+                            className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm shadow-xl shadow-indigo-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <Ticket className="w-4 h-4" />
+                            {redeemingVoucher ? "Verifying & Crediting..." : "Redeem Voucher to Wallet"}
+                        </button>
+
+                        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
+                            <p className="font-bold text-slate-300">💡 Voucher Rules:</p>
+                            <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
+                                <li>Vouchers add instant cash directly to your available balance.</li>
+                                <li>Cancellation refund coupons remain valid for 7 days.</li>
+                                <li>Single-use promo codes are automatically purged once redeemed.</li>
+                            </ul>
+                        </div>
+                    </form>
+                )}
             </div>
         </div>
     );
 }
 
 export default WalletModal;
+
