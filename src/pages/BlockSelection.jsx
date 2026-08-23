@@ -7,6 +7,8 @@ import PopupManager from "../components/PopupManager";
 import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
 import BarcodeScannerModal from "../components/BarcodeScannerModal";
+import inVideo from "../assets/in.mp4";
+import collectVideo from "../assets/collect.mp4";
 import { 
   User, 
   LogOut, 
