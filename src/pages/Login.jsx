@@ -42,7 +42,8 @@ function Login() {
 
     const handleOAuth = (provider) => {
         const endpoint = provider.toLowerCase() === "google" ? "google" : "azure";
-        window.location.href = `${API_BASE}/oauth2/authorization/${endpoint}`;
+        const origin = window.location.origin;
+        window.location.href = `${API_BASE}/oauth2/authorization/${endpoint}?redirect_uri=${encodeURIComponent(origin)}`;
     };
 
     const navigate = useNavigate();
