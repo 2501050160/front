@@ -36,4 +36,29 @@ export const loadRazorpayScript = () => {
     });
 };
 
+const memoryCache = new Map();
+
+export const cachedGet = async (url, ttlMs = 30000) => {
+    const now = Date.now();
+    const cached = memoryCache.get(url);
+    if (cached && (now - cached.timestamp < ttlMs)) {
+        return cached.data;
+    }
+    const response = await api.get(url);
+    memoryCache.set(url, { timestamp: now, data: response.data });
+    return response.data;
+};
+
+export const clearCache = (urlPattern) => {
+    if (!urlPattern) {
+        memoryCache.clear();
+        return;
+    }
+    for (const key of memoryCache.keys()) {
+        if (key.includes(urlPattern)) {
+            memoryCache.delete(key);
+        }
+    }
+};
+
 export default api;

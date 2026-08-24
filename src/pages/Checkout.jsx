@@ -33,45 +33,62 @@ function Checkout() {
     const [paperCount, setPaperCount] = useState(500);
 
     useEffect(() => {
-        if (order?.blockLocation) {
-            api.get(`/printer/paper?blockLocation=${encodeURIComponent(order.blockLocation)}`)
-                .then(res => {
-                    if (res.data !== undefined && res.data !== null) {
-                        setPaperCount(Number(res.data));
-                    }
-                })
-                .catch(() => {});
-        }
-    }, [order?.blockLocation]);
-
-    useEffect(() => {
         const searchParams = new URLSearchParams(window.location.search);
         let orderIdParam = searchParams.get("orderId");
         if (!orderIdParam) {
             const match = window.location.pathname.match(/\/pay\/([^/?]+)/);
             if (match) orderIdParam = match[1];
         }
+        if (!orderIdParam && initialOrder?.orderId) {
+            orderIdParam = initialOrder.orderId;
+        }
 
         if (orderIdParam) {
-            api.get(`/pdf/order/${orderIdParam}`)
-                .then((res) => {
-                    if (res.data) {
-                        localStorage.setItem("order", JSON.stringify(res.data));
-                        setCurrentOrder(res.data);
-                        setFinalAmount(res.data.price || 0);
-                        if (res.data.nupLayout) setNupLayout(res.data.nupLayout);
+            // Fetch everything in 1 unified single compound HTTP call
+            api.get("/pdf/checkout-context", {
+                params: {
+                    orderId: orderIdParam,
+                    userId: userId || undefined
+                }
+            })
+            .then((res) => {
+                const data = res.data || {};
+                if (data.order) {
+                    localStorage.setItem("order", JSON.stringify(data.order));
+                    setCurrentOrder(data.order);
+                    setFinalAmount(data.order.price || 0);
+                    if (data.order.nupLayout) setNupLayout(data.order.nupLayout);
 
-                        if (res.data.paymentStatus === "PAID" || res.data.status === "QUEUE" || res.data.status === "PRINTING" || res.data.status === "COMPLETED") {
-                            navigate(`/payment-success?orderId=${res.data.orderId}`);
-                            return;
-                        }
+                    if (data.order.paymentStatus === "PAID" || data.order.status === "QUEUE" || data.order.status === "PRINTING" || data.order.status === "COMPLETED") {
+                        navigate(`/payment-success?orderId=${data.order.orderId}`);
+                        return;
                     }
-                })
-                .catch((err) => {
-                    console.error("Failed to fetch order from URL parameter:", err.message);
-                });
+                }
+                if (data.paperCount !== undefined) {
+                    setPaperCount(Number(data.paperCount));
+                }
+                if (data.walletBalance !== undefined) {
+                    setWalletBalance(Number(data.walletBalance));
+                }
+                if (data.systemSettings && data.systemSettings.referralEnabled !== undefined) {
+                    setReferralEnabled(data.systemSettings.referralEnabled);
+                }
+                if (data.printerAvailable === false) {
+                    setMaintenance(true);
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to load checkout context:", err.message);
+                // Fallback to local storage if network blips
+                if (initialOrder) {
+                    setCurrentOrder(initialOrder);
+                    setFinalAmount(initialOrder.price || 0);
+                }
+            });
+        } else if (initialOrder) {
+            setFinalAmount(initialOrder.price || 0);
         }
-    }, [navigate]);
+    }, [navigate, userId]);
 
     const updatePrintSettings = async (newNup) => {
         try {
@@ -93,7 +110,6 @@ function Checkout() {
             
             // Reapply coupon if already applied
             if (couponApplied) {
-                // If coupon validation needs to run again, or simply clear it:
                 setCouponApplied(false);
                 setCouponCode("");
                 setDiscount(0);
@@ -175,23 +191,6 @@ function Checkout() {
     const [autoPayTriggered, setAutoPayTriggered] = useState(false);
 
     useEffect(() => {
-        const queryParams = new URLSearchParams(window.location.search);
-        const paramOrderId = queryParams.get("orderId");
-        if (paramOrderId) {
-            api.get(`/pdf/order/${paramOrderId}`)
-                .then((res) => {
-                    if (res.data) {
-                        setCurrentOrder(res.data);
-                        localStorage.setItem("order", JSON.stringify(res.data));
-                        setFinalAmount(res.data.price || 0);
-                        setNupLayout(res.data.nupLayout || "1-up");
-                    }
-                })
-                .catch((err) => console.error("Failed to load order from query param:", err));
-        }
-    }, []);
-
-    useEffect(() => {
         if (currentOrder && currentOrder.orderId && !autoPayTriggered && !paymentMethod) {
             const searchParams = new URLSearchParams(window.location.search);
             if (searchParams.get("orderId")) {
@@ -202,46 +201,6 @@ function Checkout() {
             }
         }
     }, [currentOrder]);
-
-    useEffect(() => {
-        if (userId) {
-            getWalletBalance(userId).then(setWalletBalance);
-        }
-    }, [userId]);
-
-    useEffect(() => {
-        const fetchStatusAndPaper = async () => {
-            if (!order) return;
-            
-            // 1. Fetch global system settings
-            try {
-                const settingsRes = await api.get("/system/settings");
-                if (settingsRes.data && settingsRes.data.referralEnabled !== undefined) {
-                    setReferralEnabled(settingsRes.data.referralEnabled);
-                }
-            } catch (err) {
-                console.error("Failed to fetch system settings", err);
-            }
-
-            // 2. Fetch block location specific settings
-            if (order.blockLocation) {
-                try {
-                    const response = await api.get("/printer/paper", {
-                        params: { blockLocation: order.blockLocation }
-                    });
-                    setPaperCount(response.data != null ? response.data : 0);
-
-                    const statusRes = await api.get("/system/status", {
-                        params: { blockLocation: order.blockLocation }
-                    });
-                    setMaintenance(statusRes.data.maintenance || false);
-                } catch (err) {
-                    console.error("Failed to fetch status and paper count", err);
-                }
-            }
-        };
-        fetchStatusAndPaper();
-    }, [order]);
 
     let pagesPerCopy = order?.totalPages || 0;
     if (order?.selectedPages && order.selectedPages !== "ALL") {

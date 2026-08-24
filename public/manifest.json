@@ -1,0 +1,17 @@
+{
+  "short_name": "CloudPrint",
+  "name": "Cloud Print - University Smart Kiosk",
+  "description": "Instant, self-service campus cloud printing kiosk network",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/dashboard",
+  "background_color": "#020617",
+  "theme_color": "#0284c7",
+  "display": "standalone",
+  "orientation": "portrait"
+}

@@ -1314,7 +1314,7 @@ function AdminDashboard() {
         }
     };
 
-    // Rewards & Voucher API calls
+    // Rewards & Voucher API calls (Manual Refresh Only)
     const [rewardsLoading, setRewardsLoading] = useState(false);
     const prevRewardsHashRef = useRef("");
     const fetchRewards = async (showSpinner = false) => {
@@ -1327,8 +1327,14 @@ function AdminDashboard() {
                 prevRewardsHashRef.current = hash;
                 setRewards(data);
             }
+            if (showSpinner) {
+                showAlert("Vouchers Updated", `Fetched ${data.length} reward voucher(s).`, "success");
+            }
         } catch (err) {
             console.error("Failed to fetch rewards", err);
+            if (showSpinner) {
+                showAlert("Refresh Failed", "Could not fetch updated vouchers.", "error");
+            }
         } finally {
             if (showSpinner) setRewardsLoading(false);
         }
@@ -1386,11 +1392,14 @@ function AdminDashboard() {
                 await api.delete("/rewards/delete", {
                     params: { id }
                 });
+                setRewards(prev => prev.filter(r => r.id !== id));
                 showAlert("Success", "Reward voucher deleted successfully", "success");
                 fetchRewards();
             } catch (err) {
-                console.error(err);
-                showAlert("Error", "Failed to delete reward voucher", "error");
+                console.error("Delete reward error:", err);
+                const msg = err.response?.data?.message || (typeof err.response?.data === "string" ? err.response.data : "Failed to delete reward voucher");
+                showAlert("Error", msg, "error");
+                fetchRewards();
             }
         });
     };
@@ -5240,9 +5249,9 @@ function AdminDashboard() {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <p className="eyebrow !mb-0">Active Vouchers</p>
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200">
-                                                    <span>📋</span>
-                                                    Synced On Demand
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">
+                                                    <span>👆</span>
+                                                    Manual Refresh Only
                                                 </span>
                                             </div>
                                             <h2 className="text-2xl font-black text-slate-900">Vouchers Directory ({rewards.length})</h2>
@@ -5271,11 +5280,12 @@ function AdminDashboard() {
                                             <button
                                                 type="button"
                                                 onClick={() => fetchRewards(true)}
-                                                className="btn secondary text-xs px-3 py-1.5 flex items-center gap-1.5 cursor-pointer"
-                                                title="Refresh vouchers list"
+                                                disabled={rewardsLoading}
+                                                className="btn secondary text-xs px-3.5 py-1.5 flex items-center gap-1.5 cursor-pointer font-bold disabled:opacity-50"
+                                                title="Tap to refresh vouchers list"
                                             >
                                                 <span className={rewardsLoading ? "animate-spin inline-block" : ""}>🔄</span>
-                                                <span>Refresh</span>
+                                                <span>{rewardsLoading ? "Refreshing..." : "Refresh"}</span>
                                             </button>
                                             <button onClick={() => setPricingSubTab("voucher-gen")} className="btn primary text-xs px-3 py-1.5">
                                                 ➕ New Voucher
