@@ -503,19 +503,24 @@ function Checkout() {
             setFinalAmount(finalPrice);
             setCouponApplied(true);
 
-            await api.post("/pdf/updatePrice", null, {
-                params: {
-                    orderId: order.orderId,
-                    price: finalPrice,
-                    originalPrice: order.price,
-                    discountAmount: discountAmount
-                }
-            });
+            await Promise.all([
+                api.post("/pdf/updatePrice", null, {
+                    params: {
+                        orderId: order.orderId,
+                        price: finalPrice,
+                        originalPrice: order.price,
+                        discountAmount: discountAmount
+                    }
+                }),
+                api.post("/coupon/use", null, {
+                    params: { couponCode: couponCode.trim() }
+                }).catch(err => console.error("Failed to mark coupon as used on application:", err))
+            ]);
 
             showAlert("Success", "Coupon Applied Successfully", "success");
         } catch (error) {
             console.error(error);
-            showAlert("Invalid Coupon", "The entered coupon code is invalid or expired.", "error");
+            showAlert("Invalid Coupon", error.response?.data || "The entered coupon code is invalid, expired, or already used.", "error");
         }
     };
 
@@ -544,6 +549,7 @@ function Checkout() {
                 <Navbar
                     title="Checkout"
                     subtitle="Secure Payment"
+                    walletBalance={walletBalance}
                     actions={[
                         { label: "Edit Order", path: "/dashboard", className: "btn secondary" }
                     ]}

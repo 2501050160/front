@@ -215,7 +215,7 @@ function MyOrders() {
                 <Navbar
                     title="My Orders"
                     subtitle="Order History"
-                    badge={`Wallet Rs. ${walletBalance}`}
+                    walletBalance={walletBalance}
                     actions={[
                         { label: "New Print", path: "/dashboard" },
                         { label: "Back", path: "/dashboard", className: "btn secondary" }
@@ -346,7 +346,7 @@ function MyOrders() {
                                                 </button>
                                             )}
 
-                                            {order.paymentStatus === "PAID" && (
+                                            {order.status === "COMPLETED" && (
                                                 <button
                                                     onClick={async () => {
                                                         try {
@@ -466,7 +466,7 @@ function MyOrders() {
                                             </div>
                                         </td>
                                         <td>
-                                            {order.paymentStatus === "PAID" && (
+                                            {order.status === "COMPLETED" && (
                                                 <button
                                                     onClick={async () => {
                                                         try {

@@ -215,6 +215,11 @@ function AdminDashboard() {
     const [isCreatingSubAdmin, setIsCreatingSubAdmin] = useState(false);
     const [managerLogs, setManagerLogs] = useState([]);
 
+    // Hardware & Low Paper Alerts state
+    const [hardwareAlerts, setHardwareAlerts] = useState([]);
+    const [showHardwareAlertsModal, setShowHardwareAlertsModal] = useState(false);
+    const [refillingBlock, setRefillingBlock] = useState(null);
+
     // Notifications management states
     const [notifications, setNotifications] = useState([]);
     const [notifTitle, setNotifTitle] = useState("");
@@ -1874,6 +1879,39 @@ function AdminDashboard() {
         }
     };
 
+    const fetchHardwareAlerts = async () => {
+        try {
+            const response = await api.get("/printer/alerts/pending");
+            setHardwareAlerts(response.data || []);
+        } catch (e) {
+            // ignore network err
+        }
+    };
+
+    const handleAcknowledgeAlert = async (alertId) => {
+        try {
+            await api.post(`/printer/alerts/ack?id=${alertId}`);
+            fetchHardwareAlerts();
+        } catch (e) {}
+    };
+
+    const lowPaperPrinters = useMemo(() => {
+        return (allPrinters || []).filter(p => {
+            if ((loggedInAdminRole === "SUB_ADMIN" || loggedInAdminRole === "MANAGER") && loggedInAdminUser !== "admin") {
+                const b = allBlocks.find(x => x.name === p.blockLocation);
+                if (b && b.college && b.college.toUpperCase() !== loggedInAdminCollege.toUpperCase()) {
+                    return false;
+                }
+            }
+            const count = p.paperCount != null ? p.paperCount : 500;
+            return count <= 50;
+        });
+    }, [allPrinters, allBlocks, loggedInAdminRole, loggedInAdminUser, loggedInAdminCollege]);
+
+    const outOfPaperPrinters = useMemo(() => {
+        return lowPaperPrinters.filter(p => (p.paperCount != null ? p.paperCount : 500) <= 0);
+    }, [lowPaperPrinters]);
+
     const updatePrinterPaper = async (blockLoc, count) => {
         try {
             await api.post("/printer/updatePaper", null, {
@@ -2565,22 +2603,28 @@ function AdminDashboard() {
         }
     }, [searchParams]);
 
-    // Live auto-refresh polling for vouchers, rewards, and pricing/coupons in real-time
+    // Fetch vouchers, rewards, and pricing/coupons on tab/subtab changes (No continuous 2s polling)
     useEffect(() => {
-        fetchRewards();
         if (activeTab === "settings") {
+            if (pricingSubTab === "active-vouchers" || pricingSubTab === "voucher-gen") {
+                fetchRewards();
+            }
             fetchCoupons();
         }
-
-        const interval = setInterval(() => {
-            fetchRewards();
-            if (activeTab === "settings") {
-                fetchCoupons();
-            }
-        }, 2000);
-
-        return () => clearInterval(interval);
     }, [activeTab, pricingSubTab]);
+
+    // Hardware & Printer Health monitoring (every 15 seconds)
+    useEffect(() => {
+        fetchPrinters();
+        fetchHardwareAlerts();
+        const interval = setInterval(() => {
+            if (document.visibilityState === "visible") {
+                fetchPrinters();
+                fetchHardwareAlerts();
+            }
+        }, 15000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <main className="page-shell page-shell-decorated !px-0 !py-0 admin-dashboard-root flex flex-row min-h-screen w-full relative">
@@ -2641,15 +2685,23 @@ function AdminDashboard() {
                             <div className={`space-y-1 ${isSidebarCollapsed ? "flex flex-col items-center" : ""}`}>
                                 <button
                                     onClick={() => handleTabChange("queue")}
-                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left ${
+                                    className={`${isSidebarCollapsed ? "w-10 h-10 justify-center p-0" : "w-full justify-start px-3 py-2"} flex items-center gap-3 rounded-xl text-xs font-bold transition-all cursor-pointer text-left relative ${
                                         activeTab === "queue"
                                             ? "bg-sky-500 text-white font-black shadow-md shadow-sky-500/25"
                                             : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                     }`}
-                                    title={isSidebarCollapsed ? "Queue & Analytics" : undefined}
+                                    title={isSidebarCollapsed ? `Queue & Analytics ${lowPaperPrinters.length > 0 ? `(${lowPaperPrinters.length} Low Paper)` : ""}` : undefined}
                                 >
                                     <span className="text-base">📋</span>
                                     {!isSidebarCollapsed && <span>Queue & Analytics</span>}
+                                    {!isSidebarCollapsed && lowPaperPrinters.length > 0 && (
+                                        <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 animate-pulse shadow-sm flex items-center gap-1">
+                                            <span>⚠️</span> {lowPaperPrinters.length}
+                                        </span>
+                                    )}
+                                    {isSidebarCollapsed && lowPaperPrinters.length > 0 && (
+                                        <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse border border-white"></span>
+                                    )}
                                 </button>
 
                                 <button
@@ -2974,8 +3026,35 @@ function AdminDashboard() {
                         )}
                     </div>
 
-                    {/* Right Header Actions: Display Panel + Profile Sign Out Dropdown */}
+                    {/* Right Header Actions: Hardware Alerts + Display Panel + Profile Sign Out Dropdown */}
                     <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
+                        {/* Hardware Alerts Bell & Quick Refill Button */}
+                        <button
+                            onClick={() => setShowHardwareAlertsModal(true)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95 border ${
+                                outOfPaperPrinters.length > 0
+                                    ? "bg-rose-500 text-white border-rose-600 animate-pulse shadow-rose-500/30"
+                                    : lowPaperPrinters.length > 0
+                                    ? "bg-amber-500 text-slate-950 border-amber-600 font-black shadow-amber-500/30"
+                                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                            }`}
+                            title="Hardware & Paper Supply Alerts"
+                        >
+                            <span>{outOfPaperPrinters.length > 0 ? "🚨" : lowPaperPrinters.length > 0 ? "⚠️" : "🔔"}</span>
+                            <span className="hidden sm:inline">
+                                {outOfPaperPrinters.length > 0 
+                                    ? `${outOfPaperPrinters.length} Empty Kiosk${outOfPaperPrinters.length > 1 ? 's' : ''}!` 
+                                    : lowPaperPrinters.length > 0 
+                                    ? `${lowPaperPrinters.length} Low Paper` 
+                                    : "Hardware Alerts"}
+                            </span>
+                            {lowPaperPrinters.length > 0 && (
+                                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-black text-white">
+                                    {lowPaperPrinters.length}
+                                </span>
+                            )}
+                        </button>
+
                         <button
                             onClick={() => navigate("/display-panel")}
                             className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 hover:from-sky-500/20 hover:to-indigo-500/20 text-slate-800 hover:text-sky-700 border border-sky-200/80 hover:border-sky-300 text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
@@ -3044,6 +3123,58 @@ function AdminDashboard() {
                         </div>
                     </div>
                 </header>
+
+                {/* Critical & Low Paper Supplies Top Notification Banner */}
+                {lowPaperPrinters.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`mb-6 rounded-2xl p-4 border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg ${
+                            outOfPaperPrinters.length > 0
+                                ? "bg-gradient-to-r from-rose-950 via-rose-900 to-slate-950 text-white border-rose-500/50 shadow-rose-900/20"
+                                : "bg-gradient-to-r from-amber-950 via-amber-900 to-slate-950 text-white border-amber-500/50 shadow-amber-900/20"
+                        }`}
+                    >
+                        <div className="flex items-center gap-3.5">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${
+                                outOfPaperPrinters.length > 0 ? "bg-rose-500/30 border border-rose-400/40 text-rose-300 animate-bounce" : "bg-amber-500/30 border border-amber-400/40 text-amber-300 animate-pulse"
+                            }`}>
+                                {outOfPaperPrinters.length > 0 ? "🚨" : "⚠️"}
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-black tracking-wide flex items-center gap-2">
+                                    <span>{outOfPaperPrinters.length > 0 ? "CRITICAL: PRINTER OUT OF PAPER" : "HARDWARE ALERT: LOW PAPER LEVEL"}</span>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-white/20 uppercase tracking-widest">
+                                        {lowPaperPrinters.length} Terminal{lowPaperPrinters.length > 1 ? 's' : ''} Affected
+                                    </span>
+                                </h4>
+                                <p className="text-xs text-slate-200 mt-0.5">
+                                    {lowPaperPrinters.map(p => `${p.blockLocation} (${p.paperCount != null ? p.paperCount : 0} sheets left)`).join(", ")}. Refill immediately to avoid printing interruptions.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 shrink-0 self-end md:self-auto">
+                            {lowPaperPrinters.map(p => (
+                                <button
+                                    key={p.id || p.blockLocation}
+                                    type="button"
+                                    onClick={() => updatePrinterPaper(p.blockLocation, 500)}
+                                    className="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1"
+                                    title={`Refill ${p.blockLocation} to 500 sheets`}
+                                >
+                                    <span>⚡</span> Refill {p.blockLocation} (500)
+                                </button>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => setShowHardwareAlertsModal(true)}
+                                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer"
+                            >
+                                Details & Refill Modal →
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Queue & Analytics Tab */}
                 {(activeTab === "queue" || activeTab === "order-queue") && (
@@ -4314,22 +4445,33 @@ function AdminDashboard() {
                                             <div className="space-y-4">
                                                 <div>
                                                     <span className="mb-2 block text-sm font-black text-slate-700">Coupon Code</span>
-                                                    <div className="flex gap-2">
+                                                    <div className="flex flex-wrap gap-2">
                                                         <input
                                                             type="text"
-                                                            placeholder="e.g. SEMEXAM50, FESTIVE25"
+                                                            placeholder="e.g. 192313, SEMEXAM50, FESTIVE25"
                                                             value={couponCode}
                                                             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                                            className="field uppercase font-mono font-black tracking-wider"
+                                                            className="field uppercase font-mono font-black tracking-wider flex-1 min-w-[160px]"
                                                         />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setCouponCode(String(Math.floor(100000 + Math.random() * 900000)))}
+                                                            className="btn secondary shrink-0 text-xs px-3"
+                                                            title="Generate random 6-digit code"
+                                                        >
+                                                            🎲 6-Digit Code
+                                                        </button>
                                                         <button 
                                                             type="button" 
                                                             onClick={() => setCouponCode(`PRINT${Math.floor(1000 + Math.random() * 9000)}`)}
                                                             className="btn secondary shrink-0 text-xs px-3"
                                                         >
-                                                            🎲 Random
+                                                            🏷️ Promo Code
                                                         </button>
                                                     </div>
+                                                    <p className="text-[11px] text-slate-400 mt-1">
+                                                        Single-use code: Students can apply this at checkout for discount or redeem once.
+                                                    </p>
                                                 </div>
 
                                                 <div>
@@ -4525,22 +4667,33 @@ function AdminDashboard() {
                                             <div className="space-y-4">
                                                 <div>
                                                     <span className="mb-2 block text-sm font-black text-slate-700">Coupon Code</span>
-                                                    <div className="flex gap-2">
+                                                    <div className="flex flex-wrap gap-2">
                                                         <input
                                                             type="text"
-                                                            placeholder="e.g. FLAT20, SAVE50"
+                                                            placeholder="e.g. 192313, SAVE50, FLAT20"
                                                             value={flatCouponCode}
                                                             onChange={(e) => setFlatCouponCode(e.target.value.toUpperCase())}
-                                                            className="field uppercase font-mono font-black tracking-wider"
+                                                            className="field uppercase font-mono font-black tracking-wider flex-1 min-w-[160px]"
                                                         />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setFlatCouponCode(String(Math.floor(100000 + Math.random() * 900000)))}
+                                                            className="btn secondary shrink-0 text-xs px-3"
+                                                            title="Generate random 6-digit single-use code"
+                                                        >
+                                                            🎲 6-Digit Code
+                                                        </button>
                                                         <button 
                                                             type="button" 
                                                             onClick={() => setFlatCouponCode(`SAVE${Math.floor(1000 + Math.random() * 9000)}`)}
                                                             className="btn secondary shrink-0 text-xs px-3"
                                                         >
-                                                            🎲 Random
+                                                            🏷️ Promo Code
                                                         </button>
                                                     </div>
+                                                    <p className="text-[11px] text-slate-400 mt-1">
+                                                        Single-use code: Students can redeem it <strong>either as direct wallet credit or print checkout discount</strong> (only once).
+                                                    </p>
                                                 </div>
 
                                                 <div>
@@ -4552,7 +4705,7 @@ function AdminDashboard() {
                                                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
                                                         <input
                                                             type="number"
-                                                            placeholder="Discount in ₹ (e.g. 20)"
+                                                            placeholder="Discount in ₹ (e.g. 2 or 10)"
                                                             value={flatDiscountAmount}
                                                             onChange={(e) => setFlatDiscountAmount(e.target.value)}
                                                             className="field pl-8"
@@ -4560,7 +4713,7 @@ function AdminDashboard() {
                                                         />
                                                     </div>
                                                     <div className="flex flex-wrap gap-1.5 mt-2">
-                                                        {[5, 10, 20, 30, 50, 100].map(val => (
+                                                        {[2, 5, 10, 20, 30, 50, 100].map(val => (
                                                             <button
                                                                 key={val}
                                                                 type="button"
@@ -4925,25 +5078,27 @@ function AdminDashboard() {
                                         </div>
                                     </div>
                                     <form onSubmit={createReward} className="space-y-4">
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1">Voucher Title</span>
-                                            <input type="text" className="field" placeholder="e.g. Welcome Bonus, Festival Treat" value={rewardTitle} onChange={(e) => setRewardTitle(e.target.value)} required />
-                                        </label>
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1">Voucher Description</span>
-                                            <input type="text" className="field" placeholder="e.g. Earn Rs. 50 wallet credits instantly" value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} required />
-                                        </label>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1">Voucher Title</span>
+                                                <input type="text" className="field" placeholder="e.g. Welcome Bonus, Single Refund" value={rewardTitle} onChange={(e) => setRewardTitle(e.target.value)} required />
+                                            </label>
+                                            <label className="block">
+                                                <span className="block text-xs font-black text-slate-700 mb-1">Voucher Description</span>
+                                                <input type="text" className="field" placeholder="e.g. Earn Rs. 2 wallet credit instantly" value={rewardDesc} onChange={(e) => setRewardDesc(e.target.value)} required />
+                                            </label>
+                                        </div>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div>
                                                 <span className="block text-xs font-black text-slate-700 mb-1">Reward Amount (₹)</span>
-                                                <input type="number" className="field" placeholder="e.g. 50" value={rewardAmt} onChange={(e) => setRewardAmt(e.target.value)} required min="1" />
-                                                <div className="flex gap-1.5 mt-2">
-                                                    {[20, 50, 100, 200, 500].map(val => (
+                                                <input type="number" className="field" placeholder="e.g. 2 or 10" value={rewardAmt} onChange={(e) => setRewardAmt(e.target.value)} required min="1" />
+                                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                                    {[2, 5, 10, 20, 50, 100, 200, 500].map(val => (
                                                         <button
                                                             key={val}
                                                             type="button"
                                                             onClick={() => setRewardAmt(val.toString())}
-                                                            className={`px-2 py-0.5 rounded text-[11px] font-black border transition-all cursor-pointer ${
+                                                            className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
                                                                 rewardAmt === val.toString()
                                                                     ? "bg-emerald-600 text-white border-emerald-600"
                                                                     : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
@@ -4956,30 +5111,59 @@ function AdminDashboard() {
                                             </div>
                                             <div>
                                                 <span className="block text-xs font-black text-slate-700 mb-1">Voucher Code (uppercase)</span>
-                                                <div className="flex gap-2">
+                                                <div className="flex flex-wrap gap-2">
                                                     <input 
                                                         type="text" 
-                                                        className="field uppercase tracking-wider font-mono font-black" 
-                                                        placeholder="e.g. BONUS50" 
+                                                        className="field uppercase tracking-wider font-mono font-black flex-1 min-w-[140px]" 
+                                                        placeholder="e.g. 192313, BONUS50" 
                                                         value={rewardCode} 
                                                         onChange={(e) => setRewardCode(e.target.value.toUpperCase())} 
                                                         required 
                                                     />
                                                     <button 
                                                         type="button" 
+                                                        onClick={() => setRewardCode(String(Math.floor(100000 + Math.random() * 900000)))}
+                                                        className="btn secondary shrink-0 text-xs px-3 cursor-pointer"
+                                                        title="Generate random 6-digit single-use numeric code"
+                                                    >
+                                                        🎲 6-Digit Code
+                                                    </button>
+                                                    <button 
+                                                        type="button" 
                                                         onClick={() => setRewardCode(`BONUS${Math.floor(1000 + Math.random() * 9000)}`)}
                                                         className="btn secondary shrink-0 text-xs px-3 cursor-pointer"
-                                                        title="Generate Random Voucher Code"
                                                     >
-                                                        🎲 Random
+                                                        🎁 Promo Code
                                                     </button>
                                                 </div>
+                                                <p className="text-[11px] text-slate-400 mt-1">
+                                                    Single-use code: Can be claimed <strong>only once</strong> (either into wallet balance or at print checkout).
+                                                </p>
                                             </div>
                                         </div>
-                                        <label className="block">
-                                            <span className="block text-xs font-black text-slate-700 mb-1">Max Claims allowed</span>
-                                            <input type="number" className="field" value={rewardMaxClaims} onChange={(e) => setRewardMaxClaims(e.target.value)} required />
-                                        </label>
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="block text-xs font-black text-slate-700">Max Claims allowed</span>
+                                                <span className="text-[11px] font-bold text-slate-500">{rewardMaxClaims === "1" || rewardMaxClaims === 1 ? "Single-Use per Student" : `${rewardMaxClaims} Claims`}</span>
+                                            </div>
+                                            <input type="number" className="field" value={rewardMaxClaims} onChange={(e) => setRewardMaxClaims(e.target.value)} required min="1" />
+                                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                                {[1, 5, 10, 25, 50, 100].map(cnt => (
+                                                    <button
+                                                        key={cnt}
+                                                        type="button"
+                                                        onClick={() => setRewardMaxClaims(cnt.toString())}
+                                                        className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                                                            rewardMaxClaims === cnt.toString()
+                                                                ? "bg-sky-600 text-white border-sky-600 shadow-sm"
+                                                                : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                                                        }`}
+                                                    >
+                                                        {cnt === 1 ? "1 (Single-Use)" : `${cnt} Uses`}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <button type="submit" className="btn success w-full mt-4" disabled={creatingReward}>
                                             {creatingReward ? "Creating Voucher..." : "🎁 Generate Reward Voucher"}
                                         </button>
@@ -5056,14 +5240,34 @@ function AdminDashboard() {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <p className="eyebrow !mb-0">Active Vouchers</p>
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                                    Live Sync (2s)
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200">
+                                                    <span>📋</span>
+                                                    Synced On Demand
                                                 </span>
                                             </div>
                                             <h2 className="text-2xl font-black text-slate-900">Vouchers Directory ({rewards.length})</h2>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => exportToCSV(
+                                                    rewards.map(r => ({
+                                                        "Voucher Code": r.claimCode,
+                                                        "Title": r.title,
+                                                        "Amount (Rs)": r.rewardAmount,
+                                                        "Claimed Count": r.claimedCount || 0,
+                                                        "Max Claims": r.maxClaims || 1,
+                                                        "Status": r.active ? "Active" : "Inactive"
+                                                    })),
+                                                    "vouchers_directory",
+                                                    ["Voucher Code", "Title", "Amount (Rs)", "Claimed Count", "Max Claims", "Status"]
+                                                )}
+                                                className="btn secondary text-xs px-3 py-1.5 flex items-center gap-1.5 cursor-pointer"
+                                                title="Export Vouchers to CSV"
+                                            >
+                                                <span>📥</span>
+                                                <span>Export CSV</span>
+                                            </button>
                                             <button
                                                 type="button"
                                                 onClick={() => fetchRewards(true)}
@@ -7137,12 +7341,21 @@ function AdminDashboard() {
                                                     .map((blk) => {
                                                         const blkName = blk.name;
                                                         const bRule = otpRules.blockRules?.[blkName] || {};
-                                                        const webVal = bRule.webOtp;
-                                                        const waVal = bRule.whatsappOtp;
+                                                        const rawWeb = bRule.webOtp;
+                                                        const rawWa = bRule.whatsappOtp;
 
-                                                        // Default to true (OTP Required) if undefined
-                                                        const isWebOtpReq = webVal !== false;
-                                                        const isWaOtpReq = waVal !== false;
+                                                        let selectedWebMode = "INHERIT";
+                                                        if (rawWeb === "REQUIRED" || rawWeb === true) selectedWebMode = "REQUIRED";
+                                                        else if (rawWeb === "BYPASS" || rawWeb === false) selectedWebMode = "BYPASS";
+                                                        else selectedWebMode = "INHERIT";
+
+                                                        let selectedWaMode = "INHERIT";
+                                                        if (rawWa === "REQUIRED" || rawWa === true) selectedWaMode = "REQUIRED";
+                                                        else if (rawWa === "BYPASS" || rawWa === false) selectedWaMode = "BYPASS";
+                                                        else selectedWaMode = "INHERIT";
+
+                                                        const effectiveWebOtp = selectedWebMode === "INHERIT" ? Boolean(otpRules.webOtpRequired) : selectedWebMode === "REQUIRED";
+                                                        const effectiveWaOtp = selectedWaMode === "INHERIT" ? Boolean(otpRules.whatsappOtpRequired) : selectedWaMode === "REQUIRED";
 
                                                         return (
                                                             <tr key={blk.id || blkName}>
@@ -7156,55 +7369,61 @@ function AdminDashboard() {
                                                                 </td>
                                                                 <td>
                                                                     <select
-                                                                        value={isWebOtpReq ? "REQUIRED" : "BYPASS"}
+                                                                        value={selectedWebMode}
                                                                         onChange={(e) => {
-                                                                            const isReq = e.target.value === "REQUIRED";
+                                                                            const val = e.target.value;
                                                                             setOtpRules(prev => ({
                                                                                 ...prev,
                                                                                 blockRules: {
                                                                                     ...prev.blockRules,
                                                                                     [blkName]: {
-                                                                                        ...(prev.blockRules?.[blkName] || { webOtp: true, whatsappOtp: true }),
-                                                                                        webOtp: isReq
+                                                                                        ...(prev.blockRules?.[blkName] || {}),
+                                                                                        webOtp: val
                                                                                     }
                                                                                 }
                                                                             }));
                                                                         }}
                                                                         className="field !w-auto text-xs py-1.5 px-3 font-bold bg-white border border-slate-300 rounded-lg text-slate-800 cursor-pointer shadow-xs"
                                                                     >
-                                                                        <option value="REQUIRED">🔒 OTP Required (Default)</option>
-                                                                        <option value="BYPASS">⚡ Direct Print (Instant Spool)</option>
+                                                                        <option value="INHERIT">⚙️ Inherit Default ({otpRules.webOtpRequired ? "🔒 OTP" : "⚡ Direct"})</option>
+                                                                        <option value="REQUIRED">🔒 Force OTP Required</option>
+                                                                        <option value="BYPASS">⚡ Force Direct Print (Bypass)</option>
                                                                     </select>
                                                                 </td>
                                                                 <td>
                                                                     <select
-                                                                        value={isWaOtpReq ? "REQUIRED" : "BYPASS"}
+                                                                        value={selectedWaMode}
                                                                         onChange={(e) => {
-                                                                            const isReq = e.target.value === "REQUIRED";
+                                                                            const val = e.target.value;
                                                                             setOtpRules(prev => ({
                                                                                 ...prev,
                                                                                 blockRules: {
                                                                                     ...prev.blockRules,
                                                                                     [blkName]: {
-                                                                                        ...(prev.blockRules?.[blkName] || { webOtp: true, whatsappOtp: true }),
-                                                                                        whatsappOtp: isReq
+                                                                                        ...(prev.blockRules?.[blkName] || {}),
+                                                                                        whatsappOtp: val
                                                                                     }
                                                                                 }
                                                                             }));
                                                                         }}
                                                                         className="field !w-auto text-xs py-1.5 px-3 font-bold bg-white border border-slate-300 rounded-lg text-slate-800 cursor-pointer shadow-xs"
                                                                     >
-                                                                        <option value="REQUIRED">🔒 OTP Required (Default)</option>
-                                                                        <option value="BYPASS">⚡ Direct Print (Instant Spool)</option>
+                                                                        <option value="INHERIT">⚙️ Inherit Default ({otpRules.whatsappOtpRequired ? "🔒 OTP" : "⚡ Direct"})</option>
+                                                                        <option value="REQUIRED">🔒 Force OTP Required</option>
+                                                                        <option value="BYPASS">⚡ Force Direct Print (Bypass)</option>
                                                                     </select>
                                                                 </td>
                                                                 <td>
                                                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${isWebOtpReq ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
-                                                                            Web: {isWebOtpReq ? "🔒 OTP" : "⚡ DIRECT"}
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${
+                                                                            effectiveWebOtp ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-amber-50 text-amber-800 border-amber-200"
+                                                                        }`}>
+                                                                            Web: {effectiveWebOtp ? "🔒 OTP" : "⚡ DIRECT"} {selectedWebMode === "INHERIT" ? "(Inherited)" : ""}
                                                                         </span>
-                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${isWaOtpReq ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200"}`}>
-                                                                            WA: {isWaOtpReq ? "🔒 OTP" : "⚡ DIRECT"}
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${
+                                                                            effectiveWaOtp ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200"
+                                                                        }`}>
+                                                                            WA: {effectiveWaOtp ? "🔒 OTP" : "⚡ DIRECT"} {selectedWaMode === "INHERIT" ? "(Inherited)" : ""}
                                                                         </span>
                                                                     </div>
                                                                 </td>
@@ -8085,6 +8304,190 @@ function AdminDashboard() {
                                 className="px-6 py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-md transition-all cursor-pointer"
                             >
                                 Confirm & Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Hardware & Paper Supplies Live Alert Modal */}
+            {showHardwareAlertsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 text-left animate-fadeIn max-h-[90vh] flex flex-col">
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-3 rounded-2xl ${outOfPaperPrinters.length > 0 ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"}`}>
+                                    <span className="text-2xl">{outOfPaperPrinters.length > 0 ? "🚨" : "📄"}</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900">Hardware & Paper Supplies</h3>
+                                    <p className="text-xs text-slate-500 font-semibold">Monitor tray sheet levels, hardware alerts, and trigger quick refills</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowHardwareAlertsModal(false)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer text-sm font-black"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+                            {/* Summary stats */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Kiosks</p>
+                                    <p className="text-xl font-black text-slate-900 mt-0.5">{allPrinters.length}</p>
+                                </div>
+                                <div className={`p-3.5 rounded-2xl border text-center ${lowPaperPrinters.length > 0 ? "bg-amber-50/80 border-amber-200" : "bg-slate-50 border-slate-100"}`}>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Low Paper (&lt;=50)</p>
+                                    <p className="text-xl font-black text-amber-600 mt-0.5">{lowPaperPrinters.length}</p>
+                                </div>
+                                <div className={`p-3.5 rounded-2xl border text-center ${outOfPaperPrinters.length > 0 ? "bg-rose-50/80 border-rose-200" : "bg-slate-50 border-slate-100"}`}>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-rose-700">Out of Paper (0)</p>
+                                    <p className="text-xl font-black text-rose-600 mt-0.5">{outOfPaperPrinters.length}</p>
+                                </div>
+                            </div>
+
+                            {/* Printer Kiosks List */}
+                            <div className="space-y-3 mt-4">
+                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Printer Tray Paper Status</h4>
+                                {allPrinters.length === 0 ? (
+                                    <p className="text-xs text-slate-400 italic">No printer kiosks configured yet.</p>
+                                ) : (
+                                    allPrinters.map(printer => {
+                                        const count = printer.paperCount != null ? printer.paperCount : 500;
+                                        const isLow = count <= 50;
+                                        const isEmpty = count <= 0;
+                                        const pct = Math.min(100, Math.max(0, Math.round((count / 500) * 100)));
+
+                                        return (
+                                            <div
+                                                key={printer.id || printer.blockLocation}
+                                                className={`p-4 rounded-2xl border transition-all ${
+                                                    isEmpty
+                                                        ? "bg-rose-50/60 border-rose-300 shadow-sm"
+                                                        : isLow
+                                                        ? "bg-amber-50/60 border-amber-300 shadow-sm"
+                                                        : "bg-slate-50 border-slate-200"
+                                                }`}
+                                            >
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-black text-sm text-slate-900">{printer.blockLocation}</span>
+                                                            <span className="text-xs text-slate-500 font-medium">({printer.printerName || "Kiosk"})</span>
+                                                            {isEmpty ? (
+                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">EMPTY</span>
+                                                            ) : isLow ? (
+                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">LOW PAPER</span>
+                                                            ) : (
+                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">HEALTHY</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-slate-500 mt-0.5">
+                                                            IP: <span className="font-mono">{printer.printerIp || "192.168.1.100"}</span> · Status: {printer.maintenance ? "🔧 Maintenance" : "🟢 Ready"}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                                        <button
+                                                            type="button"
+                                                            disabled={refillingBlock === printer.blockLocation}
+                                                            onClick={async () => {
+                                                                setRefillingBlock(printer.blockLocation);
+                                                                await updatePrinterPaper(printer.blockLocation, 500);
+                                                                setRefillingBlock(null);
+                                                            }}
+                                                            className="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-sm active:scale-95 cursor-pointer flex items-center gap-1"
+                                                            title="Refill tray to full 500 sheets"
+                                                        >
+                                                            <span>⚡</span> {refillingBlock === printer.blockLocation ? "Refilling..." : "Refill 500"}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                const custom = window.prompt(`Enter exact sheets count for ${printer.blockLocation}:`, String(count));
+                                                                if (custom !== null && !isNaN(Number(custom))) {
+                                                                    await updatePrinterPaper(printer.blockLocation, Number(custom));
+                                                                }
+                                                            }}
+                                                            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-800 transition-all cursor-pointer"
+                                                        >
+                                                            Custom
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Paper Level Progress Bar */}
+                                                <div className="mt-3">
+                                                    <div className="flex justify-between text-[11px] font-bold mb-1">
+                                                        <span className="text-slate-500">Paper Level:</span>
+                                                        <span className={isEmpty ? "text-rose-600" : isLow ? "text-amber-600" : "text-emerald-700"}>
+                                                            {count} / 500 Sheets ({pct}%)
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                                                        <div
+                                                            className={`h-full transition-all duration-500 ${
+                                                                isEmpty ? "bg-rose-500" : isLow ? "bg-amber-500" : "bg-emerald-500"
+                                                            }`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            {/* Pending System Alerts */}
+                            {hardwareAlerts.length > 0 && (
+                                <div className="space-y-2 mt-6 pt-4 border-t border-slate-100">
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                                        <span>System Hardware Logs ({hardwareAlerts.length})</span>
+                                    </h4>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                                        {hardwareAlerts.map(alert => (
+                                            <div key={alert.id} className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between gap-2">
+                                                <div>
+                                                    <p className="font-bold text-slate-800">{alert.printerName || alert.blockLocation} · <span className="font-mono text-rose-600">{alert.issueType}</span></p>
+                                                    <p className="text-slate-500 text-[11px]">{alert.details}</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAcknowledgeAlert(alert.id)}
+                                                    className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer shrink-0"
+                                                >
+                                                    ✓ Ack
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4 shrink-0">
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    for (const p of lowPaperPrinters) {
+                                        await updatePrinterPaper(p.blockLocation, 500);
+                                    }
+                                }}
+                                disabled={lowPaperPrinters.length === 0}
+                                className="px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shadow-md"
+                            >
+                                ⚡ Refill All Low Paper Trays (500 Sheets)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowHardwareAlertsModal(false)}
+                                className="px-5 py-2 rounded-xl font-bold text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                            >
+                                Close
                             </button>
                         </div>
                     </div>

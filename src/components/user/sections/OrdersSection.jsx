@@ -175,13 +175,15 @@ export function OrdersSection({
                                                 </button>
 
                                                 {/* Invoice */}
-                                                <button
-                                                    onClick={() => setSelectedInvoiceOrder(order)}
-                                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 transition-all cursor-pointer"
-                                                    title="View Digital Receipt"
-                                                >
-                                                    <Receipt className="w-3.5 h-3.5" />
-                                                </button>
+                                                {order.status === "COMPLETED" && (
+                                                    <button
+                                                        onClick={() => setSelectedInvoiceOrder(order)}
+                                                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 transition-all cursor-pointer"
+                                                        title="View Digital Receipt"
+                                                    >
+                                                        <Receipt className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -18,13 +18,24 @@ import cloudprintLogo from "../assets/cloudprint_logo.png";
 import { useAuth } from "../context/AuthContext";
 import { WalletModal } from "./user/sections/WalletModal";
 
-function Navbar({ searchQuery, setSearchQuery, badge, badgeAction }) {
+function Navbar({ searchQuery, setSearchQuery, badge, badgeAction, walletBalance: propWalletBalance }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, walletBalance, logout, refreshWallet } = useAuth();
+    const { user, walletBalance: authWalletBalance, logout, refreshWallet } = useAuth();
+    const [localWallet, setLocalWallet] = useState(() => {
+        if (propWalletBalance !== undefined && propWalletBalance !== null) return Number(propWalletBalance);
+        if (authWalletBalance !== undefined && authWalletBalance !== null) return Number(authWalletBalance);
+        return Number(localStorage.getItem("walletBalance") || 0);
+    });
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showWalletModal, setShowWalletModal] = useState(false);
     const profileMenuRef = useRef(null);
+
+    const effectiveWalletBalance = propWalletBalance !== undefined && propWalletBalance !== null 
+        ? Number(propWalletBalance) 
+        : (authWalletBalance !== undefined && authWalletBalance !== null && !isNaN(Number(authWalletBalance))
+            ? Number(authWalletBalance)
+            : localWallet);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -49,6 +60,19 @@ function Navbar({ searchQuery, setSearchQuery, badge, badgeAction }) {
         if (userId) {
             refreshWallet();
         }
+        const onWalletUpdate = (e) => {
+            if (e.detail != null) {
+                setLocalWallet(Number(e.detail) || 0);
+            } else {
+                setLocalWallet(Number(localStorage.getItem("walletBalance") || 0));
+            }
+        };
+        window.addEventListener("walletUpdated", onWalletUpdate);
+        window.addEventListener("storage", onWalletUpdate);
+        return () => {
+            window.removeEventListener("walletUpdated", onWalletUpdate);
+            window.removeEventListener("storage", onWalletUpdate);
+        };
     }, [userId, refreshWallet]);
 
     const handleLogout = () => {
@@ -153,7 +177,7 @@ function Navbar({ searchQuery, setSearchQuery, badge, badgeAction }) {
                             title="Click to add wallet money or view balance"
                         >
                             <Wallet className="w-4 h-4 text-emerald-400" />
-                            <span>₹{Number(walletBalance || 0).toFixed(2)}</span>
+                            <span>₹{Number(effectiveWalletBalance || 0).toFixed(2)}</span>
                             <Plus className="w-3.5 h-3.5 text-emerald-400 font-black" />
                         </button>
                     )}
@@ -176,7 +200,7 @@ function Navbar({ searchQuery, setSearchQuery, badge, badgeAction }) {
             {showWalletModal && (
                 <WalletModal
                     userId={userId}
-                    currentBalance={walletBalance}
+                    currentBalance={effectiveWalletBalance}
                     onClose={() => setShowWalletModal(false)}
                     onSuccess={(newBal) => {
                         refreshWallet();

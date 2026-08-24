@@ -225,6 +225,7 @@ function ScanToPrint() {
                 <Navbar
                     title="Scan to Print"
                     subtitle={`${blockLocation} Location`}
+                    walletBalance={walletBalance}
                     actions={[
                         {
                             label: "Dashboard",

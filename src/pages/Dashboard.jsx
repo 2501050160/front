@@ -618,7 +618,7 @@ function Dashboard() {
             showAlert("Success", "Coupon Applied Successfully", "success");
         } catch (error) {
             console.error(error);
-            showAlert("Invalid Coupon", "The entered coupon code is invalid or expired.", "error");
+            showAlert("Invalid Coupon", error.response?.data || "The entered coupon code is invalid, expired, or already used.", "error");
         }
     };
 
@@ -1383,6 +1383,7 @@ function Dashboard() {
                         subtitle=""
                         badge={blockLocation || "No block"}
                         badgeAction={{ label: "Change Location", path: "/blocks" }}
+                        walletBalance={walletBalance}
                         actions={[]}
                     />
 
@@ -2730,7 +2731,7 @@ function Dashboard() {
                                                                  Cancel Print
                                                              </button>
                                                          )}
-                                                         {order.paymentStatus === "PAID" && (
+                                                         {order.status === "COMPLETED" && (
                                                              <button
                                                                  onClick={async () => {
                                                                      try {

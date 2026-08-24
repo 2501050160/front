@@ -22,28 +22,52 @@ export const AuthProvider = ({ children }) => {
 
     // Refresh wallet balance
     const refreshWallet = useCallback(async () => {
-        if (!user?.id) return;
+        const activeUserId = user?.id || localStorage.getItem("userId");
+        if (!activeUserId) return;
         try {
-            const balance = await getWalletBalance(user.id);
-            setWalletBalance(Number(balance) || 0);
+            const balance = await getWalletBalance(activeUserId);
+            const num = Number(balance != null ? balance : 0);
+            setWalletBalance(num);
+            setUser((prev) => {
+                if (!prev) {
+                    const id = localStorage.getItem("userId");
+                    if (!id) return null;
+                    return {
+                        id,
+                        name: localStorage.getItem("userName") || "",
+                        email: localStorage.getItem("userEmail") || "",
+                        college: localStorage.getItem("userCollege") || "KLU",
+                        referralCode: localStorage.getItem("referralCode") || "",
+                        walletBalance: num,
+                    };
+                }
+                return { ...prev, walletBalance: num };
+            });
         } catch (err) {
             console.warn("Failed to refresh wallet balance:", err.message);
         }
     }, [user?.id]);
 
     useEffect(() => {
-        if (user?.id) {
+        const activeUserId = user?.id || localStorage.getItem("userId");
+        if (activeUserId) {
             refreshWallet();
         }
         const handleWalletUpdated = (e) => {
             if (e.detail != null) {
-                setWalletBalance(Number(e.detail) || 0);
-            } else if (user?.id) {
+                const num = Number(e.detail) || 0;
+                setWalletBalance(num);
+                setUser((prev) => (prev ? { ...prev, walletBalance: num } : prev));
+            } else {
                 refreshWallet();
             }
         };
         window.addEventListener("walletUpdated", handleWalletUpdated);
-        return () => window.removeEventListener("walletUpdated", handleWalletUpdated);
+        window.addEventListener("storage", handleWalletUpdated);
+        return () => {
+            window.removeEventListener("walletUpdated", handleWalletUpdated);
+            window.removeEventListener("storage", handleWalletUpdated);
+        };
     }, [user?.id, refreshWallet]);
 
     const login = useCallback((userData) => {

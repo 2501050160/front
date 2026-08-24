@@ -55,7 +55,7 @@ function Referrals() {
                 <Navbar
                     title="Referrals & Rewards"
                     subtitle="Share & Earn Wallet Credits"
-                    badge={`Wallet Rs. ${stats.walletBalance}`}
+                    walletBalance={stats.walletBalance}
                     actions={[
                         { label: "New Print", path: "/dashboard" },
                         { label: "Orders", path: "/my-orders", className: "btn secondary" }

@@ -30,6 +30,9 @@ export function persistUser(user) {
             "walletBalance",
             String(user.walletBalance)
         );
+        try {
+            window.dispatchEvent(new CustomEvent("walletUpdated", { detail: Number(user.walletBalance) }));
+        } catch (e) {}
     }
 }
 
@@ -43,6 +46,9 @@ export function clearUserSession() {
     localStorage.removeItem("selectedBlock");
     localStorage.removeItem("order");
     localStorage.removeItem("lastActivity");
+    try {
+        window.dispatchEvent(new CustomEvent("walletUpdated", { detail: 0 }));
+    } catch (e) {}
 }
 
 export async function getWalletBalance(userId) {
@@ -50,12 +56,17 @@ export async function getWalletBalance(userId) {
         params: { userId }
     });
 
+    const balanceNum = Number(response.data != null ? response.data : 0);
     localStorage.setItem(
         "walletBalance",
-        String(response.data)
+        String(balanceNum)
     );
 
-    return response.data;
+    try {
+        window.dispatchEvent(new CustomEvent("walletUpdated", { detail: balanceNum }));
+    } catch (e) {}
+
+    return balanceNum;
 }
 
 export function getStoredWalletBalance() {

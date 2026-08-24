@@ -154,6 +154,8 @@ export function WalletModal({
         await creditWalletWithRetry(failedPaymentId, numAmt);
     };
 
+    const [redemptionChoice, setRedemptionChoice] = useState("wallet"); // "wallet" | "discount"
+
     const handleRedeemVoucher = async (e) => {
         if (e) e.preventDefault();
         if (!voucherCode.trim()) {
@@ -166,27 +168,43 @@ export function WalletModal({
         setVoucherSuccessMsg("");
 
         try {
-            const params = {
-                voucherCode: voucherCode.trim()
-            };
-            if (resolvedUserId) params.userId = resolvedUserId;
-            if (resolvedEmail) params.email = resolvedEmail;
-
-            const res = await api.post("/wallet/redeem-voucher", null, { params });
-            const data = res.data || {};
-            if (data.success) {
-                const newBal = data.newBalance ?? (Number(currentBalance) + Number(data.creditedAmount || 0));
-                localStorage.setItem("walletBalance", String(newBal));
-                window.dispatchEvent(new CustomEvent("walletUpdated", { detail: newBal }));
-                setVoucherSuccessMsg(data.message || `🎉 ₹${Number(data.creditedAmount || 0).toFixed(2)} added directly to your wallet!`);
-                setVoucherCode("");
-                if (onSuccess) onSuccess(newBal);
+            if (redemptionChoice === "discount") {
+                // Validate for print checkout usage
+                const cleanCode = voucherCode.trim().toUpperCase();
+                const res = await api.get("/coupon/validate", { params: { couponCode: cleanCode } });
+                const coupon = res.data;
+                if (coupon) {
+                    const discountText = coupon.discountAmount && coupon.discountAmount > 0 
+                        ? `₹${Number(coupon.discountAmount).toFixed(2)} FLAT OFF` 
+                        : `${coupon.discountPercentage || 0}% OFF`;
+                    setVoucherSuccessMsg(`🎉 Code ${coupon.couponCode} is VALID for ${discountText}! Apply this code during print checkout to reduce your order price.`);
+                } else {
+                    setVoucherErrorMsg("Invalid, expired, or disabled coupon code.");
+                }
             } else {
-                setVoucherErrorMsg(data.message || "Invalid, expired, or already claimed voucher code.");
+                // Direct wallet credit
+                const params = {
+                    voucherCode: voucherCode.trim()
+                };
+                if (resolvedUserId) params.userId = resolvedUserId;
+                if (resolvedEmail) params.email = resolvedEmail;
+
+                const res = await api.post("/wallet/redeem-voucher", null, { params });
+                const data = res.data || {};
+                if (data.success) {
+                    const newBal = data.newBalance ?? (Number(currentBalance) + Number(data.creditedAmount || 0));
+                    localStorage.setItem("walletBalance", String(newBal));
+                    window.dispatchEvent(new CustomEvent("walletUpdated", { detail: newBal }));
+                    setVoucherSuccessMsg(data.message || `🎉 ₹${Number(data.creditedAmount || 0).toFixed(2)} added directly to your wallet!`);
+                    setVoucherCode("");
+                    if (onSuccess) onSuccess(newBal);
+                } else {
+                    setVoucherErrorMsg(data.message || "Invalid, expired, or already claimed voucher code.");
+                }
             }
         } catch (err) {
             console.error("Voucher redemption error:", err);
-            setVoucherErrorMsg(err.response?.data?.message || "Failed to redeem voucher. Please check the code.");
+            setVoucherErrorMsg(err.response?.data?.message || err.response?.data || "Failed to redeem code. It may be expired or already used.");
         } finally {
             setRedeemingVoucher(false);
         }
@@ -339,7 +357,7 @@ export function WalletModal({
                 {/* MODE 2: Redeem Voucher / Coupon Code */}
                 {mode === "voucher" && (
                     <form onSubmit={handleRedeemVoucher} className="space-y-4">
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                             <label className="text-[11px] font-black text-slate-400 uppercase">
                                 Enter Gift Voucher or Promo Code
                             </label>
@@ -352,9 +370,46 @@ export function WalletModal({
                                     className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white font-black text-sm uppercase tracking-wider outline-none focus:border-indigo-500 transition-colors"
                                 />
                             </div>
-                            <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
-                                Enter campus gift vouchers, refund promo codes, or event reward coupons to add direct cash credits into your wallet.
-                            </p>
+                        </div>
+
+                        {/* How would you like to use this code? */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                How to Apply This Code? (Single-Use Only)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setRedemptionChoice("wallet")}
+                                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                        redemptionChoice === "wallet"
+                                            ? "bg-indigo-950/70 border-indigo-500 text-white shadow-sm"
+                                            : "bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm">💰</span>
+                                        <span className="text-xs font-black">Wallet Credit</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1 leading-tight">Instant balance added to wallet</p>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setRedemptionChoice("discount")}
+                                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                        redemptionChoice === "discount"
+                                            ? "bg-purple-950/70 border-purple-500 text-white shadow-sm"
+                                            : "bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-200"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm">🖨️</span>
+                                        <span className="text-xs font-black">Print Discount</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1 leading-tight">Save for checkout discount</p>
+                                </button>
+                            </div>
                         </div>
 
                         {voucherSuccessMsg && (
@@ -377,15 +432,19 @@ export function WalletModal({
                             className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm shadow-xl shadow-indigo-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             <Ticket className="w-4 h-4" />
-                            {redeemingVoucher ? "Verifying & Crediting..." : "Redeem Voucher to Wallet"}
+                            {redeemingVoucher 
+                                ? "Verifying Code..." 
+                                : redemptionChoice === "wallet" 
+                                ? "Redeem ₹ to Wallet Balance" 
+                                : "Validate for Print Checkout"}
                         </button>
 
                         <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-                            <p className="font-bold text-slate-300">💡 Voucher Rules:</p>
+                            <p className="font-bold text-slate-300">💡 Single-Use Coupon Rule:</p>
                             <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
-                                <li>Vouchers add instant cash directly to your available balance.</li>
-                                <li>Cancellation refund coupons remain valid for 7 days.</li>
-                                <li>Single-use promo codes are automatically purged once redeemed.</li>
+                                <li>A coupon code can only be used <strong>once</strong>.</li>
+                                <li>You can either credit it directly into your wallet balance or apply it at print checkout.</li>
+                                <li>Once redeemed via one method, the code cannot be reused.</li>
                             </ul>
                         </div>
                     </form>
