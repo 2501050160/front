@@ -173,7 +173,7 @@ export function BlockManagementSection({
                                         )}
                                     </div>
                                     <p className="font-mono text-xs text-slate-300 truncate">
-                                        {block.serverApiKey ? `${block.serverApiKey.slice(0, 14)}••••••••` : "Click below to generate key"}
+                                        {block.serverApiKey ? `${block.serverApiKey.slice(0, 14)}••••••••` : <span className="text-amber-300 font-bold">Click below to generate key</span>}
                                     </p>
                                 </div>
 
@@ -181,9 +181,9 @@ export function BlockManagementSection({
                                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
                                     <button
                                         onClick={() => onRegenerateKey && onRegenerateKey(block.id)}
-                                        className="py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all cursor-pointer"
+                                        className="py-1.5 px-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 border border-amber-300 text-[11px] font-black transition-all cursor-pointer flex items-center justify-center gap-1 shadow-sm"
                                     >
-                                        Regenerate Key
+                                        🔑 {block.serverApiKey ? "Regenerate Key" : "Generate Key"}
                                     </button>
 
                                     <button

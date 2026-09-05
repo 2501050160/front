@@ -4631,7 +4631,7 @@ function AdminDashboard() {
                                                                 <button onClick={() => regenerateBlockKey(b.id)} className="p-2 rounded-xl bg-amber-50 hover:bg-amber-600 text-amber-600 hover:text-white border border-amber-200 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center" title="Reset / Revoke API Key">🔄</button>
                                                             </>
                                                         ) : (
-                                                            <button onClick={() => regenerateBlockKey(b.id)} className="btn small !bg-indigo-50 !text-indigo-600 border border-indigo-200 hover:!bg-indigo-100">Generate Key</button>
+                                                            <button onClick={() => regenerateBlockKey(b.id)} className="btn small !bg-amber-400 hover:!bg-amber-300 !text-slate-950 !border-amber-300 font-black shadow-xs flex items-center gap-1">🔑 Generate Key</button>
                                                         )}
                                                         <button onClick={() => renameBlock(b.id, b.name)} className="btn small">Rename</button>
                                                         <button onClick={() => deleteBlock(b.id)} className="p-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center" title="Delete Block">🗑️</button>
@@ -5640,29 +5640,25 @@ function AdminDashboard() {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <label className="block">
                                                 <span className="block text-xs font-black text-slate-700 mb-1.5">Referrer Bonus (₹)</span>
-                                                <div className="relative">
-                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                                                    <input 
-                                                        type="number" 
-                                                        className="field pl-8" 
-                                                        value={systemSettings.referrerAmount}
-                                                        onChange={(e) => setSystemSettings({...systemSettings, referrerAmount: Number(e.target.value)})}
-                                                        step="0.5"
-                                                    />
-                                                </div>
+                                                <input 
+                                                    type="number" 
+                                                    className="field" 
+                                                    value={systemSettings.referrerAmount}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, referrerAmount: Number(e.target.value)})}
+                                                    step="0.5"
+                                                    placeholder="10"
+                                                />
                                             </label>
                                             <label className="block">
                                                 <span className="block text-xs font-black text-slate-700 mb-1.5">New User Bonus (₹)</span>
-                                                <div className="relative">
-                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                                                    <input 
-                                                        type="number" 
-                                                        className="field pl-8" 
-                                                        value={systemSettings.refereeAmount}
-                                                        onChange={(e) => setSystemSettings({...systemSettings, refereeAmount: Number(e.target.value)})}
-                                                        step="0.5"
-                                                    />
-                                                </div>
+                                                <input 
+                                                    type="number" 
+                                                    className="field" 
+                                                    value={systemSettings.refereeAmount}
+                                                    onChange={(e) => setSystemSettings({...systemSettings, refereeAmount: Number(e.target.value)})}
+                                                    step="0.5"
+                                                    placeholder="5"
+                                                />
                                             </label>
                                         </div>
                                         <button type="submit" className="btn success w-full mt-4">💾 Save Referral Rules</button>
@@ -6029,7 +6025,10 @@ function AdminDashboard() {
                                                             </button>
                                                         </>
                                                     ) : (
-                                                        <button onClick={() => regenerateBlockKey(b.id)} className="btn secondary text-xs py-1.5 px-2.5 font-bold flex-1 text-indigo-600">
+                                                        <button 
+                                                            onClick={() => regenerateBlockKey(b.id)} 
+                                                            className="py-1.5 px-3 rounded-xl text-xs font-black flex-1 flex items-center justify-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 border border-amber-300 shadow-sm cursor-pointer transition-all active:scale-95"
+                                                        >
                                                             🔑 Generate Key
                                                         </button>
                                                     )}
