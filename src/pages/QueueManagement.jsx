@@ -10,7 +10,8 @@ import {
   CheckCircle,
   FileText,
   Clock,
-  Printer
+  Printer,
+  Trash2
 } from "lucide-react";
 import api from "../services/api";
 
@@ -120,6 +121,31 @@ function QueueManagement() {
     } catch (err) {
       console.error(err);
       alert("Error deleting orders: " + (err.response?.data || err.message));
+    }
+  };
+
+  const handleDeleteSingleOrder = async (orderId) => {
+    if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
+      alert("Only the main admin has permission to delete orders from the database!");
+      return;
+    }
+    if (!orderId) return;
+    if (!window.confirm(`Are you sure you want to permanently delete Order #${orderId}? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await api.post("/admin/orders/delete", null, {
+        params: {
+          adminUsername: loggedInAdminUser,
+          orderId: String(orderId)
+        }
+      });
+      alert(`Order #${orderId} deleted successfully.`);
+      setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting order: " + (err.response?.data || err.message));
     }
   };
 
@@ -234,6 +260,15 @@ function QueueManagement() {
                     >
                       <Download className="w-3.5 h-3.5 text-slate-600" />
                     </button>
+                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                      <button
+                        onClick={() => handleDeleteSingleOrder(order.orderId || order.id)}
+                        className="btn danger py-1 px-2 min-h-0"
+                        title="Delete Order Permanently"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -258,7 +293,17 @@ function QueueManagement() {
               {getColumnOrders("printing").map((order) => (
                 <div key={order.id} className="kanban-card !border-blue-200 shadow-blue-50/50">
                   <div className="flex justify-between items-start">
-                    <span className="text-xs font-black text-blue-500">#{order.orderId}</span>
+                    <div className="flex items-center gap-2">
+                      {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                        <input
+                          type="checkbox"
+                          checked={selectedOrderIds.includes(order.orderId)}
+                          onChange={() => toggleSelectOrder(order.orderId)}
+                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      )}
+                      <span className="text-xs font-black text-blue-500">#{order.orderId}</span>
+                    </div>
                     <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-500 text-white animate-pulse">
                       Printing
                     </span>
@@ -281,6 +326,15 @@ function QueueManagement() {
                     >
                       <XOctagon className="w-3.5 h-3.5" />
                     </button>
+                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                      <button
+                        onClick={() => handleDeleteSingleOrder(order.orderId || order.id)}
+                        className="btn danger py-1 px-2 min-h-0"
+                        title="Delete Order Permanently"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -305,7 +359,17 @@ function QueueManagement() {
               {getColumnOrders("completed").map((order) => (
                 <div key={order.id} className={`kanban-card opacity-70 hover:opacity-100 transition-opacity`}>
                   <div className="flex justify-between items-start">
-                    <span className="text-xs font-black text-slate-400">#{order.orderId}</span>
+                    <div className="flex items-center gap-2">
+                      {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                        <input
+                          type="checkbox"
+                          checked={selectedOrderIds.includes(order.orderId)}
+                          onChange={() => toggleSelectOrder(order.orderId)}
+                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      )}
+                      <span className="text-xs font-black text-slate-400">#{order.orderId}</span>
+                    </div>
                     <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
                       order.status === "COMPLETED"
                         ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
@@ -325,6 +389,15 @@ function QueueManagement() {
                     >
                       <RefreshCw className="w-3.5 h-3.5 text-slate-600" /> Print Again
                     </button>
+                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                      <button
+                        onClick={() => handleDeleteSingleOrder(order.orderId || order.id)}
+                        className="btn danger py-1 px-2 min-h-0"
+                        title="Delete Order Permanently"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

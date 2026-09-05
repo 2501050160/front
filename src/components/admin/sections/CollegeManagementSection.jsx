@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { School, ShieldAlert, Key, CheckCircle, AlertTriangle, Building2, Save } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { School, ShieldAlert, Key, CheckCircle, AlertTriangle, Building2, Save, MessageSquare } from "lucide-react";
 import api from "../../../services/api";
 
 export function CollegeManagementSection({
@@ -20,20 +20,51 @@ export function CollegeManagementSection({
 
     const [keyIdInputs, setKeyIdInputs] = useState({});
     const [keySecretInputs, setKeySecretInputs] = useState({});
+    const [botPhoneInputs, setBotPhoneInputs] = useState({});
+    const [dedicatedBotInputs, setDedicatedBotInputs] = useState({});
     const [savingCollege, setSavingCollege] = useState(null);
+
+    // Sync inputs when collegeConfigs are passed in
+    useEffect(() => {
+        if (collegeConfigs && collegeConfigs.length > 0) {
+            const keyIds = {};
+            const keySecrets = {};
+            const botPhones = {};
+            const dedicatedBots = {};
+            collegeConfigs.forEach(cfg => {
+                const code = (cfg.collegeName || cfg.college || "").toUpperCase();
+                if (code) {
+                    keyIds[code] = cfg.razorpayKeyId || "";
+                    keySecrets[code] = cfg.razorpayKeySecret || "";
+                    botPhones[code] = cfg.whatsappBotPhone || "";
+                    dedicatedBots[code] = Boolean(cfg.dedicatedBotEnabled);
+                }
+            });
+            setKeyIdInputs(prev => ({ ...keyIds, ...prev }));
+            setKeySecretInputs(prev => ({ ...keySecrets, ...prev }));
+            setBotPhoneInputs(prev => ({ ...botPhones, ...prev }));
+            setDedicatedBotInputs(prev => ({ ...dedicatedBots, ...prev }));
+        }
+    }, [collegeConfigs]);
 
     const handleSaveConfig = async (collegeCode) => {
         const keyId = keyIdInputs[collegeCode];
         const keySecret = keySecretInputs[collegeCode];
+        const botPhone = botPhoneInputs[collegeCode];
+        const isDedicated = dedicatedBotInputs[collegeCode];
 
         setSavingCollege(collegeCode);
         try {
             await api.post("/college-config/update", {
                 college: collegeCode,
+                collegeName: collegeCode,
                 razorpayKeyId: keyId,
-                razorpayKeySecret: keySecret
+                razorpayKeySecret: keySecret,
+                whatsappBotPhone: botPhone,
+                dedicatedBotEnabled: Boolean(isDedicated)
             });
-            showAlert("Success", `Payment configuration updated for ${collegeCode}`, "success");
+            showAlert("Success", `College configuration updated for ${collegeCode}`, "success");
+            if (onUpdateCollegeConfig) onUpdateCollegeConfig();
         } catch (error) {
             console.error(error);
             showAlert("Error", "Failed to update college configuration", "error");
@@ -107,28 +138,118 @@ export function CollegeManagementSection({
                                         onChange={(e) => setKeySecretInputs(prev => ({ ...prev, [c.code]: e.target.value }))}
                                         className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-[11px] outline-none focus:border-cyan-500"
                                     />
-                                    <button
-                                        onClick={() => handleSaveConfig(c.code)}
-                                        disabled={savingCollege === c.code}
-                                        className="w-full py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 rounded-lg font-bold text-[11px] transition-all cursor-pointer"
-                                    >
-                                        {savingCollege === c.code ? "Saving..." : "Save Gateway"}
-                                    </button>
                                 </div>
+
+                                {/* WhatsApp Dedicated Bot Setup */}
+                                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-black text-slate-400 uppercase text-[10px] flex items-center gap-1">
+                                            <MessageSquare className="w-3 h-3 text-emerald-400" />
+                                            WhatsApp Bot Setup
+                                        </span>
+                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                                            dedicatedBotInputs[c.code]
+                                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                                : "bg-slate-800 text-slate-400 border-slate-700"
+                                        }`}>
+                                            {dedicatedBotInputs[c.code] ? "Dedicated Bot" : "Unified Bot (Default)"}
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Dedicated Bot Phone (+91 94941...)"
+                                        value={botPhoneInputs[c.code] ?? ""}
+                                        onChange={(e) => setBotPhoneInputs(prev => ({ ...prev, [c.code]: e.target.value }))}
+                                        className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-[11px] outline-none focus:border-emerald-500"
+                                    />
+                                    <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer pt-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={Boolean(dedicatedBotInputs[c.code])}
+                                            onChange={(e) => setDedicatedBotInputs(prev => ({ ...prev, [c.code]: e.target.checked }))}
+                                            className="rounded border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer"
+                                        />
+                                        Enable Dedicated WhatsApp Bot Instance
+                                    </label>
+                                </div>
+
+                                <button
+                                    onClick={() => handleSaveConfig(c.code)}
+                                    disabled={savingCollege === c.code}
+                                    className="w-full py-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                >
+                                    <Save className="w-3.5 h-3.5" />
+                                    {savingCollege === c.code ? "Saving Configuration..." : `Save ${c.code} Configuration`}
+                                </button>
+
+                                {/* Download bot_config.json */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const configObj = {
+                                            targetCollege: c.code,
+                                            backendUrl: "https://printer-backend-kgzp.onrender.com",
+                                            frontendUrl: "https://cloudprint.website",
+                                            botName: `${c.code} Dedicated WhatsApp Bot`
+                                        };
+                                        const blob = new Blob([JSON.stringify(configObj, null, 2)], { type: "application/json" });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement("a");
+                                        a.href = url;
+                                        a.download = "bot_config.json";
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                        URL.revokeObjectURL(url);
+                                        showAlert("Config Downloaded", `bot_config.json for ${c.code} downloaded successfully! Place it in the bot-agent folder.`, "success");
+                                    }}
+                                    className="w-full py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                    title={`Download bot_config.json for ${c.code}`}
+                                >
+                                    📥 Download bot_config.json
+                                </button>
                             </div>
 
-                            {/* Emergency Suspension Toggle */}
-                            <div className="pt-3 border-t border-slate-800">
-                                <button
-                                    onClick={() => onToggleSuspension && onToggleSuspension(c.code)}
-                                    className={`w-full py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
-                                        isSuspended
-                                            ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-600/30"
-                                            : "bg-rose-600/20 text-rose-300 border-rose-500/40 hover:bg-rose-600/30"
-                                    }`}
-                                >
-                                    {isSuspended ? "Lift Suspension" : "Emergency Suspend Campus"}
-                                </button>
+                            {/* Main Admin Only: Reset College Orders & Emergency Suspension */}
+                            <div className="pt-3 border-t border-slate-800 space-y-2">
+                                {(localStorage.getItem("adminRole") === "MAIN_ADMIN" || localStorage.getItem("adminUser") === "admin") && (
+                                    <button
+                                        onClick={async () => {
+                                            if (window.confirm(`⚠️ CRITICAL WARNING: This will permanently delete ALL orders and print records for College '${c.code}'. This action CANNOT be undone. Proceed?`)) {
+                                                try {
+                                                    await api.post("/admin/reset-stats", null, {
+                                                        params: {
+                                                            adminUsername: localStorage.getItem("adminUser") || "admin",
+                                                            scope: "COLLEGE",
+                                                            targetName: c.code
+                                                        }
+                                                    });
+                                                    showAlert("Orders Reset", `All orders for ${c.code} have been deleted.`, "success");
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    showAlert("Error", "Failed to reset college orders", "error");
+                                                }
+                                            }
+                                        }}
+                                        className="w-full py-2 rounded-xl text-xs font-black transition-all cursor-pointer border border-rose-500/40 bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 flex items-center justify-center gap-1.5"
+                                        title={`Reset all orders for ${c.code}`}
+                                    >
+                                        🗑️ Reset Orders for {c.code}
+                                    </button>
+                                )}
+
+                                {(localStorage.getItem("adminRole") === "MAIN_ADMIN" || localStorage.getItem("adminUser") === "admin") && (
+                                    <button
+                                        onClick={() => onToggleSuspension && onToggleSuspension(c.code)}
+                                        className={`w-full py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                                            isSuspended
+                                                ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-600/30"
+                                                : "bg-rose-600/20 text-rose-300 border-rose-500/40 hover:bg-rose-600/30"
+                                        }`}
+                                    >
+                                        {isSuspended ? "Lift Suspension" : "Emergency Suspend Campus"}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     );

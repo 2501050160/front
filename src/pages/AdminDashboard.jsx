@@ -197,6 +197,28 @@ function AdminDashboard() {
     const [paymentConfigModal, setPaymentConfigModal] = useState(null);
     const [configKeyId, setConfigKeyId] = useState("");
     const [configKeySecret, setConfigKeySecret] = useState("");
+    const [configBotPhone, setConfigBotPhone] = useState("");
+    const [configDedicatedBot, setConfigDedicatedBot] = useState(false);
+
+    const downloadBotConfig = (collegeName) => {
+        const col = (collegeName === "unified" || !collegeName || collegeName === "ALL") ? "" : collegeName.trim();
+        const configObj = {
+            targetCollege: col,
+            backendUrl: "https://printer-backend-kgzp.onrender.com",
+            frontendUrl: "https://cloudprint.website",
+            botName: col ? `${col} Dedicated WhatsApp Bot` : "Unified Cloud Print Bot"
+        };
+        const blob = new Blob([JSON.stringify(configObj, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "bot_config.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showAlert("Config Downloaded", `bot_config.json for ${col || "Unified Bot"} downloaded successfully! Place it in the bot-agent folder.`, "success");
+    };
 
     // Custom Popups States
     const [popups, setPopups] = useState([]);
@@ -1225,6 +1247,35 @@ function AdminDashboard() {
                 } catch (error) {
                     console.error("Error deleting orders:", error);
                     showAlert("Error", error.response?.data || "Failed to delete orders", "error");
+                }
+            }
+        );
+    };
+
+    const handleDeleteSingleOrder = async (orderId) => {
+        if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
+            showAlert("Permission Denied", "Only the main admin has permission to delete orders.", "error");
+            return;
+        }
+        if (!orderId) return;
+        showConfirm(
+            "Confirm Delete Order",
+            `Are you sure you want to permanently delete Order #${orderId}? It will be removed from the database and print queue.`,
+            async () => {
+                try {
+                    await api.post("/admin/orders/delete", null, {
+                        params: {
+                            adminUsername: loggedInAdminUser,
+                            orderId: String(orderId)
+                        }
+                    });
+                    showAlert("Deleted", `Order #${orderId} deleted successfully.`, "success");
+                    setSelectedAdminOrderIds(prev => prev.filter(id => id !== orderId));
+                    fetchOrders();
+                    fetchStats();
+                } catch (error) {
+                    console.error("Error deleting order:", error);
+                    showAlert("Error", error.response?.data || "Failed to delete order", "error");
                 }
             }
         );
@@ -3073,6 +3124,16 @@ function AdminDashboard() {
                             <span className="hidden sm:inline">Display Panel</span>
                         </button>
 
+                        {/* WhatsApp Bot Config Quick Download */}
+                        <button
+                            onClick={() => downloadBotConfig((loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? loggedInAdminCollege : "unified")}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 text-emerald-800 border border-emerald-300 text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+                            title={`Download bot_config.json for ${(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? loggedInAdminCollege : "Unified Bot"}`}
+                        >
+                            <span className="text-base">🤖</span>
+                            <span className="hidden sm:inline">{(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? `${loggedInAdminCollege} Bot Config` : "Bot Config"}</span>
+                        </button>
+
                         {/* Profile Pill with Logout Dropdown */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setIsProfileMenuOpen(false); }}>
                             <button
@@ -3203,6 +3264,37 @@ function AdminDashboard() {
                                         <p className="subtitle">Orders currently in the active print pipeline. Refreshes every 3 seconds.</p>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
+                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedCollegeFilter && selectedCollegeFilter !== "ALL" && (
+                                            <button
+                                                onClick={() => {
+                                                    showConfirm(
+                                                        `RESET ALL ORDERS FOR ${selectedCollegeFilter}`,
+                                                        `⚠️ CRITICAL WARNING: This will permanently delete ALL orders and print records for College '${selectedCollegeFilter}'. This action CANNOT be undone. Proceed?`,
+                                                        async () => {
+                                                            try {
+                                                                await api.post("/admin/reset-stats", null, {
+                                                                    params: {
+                                                                        adminUsername: loggedInAdminUser,
+                                                                        scope: "COLLEGE",
+                                                                        targetName: selectedCollegeFilter
+                                                                    }
+                                                                });
+                                                                showAlert("Orders Reset", `All orders for ${selectedCollegeFilter} have been deleted.`, "success");
+                                                                setSelectedAdminOrderIds([]);
+                                                                fetchOrders();
+                                                                fetchStats();
+                                                            } catch (err) {
+                                                                showAlert("Error", err.response?.data || "Failed to reset orders", "error");
+                                                            }
+                                                        }
+                                                    );
+                                                }}
+                                                className="btn danger px-3 py-2 text-xs font-bold min-h-0 border border-rose-400 bg-rose-600 text-white hover:bg-rose-700"
+                                                title={`Permanently wipe all orders for ${selectedCollegeFilter}`}
+                                            >
+                                                🗑️ Reset All {selectedCollegeFilter} Orders
+                                            </button>
+                                        )}
                                         {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
                                             <button
                                                 onClick={handleBulkDeleteOrders}
@@ -3352,6 +3444,15 @@ function AdminDashboard() {
                                                         >
                                                             📥 PDF
                                                         </a>
+                                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                            <button
+                                                                onClick={() => handleDeleteSingleOrder(order.orderId || order.id)}
+                                                                className="btn danger py-1 px-2 text-[11px] min-h-0 font-bold"
+                                                                title="Permanently delete this order"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -3359,7 +3460,7 @@ function AdminDashboard() {
 
                                         {orders.filter(o => ["CANCEL_WINDOW", "PENDING_SCAN", "QUEUE", "PRINTING"].includes(o.status)).length === 0 && (
                                             <tr>
-                                                <td colSpan="10" className="text-center font-bold text-slate-500 py-10">
+                                                <td colSpan={(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") ? "11" : "10"} className="text-center font-bold text-slate-500 py-10">
                                                     <div className="flex flex-col items-center gap-2">
                                                         <span className="text-4xl">📋</span>
                                                         <span>No active orders in the print queue right now.</span>
@@ -4015,6 +4116,37 @@ function AdminDashboard() {
                                         </h2>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
+                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedCollegeFilter && selectedCollegeFilter !== "ALL" && (
+                                            <button
+                                                onClick={() => {
+                                                    showConfirm(
+                                                        `RESET ALL ORDERS FOR ${selectedCollegeFilter}`,
+                                                        `⚠️ CRITICAL WARNING: This will permanently delete ALL orders and print records for College '${selectedCollegeFilter}'. This action CANNOT be undone. Proceed?`,
+                                                        async () => {
+                                                            try {
+                                                                await api.post("/admin/reset-stats", null, {
+                                                                    params: {
+                                                                        adminUsername: loggedInAdminUser,
+                                                                        scope: "COLLEGE",
+                                                                        targetName: selectedCollegeFilter
+                                                                    }
+                                                                });
+                                                                showAlert("Orders Reset", `All orders for ${selectedCollegeFilter} have been deleted.`, "success");
+                                                                setSelectedAdminOrderIds([]);
+                                                                fetchOrders();
+                                                                fetchStats();
+                                                            } catch (err) {
+                                                                showAlert("Error", err.response?.data || "Failed to reset orders", "error");
+                                                            }
+                                                        }
+                                                    );
+                                                }}
+                                                className="btn danger px-3 py-2 text-xs font-bold min-h-0 border border-rose-400 bg-rose-600 text-white hover:bg-rose-700"
+                                                title={`Permanently wipe all orders for ${selectedCollegeFilter}`}
+                                            >
+                                                🗑️ Reset All {selectedCollegeFilter} Orders
+                                            </button>
+                                        )}
                                         {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && selectedAdminOrderIds.length > 0 && (
                                             <button
                                                 onClick={handleBulkDeleteOrders}
@@ -4066,6 +4198,9 @@ function AdminDashboard() {
                                             <th>Price</th>
                                             <th>Payment</th>
                                             <th>Status</th>
+                                            {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                <th>Actions</th>
+                                            )}
                                         </tr>
                                     </thead>
 
@@ -4142,12 +4277,23 @@ function AdminDashboard() {
                                                         {order.status}
                                                     </span>
                                                 </td>
+                                                {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                    <td>
+                                                        <button
+                                                            onClick={() => handleDeleteSingleOrder(order.orderId || order.id)}
+                                                            className="btn danger py-1 px-2 text-[11px] min-h-0 font-bold"
+                                                            title="Permanently delete this order"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </td>
+                                                )}
                                             </motion.tr>
                                         ))}
 
                                         {orders.length === 0 && (
                                             <tr>
-                                                <td colSpan="9" className="text-center font-bold text-slate-500 py-6">
+                                                <td colSpan={(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") ? "11" : "9"} className="text-center font-bold text-slate-500 py-6">
                                                     No print orders in history
                                                 </td>
                                             </tr>
@@ -5490,7 +5636,7 @@ function AdminDashboard() {
                                                             {colBlocks.length === 0 && <li className="text-slate-400">No blocks associated</li>}
                                                         </ul>
                                                     </div>
-                                                    <div className="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                                                    <div className="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
                                                         <div className="flex items-center justify-between">
                                                             <span className="font-bold text-slate-500 uppercase text-[10px]">Razorpay Gateway</span>
                                                             {(() => {
@@ -5502,50 +5648,110 @@ function AdminDashboard() {
                                                                 );
                                                             })()}
                                                         </div>
+                                                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                                                            <span className="font-bold text-slate-500 uppercase text-[10px]">WhatsApp Bot</span>
+                                                            {(() => {
+                                                                const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                                return (
+                                                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${existing?.dedicatedBotEnabled ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}`}>
+                                                                        {existing?.dedicatedBotEnabled ? `🤖 Dedicated` : '🌐 Unified Bot'}
+                                                                    </span>
+                                                                );
+                                                            })()}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 
                                                 <div className="w-full space-y-2 mt-auto">
+                                                    {/* Main Admin Only: Suspend & Delete Campus */}
+                                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                        <div className="flex w-full gap-2">
+                                                            <button 
+                                                                onClick={() => toggleCollegeSuspension(col)}
+                                                                className={`btn text-xs py-2 flex-1 font-bold ${isSuspended ? 'secondary' : 'warning'}`}
+                                                            >
+                                                                {isSuspended ? '▶️ Resume' : '⏸️ Suspend'}
+                                                            </button>
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    if (window.confirm(`Are you sure you want to DELETE the college "${col}" and ALL its ${colBlocks.length} blocks? This cannot be undone.`)) {
+                                                                        try {
+                                                                            for (const block of colBlocks) {
+                                                                                await api.delete(`/blocks/delete/${block.id}`);
+                                                                            }
+                                                                            fetchBlocks();
+                                                                            if (isSuspended) {
+                                                                                toggleCollegeSuspension(col);
+                                                                            }
+                                                                            alert(`${col} and all its blocks have been deleted.`);
+                                                                        } catch (err) {
+                                                                            alert("Error deleting some blocks.");
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="btn danger text-xs py-2 flex-1 font-bold"
+                                                            >
+                                                                🗑️ Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Main Admin Only: Reset College Orders */}
+                                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                        <button
+                                                            onClick={() => {
+                                                                showConfirm(
+                                                                    `RESET ORDERS FOR ${col}`,
+                                                                    `⚠️ CRITICAL WARNING: This will permanently delete ALL orders and print records for College '${col}'. This action CANNOT be undone. Are you sure you want to proceed?`,
+                                                                    async () => {
+                                                                        try {
+                                                                            await api.post("/admin/reset-stats", null, {
+                                                                                params: {
+                                                                                    adminUsername: loggedInAdminUser,
+                                                                                    scope: "COLLEGE",
+                                                                                    targetName: col
+                                                                                }
+                                                                            });
+                                                                            showAlert("Orders Reset", `All orders for ${col} have been permanently deleted.`, "success");
+                                                                            fetchStats();
+                                                                            fetchOrders();
+                                                                        } catch (err) {
+                                                                            console.error(err);
+                                                                            showAlert("Error", err.response?.data || "Failed to reset orders", "error");
+                                                                        }
+                                                                    }
+                                                                );
+                                                            }}
+                                                            className="btn danger text-xs py-2 w-full font-bold flex items-center justify-center gap-1.5 border border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                                                            title={`Permanently delete all orders for ${col}`}
+                                                        >
+                                                            🗑️ Reset All Orders for {col}
+                                                        </button>
+                                                    )}
+
+                                                    {/* Available to Both Sub-Admin & Main-Admin: Settings & Bot Config Download */}
                                                     <div className="flex w-full gap-2">
                                                         <button 
-                                                            onClick={() => toggleCollegeSuspension(col)}
-                                                            className={`btn text-xs py-2 flex-1 font-bold ${isSuspended ? 'secondary' : 'warning'}`}
+                                                            onClick={() => {
+                                                                const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                                setConfigKeyId(existing?.razorpayKeyId || "");
+                                                                setConfigKeySecret(existing?.razorpayKeySecret || "");
+                                                                setConfigBotPhone(existing?.whatsappBotPhone || "");
+                                                                setConfigDedicatedBot(Boolean(existing?.dedicatedBotEnabled));
+                                                                setPaymentConfigModal(col);
+                                                            }}
+                                                            className="btn primary text-xs py-2 flex-1 font-bold flex items-center justify-center gap-1.5"
                                                         >
-                                                            {isSuspended ? '▶️ Resume' : '⏸️ Suspend'}
+                                                            ⚙️ Gateway & Bot
                                                         </button>
                                                         <button 
-                                                            onClick={async () => {
-                                                                if (window.confirm(`Are you sure you want to DELETE the college "${col}" and ALL its ${colBlocks.length} blocks? This cannot be undone.`)) {
-                                                                    try {
-                                                                        for (const block of colBlocks) {
-                                                                            await api.delete(`/blocks/delete/${block.id}`);
-                                                                        }
-                                                                        fetchBlocks();
-                                                                        if (isSuspended) {
-                                                                            toggleCollegeSuspension(col);
-                                                                        }
-                                                                        alert(`${col} and all its blocks have been deleted.`);
-                                                                    } catch (err) {
-                                                                        alert("Error deleting some blocks.");
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className="btn danger text-xs py-2 flex-1 font-bold"
+                                                            onClick={() => downloadBotConfig(col)}
+                                                            className="btn secondary text-xs py-2 px-3 font-bold flex items-center justify-center gap-1 bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                                            title={`Download bot_config.json for ${col}`}
                                                         >
-                                                            🗑️ Delete
+                                                            📥 Bot Config
                                                         </button>
                                                     </div>
-                                                    <button 
-                                                        onClick={() => {
-                                                            const existing = collegeConfigs.find(c => c.collegeName === col);
-                                                            setConfigKeyId(existing?.razorpayKeyId || "");
-                                                            setConfigKeySecret(existing?.razorpayKeySecret || "");
-                                                            setPaymentConfigModal(col);
-                                                        }}
-                                                        className="btn primary text-xs py-2 w-full font-bold flex items-center justify-center gap-1.5"
-                                                    >
-                                                        💳 Configure Payment Gateway
-                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -8168,18 +8374,18 @@ function AdminDashboard() {
 
             </div>
 
-            {/* Payment Config Modal */}
+            {/* Payment & WhatsApp Bot Config Modal */}
             <AnimatePresence>
                 {paymentConfigModal && (
                     <CustomModal
                         isOpen={!!paymentConfigModal}
                         onClose={() => setPaymentConfigModal(null)}
-                        title={`💳 Payment Gateway: ${paymentConfigModal}`}
+                        title={`⚙️ College Gateway & WhatsApp Bot: ${paymentConfigModal}`}
                         duration={0}
                     >
                         <div className="space-y-4">
                             <p className="text-xs text-slate-500 font-semibold mb-2">
-                                Route online UPI & card payments for <strong>{paymentConfigModal}</strong> directly into its own Razorpay Merchant account. If left empty or reset, payments will fall back to the system default master account.
+                                Configure isolated Razorpay merchant credentials and dedicated WhatsApp bot instance for <strong>{paymentConfigModal}</strong>.
                             </p>
                             <div>
                                 <label className="block text-xs font-black text-slate-700 mb-1">Razorpay Key ID</label>
@@ -8201,26 +8407,58 @@ function AdminDashboard() {
                                     placeholder="Razorpay Secret Key"
                                 />
                             </div>
-                            <div className="flex gap-2 pt-2">
+
+                            <div className="pt-2 border-t border-slate-200">
+                                <label className="block text-xs font-black text-slate-700 mb-1">Dedicated WhatsApp Bot Phone</label>
+                                <input 
+                                    type="text" 
+                                    value={configBotPhone}
+                                    onChange={(e) => setConfigBotPhone(e.target.value)}
+                                    className="field font-mono text-xs" 
+                                    placeholder="+91 94941 89664"
+                                />
+                                <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer mt-2">
+                                    <input 
+                                        type="checkbox"
+                                        checked={configDedicatedBot}
+                                        onChange={(e) => setConfigDedicatedBot(e.target.checked)}
+                                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                                    />
+                                    Enable Dedicated Bot Mode for {paymentConfigModal}
+                                </label>
+                            </div>
+
+                            {/* Download Config Button */}
+                            <button
+                                type="button"
+                                onClick={() => downloadBotConfig(paymentConfigModal)}
+                                className="w-full py-2.5 px-3 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                            >
+                                📥 Download bot_config.json for {paymentConfigModal}
+                            </button>
+
+                            <div className="flex gap-2 pt-2 border-t border-slate-200">
                                 <button 
                                     onClick={async () => {
                                         try {
                                             await api.post("/college-config", {
                                                 collegeName: paymentConfigModal,
                                                 razorpayKeyId: configKeyId.trim(),
-                                                razorpayKeySecret: configKeySecret.trim()
+                                                razorpayKeySecret: configKeySecret.trim(),
+                                                whatsappBotPhone: configBotPhone.trim(),
+                                                dedicatedBotEnabled: configDedicatedBot
                                             });
-                                            showAlert("Success", "Payment credentials saved for " + paymentConfigModal, "success");
+                                            showAlert("Success", "Configuration saved for " + paymentConfigModal, "success");
                                             setPaymentConfigModal(null);
                                             fetchCollegeConfigs();
                                         } catch (err) {
                                             console.error("Save config error:", err);
-                                            showAlert("Error", "Failed to save keys. Please verify backend connection.", "error");
+                                            showAlert("Error", "Failed to save configuration.", "error");
                                         }
                                     }}
                                     className="btn primary flex-1 py-2.5 font-black text-xs"
                                 >
-                                    💾 Save Credentials
+                                    💾 Save Configuration
                                 </button>
                                 {(() => {
                                     const existing = collegeConfigs.find(c => c.collegeName === paymentConfigModal);
@@ -8228,10 +8466,10 @@ function AdminDashboard() {
                                         return (
                                             <button 
                                                 onClick={async () => {
-                                                    if (window.confirm(`Reset ${paymentConfigModal} back to system default Razorpay gateway?`)) {
+                                                    if (window.confirm(`Reset ${paymentConfigModal} back to system default settings?`)) {
                                                         try {
                                                             await api.delete(`/college-config/${existing.id}`);
-                                                            showAlert("Reset Complete", `Reset ${paymentConfigModal} to default gateway.`, "success");
+                                                            showAlert("Reset Complete", `Reset ${paymentConfigModal} to default.`, "success");
                                                             setPaymentConfigModal(null);
                                                             fetchCollegeConfigs();
                                                         } catch (err) {

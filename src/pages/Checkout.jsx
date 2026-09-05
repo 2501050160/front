@@ -859,7 +859,6 @@ function Checkout() {
                         )}
 
                         {/* Pay with Razorpay Button */}
-
                         <button
                             onClick={payNow}
                             className="btn success mt-3 w-full flex items-center justify-center gap-2"

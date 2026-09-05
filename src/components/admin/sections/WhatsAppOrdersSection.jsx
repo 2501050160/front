@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, Phone, User, Search, Download, Printer, CheckCircle, Clock, ExternalLink } from "lucide-react";
+import { MessageSquare, Phone, User, Search, Download, Printer, CheckCircle, Clock, ExternalLink, Trash2 } from "lucide-react";
 import StatusBadge from "../../common/StatusBadge";
 import MetricCard from "../../common/MetricCard";
 import api, { getPdfDownloadUrl } from "../../../services/api";
@@ -110,6 +110,33 @@ export function WhatsAppOrdersSection({
         } catch (error) {
             console.error(error);
             showAlert("Error", "Failed to update status", "error");
+        }
+    };
+
+    const handleDeleteOrder = (orderId) => {
+        if (localStorage.getItem("adminRole") !== "MAIN_ADMIN" && localStorage.getItem("adminUser") !== "admin") {
+            showAlert && showAlert("Only the main admin has permission to delete orders from the database!", "error");
+            return;
+        }
+        if (!orderId) return;
+        const proceed = () => {
+            api.post("/admin/orders/delete", null, {
+                params: {
+                    adminUsername: localStorage.getItem("adminUser") || "admin",
+                    orderId: String(orderId)
+                }
+            }).then(() => {
+                showAlert && showAlert(`Order #${orderId} deleted successfully.`, "success");
+                fetchOrders();
+            }).catch(err => {
+                showAlert && showAlert("Failed to delete order: " + (err.response?.data || err.message), "error");
+            });
+        };
+
+        if (showConfirm) {
+            showConfirm(`Are you sure you want to permanently delete WhatsApp Order #${orderId}? This cannot be undone.`, proceed);
+        } else if (window.confirm(`Are you sure you want to permanently delete WhatsApp Order #${orderId}?`)) {
+            proceed();
         }
     };
 
@@ -397,6 +424,16 @@ export function WhatsAppOrdersSection({
                                                         className="px-3 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer"
                                                     >
                                                         Done
+                                                    </button>
+                                                )}
+
+                                                {(localStorage.getItem("adminRole") === "MAIN_ADMIN" || localStorage.getItem("adminUser") === "admin") && (
+                                                    <button
+                                                        onClick={() => handleDeleteOrder(order.orderId || order.id)}
+                                                        className="p-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+                                                        title="Delete this order permanently (Main Admin Only)"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </div>
