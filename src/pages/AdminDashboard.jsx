@@ -3088,51 +3088,41 @@ function AdminDashboard() {
 
                     {/* Right Header Actions: Hardware Alerts + Display Panel + Profile Sign Out Dropdown */}
                     <div className="flex items-center gap-2.5 shrink-0 self-end md:self-auto">
-                        {/* Hardware Alerts Bell & Quick Refill Button */}
+                        {/* Hardware Alerts Bell & Quick Refill Button - Symbol Only */}
                         <button
                             onClick={() => setShowHardwareAlertsModal(true)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95 border ${
+                            className={`p-2 rounded-xl text-xs font-black transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0 active:scale-95 border ${
                                 outOfPaperPrinters.length > 0
                                     ? "bg-rose-500 text-white border-rose-600 animate-pulse shadow-rose-500/30"
                                     : lowPaperPrinters.length > 0
                                     ? "bg-amber-500 text-slate-950 border-amber-600 font-black shadow-amber-500/30"
                                     : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
                             }`}
-                            title="Hardware & Paper Supply Alerts"
+                            title={
+                                outOfPaperPrinters.length > 0
+                                    ? `${outOfPaperPrinters.length} Empty Kiosk(s)! Hardware Alert`
+                                    : lowPaperPrinters.length > 0
+                                    ? `${lowPaperPrinters.length} Low Paper Warning! Hardware Alert`
+                                    : "Hardware & Paper Supply Alerts"
+                            }
                         >
-                            <span>{outOfPaperPrinters.length > 0 ? "🚨" : lowPaperPrinters.length > 0 ? "⚠️" : "🔔"}</span>
-                            <span className="hidden sm:inline">
-                                {outOfPaperPrinters.length > 0 
-                                    ? `${outOfPaperPrinters.length} Empty Kiosk${outOfPaperPrinters.length > 1 ? 's' : ''}!` 
-                                    : lowPaperPrinters.length > 0 
-                                    ? `${lowPaperPrinters.length} Low Paper` 
-                                    : "Hardware Alerts"}
-                            </span>
-                            {lowPaperPrinters.length > 0 && (
-                                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-black text-white">
-                                    {lowPaperPrinters.length}
+                            <span className="text-base leading-none">{outOfPaperPrinters.length > 0 ? "🚨" : lowPaperPrinters.length > 0 ? "⚠️" : "🔔"}</span>
+                            {(outOfPaperPrinters.length > 0 || lowPaperPrinters.length > 0) && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-black text-white leading-none">
+                                    {outOfPaperPrinters.length + lowPaperPrinters.length}
                                 </span>
                             )}
                         </button>
 
+                        {/* Display Panel Button - Symbol Only */}
                         <button
                             onClick={() => navigate("/display-panel")}
-                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 hover:from-sky-500/20 hover:to-indigo-500/20 text-slate-800 hover:text-sky-700 border border-sky-200/80 hover:border-sky-300 text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+                            className="p-2 rounded-xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 hover:from-sky-500/20 hover:to-indigo-500/20 text-slate-800 hover:text-sky-700 border border-sky-200/80 hover:border-sky-300 text-xs font-black transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0 active:scale-95"
                             title="Open Live Display Panel"
                         >
-                            <span className="text-base">📺</span>
-                            <span className="hidden sm:inline">Display Panel</span>
+                            <span className="text-base leading-none">📺</span>
                         </button>
 
-                        {/* WhatsApp Bot Config Quick Download */}
-                        <button
-                            onClick={() => downloadBotConfig((loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? loggedInAdminCollege : "unified")}
-                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 text-emerald-800 border border-emerald-300 text-xs font-black transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
-                            title={`Download bot_config.json for ${(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? loggedInAdminCollege : "Unified Bot"}`}
-                        >
-                            <span className="text-base">🤖</span>
-                            <span className="hidden sm:inline">{(loggedInAdminRole === "SUB_ADMIN" && loggedInAdminUser !== "admin") ? `${loggedInAdminCollege} Bot Config` : "Bot Config"}</span>
-                        </button>
 
                         {/* Profile Pill with Logout Dropdown */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setIsProfileMenuOpen(false); }}>
@@ -5729,24 +5719,25 @@ function AdminDashboard() {
                                                         </button>
                                                     )}
 
-                                                    {/* Available to Both Sub-Admin & Main-Admin: Settings & Bot Config Download */}
                                                     <div className="flex w-full gap-2">
-                                                        <button 
-                                                            onClick={() => {
-                                                                const existing = collegeConfigs.find(c => c.collegeName === col);
-                                                                setConfigKeyId(existing?.razorpayKeyId || "");
-                                                                setConfigKeySecret(existing?.razorpayKeySecret || "");
-                                                                setConfigBotPhone(existing?.whatsappBotPhone || "");
-                                                                setConfigDedicatedBot(Boolean(existing?.dedicatedBotEnabled));
-                                                                setPaymentConfigModal(col);
-                                                            }}
-                                                            className="btn primary text-xs py-2 flex-1 font-bold flex items-center justify-center gap-1.5"
-                                                        >
-                                                            ⚙️ Gateway & Bot
-                                                        </button>
+                                                        {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                                    setConfigKeyId(existing?.razorpayKeyId || "");
+                                                                    setConfigKeySecret(existing?.razorpayKeySecret || "");
+                                                                    setConfigBotPhone(existing?.whatsappBotPhone || "");
+                                                                    setConfigDedicatedBot(Boolean(existing?.dedicatedBotEnabled));
+                                                                    setPaymentConfigModal(col);
+                                                                }}
+                                                                className="btn primary text-xs py-2 flex-1 font-bold flex items-center justify-center gap-1.5"
+                                                            >
+                                                                ⚙️ Gateway & Bot
+                                                            </button>
+                                                        )}
                                                         <button 
                                                             onClick={() => downloadBotConfig(col)}
-                                                            className="btn secondary text-xs py-2 px-3 font-bold flex items-center justify-center gap-1 bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                                            className="btn secondary text-xs py-2 px-3 font-bold flex-1 flex items-center justify-center gap-1 bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
                                                             title={`Download bot_config.json for ${col}`}
                                                         >
                                                             📥 Bot Config
