@@ -208,6 +208,27 @@ export function CollegeManagementSection({
                                 >
                                     📥 Download bot_config.json
                                 </button>
+
+                                {(localStorage.getItem("adminRole") === "MAIN_ADMIN" || localStorage.getItem("adminUser") === "admin") && (
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (window.confirm(`Are you sure you want to remotely log out and unlink the WhatsApp Bot for ${c.code}? This will disconnect the bot and generate a new QR code on its next run.`)) {
+                                                try {
+                                                    await api.post("/college-config/bot-logout", null, { params: { college: c.code } });
+                                                    showAlert("Bot Logged Out", `WhatsApp Bot for ${c.code} logout requested. It will unpair on next heartbeat.`, "success");
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    showAlert("Error", err.response?.data?.message || "Failed to log out bot", "error");
+                                                }
+                                            }
+                                        }}
+                                        className="w-full py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                        title={`Remotely disconnect and log out WhatsApp Bot for ${c.code}`}
+                                    >
+                                        🚪 Logout WhatsApp Bot
+                                    </button>
+                                )}
                             </div>
 
                             {/* Main Admin Only: Reset College Orders & Emergency Suspension */}

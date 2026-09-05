@@ -279,15 +279,17 @@ function UserManagement() {
                             <School className="w-3.5 h-3.5 text-sky-600" /> College
                           </button>
                         )}
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowModal(true);
-                          }}
-                          className="btn secondary py-1.5 px-3 min-h-0 text-xs font-black flex items-center gap-1"
-                        >
-                          <PlusCircle className="w-3.5 h-3.5 text-blue-600" /> Add Money
-                        </button>
+                        {loggedInAdminRole !== "MANAGER" && (
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowModal(true);
+                            }}
+                            className="btn secondary py-1.5 px-3 min-h-0 text-xs font-black flex items-center gap-1"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5 text-blue-600" /> Add Money
+                          </button>
+                        )}
                         <button
                           onClick={() => handleToggleBlock(user.id)}
                           className={`btn min-h-0 py-1.5 px-3 text-xs font-black flex items-center gap-1 ${

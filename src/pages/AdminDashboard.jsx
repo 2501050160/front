@@ -237,6 +237,57 @@ function AdminDashboard() {
     const [isCreatingSubAdmin, setIsCreatingSubAdmin] = useState(false);
     const [managerLogs, setManagerLogs] = useState([]);
 
+    // Security Key Lock state for Manager role (Vouchers)
+    const [isVoucherUnlocked, setIsVoucherUnlocked] = useState(false);
+
+    const handleUnlockVouchers = async (targetSubTab = "voucher-gen") => {
+        if (loggedInAdminRole !== "MANAGER") {
+            setIsVoucherUnlocked(true);
+            setPricingSubTab(targetSubTab);
+            return;
+        }
+        const secret = window.prompt("🔑 Security Verification:\nEnter Manager Security Key to access Voucher Generator & Active Vouchers:");
+        if (!secret) return;
+
+        try {
+            const adminId = localStorage.getItem("adminId");
+            const verifyResponse = await api.post("/admin/verify-secret", null, {
+                params: { adminId, secret }
+            });
+            if (verifyResponse.data?.success) {
+                setIsVoucherUnlocked(true);
+                setPricingSubTab(targetSubTab);
+                showAlert("Access Unlocked", "Voucher Generator & Active Vouchers unlocked for this session.", "success");
+            } else {
+                showAlert("Security Error", "Invalid Security Key. Access denied.", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showAlert("Error", "Error verifying security key.", "error");
+        }
+    };
+
+    const handleLogoutCollegeBot = (col) => {
+        if (loggedInAdminRole !== "MAIN_ADMIN" && loggedInAdminUser !== "admin") {
+            showAlert("Permission Denied", "Only the main admin has permission to log out college WhatsApp bots.", "error");
+            return;
+        }
+        showConfirm(
+            "Confirm WhatsApp Bot Logout",
+            `Are you sure you want to log out and unlink the WhatsApp bot for ${col}? This will disconnect the bot and generate a new QR code on next launch.`,
+            async () => {
+                try {
+                    await api.post("/college-config/bot-logout", null, { params: { college: col } });
+                    showAlert("Bot Logged Out", `WhatsApp Bot for ${col} has been logged out successfully. Next time it starts, a new QR code will be generated.`, "success");
+                    fetchCollegeConfigs();
+                } catch (err) {
+                    console.error("Error logging out bot:", err);
+                    showAlert("Error", err.response?.data?.message || "Failed to log out WhatsApp bot", "error");
+                }
+            }
+        );
+    };
+
     // Hardware & Low Paper Alerts state
     const [hardwareAlerts, setHardwareAlerts] = useState([]);
     const [showHardwareAlertsModal, setShowHardwareAlertsModal] = useState(false);
@@ -734,6 +785,10 @@ function AdminDashboard() {
     };
 
     const handleAddWalletMoney = async (user) => {
+        if (loggedInAdminRole === "MANAGER") {
+            showAlert("Permission Denied", "Managers are not authorized to add wallet money directly.", "error");
+            return;
+        }
         const inputAmount = window.prompt(`Add wallet balance for ${user.name || user.email}.\nEnter amount in ₹ to add:`, "50");
         if (inputAmount === null) return;
         const amount = parseFloat(inputAmount);
@@ -2946,8 +3001,10 @@ function AdminDashboard() {
                                 { id: "tickets", label: "Support Tickets", icon: "🎧", desc: `${allSupportTickets.length} Inquiries` },
                                 { id: "wallets", label: "Wallet Balances", icon: "💳", desc: "User Credits" },
                                 { id: "moderation", label: "Blocked Accounts", icon: "⛔", desc: `${users.filter(u => u.blocked).length} Suspended` },
-                                { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
-                                { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
+                                ...(loggedInAdminRole !== "MANAGER" ? [
+                                    { id: "staff-list", label: "Staff Directory", icon: "🔑", desc: `${subAdmins.length} Accounts` },
+                                    { id: "add-staff", label: "Add Staff", icon: "➕", desc: "Create Account" },
+                                ] : []),
                             ].map(sub => (
                                 <button
                                     key={sub.id}
@@ -2973,22 +3030,45 @@ function AdminDashboard() {
                                 { id: "coupon-gen", label: "% Discount Coupon", icon: "🎟️", desc: "% Percentage Off" },
                                 { id: "flat-coupon-gen", label: "₹ Flat Off Coupon", icon: "🏷️", desc: "Flat ₹ Discount" },
                                 { id: "active-coupons", label: "Active Coupons", icon: "📋", desc: `${coupons.length} Active` },
-                                { id: "voucher-gen", label: "Voucher Generator", icon: "🎁", desc: "Wallet Credits" },
-                                { id: "active-vouchers", label: "Active Vouchers", icon: "🎫", desc: `${rewards.length} Active` },
+                                { 
+                                    id: "voucher-gen", 
+                                    label: "Voucher Generator", 
+                                    icon: (loggedInAdminRole === "MANAGER" && !isVoucherUnlocked) ? "🔒" : "🎁", 
+                                    desc: (loggedInAdminRole === "MANAGER" && !isVoucherUnlocked) ? "Locked (Key Req.)" : "Wallet Credits",
+                                    locked: loggedInAdminRole === "MANAGER" && !isVoucherUnlocked
+                                },
+                                { 
+                                    id: "active-vouchers", 
+                                    label: "Active Vouchers", 
+                                    icon: (loggedInAdminRole === "MANAGER" && !isVoucherUnlocked) ? "🔒" : "🎫", 
+                                    desc: (loggedInAdminRole === "MANAGER" && !isVoucherUnlocked) ? "Locked (Key Req.)" : `${rewards.length} Active`,
+                                    locked: loggedInAdminRole === "MANAGER" && !isVoucherUnlocked
+                                },
                                 { id: "referrals", label: "Refer & Earn", icon: "👥", desc: "Referral Rules" }
                             ].map(sub => (
                                 <button
                                     key={sub.id}
-                                    onClick={() => setPricingSubTab(sub.id)}
+                                    onClick={() => {
+                                        if (sub.locked) {
+                                            handleUnlockVouchers(sub.id);
+                                        } else {
+                                            setPricingSubTab(sub.id);
+                                        }
+                                    }}
                                     className={`min-w-[125px] flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer shrink-0 text-center ${
                                         pricingSubTab === sub.id
                                             ? "bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400"
+                                            : sub.locked
+                                            ? "bg-amber-50/80 hover:bg-amber-100 text-amber-900 border border-amber-200/80 hover:border-amber-300"
                                             : "bg-slate-50/80 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                     }`}
                                 >
                                     <span className="text-xl mb-1">{sub.icon}</span>
-                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
-                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${pricingSubTab === sub.id ? "text-sky-100" : "text-slate-500"}`}>
+                                    <span className="text-xs font-black leading-tight flex items-center gap-1">
+                                        {sub.label}
+                                        {sub.locked && <span className="text-[10px] text-amber-600 font-bold">🔒</span>}
+                                    </span>
+                                    <span className={`text-[10px] font-semibold mt-0.5 leading-tight ${pricingSubTab === sub.id ? "text-sky-100" : sub.locked ? "text-amber-700 font-bold" : "text-slate-500"}`}>
                                         {sub.desc}
                                     </span>
                                 </button>
@@ -5208,12 +5288,34 @@ function AdminDashboard() {
 
                         {/* SUBPAGE 5: Voucher Generator (Rewards Program) */}
                         {pricingSubTab === "voucher-gen" && (
-                            <motion.div
-                                className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
-                                initial={{ opacity: 0, y: 14 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.25 }}
-                            >
+                            (loggedInAdminRole === "MANAGER" && !isVoucherUnlocked) ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="panel p-10 flex flex-col items-center justify-center min-h-[350px] text-center max-w-lg mx-auto border-2 border-amber-200 bg-amber-50/40 rounded-2xl shadow-sm my-6"
+                                >
+                                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-3xl mb-4 text-amber-600 shadow-inner">
+                                        🔒
+                                    </div>
+                                    <h2 className="text-2xl font-black text-slate-900 mb-2">Voucher Generator Locked</h2>
+                                    <p className="text-slate-600 text-sm font-semibold mb-6 max-w-sm">
+                                        Manager access to generate wallet credit vouchers is locked. Enter your security key to unlock.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleUnlockVouchers("voucher-gen")}
+                                        className="btn primary px-6 py-2.5 font-black text-sm inline-flex items-center gap-2 cursor-pointer shadow-md shadow-sky-500/20"
+                                    >
+                                        <span>🔑</span> Unlock with Security Key
+                                    </button>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    className="grid gap-6 lg:grid-cols-[1.2fr_1fr]"
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                >
                                 <section className="panel p-6">
                                     <div className="section-header mb-6">
                                         <div>
@@ -5371,15 +5473,38 @@ function AdminDashboard() {
                                     </div>
                                 </section>
                             </motion.div>
+                            )
                         )}
 
                         {/* SUBPAGE 6: Active Vouchers List */}
                         {pricingSubTab === "active-vouchers" && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 14 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.25 }}
-                            >
+                            (loggedInAdminRole === "MANAGER" && !isVoucherUnlocked) ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="panel p-10 flex flex-col items-center justify-center min-h-[350px] text-center max-w-lg mx-auto border-2 border-amber-200 bg-amber-50/40 rounded-2xl shadow-sm my-6"
+                                >
+                                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-3xl mb-4 text-amber-600 shadow-inner">
+                                        🔒
+                                    </div>
+                                    <h2 className="text-2xl font-black text-slate-900 mb-2">Active Vouchers Locked</h2>
+                                    <p className="text-slate-600 text-sm font-semibold mb-6 max-w-sm">
+                                        Manager access to view and manage active wallet vouchers is locked. Enter your security key to unlock.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleUnlockVouchers("active-vouchers")}
+                                        className="btn primary px-6 py-2.5 font-black text-sm inline-flex items-center gap-2 cursor-pointer shadow-md shadow-sky-500/20"
+                                    >
+                                        <span>🔑</span> Unlock with Security Key
+                                    </button>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                >
                                 <section className="panel p-6 overflow-x-auto">
                                     <div className="section-header mb-6 pb-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
                                         <div>
@@ -5479,6 +5604,7 @@ function AdminDashboard() {
                                     </table>
                                 </section>
                             </motion.div>
+                            )
                         )}
 
                         {/* SUBPAGE 7: Refer & Earn Program (Referrals) */}
@@ -5743,6 +5869,16 @@ function AdminDashboard() {
                                                             📥 Bot Config
                                                         </button>
                                                     </div>
+
+                                                    {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
+                                                        <button
+                                                            onClick={() => handleLogoutCollegeBot(col)}
+                                                            className="btn warning text-xs py-2 w-full font-bold flex items-center justify-center gap-1.5 border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 cursor-pointer"
+                                                            title={`Remotely disconnect and log out WhatsApp Bot for ${col}`}
+                                                        >
+                                                            🚪 Logout WhatsApp Bot
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -6440,13 +6576,15 @@ function AdminDashboard() {
                                                 </td>
                                                 <td>
                                                     <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => handleAddWalletMoney(user)}
-                                                            className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                                            title="Add money to user wallet"
-                                                        >
-                                                            <span>💳</span> Add Money
-                                                        </button>
+                                                        {loggedInAdminRole !== "MANAGER" && (
+                                                            <button
+                                                                onClick={() => handleAddWalletMoney(user)}
+                                                                className="btn success min-h-0 px-2.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                                                title="Add money to user wallet"
+                                                            >
+                                                                <span>💳</span> Add Money
+                                                            </button>
+                                                        )}
                                                         <button
                                                             onClick={() => toggleBlockUser(user.id)}
                                                             className={`btn ${user.blocked ? 'success' : 'warning'} min-h-0 px-2.5 py-1 text-xs font-bold cursor-pointer`}
@@ -6601,7 +6739,7 @@ function AdminDashboard() {
                         )}
 
                         {/* SUBPAGE 4: Staff Directory Table */}
-                        {usersSubTab === "staff-list" && (
+                        {usersSubTab === "staff-list" && loggedInAdminRole !== "MANAGER" && (
                             <motion.section
                                 className="panel p-6 overflow-x-auto"
                                 initial={{ opacity: 0, y: 12 }}
@@ -6653,7 +6791,7 @@ function AdminDashboard() {
                         )}
 
                         {/* SUBPAGE 5: Add Staff Account Form */}
-                        {usersSubTab === "add-staff" && (
+                        {usersSubTab === "add-staff" && loggedInAdminRole !== "MANAGER" && (
                             <motion.div
                                 className="grid gap-6 md:grid-cols-[1.2fr_1fr]"
                                 initial={{ opacity: 0, y: 12 }}
