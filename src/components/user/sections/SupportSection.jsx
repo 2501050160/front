@@ -11,6 +11,31 @@ export function SupportSection({
     const [email, setEmail] = useState(userEmail);
     const [message, setMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [botPhone, setBotPhone] = useState("918688500278");
+    const [botCollege, setBotCollege] = useState("");
+
+    React.useEffect(() => {
+        const fetchBot = async () => {
+            try {
+                const userCol = localStorage.getItem("userCollege") || "KLU";
+                const res = await api.get("/college-config");
+                if (res.data && Array.isArray(res.data)) {
+                    let target = res.data.find(c => c.collegeName && c.collegeName.toUpperCase() === userCol.toUpperCase() && c.whatsappBotPhone);
+                    if (!target) target = res.data.find(c => c.dedicatedBotEnabled && c.whatsappBotPhone);
+                    if (!target) target = res.data.find(c => c.whatsappBotPhone);
+                    if (target && target.whatsappBotPhone) {
+                        const digits = target.whatsappBotPhone.replace(/\D/g, "");
+                        const formatted = digits.length === 10 ? `91${digits}` : digits;
+                        if (formatted) {
+                            setBotPhone(formatted);
+                            setBotCollege(target.collegeName || userCol);
+                        }
+                    }
+                }
+            } catch (e) {}
+        };
+        fetchBot();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -117,10 +142,10 @@ export function SupportSection({
                             Need instant help at a kiosk? Message our automated AI bot on WhatsApp directly.
                         </p>
                         <button
-                            onClick={() => window.open("https://wa.me/919999999999", "_blank")}
-                            className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow-md"
+                            onClick={() => window.open(`https://wa.me/${botPhone}?text=Hi`, "_blank")}
+                            className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow-md flex items-center justify-center gap-1.5"
                         >
-                            Open WhatsApp Chat
+                            Open WhatsApp Chat {botCollege ? `(${botCollege})` : ""}
                         </button>
                     </div>
 

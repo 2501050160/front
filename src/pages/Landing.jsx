@@ -41,8 +41,42 @@ function Landing() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [typedTitle1, setTypedTitle1] = useState("");
-  const [typedTitle2, setTypedTitle2] = useState("");
   const [whatsappBotNumber, setWhatsappBotNumber] = useState("918688500278");
+  const [dedicatedBotCollege, setDedicatedBotCollege] = useState("");
+
+  useEffect(() => {
+    // Dynamically fetch assigned dedicated WhatsApp Bot phone number from College Config
+    const fetchDedicatedBotNumber = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "https://printer-backend-kgzp.onrender.com";
+        const userCol = localStorage.getItem("userCollege") || "KLU";
+        const res = await fetch(`${apiUrl}/api/college-config`);
+        if (res.ok) {
+          const configs = await res.json();
+          if (Array.isArray(configs) && configs.length > 0) {
+            let target = configs.find(c => c.collegeName && c.collegeName.toUpperCase() === userCol.toUpperCase() && c.whatsappBotPhone);
+            if (!target) {
+              target = configs.find(c => c.dedicatedBotEnabled && c.whatsappBotPhone);
+            }
+            if (!target) {
+              target = configs.find(c => c.whatsappBotPhone);
+            }
+            if (target && target.whatsappBotPhone) {
+              const digits = target.whatsappBotPhone.replace(/\D/g, "");
+              const formatted = digits.length === 10 ? `91${digits}` : digits;
+              if (formatted) {
+                setWhatsappBotNumber(formatted);
+                setDedicatedBotCollege(target.collegeName || userCol);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load dedicated bot number:", err);
+      }
+    };
+    fetchDedicatedBotNumber();
+  }, []);
 
   useEffect(() => {
     const title1 = "Print Anywhere.";
@@ -325,7 +359,7 @@ function Landing() {
               rel="noopener noreferrer"
               className="btn bg-emerald-600 hover:bg-emerald-500 text-white min-h-0 py-2.5 px-4 rounded-xl font-black text-sm flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
             >
-              💬 WhatsApp Bot
+              💬 WhatsApp Bot {dedicatedBotCollege ? `(${dedicatedBotCollege})` : ""}
             </a>
             <Link to="/login" className="btn success min-h-0 py-2.5 px-5 rounded-xl font-black text-sm shadow-md shadow-blue-500/10">
               ⚡ Upload Document
@@ -412,7 +446,7 @@ function Landing() {
                   rel="noopener noreferrer"
                   className="btn bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3.5 rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
                 >
-                  💬 Print via WhatsApp
+                  💬 Print via WhatsApp {dedicatedBotCollege ? `(${dedicatedBotCollege})` : ""}
                 </a>
                 <button
                   onClick={() => setShowDemo(true)}
