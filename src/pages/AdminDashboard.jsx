@@ -199,11 +199,14 @@ function AdminDashboard() {
     const [configKeySecret, setConfigKeySecret] = useState("");
     const [configBotPhone, setConfigBotPhone] = useState("");
     const [configDedicatedBot, setConfigDedicatedBot] = useState(false);
+    const [configBotApiKey, setConfigBotApiKey] = useState("");
 
     const downloadBotConfig = (collegeName) => {
         const col = (collegeName === "unified" || !collegeName || collegeName === "ALL") ? "" : collegeName.trim();
+        const existing = collegeConfigs.find(c => (c.collegeName || "").toUpperCase() === (col || "").toUpperCase());
         const configObj = {
             targetCollege: col,
+            botApiKey: existing?.whatsappBotApiKey || configBotApiKey || "",
             backendUrl: "https://printer-backend-kgzp.onrender.com",
             frontendUrl: "https://cloudprint.website",
             botName: col ? `${col} Dedicated WhatsApp Bot` : "Unified Cloud Print Bot"
@@ -5845,11 +5848,12 @@ function AdminDashboard() {
                                                         {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                                                             <button 
                                                                 onClick={() => {
-                                                                    const existing = collegeConfigs.find(c => c.collegeName === col);
+                                                                    const existing = collegeConfigs.find(c => (c.collegeName || "").toUpperCase() === (col || "").toUpperCase());
                                                                     setConfigKeyId(existing?.razorpayKeyId || "");
                                                                     setConfigKeySecret(existing?.razorpayKeySecret || "");
                                                                     setConfigBotPhone(existing?.whatsappBotPhone || "");
                                                                     setConfigDedicatedBot(Boolean(existing?.dedicatedBotEnabled));
+                                                                    setConfigBotApiKey(existing?.whatsappBotApiKey || "");
                                                                     setPaymentConfigModal(col);
                                                                 }}
                                                                 className="btn primary text-xs py-2 flex-1 font-bold flex items-center justify-center gap-1.5"
@@ -8536,6 +8540,7 @@ function AdminDashboard() {
                                 />
                             </div>
 
+                            {/* Dedicated WhatsApp Bot Phone & Mode */}
                             <div className="pt-2 border-t border-slate-200">
                                 <label className="block text-xs font-black text-slate-700 mb-1">Dedicated WhatsApp Bot Phone</label>
                                 <input 
@@ -8556,6 +8561,54 @@ function AdminDashboard() {
                                 </label>
                             </div>
 
+                            {/* Dedicated Bot API Key Section */}
+                            <div className="pt-2 border-t border-slate-200 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-xs font-black text-slate-700">Dedicated WhatsApp Bot API Key</label>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            try {
+                                                const res = await api.post("/college-config/generate-bot-key", null, { params: { college: paymentConfigModal } });
+                                                if (res.data && res.data.botApiKey) {
+                                                    setConfigBotApiKey(res.data.botApiKey);
+                                                    showAlert("API Key Generated", `New WhatsApp Bot API Key created for ${paymentConfigModal}!`, "success");
+                                                    fetchCollegeConfigs();
+                                                }
+                                            } catch (err) {
+                                                console.error("Generate key error:", err);
+                                                showAlert("Error", "Failed to generate bot API key", "error");
+                                            }
+                                        }}
+                                        className="text-[11px] font-black py-1 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-300 shadow-xs cursor-pointer flex items-center gap-1 transition-all"
+                                    >
+                                        🔑 {configBotApiKey ? "Regenerate Key" : "Generate Bot Key"}
+                                    </button>
+                                </div>
+                                {configBotApiKey ? (
+                                    <div className="flex items-center gap-2 p-2 bg-slate-100 rounded-lg border border-slate-300">
+                                        <input 
+                                            type="text" 
+                                            readOnly 
+                                            value={configBotApiKey} 
+                                            className="bg-transparent font-mono text-[11px] font-bold text-slate-800 flex-1 outline-none select-all"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(configBotApiKey);
+                                                showAlert("Copied", "Bot API Key copied to clipboard!", "success");
+                                            }}
+                                            className="px-2 py-0.5 text-[10px] font-black rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 cursor-pointer"
+                                        >
+                                            📋 Copy
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="text-[11px] text-slate-400 italic">No dedicated bot API key generated yet. Click "Generate Bot Key" to bind.</div>
+                                )}
+                            </div>
+
                             {/* Download Config Button */}
                             <button
                                 type="button"
@@ -8574,7 +8627,8 @@ function AdminDashboard() {
                                                 razorpayKeyId: configKeyId.trim(),
                                                 razorpayKeySecret: configKeySecret.trim(),
                                                 whatsappBotPhone: configBotPhone.trim(),
-                                                dedicatedBotEnabled: configDedicatedBot
+                                                dedicatedBotEnabled: configDedicatedBot,
+                                                whatsappBotApiKey: configBotApiKey.trim()
                                             });
                                             showAlert("Success", "Configuration saved for " + paymentConfigModal, "success");
                                             setPaymentConfigModal(null);
