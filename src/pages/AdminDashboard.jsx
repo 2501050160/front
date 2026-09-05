@@ -1236,16 +1236,19 @@ function AdminDashboard() {
             "Confirm Delete",
             `Are you sure you want to permanently delete ${selectedAdminOrderIds.length} selected order(s)? They will be removed from the database and user history.`,
             async () => {
+                const toDelete = [...selectedAdminOrderIds];
+                const toDeleteSet = new Set(toDelete.map(id => String(id)));
+                setOrders(prev => prev.filter(o => !toDeleteSet.has(String(o.orderId)) && !toDeleteSet.has(String(o.id))));
+                setSelectedAdminOrderIds([]);
+
                 try {
-                    await api.post("/admin/orders/delete-bulk", selectedAdminOrderIds, {
+                    await api.post("/admin/orders/delete-bulk", toDelete, {
                         params: { adminUsername: loggedInAdminUser }
                     });
-                    showAlert("Delete Success", `${selectedAdminOrderIds.length} order(s) deleted successfully.`, "success");
-                    setSelectedAdminOrderIds([]);
-                    fetchOrders();
                     fetchStats();
                 } catch (error) {
                     console.error("Error deleting orders:", error);
+                    fetchOrders();
                     showAlert("Error", error.response?.data || "Failed to delete orders", "error");
                 }
             }
@@ -1258,27 +1261,24 @@ function AdminDashboard() {
             return;
         }
         if (!orderId) return;
-        showConfirm(
-            "Confirm Delete Order",
-            `Are you sure you want to permanently delete Order #${orderId}? It will be removed from the database and print queue.`,
-            async () => {
-                try {
-                    await api.post("/admin/orders/delete", null, {
-                        params: {
-                            adminUsername: loggedInAdminUser,
-                            orderId: String(orderId)
-                        }
-                    });
-                    showAlert("Deleted", `Order #${orderId} deleted successfully.`, "success");
-                    setSelectedAdminOrderIds(prev => prev.filter(id => id !== orderId));
-                    fetchOrders();
-                    fetchStats();
-                } catch (error) {
-                    console.error("Error deleting order:", error);
-                    showAlert("Error", error.response?.data || "Failed to delete order", "error");
+
+        // Instant optimistic UI deletion: disappears immediately upon pressing delete
+        setOrders(prev => prev.filter(o => o.orderId !== orderId && o.id !== orderId && String(o.id) !== String(orderId) && String(o.orderId) !== String(orderId)));
+        setSelectedAdminOrderIds(prev => prev.filter(id => id !== orderId && String(id) !== String(orderId)));
+
+        try {
+            await api.post("/admin/orders/delete", null, {
+                params: {
+                    adminUsername: loggedInAdminUser,
+                    orderId: String(orderId)
                 }
-            }
-        );
+            });
+            fetchStats();
+        } catch (error) {
+            console.error("Error deleting order:", error);
+            fetchOrders();
+            showAlert("Error", error.response?.data || "Failed to delete order", "error");
+        }
     };
 
     const handleUpdateOrderStatus = async (orderId, newStatus) => {
@@ -8394,7 +8394,7 @@ function AdminDashboard() {
                                     value={configKeyId}
                                     onChange={(e) => setConfigKeyId(e.target.value)}
                                     className="field font-mono text-xs" 
-                                    placeholder="rzp_live_... or rzp_test_..."
+                                    placeholder="Default: rzp_live_TOBWLIHZxellOE (or custom)"
                                 />
                             </div>
                             <div>
@@ -8404,7 +8404,7 @@ function AdminDashboard() {
                                     value={configKeySecret}
                                     onChange={(e) => setConfigKeySecret(e.target.value)}
                                     className="field font-mono text-xs" 
-                                    placeholder="Razorpay Secret Key"
+                                    placeholder="Default: zth9Qce6MLqEs6O151FPfIsV (or custom)"
                                 />
                             </div>
 

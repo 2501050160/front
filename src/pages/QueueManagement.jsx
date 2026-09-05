@@ -111,15 +111,18 @@ function QueueManagement() {
     if (!window.confirm(`Are you sure you want to permanently delete ${selectedOrderIds.length} selected order(s)? They will be removed from the database and user history.`)) {
       return;
     }
+    const toDelete = [...selectedOrderIds];
+    const toDeleteSet = new Set(toDelete.map(id => String(id)));
+    setOrders(prev => prev.filter(o => !toDeleteSet.has(String(o.orderId)) && !toDeleteSet.has(String(o.id))));
+    setSelectedOrderIds([]);
+
     try {
-      await api.post("/admin/orders/delete-bulk", selectedOrderIds, {
+      await api.post("/admin/orders/delete-bulk", toDelete, {
         params: { adminUsername: loggedInAdminUser }
       });
-      alert(`Deleted ${selectedOrderIds.length} order(s) successfully.`);
-      setSelectedOrderIds([]);
-      fetchOrders();
     } catch (err) {
       console.error(err);
+      fetchOrders();
       alert("Error deleting orders: " + (err.response?.data || err.message));
     }
   };
@@ -130,9 +133,11 @@ function QueueManagement() {
       return;
     }
     if (!orderId) return;
-    if (!window.confirm(`Are you sure you want to permanently delete Order #${orderId}? This action cannot be undone.`)) {
-      return;
-    }
+
+    // Instant optimistic UI deletion: disappears immediately upon pressing delete
+    setOrders(prev => prev.filter(o => o.orderId !== orderId && o.id !== orderId && String(o.id) !== String(orderId) && String(o.orderId) !== String(orderId)));
+    setSelectedOrderIds(prev => prev.filter(id => id !== orderId && String(id) !== String(orderId)));
+
     try {
       await api.post("/admin/orders/delete", null, {
         params: {
@@ -140,11 +145,9 @@ function QueueManagement() {
           orderId: String(orderId)
         }
       });
-      alert(`Order #${orderId} deleted successfully.`);
-      setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
-      fetchOrders();
     } catch (err) {
       console.error(err);
+      fetchOrders();
       alert("Error deleting order: " + (err.response?.data || err.message));
     }
   };

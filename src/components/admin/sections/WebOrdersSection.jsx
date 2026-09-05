@@ -121,25 +121,20 @@ export function WebOrdersSection({
             return;
         }
         if (!orderId) return;
-        const proceed = () => {
-            api.post("/admin/orders/delete", null, {
-                params: {
-                    adminUsername: localStorage.getItem("adminUser") || "admin",
-                    orderId: String(orderId)
-                }
-            }).then(() => {
-                showAlert && showAlert(`Order #${orderId} deleted successfully.`, "success");
-                fetchOrders();
-            }).catch(err => {
-                showAlert && showAlert("Failed to delete order: " + (err.response?.data || err.message), "error");
-            });
-        };
 
-        if (showConfirm) {
-            showConfirm(`Are you sure you want to permanently delete Web Order #${orderId}? This cannot be undone.`, proceed);
-        } else if (window.confirm(`Are you sure you want to permanently delete Web Order #${orderId}?`)) {
-            proceed();
-        }
+        // Instant optimistic UI deletion: disappears immediately upon pressing delete
+        setOrders(prev => prev.filter(o => o.orderId !== orderId && o.id !== orderId && String(o.id) !== String(orderId) && String(o.orderId) !== String(orderId)));
+
+        api.post("/admin/orders/delete", null, {
+            params: {
+                adminUsername: localStorage.getItem("adminUser") || "admin",
+                orderId: String(orderId)
+            }
+        }).catch(err => {
+            console.error("Error deleting order:", err);
+            showAlert && showAlert("Failed to delete order: " + (err.response?.data || err.message), "error");
+            fetchOrders();
+        });
     };
 
     const isPaidOrder = (o) => {

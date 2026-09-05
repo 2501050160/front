@@ -126,14 +126,14 @@ export function CollegeManagementSection({
                                     </span>
                                     <input
                                         type="text"
-                                        placeholder="Razorpay Key ID (rzp_live_...)"
+                                        placeholder="Default: rzp_live_TOBWLIHZxellOE (or custom)"
                                         value={keyIdInputs[c.code] ?? ""}
                                         onChange={(e) => setKeyIdInputs(prev => ({ ...prev, [c.code]: e.target.value }))}
                                         className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-[11px] outline-none focus:border-cyan-500"
                                     />
                                     <input
                                         type="password"
-                                        placeholder="Razorpay Key Secret"
+                                        placeholder="Default: zth9Qce6MLqEs6O151FPfIsV (or custom)"
                                         value={keySecretInputs[c.code] ?? ""}
                                         onChange={(e) => setKeySecretInputs(prev => ({ ...prev, [c.code]: e.target.value }))}
                                         className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-[11px] outline-none focus:border-cyan-500"
