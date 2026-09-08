@@ -41,6 +41,7 @@ function Landing() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [typedTitle1, setTypedTitle1] = useState("");
+  const [typedTitle2, setTypedTitle2] = useState("");
   const [whatsappBotNumber, setWhatsappBotNumber] = useState("918688500278");
   const [dedicatedBotCollege, setDedicatedBotCollege] = useState("");
 
