@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import introVideo from "../assets/login_hero10.mp4";
 import demoVideo from "../assets/demo.mp4";
 import inVideo from "../assets/in.mp4";
 import api from "../services/api";
@@ -31,9 +30,6 @@ function Landing() {
   const [activeBuilding, setActiveBuilding] = useState("C Block");
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeFlowStep, setActiveFlowStep] = useState(0);
-  const [showIntro, setShowIntro] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const introVideoRef = useRef(null);
   const [showDemo, setShowDemo] = useState(false);
   const statsRef = useRef(null);
   const statsStarted = useRef(false);
@@ -139,17 +135,6 @@ function Landing() {
     successRate: 99.8
   });
 
-  useEffect(() => {
-    const introShown = sessionStorage.getItem("landingIntroShown");
-    if (!introShown) {
-      setShowIntro(true);
-    }
-  }, []);
-
-  const handleSkipIntro = () => {
-    sessionStorage.setItem("landingIntroShown", "true");
-    setShowIntro(false);
-  };
 
   // Load and refresh stats from database every 5 seconds
   useEffect(() => {
@@ -917,71 +902,7 @@ function Landing() {
       </footer>
     </div>
 
-      {/* Intro Video Overlay */}
-      <AnimatePresence>
-        {showIntro && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-black"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <video
-              ref={introVideoRef}
-              autoPlay
-              muted={isMuted}
-              playsInline
-              className="w-full h-full object-cover absolute inset-0 z-0"
-              onEnded={handleSkipIntro}
-            >
-              <source src={introVideo} type="video/mp4" />
-            </video>
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-10 pointer-events-none" />
-
-            {/* Tap to Start splash */}
-            <AnimatePresence>
-              {isMuted && (
-                <motion.div
-                  className="absolute inset-0 z-30 flex flex-col items-start justify-end pb-10 pl-10 cursor-pointer"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  onClick={() => {
-                    const v = introVideoRef.current;
-                    if (!v) return;
-                    v.muted = false;
-                    v.play().catch(() => {});
-                    setIsMuted(false);
-                  }}
-                >
-                  <motion.div
-                    className="flex flex-row items-center gap-3"
-                    animate={{ scale: [1, 1.04, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center shadow-2xl">
-                      <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                      </svg>
-                    </div>
-                    <p className="text-white font-black text-xs tracking-widest uppercase">Tap to Unmute</p>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Skip button */}
-            <button
-              onClick={handleSkipIntro}
-              className="absolute bottom-10 right-10 z-40 px-6 py-3 bg-white/10 hover:bg-white/25 text-white font-black text-sm tracking-wider uppercase rounded-full border border-white/25 backdrop-blur-md transition-all shadow-2xl hover:scale-105 active:scale-95"
-            >
-              Skip Intro →
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Demo Video Modal */}
       <AnimatePresence>
