@@ -12,11 +12,34 @@ export function CollegeManagementSection({
 }) {
     const suspendedList = suspendedColleges ? suspendedColleges.split(",").map(s => s.trim().toUpperCase()).filter(Boolean) : [];
 
-    const colleges = [
-        { code: "KLU", name: "KL University (Vijayawada & Hyderabad)", active: !suspendedList.includes("KLU") },
-        { code: "VNR", name: "VNR Vignana Jyothi Institute (Hyderabad)", active: !suspendedList.includes("VNR") },
-        { code: "CBIT", name: "Chaitanya Bharathi Institute of Tech", active: !suspendedList.includes("CBIT") }
+    const baseColleges = [
+        { code: "KLU", name: "KL University (Vijayawada & Hyderabad)" },
+        { code: "VNR", name: "VNR Vignana Jyothi Institute (Hyderabad)" },
+        { code: "CBIT", name: "Chaitanya Bharathi Institute of Tech" }
     ];
+
+    const collegesMap = new Map();
+    baseColleges.forEach(c => collegesMap.set(c.code, c.name));
+
+    (collegeConfigs || []).forEach(cfg => {
+        const code = (cfg.collegeName || cfg.college || "").trim().toUpperCase();
+        if (code && !collegesMap.has(code)) {
+            collegesMap.set(code, `${code} Campus`);
+        }
+    });
+
+    (blocks || []).forEach(b => {
+        const code = (b.college || "").trim().toUpperCase();
+        if (code && !collegesMap.has(code)) {
+            collegesMap.set(code, `${code} Campus`);
+        }
+    });
+
+    const colleges = Array.from(collegesMap.entries()).map(([code, name]) => ({
+        code,
+        name,
+        active: !suspendedList.includes(code)
+    }));
 
     const [keyIdInputs, setKeyIdInputs] = useState({});
     const [keySecretInputs, setKeySecretInputs] = useState({});

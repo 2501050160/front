@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Headphones, MessageSquare, Send, Phone, HelpCircle, CheckCircle } from "lucide-react";
 import api from "../../../services/api";
+import { sendSupportTicketAlert } from "../../../services/notificationService";
 
 export function SupportSection({
     userName = "",
@@ -51,7 +52,18 @@ export function SupportSection({
                 email: email.trim() || userEmail,
                 message: message.trim()
             });
-            showAlert("Ticket Submitted", "Our campus technician team has received your request.", "success");
+
+            // Dispatch instant WhatsApp alert to Admin (9494189664)
+            const campusCollege = botCollege || localStorage.getItem("userCollege") || "Campus";
+            sendSupportTicketAlert({
+                name: name.trim() || "Student",
+                email: email.trim() || userEmail,
+                message: message.trim(),
+                college: campusCollege,
+                autoOpen: true
+            });
+
+            showAlert("Ticket Submitted", "Your issue has been logged and an instant WhatsApp alert was dispatched to the Admin.", "success");
             setMessage("");
         } catch (error) {
             console.error(error);

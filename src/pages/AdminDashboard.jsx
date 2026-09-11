@@ -6,6 +6,7 @@ import CustomModal from "../components/CustomModal";
 import Navbar from "../components/Navbar";
 import WhatsAppOrdersSection from "../components/admin/sections/WhatsAppOrdersSection";
 import WebOrdersSection from "../components/admin/sections/WebOrdersSection";
+import SettlementSection from "../components/admin/sections/SettlementSection";
 import cloudprintLogo from "../assets/cloudprint_logo.png";
 
 function AdminDashboard() {
@@ -475,6 +476,7 @@ function AdminDashboard() {
         fetchPrices(selectedPricingBlock);
         fetchBlocks();
         fetchPrinters();
+        fetchCollegeConfigs();
         fetchCollegePlatformSettings(selectedCollegeFilter || loggedInAdminCollege || "KLU");
 
         const interval = setInterval(() => {
@@ -2639,6 +2641,15 @@ function AdminDashboard() {
             if (window.innerWidth < 768) setIsSidebarCollapsed(true);
             return;
         }
+        if (tabId === "settlements") {
+            setActiveTab("colleges");
+            setCollegesSubTab("settlements");
+            setSearchParams({ tab: "colleges", subtab: "settlements" });
+            fetchBlocks();
+            fetchCollegeConfigs();
+            if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+            return;
+        }
         setActiveTab(tabId);
         const params = { tab: tabId };
         if (subtabId) params.subtab = subtabId;
@@ -2705,6 +2716,9 @@ function AdminDashboard() {
             } else if (tab === "analytics") {
                 setActiveTab("queue");
                 setQueueSubTab("revenue");
+            } else if (tab === "settlements") {
+                setActiveTab("colleges");
+                setCollegesSubTab("settlements");
             } else {
                 setActiveTab(tab);
                 if (subtab) {
@@ -2834,8 +2848,6 @@ function AdminDashboard() {
                                     <span className="text-base">🏷️</span>
                                     {!isSidebarCollapsed && <span>Pricing & Coupons</span>}
                                 </button>
-
-
 
                                 {loggedInAdminRole !== "MANAGER" && (
                                     <button
@@ -2998,6 +3010,22 @@ function AdminDashboard() {
                                 </button>
                             ))
                         )}
+                        {activeTab === "settlements" && (
+                            [
+                                { id: "settlements-ledger", label: "Settlement Ledger", icon: "💳", desc: "Balance & Payouts" },
+                            ].map(sub => (
+                                <button
+                                    key={sub.id}
+                                    className="min-w-[130px] flex flex-col items-center justify-center p-2.5 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 scale-[1.02] border border-sky-400 shrink-0 text-center cursor-default"
+                                >
+                                    <span className="text-xl mb-1">{sub.icon}</span>
+                                    <span className="text-xs font-black leading-tight">{sub.label}</span>
+                                    <span className="text-[10px] font-semibold mt-0.5 leading-tight text-sky-100">
+                                        {sub.desc}
+                                    </span>
+                                </button>
+                            ))
+                        )}
                         {activeTab === "users" && (
                             [
                                 { id: "users-list", label: "User Directory", icon: "👥", desc: `${users.length} Registered` },
@@ -3079,7 +3107,8 @@ function AdminDashboard() {
                         )}
                         {(activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers") && (
                             [
-                                { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean))).length} Campuses` },
+                                { id: "colleges-list", label: "College Directory", icon: "🏫", desc: `${Array.from(new Set([...allBlocks.map(b => b.college), ...(collegeConfigs || []).map(c => c.collegeName || c.college), "KLU", "VNR", "CBIT"].filter(Boolean))).length} Campuses` },
+                                { id: "settlements", label: "Settlement Ledger", icon: "💳", desc: "Balances & Payouts" },
                                 ...(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin" ? [{ id: "add-college", label: "Add New College", icon: "➕", desc: "Register Campus" }] : []),
                                 { id: "all-blocks", label: "Block Directory", icon: "🏛️", desc: `${blocks.length} Configured` },
                                 { id: "add-block", label: "Add New Block", icon: "➕", desc: "Create Location" },
@@ -3317,6 +3346,18 @@ function AdminDashboard() {
                             </button>
                         </div>
                     </motion.div>
+                )}
+
+                {/* Settlements & Balances Tab */}
+                {activeTab === "settlements" && (
+                    <div className="mt-6">
+                        <SettlementSection
+                            adminRole={loggedInAdminRole}
+                            adminUser={loggedInAdminUser}
+                            adminCollege={loggedInAdminCollege}
+                            showAlert={showAlert}
+                        />
+                    </div>
                 )}
 
                 {/* Queue & Analytics Tab */}
@@ -3676,8 +3717,8 @@ function AdminDashboard() {
                                                         onChange={(e) => setSelectedCollegeFilter(e.target.value)}
                                                         className="text-xs font-black bg-transparent text-slate-800 focus:outline-none cursor-pointer"
                                                     >
-                                                        <option value="ALL">All Campuses ({Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).length})</option>
-                                                        {Array.from(new Set(blocks.map(b => b.college).filter(Boolean))).map(col => (
+                                                        <option value="ALL">All Campuses ({Array.from(new Set([...blocks.map(b => b.college), ...(collegeConfigs || []).map(c => c.collegeName || c.college), "KLU", "VNR", "CBIT"].filter(Boolean))).length})</option>
+                                                        {Array.from(new Set(["KLU", "VNR", "CBIT", ...blocks.map(b => b.college), ...(collegeConfigs || []).map(c => c.collegeName || c.college)].filter(Boolean))).map(col => (
                                                             <option key={col} value={col}>{col}</option>
                                                         ))}
                                                     </select>
@@ -5705,6 +5746,22 @@ function AdminDashboard() {
                 {(activeTab === "colleges" || activeTab === "blocks" || activeTab === "printers") && (
                     <div className="mt-6 space-y-6">
 
+                        {/* SUBPAGE: College Settlement Ledger inside College Management */}
+                        {collegesSubTab === "settlements" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <SettlementSection
+                                    adminRole={loggedInAdminRole}
+                                    adminUser={loggedInAdminUser}
+                                    adminCollege={loggedInAdminCollege}
+                                    allColleges={Array.from(new Set(allBlocks.map(b => b.college).filter(Boolean)))}
+                                    showAlert={showAlert}
+                                />
+                            </motion.div>
+                        )}
+
                         {/* SUBPAGE 1: Colleges Directory & Gateway */}
                         {(collegesSubTab === "colleges-list" || blocksSubTab === "colleges-list") && (
                             <motion.section 
@@ -5778,6 +5835,14 @@ function AdminDashboard() {
                                                 </div>
                                                 
                                                 <div className="w-full space-y-2 mt-auto">
+                                                    {/* View Settlements & Ledger Button */}
+                                                    <button
+                                                        onClick={() => setCollegesSubTab("settlements")}
+                                                        className="btn secondary text-xs py-2 w-full font-bold flex items-center justify-center gap-1.5"
+                                                        title={`View financial ledger & settlements for ${col}`}
+                                                    >
+                                                        <span>💳</span> View Settlements & Ledger
+                                                    </button>
                                                     {/* Main Admin Only: Suspend & Delete Campus */}
                                                     {(loggedInAdminRole === "MAIN_ADMIN" || loggedInAdminUser === "admin") && (
                                                         <div className="flex w-full gap-2">

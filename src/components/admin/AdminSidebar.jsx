@@ -21,7 +21,8 @@ import {
     Sliders,
     LogOut,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Wallet
 } from "lucide-react";
 
 export function AdminSidebar({

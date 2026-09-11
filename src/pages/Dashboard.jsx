@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import api, { RAZORPAY_KEY, loadRazorpayScript } from "../services/api";
+import { sendSupportTicketAlert } from "../services/notificationService";
 import Navbar from "../components/Navbar";
 import { getWalletBalance, clearUserSession } from "../services/auth";
 import CustomModal from "../components/CustomModal";
@@ -1067,7 +1068,16 @@ function Dashboard() {
                 _subject: "New Cloud Print Support Request"
             });
 
-            showAlert("Ticket Created", "Support request submitted successfully! We will get back to you via email.", "success");
+            // 3. Dispatch WhatsApp alert to Admin hotline (9494189664)
+            sendSupportTicketAlert({
+                name: supportName,
+                email: supportEmail,
+                message: supportMessage,
+                college: userCollege || "CloudPrint Campus",
+                autoOpen: true
+            });
+
+            showAlert("Ticket Created", "Support request submitted successfully! We dispatched an instant WhatsApp alert to the Admin team.", "success");
             setSupportMessage("");
         } catch (err) {
             console.error(err);
